@@ -7,7 +7,8 @@
     "dev": "nuxt dev",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "lint": "eslint .",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint .",
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
@@ -22,6 +23,7 @@
     "tailwindcss": "^4.2.1"
   },
   "devDependencies": {
+    "@iconify-json/ic": "^1.2.4",
     "@nuxt/eslint": "^1.15.2",
     "eslint": "^10.0.3",
     "typescript": "^5.9.3",
