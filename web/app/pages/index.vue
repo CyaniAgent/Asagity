@@ -1,57 +1,101 @@
+<script setup lang="ts">
+import { subHours, subMinutes } from 'date-fns'
+
+const mockPosts = [
+  {
+    id: '1',
+    author: {
+      avatar: 'https://avatars.githubusercontent.com/u/739984?v=4',
+      displayName: '绝对领域SK',
+      username: 'syskuku'
+    },
+    createdAt: subHours(new Date(), 1),
+    content: '这就去写一个新的长篇小说！大家有什么$[tada 想看的题材]吗？ $[rainbow #Asagity]',
+    metrics: { replies: 5, reposts: 12, reactions: 42 }
+  },
+  {
+    id: '2',
+    author: {
+      avatar: 'https://avatars.githubusercontent.com/u/739984?v=4',
+      displayName: 'Little',
+      username: 'Little',
+      instance: 'misskey.io'
+    },
+    createdAt: subMinutes(new Date(), 45),
+    content: '@syskuku 我用服务器部署的，请了也没事 $[spin.speed=2s 🌀]',
+    replyTo: {
+      author: {
+        avatar: 'https://avatars.githubusercontent.com/u/739984?v=4',
+        displayName: '绝对领域SK',
+        username: 'syskuku'
+      }
+    },
+    metrics: { replies: 2, reposts: 0, reactions: 15 }
+  },
+  {
+    id: '3',
+    author: {
+      avatar: 'https://avatars.githubusercontent.com/u/739984?v=4',
+      displayName: 'Yuna',
+      username: 'yuna_ayase'
+    },
+    createdAt: subMinutes(new Date(), 10),
+    content: '今天天气真不错喵~ 想出去散步。 #日常 $[shake 🐾]',
+    metrics: { replies: 1, reposts: 1, reactions: 8 }
+  }
+]
+</script>
+
 <template>
-  <div class="max-w-4xl mx-auto space-y-8">
-    <!-- 欢迎区块 -->
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 backdrop-blur-md border border-cyan-500/20 p-8 shadow-sm">
-      <div class="flex items-center justify-between z-10 relative">
-        <div class="space-y-4">
-          <h1 class="text-3xl font-black text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-            欢迎回到 Asagity! <span class="animate-bounce">✨</span>
-          </h1>
-          <p class="text-gray-600 dark:text-gray-300">
-            全维度二次元去中心化社交网络，这里是属于你的空间。
-          </p>
-          <div class="pt-2">
+  <div class="max-w-[700px] mx-auto space-y-6">
+    <!-- 发布器占位符 -->
+    <div
+      class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-[20px] p-4 shadow-sm flex items-start gap-4"
+    >
+      <UAvatar
+        src="https://avatars.githubusercontent.com/u/739984?v=4"
+        size="md"
+      />
+      <div class="flex-1">
+        <textarea
+          class="w-full bg-transparent resize-none outline-none text-[15px] placeholder:text-gray-400 dark:placeholder:text-gray-500 min-h-[60px] custom-scrollbar"
+          placeholder="有什么新鲜事？"
+        />
+        <div class="flex justify-between items-center mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+          <div class="flex gap-1 text-cyan-500">
             <UButton
-              label="立刻签到！"
-              icon="i-lucide-sparkles"
-              color="primary"
-              variant="subtle"
+              icon="i-lucide-image"
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              class="hover:bg-cyan-50 dark:hover:bg-cyan-900/30 rounded-full"
+            />
+            <UButton
+              icon="i-lucide-smile"
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              class="hover:bg-cyan-50 dark:hover:bg-cyan-900/30 rounded-full"
             />
           </div>
-        </div>
-        <div class="hidden md:block">
-          <div class="w-32 h-32 rounded-full bg-gradient-to-tr from-cyan-400/40 to-blue-400/40 blur-3xl animate-pulse" />
+          <UButton
+            label="发送"
+            color="primary"
+            class="rounded-full px-5 font-bold shadow-sm shadow-cyan-500/30"
+          />
         </div>
       </div>
     </div>
 
-    <!-- 动态流骨架屏占位 -->
-    <div class="space-y-4">
-      <h2 class="text-xl font-bold bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent w-max">
-        本站最新动态
-      </h2>
-      <div
-        v-for="i in 5"
-        :key="i"
-        class="bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border border-gray-200 dark:border-gray-800 rounded-xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(57,197,187,0.1)] transition-all duration-300 cursor-pointer group"
-      >
-        <div class="flex items-center gap-3 mb-4">
-          <USkeleton class="h-10 w-10 rounded-full" />
-          <div class="space-y-2">
-            <USkeleton class="h-4 w-[150px]" />
-            <USkeleton class="h-3 w-[100px]" />
-          </div>
-        </div>
-        <div class="space-y-3">
-          <USkeleton class="h-4 w-full" />
-          <USkeleton class="h-4 w-[90%]" />
-          <USkeleton class="h-4 w-[60%]" />
-        </div>
-        <div class="flex items-center gap-4 mt-6 opacity-60 group-hover:opacity-100 transition-opacity">
-          <USkeleton class="h-4 w-12" />
-          <USkeleton class="h-4 w-12" />
-        </div>
-      </div>
+    <!-- 动态流 (无外边框的列表) -->
+    <div
+      class="bg-white dark:bg-gray-900 rounded-[20px] border border-gray-200 dark:border-gray-800 flex flex-col shadow-sm"
+    >
+      <AppPostItem
+        v-for="post in mockPosts"
+        :key="post.id"
+        :post="post"
+      />
     </div>
   </div>
 </template>

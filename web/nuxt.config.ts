@@ -6,7 +6,8 @@ export default defineNuxtConfig({
     '@nuxt/image',
     '@pinia/nuxt',
     '@vueuse/nuxt',
-    '@nuxtjs/i18n'
+    '@nuxtjs/i18n',
+    '@vueuse/motion/nuxt'
   ],
 
   devtools: {
@@ -20,6 +21,16 @@ export default defineNuxtConfig({
   },
 
   compatibilityDate: '2025-01-15',
+
+  vite: {
+    optimizeDeps: {
+      include: [
+        'date-fns',
+        'date-fns/locale',
+        'mfm-js'
+      ]
+    }
+  },
 
   eslint: {
     config: {

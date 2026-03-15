@@ -1,4 +1,8 @@
-<script setup>
+<script setup lang="ts">
+import { useInstanceStore } from '~/stores/instance'
+
+const instanceStore = useInstanceStore()
+
 useHead({
   meta: [
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }
@@ -11,14 +15,11 @@ useHead({
   }
 })
 
-const title = 'Nuxt Starter Template'
-const description = 'A production-ready starter template powered by Nuxt UI. Build beautiful, accessible, and performant applications in minutes, not hours.'
-
 useSeoMeta({
-  title,
-  description,
-  ogTitle: title,
-  ogDescription: description,
+  title: () => instanceStore.name,
+  description: () => instanceStore.description,
+  ogTitle: () => instanceStore.name,
+  ogDescription: () => instanceStore.description,
   ogImage: 'https://ui.nuxt.com/assets/templates/nuxt/starter-light.png',
   twitterImage: 'https://ui.nuxt.com/assets/templates/nuxt/starter-light.png',
   twitterCard: 'summary_large_image'

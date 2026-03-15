@@ -18,8 +18,12 @@
     "@nuxt/ui": "^4.5.1",
     "@nuxtjs/i18n": "10.2.3",
     "@pinia/nuxt": "0.11.3",
+    "@vueuse/motion": "^3.0.3",
     "@vueuse/nuxt": "14.2.1",
+    "date-fns": "^4.1.0",
+    "mfm-js": "^0.25.0",
     "nuxt": "^4.3.1",
+    "pinia": "^3.0.4",
     "tailwindcss": "^4.2.1"
   },
   "devDependencies": {
