@@ -52,6 +52,13 @@ function handleClick() {
     splitViewStore.openPost(props.post)
   }
 }
+
+function handleUserClick(e: MouseEvent) {
+  e.stopPropagation()
+  if (!props.isDetailView) {
+    splitViewStore.openUser(props.post.author)
+  }
+}
 </script>
 
 <template>
@@ -69,6 +76,7 @@ function handleClick() {
         :alt="post.author.displayName"
         size="md"
         class="ring-2 ring-transparent hover:ring-cyan-400 transition-all cursor-pointer shadow-sm"
+        @click="handleUserClick"
       />
     </div>
 
@@ -78,7 +86,10 @@ function handleClick() {
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-start flex-col gap-0.5 min-w-0">
           <div class="flex items-center gap-1.5 truncate w-full">
-            <span class="font-bold text-[15px] truncate cursor-pointer hover:underline text-gray-900 dark:text-gray-100 decoration-cyan-400">
+            <span
+              class="font-bold text-[15px] truncate cursor-pointer hover:underline text-gray-900 dark:text-gray-100 decoration-cyan-400"
+              @click="handleUserClick"
+            >
               {{ post.author.displayName }}
             </span>
             <span class="text-sm text-gray-500 truncate cursor-pointer hover:text-cyan-600 transition-colors">
