@@ -15,6 +15,11 @@ function handleProgressChange(e: Event) {
   const target = e.target as HTMLInputElement
   musicStore.setProgress(parseFloat(target.value))
 }
+
+function handleVolumeChange(e: Event) {
+  const target = e.target as HTMLInputElement
+  musicStore.setVolume(parseInt(target.value))
+}
 </script>
 
 <template>
@@ -41,6 +46,22 @@ function handleProgressChange(e: Event) {
 
     <!-- Main Player Area -->
     <div class="flex-1 overflow-y-auto custom-scrollbar p-8 flex flex-col items-center justify-center gap-10">
+      <!-- Loading Overlay -->
+      <div
+        v-if="musicStore.isLoading"
+        class="absolute inset-0 bg-black/40 backdrop-blur-sm z-30 flex items-center justify-center"
+      >
+        <div class="flex flex-col items-center gap-4">
+          <UIcon
+            name="i-lucide-loader-2"
+            class="w-12 h-12 text-cyan-500 animate-spin"
+          />
+          <p class="text-xs font-bold tracking-widest uppercase opacity-80">
+            Parsing Metadata...
+          </p>
+        </div>
+      </div>
+
       <!-- Album Art with Glow -->
       <div class="relative group">
         <div class="absolute inset-0 bg-cyan-500/30 rounded-[30px] blur-[40px] opacity-0 group-hover:opacity-100 transition-opacity duration-700 animate-pulse" />
@@ -62,7 +83,7 @@ function handleProgressChange(e: Event) {
         <h1 class="text-2xl md:text-3xl font-black tracking-tight text-white line-clamp-1 hover:text-cyan-400 transition-colors cursor-default">
           {{ musicStore.currentTrack.title }}
         </h1>
-        <p class="text-lg font-medium text-gray-400 hover:text-gray-200 transition-colors cursor-default">
+        <p class="text-[17px] font-semibold text-gray-400 hover:text-gray-200 transition-colors cursor-default">
           {{ musicStore.currentTrack.artist }}
         </p>
       </div>
@@ -75,8 +96,9 @@ function handleProgressChange(e: Event) {
             <input
               type="range"
               :min="0"
-              :max="musicStore.currentTrack.duration"
+              :max="musicStore.currentTrack.duration || 100"
               :value="musicStore.progress"
+              step="0.1"
               class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
               @input="handleProgressChange"
             >
@@ -85,7 +107,7 @@ function handleProgressChange(e: Event) {
               :style="{ width: `${musicStore.progressPercentage}%` }"
             />
           </div>
-          <div class="flex justify-between text-[11px] font-bold text-gray-500 tracking-tighter uppercase">
+          <div class="flex justify-between text-[11px] font-bold text-gray-500 tracking-tighter uppercase font-mono">
             <span>{{ formatTime(musicStore.progress) }}</span>
             <span>{{ formatTime(musicStore.currentTrack.duration) }}</span>
           </div>
@@ -135,12 +157,20 @@ function handleProgressChange(e: Event) {
 
         <!-- Secondary Controls -->
         <div class="flex items-center justify-center gap-6 pt-4">
-          <div class="flex items-center gap-3 group/volume">
+          <div class="flex items-center gap-3 group/volume w-32">
             <UIcon
               name="i-lucide-volume-2"
-              class="text-gray-500 group-hover/volume:text-cyan-400 transition-colors"
+              class="text-gray-500 group-hover/volume:text-cyan-400 transition-colors shrink-0"
             />
-            <div class="w-24 h-1 bg-white/10 rounded-full overflow-hidden">
+            <div class="relative flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
+              <input
+                type="range"
+                min="0"
+                max="100"
+                :value="musicStore.volume"
+                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                @input="handleVolumeChange"
+              >
               <div
                 class="h-full bg-cyan-400/80 transition-all"
                 :style="{ width: `${musicStore.volume}%` }"
@@ -156,21 +186,44 @@ function handleProgressChange(e: Event) {
         </div>
       </div>
 
-      <!-- Lyrics / Interactive Slot -->
-      <div class="w-full max-w-md mt-4">
-        <div class="bg-white/5 border border-white/10 rounded-[25px] p-6 backdrop-blur-sm cursor-pointer hover:bg-white/10 transition-all group">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xs font-black tracking-widest uppercase text-cyan-400">
-              Lyrics
+      <!-- Lyrics List Display -->
+      <div class="w-full max-w-md h-40 relative group">
+        <div class="bg-white/5 border border-white/10 rounded-[25px] h-full p-6 backdrop-blur-sm overflow-hidden relative">
+          <div class="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-[#121212]/30 to-transparent z-10" />
+          <div class="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-[#121212]/30 to-transparent z-10" />
+
+          <div class="flex justify-between items-center mb-2 shrink-0">
+            <h3 class="text-[10px] font-black tracking-widest uppercase text-cyan-500/70">
+              Synchronized Lyrics
             </h3>
             <UIcon
               name="i-lucide-maximize-2"
-              class="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity"
+              class="w-3 h-3 opacity-40 group-hover:opacity-100 transition-opacity"
             />
           </div>
-          <p class="text-lg font-bold leading-relaxed line-clamp-2 text-gray-300 italic">
-            "Tell your world, let the frequency touch everyone..."
-          </p>
+
+          <div class="flex flex-col gap-3 overflow-y-auto h-full pb-8 custom-scrollbar scroll-smooth">
+            <div v-if="musicStore.lyrics.length > 0">
+              <div
+                v-for="(line, index) in musicStore.lyrics"
+                :key="index"
+                :class="[
+                  'text-[15px] font-bold transition-all duration-300 cursor-default py-1 px-2 rounded-lg',
+                  musicStore.currentLyricIndex === index
+                    ? 'text-cyan-400 scale-105 bg-cyan-400/5'
+                    : 'text-gray-500 opacity-60 hover:opacity-100'
+                ]"
+              >
+                {{ line.text }}
+              </div>
+            </div>
+            <div
+              v-else
+              class="h-full flex items-center justify-center text-gray-600 text-sm italic py-4"
+            >
+              {{ musicStore.isLoading ? 'Searching for lyrics...' : 'No synchronized lyrics found' }}
+            </div>
+          </div>
         </div>
       </div>
     </div>

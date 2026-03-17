@@ -21,8 +21,11 @@
     "@vueuse/core": "^14.2.1",
     "@vueuse/motion": "^3.0.3",
     "@vueuse/nuxt": "14.2.1",
+    "buffer": "^6.0.3",
     "date-fns": "^4.1.0",
+    "lrc-kit": "^1.2.1",
     "mfm-js": "^0.25.0",
+    "music-metadata-browser": "^2.5.11",
     "nuxt": "^4.3.1",
     "pinia": "^3.0.4",
     "tailwindcss": "^4.2.1"
