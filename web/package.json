@@ -25,7 +25,7 @@
     "date-fns": "^4.1.0",
     "lrc-kit": "^1.2.1",
     "mfm-js": "^0.25.0",
-    "music-metadata-browser": "^2.5.11",
+    "music-metadata": "^11.12.3",
     "nuxt": "^4.3.1",
     "pinia": "^3.0.4",
     "tailwindcss": "^4.2.1"
@@ -33,6 +33,7 @@
   "devDependencies": {
     "@iconify-json/ic": "^1.2.4",
     "@nuxt/eslint": "^1.15.2",
+    "@types/node": "^25.5.0",
     "eslint": "^10.0.3",
     "typescript": "^5.9.3",
     "vue-tsc": "^3.2.5"

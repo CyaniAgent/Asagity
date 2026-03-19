@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed, onBeforeUnmount } from 'vue'
-import { fetchFromUrl } from 'music-metadata-browser'
+import { parseBlob } from 'music-metadata'
 import { Lrc } from 'lrc-kit'
 
 export interface Track {
@@ -14,7 +14,8 @@ export interface Track {
 
 export interface LyricLine {
   timestamp: number
-  text: string
+  text: string // Combined text for display
+  rawLines: string[] // Original lines for this timestamp
 }
 
 export const useMusicStore = defineStore('music', () => {
@@ -31,7 +32,7 @@ export const useMusicStore = defineStore('music', () => {
     artist: 'Loading...',
     albumArt: 'https://images.microcms-assets.io/assets/2665b63c437a44f4a35048d2eb4b7b3b/0cc8e4b8a9f34a41b7cc1d83049b4c05/tell-your-world.jpg',
     duration: 0,
-    url: 'https://kodo.imikufans.com//iMikufansHub/1d73728b-f240-4d0f-8add-d158ddc52be8.flac'
+    url: '/sounds/MusicTest.mp3'
   })
 
   // HTML5 Audio handle (Client-side only)
@@ -67,14 +68,17 @@ export const useMusicStore = defineStore('music', () => {
   async function fetchMetadata(url: string) {
     isLoading.value = true
     try {
-      // Use fetchFromUrl for browser-side metadata extraction
-      const metadata = await fetchFromUrl(url)
+      // Fetch the file and parse as a blob with the new music-metadata library
+      const response = await fetch(url)
+      const blob = await response.blob()
+      const metadata = await parseBlob(blob)
 
       let albumArt = 'https://images.microcms-assets.io/assets/2665b63c437a44f4a35048d2eb4b7b3b/0cc8e4b8a9f34a41b7cc1d83049b4c05/tell-your-world.jpg'
       if (metadata.common.picture && metadata.common.picture.length > 0) {
         const pic = metadata.common.picture[0]
         if (pic) {
-          const blob = new Blob([pic.data], { type: pic.format })
+          const uint8Array = new Uint8Array(pic.data)
+          const blob = new Blob([uint8Array], { type: pic.format })
           albumArt = URL.createObjectURL(blob)
         }
       }
@@ -91,10 +95,11 @@ export const useMusicStore = defineStore('music', () => {
       // Check for lyrics in metadata
       if (metadata.common.lyrics && metadata.common.lyrics.length > 0) {
         const lyric = metadata.common.lyrics[0]
-        if (lyric) {
-          parseLyrics(lyric)
+        if (lyric && lyric.text) {
+          parseLyrics(lyric.text)
         }
       } else {
+        // Fallback or clear
         lyrics.value = []
       }
 
@@ -102,7 +107,7 @@ export const useMusicStore = defineStore('music', () => {
         audio.src = url
       }
     } catch (error) {
-      console.error('Failed to fetch metadata:', error)
+      console.error('Final music loading error:', error)
     } finally {
       isLoading.value = false
     }
@@ -111,13 +116,26 @@ export const useMusicStore = defineStore('music', () => {
   function parseLyrics(lrcContent: string) {
     try {
       const parsed = Lrc.parse(lrcContent)
-      lyrics.value = parsed.lyrics.map(line => ({
-        timestamp: line.timestamp,
-        text: line.content
-      }))
+      const grouped: Record<number, string[]> = {}
+
+      parsed.lyrics.forEach((line) => {
+        const ts = line.timestamp
+        if (!grouped[ts]) {
+          grouped[ts] = []
+        }
+        grouped[ts].push(line.content)
+      })
+
+      lyrics.value = Object.entries(grouped)
+        .map(([timestamp, lines]) => ({
+          timestamp: parseFloat(timestamp),
+          text: lines.join('\n'),
+          rawLines: lines
+        }))
+        .sort((a, b) => a.timestamp - b.timestamp)
     } catch {
       console.warn('LRC parsing failed, treating as plain text')
-      lyrics.value = [{ timestamp: 0, text: lrcContent }]
+      lyrics.value = [{ timestamp: 0, text: lrcContent, rawLines: [lrcContent] }]
     }
   }
 

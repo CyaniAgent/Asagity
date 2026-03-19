@@ -27,7 +27,9 @@ export default defineNuxtConfig({
       include: [
         'date-fns',
         'date-fns/locale',
-        'mfm-js'
+        'mfm-js',
+        'music-metadata',
+        'lrc-kit'
       ]
     }
   },

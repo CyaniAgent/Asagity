@@ -12,7 +12,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
   const rightPanelWidth = ref(50) // Percentage
   const isResizing = ref(false)
   const activeView = ref<'left' | 'right'>('left')
-  const currentRightViewType = ref<'post' | 'user' | 'music' | null>(null)
+  const currentRightViewType = ref<'post' | 'user' | 'music' | 'notifications' | null>(null)
 
   function openPost(post: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
     currentPost.value = post
@@ -36,6 +36,14 @@ export const useSplitViewStore = defineStore('splitView', () => {
     currentPost.value = null
     currentUser.value = null
     currentRightViewType.value = 'music'
+    isOpen.value = true
+    activeView.value = 'right'
+  }
+
+  function openNotifications() {
+    currentPost.value = null
+    currentUser.value = null
+    currentRightViewType.value = 'notifications'
     isOpen.value = true
     activeView.value = 'right'
   }
@@ -83,6 +91,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
     openPost,
     openUser,
     openMusic,
+    openNotifications,
     close,
     setTab,
     setProfileTab,

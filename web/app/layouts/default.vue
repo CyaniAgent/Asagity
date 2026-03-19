@@ -148,16 +148,18 @@ useEventListener('mouseup', () => {
             class="flex items-center gap-2 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-full pr-2 pl-1 py-1 border border-white/20 dark:border-gray-700/50 shadow-sm transition-all hover:scale-105 cursor-pointer group"
             @click="splitViewStore.openMusic()"
           >
-            <div
-              class="w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 shrink-0 drop-shadow-sm"
+            <img
+              :src="musicStore.currentTrack.albumArt"
+              class="w-6 h-6 rounded-full object-cover shrink-0 shadow-sm transition-transform duration-700"
               :class="musicStore.isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''"
-            />
+              alt="Art"
+            >
             <div class="w-24 overflow-hidden mask-image:linear-gradient(to_right,white_80%,transparent)">
               <div
-                class="text-xs font-medium whitespace-nowrap inline-block text-gray-700 dark:text-gray-300"
+                class="text-xs font-bold whitespace-nowrap inline-block text-gray-800 dark:text-gray-100"
                 :class="musicStore.isPlaying ? 'animate-[marquee_10s_linear_infinite]' : ''"
               >
-                ♪ {{ musicStore.currentTrack.title }}
+                {{ musicStore.currentTrack.title }}
               </div>
             </div>
             <UButton
@@ -176,6 +178,7 @@ useEventListener('mouseup', () => {
               icon="i-lucide-bell"
               color="neutral"
               variant="ghost"
+              @click="splitViewStore.openNotifications()"
             />
             <span class="absolute top-1 right-1 flex w-2 h-2">
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
@@ -248,6 +251,7 @@ useEventListener('mouseup', () => {
               <AppUserProfile v-if="splitViewStore.currentRightViewType === 'user' && splitViewStore.isOpen" />
               <AppPostDetail v-else-if="splitViewStore.currentRightViewType === 'post' && splitViewStore.isOpen" />
               <AppMusicPlayer v-else-if="splitViewStore.currentRightViewType === 'music' && splitViewStore.isOpen" />
+              <AppNotifications v-else-if="splitViewStore.currentRightViewType === 'notifications' && splitViewStore.isOpen" />
             </div>
           </div>
         </div>

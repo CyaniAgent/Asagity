@@ -1,9 +1,44 @@
 <script setup lang="ts">
+import { ref, watch, computed, nextTick, onBeforeUpdate } from 'vue'
 import { useMusicStore } from '~/stores/music'
 import { useSplitViewStore } from '~/stores/splitView'
 
 const musicStore = useMusicStore()
 const splitViewStore = useSplitViewStore()
+
+const lyricsContainer = ref<HTMLElement | null>(null)
+const lyricLines = ref<HTMLElement[]>([])
+const isLyricsExpanded = ref(false)
+
+onBeforeUpdate(() => {
+  lyricLines.value = []
+})
+
+// Watch current lyric index to scroll to center (Spotify-style)
+watch(() => musicStore.currentLyricIndex, async (newIndex) => {
+  if (newIndex === -1 || !lyricsContainer.value) return
+
+  await nextTick()
+  const activeLine = lyricLines.value[newIndex]
+  if (activeLine) {
+    const container = lyricsContainer.value
+    const top = activeLine.offsetTop - (container.clientHeight / 2) + (activeLine.clientHeight / 2)
+    container.scrollTo({ top, behavior: 'smooth' })
+  }
+})
+
+// Dynamic theme color from album art (fallback to Miku Green)
+const activeColor = computed(() => {
+  // In a real app, we could extract the vibrant color from the image.
+  // For now, we'll pulse the Miku Green theme.
+  return '#39C5BB'
+})
+
+function setLyricRef(el: Element | null, index: number) {
+  if (el) {
+    lyricLines.value[index] = el as HTMLElement
+  }
+}
 
 function formatTime(seconds: number) {
   const mins = Math.floor(seconds / 60)
@@ -23,221 +58,257 @@ function handleVolumeChange(e: Event) {
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-[#121212] text-white overflow-hidden font-sans">
-    <!-- Header -->
-    <div class="flex items-center justify-between px-6 py-4 shrink-0 bg-black/20 backdrop-blur-md z-20">
-      <div class="flex items-center gap-2">
-        <UIcon
-          name="i-lucide-music"
-          class="text-cyan-400 w-5 h-5"
-        />
-        <h2 class="text-sm font-bold tracking-widest uppercase opacity-80">
-          Now Playing
-        </h2>
+  <div class="relative flex flex-col h-full bg-black text-white overflow-hidden font-sans select-none">
+    <!-- Immersive Blurred Backdrop -->
+    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+      <img
+        :src="musicStore.currentTrack.albumArt"
+        class="w-full h-full object-cover scale-150 blur-[80px] opacity-40 transition-all duration-1000"
+        alt=""
+      >
+      <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
+    </div>
+
+    <!-- Absolute Navigation Header -->
+    <header class="absolute top-0 left-0 right-0 h-20 flex items-center justify-between px-6 z-50 pointer-events-auto">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10">
+          <UIcon
+            name="i-lucide-music"
+            class="text-cyan-400 w-4 h-4"
+          />
+        </div>
+        <span class="text-[11px] font-black uppercase tracking-[0.3em] text-white/60">Now Playing</span>
       </div>
       <UButton
         icon="i-lucide-x"
         color="neutral"
         variant="ghost"
-        class="hover:bg-white/10 text-white rounded-full transition-colors"
+        class="w-10 h-10 rounded-full hover:bg-white/10 text-white transition-all active:scale-90"
         @click="splitViewStore.close()"
       />
-    </div>
+    </header>
 
-    <!-- Main Player Area -->
-    <div class="flex-1 overflow-y-auto custom-scrollbar p-8 flex flex-col items-center justify-center gap-10">
+    <!-- Main Scrollable Content -->
+    <div class="relative z-10 flex-1 overflow-y-auto custom-scrollbar pt-24 pb-12 px-6 flex flex-col items-center">
       <!-- Loading Overlay -->
       <div
         v-if="musicStore.isLoading"
-        class="absolute inset-0 bg-black/40 backdrop-blur-sm z-30 flex items-center justify-center"
+        class="absolute inset-0 bg-black/60 backdrop-blur-md z-40 flex items-center justify-center"
       >
-        <div class="flex flex-col items-center gap-4">
+        <div class="flex flex-col items-center gap-6">
           <UIcon
             name="i-lucide-loader-2"
             class="w-12 h-12 text-cyan-500 animate-spin"
           />
-          <p class="text-xs font-bold tracking-widest uppercase opacity-80">
-            Parsing Metadata...
+          <p class="text-xs font-black tracking-[0.2em] uppercase text-white/70">
+            Asagity Rendering...
           </p>
         </div>
       </div>
 
-      <!-- Album Art with Glow -->
-      <div class="relative group">
-        <div class="absolute inset-0 bg-cyan-500/30 rounded-[30px] blur-[40px] opacity-0 group-hover:opacity-100 transition-opacity duration-700 animate-pulse" />
-        <div class="relative w-64 h-64 md:w-80 md:h-80 rounded-[30px] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-transform duration-500 group-hover:scale-105 border border-white/10">
+      <!-- Large Center Piece: Album Art -->
+      <section class="w-full max-w-[320px] aspect-square relative mb-10 group shrink-0">
+        <div
+          class="absolute inset-0 bg-cyan-500/20 rounded-[40px] blur-[50px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000"
+          :style="{ backgroundColor: `${activeColor}33` }"
+        />
+        <div class="relative w-full h-full rounded-[40px] overflow-hidden shadow-[0_30px_60px_-12px_rgba(0,0,0,0.8)] border border-white/10 transition-transform duration-700 ease-out group-hover:scale-[1.02]">
           <img
             :src="musicStore.currentTrack.albumArt"
-            class="w-full h-full object-cover"
+            class="w-full h-full object-cover transition-all duration-700"
             alt="Album Art"
           >
-          <!-- Decorative Overlay -->
-          <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-6">
-            <span class="text-xs font-bold tracking-tighter opacity-50 uppercase">Asagity Hi-Res Audio</span>
-          </div>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
         </div>
-      </div>
+      </section>
 
-      <!-- Track Info -->
-      <div class="w-full max-w-md text-center space-y-2">
-        <h1 class="text-2xl md:text-3xl font-black tracking-tight text-white line-clamp-1 hover:text-cyan-400 transition-colors cursor-default">
+      <!-- Track Information -->
+      <section class="w-full max-w-[340px] mb-8 space-y-1 text-center md:text-left">
+        <h1 class="text-2xl md:text-3xl font-black tracking-tight leading-tight text-white/95 truncate">
           {{ musicStore.currentTrack.title }}
         </h1>
-        <p class="text-[17px] font-semibold text-gray-400 hover:text-gray-200 transition-colors cursor-default">
-          {{ musicStore.currentTrack.artist }}
+        <p class="text-lg font-bold text-white/50 truncate flex items-center justify-center md:justify-start gap-2">
+          <span>{{ musicStore.currentTrack.artist || 'Unknown Artist' }}</span>
+          <span class="w-1 h-1 bg-white/20 rounded-full" />
+          <span class="text-sm opacity-60">Hi-Res</span>
         </p>
-      </div>
+      </section>
 
-      <!-- Controls & Progress -->
-      <div class="w-full max-w-md space-y-6">
-        <!-- Progress Bar -->
-        <div class="space-y-2">
-          <div class="relative w-full h-1.5 bg-white/10 rounded-full overflow-hidden group/progress pointer-events-auto">
-            <input
-              type="range"
-              :min="0"
-              :max="musicStore.currentTrack.duration || 100"
-              :value="musicStore.progress"
-              step="0.1"
-              class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-              @input="handleProgressChange"
-            >
-            <div
-              class="absolute top-0 left-0 h-full bg-gradient-to-r from-cyan-400 to-teal-400 transition-all duration-300"
-              :style="{ width: `${musicStore.progressPercentage}%` }"
-            />
-          </div>
-          <div class="flex justify-between text-[11px] font-bold text-gray-500 tracking-tighter uppercase font-mono">
-            <span>{{ formatTime(musicStore.progress) }}</span>
-            <span>{{ formatTime(musicStore.currentTrack.duration) }}</span>
-          </div>
-        </div>
-
-        <!-- Main Buttons -->
-        <div class="flex items-center justify-between px-4">
-          <UButton
-            icon="i-lucide-shuffle"
-            variant="ghost"
-            color="neutral"
-            class="text-gray-500 hover:text-white transition-colors"
+      <!-- Interactive Seeker & Time -->
+      <section class="w-full max-w-[360px] mb-8 space-y-3">
+        <div class="relative w-full h-1.5 bg-white/10 rounded-full group cursor-pointer">
+          <input
+            type="range"
+            :min="0"
+            :max="musicStore.currentTrack.duration || 100"
+            :value="musicStore.progress"
+            step="0.1"
+            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+            @input="handleProgressChange"
+          >
+          <div
+            class="absolute top-0 left-0 h-full rounded-full transition-all duration-300 shadow-[0_0_10px_rgba(57,197,187,0.5)]"
+            :style="{ width: `${musicStore.progressPercentage}%`, backgroundColor: activeColor }"
           />
-          <div class="flex items-center gap-4 md:gap-8">
-            <UButton
-              icon="i-lucide-skip-back"
-              variant="ghost"
-              color="neutral"
-              size="xl"
-              class="text-white hover:scale-110 transition-transform"
-            />
-            <button
-              class="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center text-black shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:scale-110 active:scale-95 transition-all duration-300 group"
-              @click="musicStore.togglePlay"
-            >
-              <UIcon
-                :name="musicStore.isPlaying ? 'i-lucide-pause' : 'i-lucide-play'"
-                class="w-8 h-8 md:w-10 md:h-10 transition-colors group-hover:text-cyan-600"
-                :class="!musicStore.isPlaying && 'pl-1'"
-              />
-            </button>
-            <UButton
-              icon="i-lucide-skip-forward"
-              variant="ghost"
-              color="neutral"
-              size="xl"
-              class="text-white hover:scale-110 transition-transform"
-            />
-          </div>
-          <UButton
-            icon="i-lucide-repeat"
-            variant="ghost"
-            color="neutral"
-            class="text-gray-500 hover:text-white transition-colors"
+          <!-- Thumb visualization -->
+          <div
+            class="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            :style="{ left: `${musicStore.progressPercentage}%` }"
           />
         </div>
+        <div class="flex justify-between text-[10px] font-black tracking-widest text-white/40 font-mono">
+          <span>{{ formatTime(musicStore.progress) }}</span>
+          <span>{{ formatTime(musicStore.currentTrack.duration) }}</span>
+        </div>
+      </section>
 
-        <!-- Secondary Controls -->
-        <div class="flex items-center justify-center gap-6 pt-4">
-          <div class="flex items-center gap-3 group/volume w-32">
+      <!-- Playback Controls -->
+      <section class="w-full max-w-[360px] flex items-center justify-around mb-12">
+        <UButton
+          icon="i-lucide-shuffle"
+          variant="ghost"
+          color="neutral"
+          class="text-white/30 hover:text-white"
+        />
+
+        <div class="flex items-center gap-6">
+          <UButton
+            icon="i-lucide-skip-back"
+            variant="ghost"
+            color="neutral"
+            size="xl"
+            class="text-white hover:scale-110"
+          />
+          <button
+            class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-black shadow-xl hover:scale-105 active:scale-95 transition-all"
+            @click="musicStore.togglePlay"
+          >
             <UIcon
-              name="i-lucide-volume-2"
-              class="text-gray-500 group-hover/volume:text-cyan-400 transition-colors shrink-0"
+              :name="musicStore.isPlaying ? 'i-lucide-pause' : 'i-lucide-play'"
+              class="w-8 h-8"
+              :class="!musicStore.isPlaying && 'ml-1'"
             />
-            <div class="relative flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
-              <input
-                type="range"
-                min="0"
-                max="100"
-                :value="musicStore.volume"
-                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                @input="handleVolumeChange"
-              >
-              <div
-                class="h-full bg-cyan-400/80 transition-all"
-                :style="{ width: `${musicStore.volume}%` }"
-              />
-            </div>
-          </div>
+          </button>
           <UButton
-            icon="i-lucide-list-music"
+            icon="i-lucide-skip-forward"
             variant="ghost"
             color="neutral"
-            class="text-gray-500 hover:text-white"
+            size="xl"
+            class="text-white hover:scale-110"
           />
         </div>
-      </div>
 
-      <!-- Lyrics List Display -->
-      <div class="w-full max-w-md h-40 relative group">
-        <div class="bg-white/5 border border-white/10 rounded-[25px] h-full p-6 backdrop-blur-sm overflow-hidden relative">
-          <div class="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-[#121212]/30 to-transparent z-10" />
-          <div class="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-[#121212]/30 to-transparent z-10" />
+        <UButton
+          icon="i-lucide-repeat"
+          variant="ghost"
+          color="neutral"
+          class="text-white/30 hover:text-white"
+        />
+      </section>
 
-          <div class="flex justify-between items-center mb-2 shrink-0">
-            <h3 class="text-[10px] font-black tracking-widest uppercase text-cyan-500/70">
-              Synchronized Lyrics
+      <!-- Advanced Lyrics Focus Mode -->
+      <section
+        class="w-full max-w-[380px] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
+        :class="isLyricsExpanded ? 'max-h-[800px]' : 'max-h-[400px]'"
+      >
+        <div class="bg-white/[0.03] border border-white/10 rounded-[40px] p-8 backdrop-blur-3xl relative overflow-hidden group/lyrics">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="flex items-center gap-2 text-[10px] font-black tracking-[0.3em] uppercase text-cyan-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_#39C5BB] animate-pulse" />
+              Immersion Lyrics
             </h3>
-            <UIcon
-              name="i-lucide-maximize-2"
-              class="w-3 h-3 opacity-40 group-hover:opacity-100 transition-opacity"
+            <UButton
+              :icon="isLyricsExpanded ? 'i-lucide-minimize-2' : 'i-lucide-maximize-2'"
+              variant="ghost"
+              color="neutral"
+              class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white"
+              @click="isLyricsExpanded = !isLyricsExpanded"
             />
           </div>
 
-          <div class="flex flex-col gap-3 overflow-y-auto h-full pb-8 custom-scrollbar scroll-smooth">
-            <div v-if="musicStore.lyrics.length > 0">
+          <div
+            ref="lyricsContainer"
+            class="flex flex-col gap-6 overflow-y-auto max-h-[300px] transition-all duration-700 custom-scrollbar relative px-2"
+            :class="isLyricsExpanded ? 'max-h-[600px]' : 'max-h-[160px]'"
+          >
+            <div
+              v-if="musicStore.lyrics.length > 0"
+              class="space-y-4 pb-20"
+            >
               <div
                 v-for="(line, index) in musicStore.lyrics"
                 :key="index"
+                :ref="(el: any) => setLyricRef(el, index)"
                 :class="[
-                  'text-[15px] font-bold transition-all duration-300 cursor-default py-1 px-2 rounded-lg',
+                  'transition-all duration-700 cursor-default px-4 py-3 rounded-2xl flex flex-col gap-1.5',
                   musicStore.currentLyricIndex === index
-                    ? 'text-cyan-400 scale-105 bg-cyan-400/5'
-                    : 'text-gray-500 opacity-60 hover:opacity-100'
+                    ? 'text-white translate-x-2 bg-white/[0.07] shadow-lg'
+                    : 'text-white/20 blur-[0.5px] hover:blur-0 hover:text-white/60'
                 ]"
               >
-                {{ line.text }}
+                <div
+                  v-for="(subLine, subIdx) in line.rawLines"
+                  :key="subIdx"
+                  :class="[
+                    'font-black leading-tight transition-colors duration-500',
+                    subIdx === 0 ? 'text-[18px] md:text-[21px]' : 'text-[14px] opacity-60 font-bold'
+                  ]"
+                  :style="musicStore.currentLyricIndex === index && subIdx === 0 ? { color: activeColor } : {}"
+                >
+                  {{ subLine }}
+                </div>
               </div>
             </div>
             <div
               v-else
-              class="h-full flex items-center justify-center text-gray-600 text-sm italic py-4"
+              class="h-40 flex items-center justify-center text-white/20 text-xs italic tracking-widest font-black uppercase"
             >
-              {{ musicStore.isLoading ? 'Searching for lyrics...' : 'No synchronized lyrics found' }}
+              No lyric signals detected
             </div>
           </div>
+
+          <!-- Bottom Fading -->
+          <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
         </div>
-      </div>
+      </section>
+
+      <!-- Additional Toolbar -->
+      <footer class="w-full max-w-[360px] flex items-center justify-center gap-10 mt-12 mb-6 opacity-40 hover:opacity-100 transition-opacity">
+        <UButton
+          icon="i-lucide-share-2"
+          variant="ghost"
+          color="neutral"
+          size="sm"
+        />
+        <UButton
+          icon="i-lucide-settings-2"
+          variant="ghost"
+          color="neutral"
+          size="sm"
+        />
+        <UButton
+          icon="i-lucide-info"
+          variant="ghost"
+          color="neutral"
+          size="sm"
+        />
+      </footer>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* Custom Slider Style */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  height: 12px;
-  width: 12px;
-  border-radius: 50%;
-  background: white;
-  cursor: pointer;
+  height: 0;
+  width: 0;
 }
 </style>
