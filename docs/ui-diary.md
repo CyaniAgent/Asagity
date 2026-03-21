@@ -68,4 +68,27 @@
     - 音频元数据：`music-metadata` v11 (Blob 原生解析)。
 
 ---
-*Created by Antigravity Divine Engineer*
+## 7. 动态自由窗口系统 (Dynamic Free Window System)
+
+### 7.1 架构原理
+- **容器脱离 (Teleport)**：自由窗口通过 `<Teleport to="body">` 渲染，完全隔离 `Split View` 容器的尺寸变化及缩放副作用，解决详情页频繁重绘导致的 UI 抖动。
+- **自由交互 (useDraggable)**：集成 `@vueuse/core`，实现全屏范围内无感的拖拽位移。
+- **组件实现**：
+    - `MusicLyricsWindow.vue`：沉浸式全屏歌词窗，支持**点击歌词跳转时间戳 (Seek-on-Click)**。
+    - `MusicInfoWindow.vue`：高保真音频流分析窗。
+
+### 7.2 技术规格与质量检测 (Audio Analysis)
+- **音质分级逻辑**：
+    - **Lossless**：FLAC, WAV, ALAC, AIFF, Monkey's Audio。
+    - **MP3 HQ**：Bitrate > 128kbps (Miku Green Color Badge)。
+    - **MP3 Normal**：Bitrate ≤ 128kbps (Gray Color Badge)。
+- **元数据提取**：基于 `music-metadata` v11 实装比特率 (Bitrate)、采样率 (Sample Rate) 与原始 ID3 指向的 Album/Year/Codec 字段。
+
+### 7.3 精致动效 (Premium Motion)
+- **视窗弹跳 (Window Pop)**：
+    - **曲线**：`cubic-bezier(0.34, 1.56, 0.64, 1)`。
+    - **效果**：`scale(0.9) translateY(30px) -> scale(1) translateY(0)`，配合 `opacity` 实现呼吸感的开启体验。
+- **交互回馈**：歌词选中项高亮背景与模糊滤镜同步更新，确保焦点明确。
+
+---
+*Updated by Antigravity Divine Engineer - 2026-03-21*
