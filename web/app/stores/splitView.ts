@@ -14,6 +14,9 @@ export const useSplitViewStore = defineStore('splitView', () => {
   const activeView = ref<'left' | 'right'>('left')
   const currentRightViewType = ref<'post' | 'user' | 'music' | 'notifications' | null>(null)
 
+  const isMaximized = ref(false)
+  const refreshKey = ref(0)
+
   function openPost(post: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
     currentPost.value = post
     currentUser.value = null
@@ -21,6 +24,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
     isOpen.value = true
     activeTab.value = 'comments'
     activeView.value = 'right'
+    isMaximized.value = false
   }
 
   function openUser(user: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -30,6 +34,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
     isOpen.value = true
     profileTab.value = 'home'
     activeView.value = 'right'
+    isMaximized.value = false
   }
 
   function openMusic() {
@@ -38,6 +43,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
     currentRightViewType.value = 'music'
     isOpen.value = true
     activeView.value = 'right'
+    isMaximized.value = false
   }
 
   function openNotifications() {
@@ -46,16 +52,26 @@ export const useSplitViewStore = defineStore('splitView', () => {
     currentRightViewType.value = 'notifications'
     isOpen.value = true
     activeView.value = 'right'
+    isMaximized.value = false
   }
 
   function close() {
     isOpen.value = false
     activeView.value = 'left'
     currentRightViewType.value = null
+    isMaximized.value = false
     setTimeout(() => {
       currentPost.value = null
       currentUser.value = null
     }, 300)
+  }
+
+  function toggleMaximize() {
+    isMaximized.value = !isMaximized.value
+  }
+
+  function triggerRefresh() {
+    refreshKey.value++
   }
 
   function setTab(tab: string) {
@@ -67,6 +83,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
   }
 
   function setRightPanelWidth(width: number) {
+    if (isMaximized.value) return
     rightPanelWidth.value = Math.max(20, Math.min(80, width))
   }
 
@@ -88,11 +105,15 @@ export const useSplitViewStore = defineStore('splitView', () => {
     isResizing,
     activeView,
     currentRightViewType,
+    isMaximized,
+    refreshKey,
     openPost,
     openUser,
     openMusic,
     openNotifications,
     close,
+    toggleMaximize,
+    triggerRefresh,
     setTab,
     setProfileTab,
     setRightPanelWidth,

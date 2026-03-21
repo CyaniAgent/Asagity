@@ -63,6 +63,26 @@ useEventListener('mousemove', (e: MouseEvent) => {
 useEventListener('mouseup', () => {
   splitViewStore.isResizing = false
 })
+
+function getSplitViewIcon(type: string | null) {
+  switch (type) {
+    case 'post': return 'i-lucide-scroll-text'
+    case 'user': return 'i-lucide-user'
+    case 'music': return 'i-lucide-music'
+    case 'notifications': return 'i-lucide-bell'
+    default: return 'i-lucide-layout-panel-right'
+  }
+}
+
+function getSplitViewTitle(type: string | null) {
+  switch (type) {
+    case 'post': return '帖子详情'
+    case 'user': return '用户主页'
+    case 'music': return '音乐播放器'
+    case 'notifications': return '通知中心'
+    default: return '未知视图'
+  }
+}
 </script>
 
 <template>
@@ -77,22 +97,52 @@ useEventListener('mouseup', () => {
       </div>
 
       <!-- 中间 导航 -->
-      <div class="flex-1 px-4 py-4 overflow-y-auto">
-        <UNavigationMenu
-          :items="navigation"
-          orientation="vertical"
-          class="w-full"
-        />
+      <nav class="flex-1 px-3 py-2 overflow-y-auto custom-scrollbar flex flex-col gap-3">
+        <div v-for="(group, gIdx) in navigation" :key="gIdx" class="flex flex-col gap-0.5">
+          <NuxtLink v-for="item in group" :key="item.to" :to="item.to"
+            class="flex items-center gap-4 px-4 py-2.5 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-gray-700 dark:text-gray-300 font-bold group/nav"
+            active-class="bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
+            <UIcon :name="item.icon"
+              class="w-[22px] h-[22px] opacity-70 group-hover/nav:opacity-100 transition-opacity" />
+            <span class="text-[15px] tracking-wide">{{ item.label }}</span>
+          </NuxtLink>
+          <div v-if="gIdx < navigation.length - 1" class="h-px bg-gray-200 dark:bg-white/10 my-2.5 mx-3" />
+        </div>
+      </nav>
+
+      <!-- 底部：拆分视图管理 (Split View Task Manager) -->
+      <div v-if="splitViewStore.isOpen" class="px-4 pb-2 shrink-0 animate-[fade-in_0.3s_ease-out]">
+        <div
+          class="text-[10px] font-black text-gray-400 dark:text-gray-500 mb-2 px-1 uppercase tracking-widest flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
+          Active Display
+        </div>
+        <div
+          class="bg-gray-100 dark:bg-gray-800/80 rounded-[20px] p-3 border border-gray-200 dark:border-white/5 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between group cursor-pointer backdrop-blur-md">
+          <div class="flex items-center gap-3 overflow-hidden">
+            <div
+              class="w-8 h-8 rounded-full bg-white dark:bg-white/10 flex items-center justify-center shrink-0 shadow-sm">
+              <UIcon :name="getSplitViewIcon(splitViewStore.currentRightViewType)"
+                class="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+            </div>
+            <div class="flex flex-col overflow-hidden">
+              <span class="text-sm font-bold text-gray-900 dark:text-white truncate">
+                {{ getSplitViewTitle(splitViewStore.currentRightViewType) }}
+              </span>
+              <span class="text-[10px] items-center gap-1 font-semibold text-cyan-600 dark:text-cyan-400/80">
+                Split View
+              </span>
+            </div>
+          </div>
+          <UButton icon="i-lucide-x" color="neutral" variant="ghost"
+            class="rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 hover:text-red-500"
+            @click.stop="splitViewStore.close()" />
+        </div>
       </div>
 
-      <!-- 底部 发布按钮 -->
       <div class="p-4 shrink-0">
-        <UButton
-          label="发布 (Publish)"
-          color="primary"
-          size="xl"
-          class="w-full justify-center rounded-full shadow-[0_0_15px_rgba(57,197,187,0.5)] transition-all hover:scale-105 hover:shadow-[0_0_25px_rgba(57,197,187,0.8)] font-bold text-base bg-gradient-to-r from-cyan-500 to-primary-600"
-        />
+        <UButton icon="i-lucide-send" label="发布" color="primary" size="xl"
+          class="w-full justify-center rounded-full shadow-[0_0_15px_rgba(57,197,187,0.5)] transition-all hover:scale-105 hover:shadow-[0_0_25px_rgba(57,197,187,0.8)] font-bold text-base bg-gradient-to-r from-cyan-500 to-primary-600" />
       </div>
     </aside>
 
@@ -103,42 +153,25 @@ useEventListener('mouseup', () => {
         <!-- 左/中：子导航栏 (context-aware) -->
         <div class="flex items-center">
           <!-- Timeline tabs (left view active or split closed) -->
-          <UNavigationMenu
-            v-if="!splitViewStore.isOpen || splitViewStore.activeView === 'left'"
-            :items="tabs"
-            class="w-full"
-          />
+          <UNavigationMenu v-if="!splitViewStore.isOpen || splitViewStore.activeView === 'left'" :items="tabs"
+            class="w-full" />
           <!-- Profile tabs (right view active, showing user) -->
-          <div
-            v-else-if="splitViewStore.activeView === 'right' && splitViewStore.currentRightViewType === 'user'"
-            class="flex items-center"
-          >
+          <div v-else-if="splitViewStore.activeView === 'right' && splitViewStore.currentRightViewType === 'user'"
+            class="flex items-center">
             <div class="flex">
-              <button
-                v-for="tab in profileTabs[0]"
-                :key="tab.slot"
-                :class="[
-                  splitViewStore.profileTab === tab.slot
-                    ? 'border-cyan-500 text-cyan-600 dark:text-cyan-400 font-semibold border-b-2'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 border-b-2',
-                  'flex items-center gap-1.5 whitespace-nowrap py-1.5 px-3 text-sm transition-all duration-200'
-                ]"
-                @click="splitViewStore.setProfileTab(tab.slot)"
-              >
-                <UIcon
-                  :name="tab.icon"
-                  class="w-4 h-4"
-                />
+              <button v-for="tab in profileTabs[0]" :key="tab.slot" :class="[
+                splitViewStore.profileTab === tab.slot
+                  ? 'border-cyan-500 text-cyan-600 dark:text-cyan-400 font-semibold border-b-2'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 border-b-2',
+                'flex items-center gap-1.5 whitespace-nowrap py-1.5 px-3 text-sm transition-all duration-200'
+              ]" @click="splitViewStore.setProfileTab(tab.slot)">
+                <UIcon :name="tab.icon" class="w-4 h-4" />
                 {{ tab.label }}
               </button>
             </div>
           </div>
           <!-- Post detail tabs (right view active, showing post) -->
-          <UNavigationMenu
-            v-else
-            :items="tabs"
-            class="w-full"
-          />
+          <UNavigationMenu v-else :items="tabs" class="w-full" />
         </div>
 
         <!-- 右侧：小组件 -->
@@ -146,112 +179,97 @@ useEventListener('mouseup', () => {
           <!-- 音乐播放器组件 (联动 musicStore) -->
           <div
             class="flex items-center gap-2 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-full pr-2 pl-1 py-1 border border-white/20 dark:border-gray-700/50 shadow-sm transition-all hover:scale-105 cursor-pointer group"
-            @click="splitViewStore.openMusic()"
-          >
-            <img
-              :src="musicStore.currentTrack.albumArt"
+            @click="splitViewStore.openMusic()">
+            <img :src="musicStore.currentTrack.albumArt"
               class="w-6 h-6 rounded-full object-cover shrink-0 shadow-sm transition-transform duration-700"
-              :class="musicStore.isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''"
-              alt="Art"
-            >
+              :class="musicStore.isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''" alt="Art">
             <div class="w-24 overflow-hidden mask-image:linear-gradient(to_right,white_80%,transparent)">
-              <div
-                class="text-xs font-bold whitespace-nowrap inline-block text-gray-800 dark:text-gray-100"
-                :class="musicStore.isPlaying ? 'animate-[marquee_10s_linear_infinite]' : ''"
-              >
+              <div class="text-xs font-bold whitespace-nowrap inline-block text-gray-800 dark:text-gray-100"
+                :class="musicStore.isPlaying ? 'animate-[marquee_10s_linear_infinite]' : ''">
                 {{ musicStore.currentTrack.title }}
               </div>
             </div>
-            <UButton
-              :icon="musicStore.isPlaying ? 'i-lucide-pause' : 'i-lucide-play'"
-              color="neutral"
-              variant="ghost"
-              size="xs"
-              class="rounded-full hover:bg-cyan-500/20"
-              @click.stop="musicStore.togglePlay()"
-            />
+            <UButton :icon="musicStore.isPlaying ? 'i-lucide-pause' : 'i-lucide-play'" color="neutral" variant="ghost"
+              size="xs" class="rounded-full hover:bg-cyan-500/20" @click.stop="musicStore.togglePlay()" />
           </div>
 
           <!-- 通知按钮 -->
-          <div class="relative flex items-center justify-center">
-            <UButton
-              icon="i-lucide-bell"
-              color="neutral"
-              variant="ghost"
-              @click="splitViewStore.openNotifications()"
-            />
-            <span class="absolute top-1 right-1 flex w-2 h-2">
+          <div class="relative flex items-center justify-center cursor-pointer"
+            @click="splitViewStore.openNotifications()">
+            <UButton icon="i-lucide-bell" color="neutral" variant="ghost" class="cursor-pointer" />
+            <span class="absolute top-1 right-1 flex w-2 h-2 pointer-events-none">
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
               <span class="relative inline-flex rounded-full w-2 h-2 bg-red-500" />
             </span>
           </div>
 
           <!-- 用户头像 -->
-          <UAvatar
-            src="https://avatars.githubusercontent.com/u/739984?v=4"
-            alt="Avatar"
-            size="sm"
-            class="ring-2 ring-cyan-500/50 cursor-pointer hover:ring-cyan-500 transition-all"
-          />
+          <UAvatar src="https://avatars.githubusercontent.com/u/739984?v=4" alt="Avatar" size="sm"
+            class="ring-2 ring-cyan-500/50 cursor-pointer hover:ring-cyan-500 transition-all" />
         </div>
       </header>
 
       <!-- 下半部分：双栏显示区域 (True Split View 架构) -->
       <div class="flex-1 overflow-hidden p-4 pt-0">
-        <div
-          ref="containerRef"
-          class="relative h-full w-full flex gap-1.5 overflow-hidden"
-        >
+        <div ref="containerRef" class="relative h-full w-full flex gap-1.5 overflow-hidden">
           <!-- 左侧：主视图容器 -->
-          <div
-            class="h-full bg-white dark:bg-gray-900 rounded-[30px] border overflow-hidden cursor-default"
-            :class="[
-              splitViewStore.isResizing ? '' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
-              splitViewStore.isOpen && splitViewStore.activeView === 'left'
-                ? 'border-cyan-400/60 shadow-[0_0_0_2px_rgba(34,211,238,0.15),0_4px_20px_rgba(0,0,0,0.03)]'
-                : 'border-gray-200/50 dark:border-gray-800/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)]'
-            ]"
-            :style="{
-              width: splitViewStore.isOpen ? `${100 - splitViewStore.rightPanelWidth}%` : '100%',
-              transform: splitViewStore.isOpen ? 'translateX(-8px)' : 'translateX(0)'
-            }"
-            @pointerdown="splitViewStore.focusLeft()"
-          >
+          <div class="h-full bg-white dark:bg-gray-900 rounded-[30px] border overflow-hidden cursor-default" :class="[
+            splitViewStore.isResizing ? '' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
+            splitViewStore.isOpen && splitViewStore.activeView === 'left'
+              ? 'border-cyan-400/60 shadow-[0_0_0_2px_rgba(34,211,238,0.15),0_4px_20px_rgba(0,0,0,0.03)]'
+              : 'border-gray-200/50 dark:border-gray-800/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)]'
+          ]" :style="{
+            width: splitViewStore.isMaximized ? '0%' : (splitViewStore.isOpen ? `${100 - splitViewStore.rightPanelWidth}%` : '100%'),
+            transform: splitViewStore.isMaximized ? 'translateX(-100%)' : (splitViewStore.isOpen ? 'translateX(-8px)' : 'translateX(0)'),
+            opacity: splitViewStore.isMaximized ? '0' : '1',
+            pointerEvents: splitViewStore.isMaximized ? 'none' : 'auto'
+          }" @pointerdown="splitViewStore.focusLeft()">
             <div class="h-full overflow-y-auto p-6 lg:p-10 custom-scrollbar">
               <slot />
             </div>
           </div>
 
           <!-- 可调节缝隙 (Divider) -->
-          <div
-            v-if="splitViewStore.isOpen"
+          <div v-if="splitViewStore.isOpen && !splitViewStore.isMaximized"
             class="w-1.5 h-full cursor-col-resize hover:bg-cyan-500/20 active:bg-cyan-500/40 transition-colors z-30 shrink-0 rounded-full"
-            @mousedown="startResizing"
-          />
+            @mousedown="startResizing" />
 
           <!-- 右侧：详情面板容器 -->
-          <div
-            class="h-full overflow-hidden"
-            :class="[
-              splitViewStore.isResizing ? '' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
-              splitViewStore.isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-            ]"
-            :style="{ width: splitViewStore.isOpen ? `${splitViewStore.rightPanelWidth}%` : '0px' }"
-            @pointerdown="splitViewStore.focusRight()"
-          >
-            <div
-              class="h-full bg-white dark:bg-gray-900 rounded-[30px] border overflow-hidden"
-              :class="[
-                splitViewStore.activeView === 'right'
-                  ? 'border-cyan-400/60 shadow-[0_0_0_2px_rgba(34,211,238,0.15),0_4px_20px_rgba(0,0,0,0.03)]'
-                  : 'border-gray-200/50 dark:border-gray-800/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)]'
-              ]"
-            >
+          <div class="h-full overflow-hidden" :class="[
+            splitViewStore.isResizing ? '' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
+            splitViewStore.isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          ]"
+            :style="{ width: splitViewStore.isMaximized ? '100%' : (splitViewStore.isOpen ? `${splitViewStore.rightPanelWidth}%` : '0px') }"
+            @pointerdown="splitViewStore.focusRight()">
+            <div class="h-full bg-white dark:bg-gray-900 rounded-[30px] border overflow-hidden flex flex-col" :class="[
+              splitViewStore.activeView === 'right'
+                ? 'border-cyan-400/60 shadow-[0_0_0_2px_rgba(34,211,238,0.15),0_4px_20px_rgba(0,0,0,0.03)]'
+                : 'border-gray-200/50 dark:border-gray-800/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)]'
+            ]">
+              <!-- Split View Header Controls -->
+              <div v-if="splitViewStore.currentRightViewType !== 'music'"
+                class="px-4 py-2 flex justify-end items-center gap-1 border-b border-gray-100 dark:border-gray-800 shrink-0">
+                <UButton icon="i-lucide-rotate-cw" color="neutral" variant="ghost" size="xs"
+                  class="rounded-full text-gray-400 hover:text-cyan-500" @click="splitViewStore.triggerRefresh()" />
+                <UButton :icon="splitViewStore.isMaximized ? 'i-lucide-minimize-2' : 'i-lucide-maximize-2'"
+                  color="neutral" variant="ghost" size="xs" class="rounded-full text-gray-400 hover:text-cyan-500"
+                  @click="splitViewStore.toggleMaximize()" />
+                <div class="w-px h-3 bg-gray-200 dark:bg-gray-800 mx-1" />
+                <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="xs"
+                  class="rounded-full text-gray-400 hover:text-red-500" @click="splitViewStore.close()" />
+              </div>
+
               <!-- Route to correct component based on content type -->
-              <AppUserProfile v-if="splitViewStore.currentRightViewType === 'user' && splitViewStore.isOpen" />
-              <AppPostDetail v-else-if="splitViewStore.currentRightViewType === 'post' && splitViewStore.isOpen" />
-              <AppMusicPlayer v-else-if="splitViewStore.currentRightViewType === 'music' && splitViewStore.isOpen" />
-              <AppNotifications v-else-if="splitViewStore.currentRightViewType === 'notifications' && splitViewStore.isOpen" />
+              <div class="flex-1 overflow-hidden">
+                <AppUserProfile v-if="splitViewStore.currentRightViewType === 'user' && splitViewStore.isOpen"
+                  :key="`user-${splitViewStore.refreshKey}`" />
+                <AppPostDetail v-else-if="splitViewStore.currentRightViewType === 'post' && splitViewStore.isOpen"
+                  :key="`post-${splitViewStore.refreshKey}`" />
+                <AppMusicPlayer v-else-if="splitViewStore.currentRightViewType === 'music' && splitViewStore.isOpen" />
+                <AppNotifications
+                  v-else-if="splitViewStore.currentRightViewType === 'notifications' && splitViewStore.isOpen"
+                  :key="`notif-${splitViewStore.refreshKey}`" />
+              </div>
             </div>
           </div>
         </div>
