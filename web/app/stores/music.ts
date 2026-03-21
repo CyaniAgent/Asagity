@@ -10,6 +10,12 @@ export interface Track {
   albumArt: string
   duration: number // in seconds
   url: string
+  bitrate?: number
+  sampleRate?: number
+  container?: string
+  codec?: string
+  year?: number
+  album?: string
 }
 
 export interface LyricLine {
@@ -25,6 +31,16 @@ export const useMusicStore = defineStore('music', () => {
   const lyrics = ref<LyricLine[]>([])
   const currentLyricIndex = ref(-1)
   const isLoading = ref(false)
+
+  // New Playback States
+  const shuffle = ref(false)
+  const loopMode = ref<'none' | 'one' | 'all'>('none')
+  const playlist = ref<Track[]>([])
+  const currentIndex = ref(0)
+  
+  // UI States
+  const isLyricsWindowOpen = ref(false)
+  const isMusicInfoWindowOpen = ref(false)
 
   const currentTrack = ref<Track>({
     id: '1',
@@ -56,13 +72,39 @@ export const useMusicStore = defineStore('music', () => {
       isPlaying.value = false
     })
     audio.addEventListener('ended', () => {
-      isPlaying.value = false
+      playNext(true) // Trigger auto-next
     })
+  }
+
+  function seek(timeInSeconds: number) {
+    if (audio) {
+      audio.currentTime = timeInSeconds
+      progress.value = timeInSeconds
+      updateLyricIndex()
+    }
   }
 
   const progressPercentage = computed(() => {
     if (!currentTrack.value.duration) return 0
     return (progress.value / currentTrack.value.duration) * 100
+  })
+
+  const audioQuality = computed(() => {
+    const { container, bitrate } = currentTrack.value
+    if (!container) return 'Unknown'
+    
+    const c = container.toUpperCase()
+    const isLossless = ['FLAC', 'WAV', 'ALAC', 'AIFF', 'MONKEY\'S AUDIO'].includes(c)
+    if (isLossless) return 'Lossless'
+    
+    if (c === 'MPEG' || c === 'ADTS' || c === 'M4A' || c === 'MP4') {
+      if (!bitrate) return 'Unknown'
+      const kbps = bitrate / 1000
+      if (kbps <= 128) return 'MP3 Normal'
+      return 'MP3 HQ'
+    }
+    
+    return container
   })
 
   async function fetchMetadata(url: string) {
@@ -89,7 +131,13 @@ export const useMusicStore = defineStore('music', () => {
         artist: metadata.common.artist || 'Unknown Artist',
         albumArt,
         duration: metadata.format.duration || 0,
-        url
+        url,
+        bitrate: metadata.format.bitrate,
+        sampleRate: metadata.format.sampleRate,
+        container: metadata.format.container,
+        codec: metadata.format.codec,
+        year: metadata.common.year,
+        album: metadata.common.album
       }
 
       // Check for lyrics in metadata
@@ -171,6 +219,79 @@ export const useMusicStore = defineStore('music', () => {
     }
   }
 
+  // Playback Control Logic
+  function toggleShuffle() {
+    shuffle.value = !shuffle.value
+  }
+
+  function toggleLoopMode() {
+    const modes: ('none' | 'one' | 'all')[] = ['none', 'one', 'all']
+    const nextIdx = (modes.indexOf(loopMode.value) + 1) % modes.length
+    loopMode.value = modes[nextIdx] as ('none' | 'one' | 'all')
+  }
+
+  async function playNext(isAuto = false) {
+    if (loopMode.value === 'one' && isAuto) {
+      if (audio) {
+        audio.currentTime = 0
+        audio.play().catch(console.error)
+      }
+      return
+    }
+
+    if (playlist.value.length === 0) return
+
+    let nextIdx = currentIndex.value
+    if (shuffle.value) {
+      // Pick a random index that isn't the current one (if playlist > 1)
+      if (playlist.value.length > 1) {
+        do {
+          nextIdx = Math.floor(Math.random() * playlist.value.length)
+        } while (nextIdx === currentIndex.value)
+      }
+    } else {
+      nextIdx = currentIndex.value + 1
+      if (nextIdx >= playlist.value.length) {
+        if (loopMode.value === 'all') {
+          nextIdx = 0
+        } else {
+          // End of playlist
+          isPlaying.value = false
+          return
+        }
+      }
+    }
+
+    await setTrackByIndex(nextIdx)
+  }
+
+  async function playPrev() {
+    if (playlist.value.length === 0) return
+
+    let prevIdx = currentIndex.value - 1
+    if (prevIdx < 0) {
+      prevIdx = loopMode.value === 'all' ? playlist.value.length - 1 : 0
+    }
+
+    await setTrackByIndex(prevIdx)
+  }
+
+  async function setTrackByIndex(index: number) {
+    if (index < 0 || index >= playlist.value.length) return
+    currentIndex.value = index
+    const track = playlist.value[index]
+    if (!track) return
+    await fetchMetadata(track.url)
+    if (audio) {
+      audio.play().catch(console.error)
+    }
+  }
+
+  async function setPlaylist(tracks: Track[], startIndex = 0) {
+    playlist.value = tracks
+    await setTrackByIndex(startIndex)
+  }
+
   // Initial load
   if (import.meta.client) {
     fetchMetadata(currentTrack.value.url)
@@ -193,9 +314,23 @@ export const useMusicStore = defineStore('music', () => {
     currentLyricIndex,
     isLoading,
     progressPercentage,
+    shuffle,
+    loopMode,
+    playlist,
+    currentIndex,
+    isLyricsWindowOpen,
+    isMusicInfoWindowOpen,
+    audioQuality,
+    seek,
     togglePlay,
     setProgress,
     setVolume,
-    fetchMetadata
+    fetchMetadata,
+    toggleShuffle,
+    toggleLoopMode,
+    playNext,
+    playPrev,
+    setTrackByIndex,
+    setPlaylist
   }
 })

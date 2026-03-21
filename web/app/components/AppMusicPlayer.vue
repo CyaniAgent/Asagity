@@ -1,44 +1,16 @@
 <script setup lang="ts">
-import { ref, watch, computed, nextTick, onBeforeUpdate } from 'vue'
+import { computed } from 'vue'
 import { useMusicStore } from '~/stores/music'
 import { useSplitViewStore } from '~/stores/splitView'
+import MusicLyrics from '~/components/MusicLyrics.vue'
 
 const musicStore = useMusicStore()
 const splitViewStore = useSplitViewStore()
 
-const lyricsContainer = ref<HTMLElement | null>(null)
-const lyricLines = ref<HTMLElement[]>([])
-const isLyricsExpanded = ref(false)
-
-onBeforeUpdate(() => {
-  lyricLines.value = []
-})
-
-// Watch current lyric index to scroll to center (Spotify-style)
-watch(() => musicStore.currentLyricIndex, async (newIndex) => {
-  if (newIndex === -1 || !lyricsContainer.value) return
-
-  await nextTick()
-  const activeLine = lyricLines.value[newIndex]
-  if (activeLine) {
-    const container = lyricsContainer.value
-    const top = activeLine.offsetTop - (container.clientHeight / 2) + (activeLine.clientHeight / 2)
-    container.scrollTo({ top, behavior: 'smooth' })
-  }
-})
-
 // Dynamic theme color from album art (fallback to Miku Green)
 const activeColor = computed(() => {
-  // In a real app, we could extract the vibrant color from the image.
-  // For now, we'll pulse the Miku Green theme.
   return '#39C5BB'
 })
-
-function setLyricRef(el: Element | null, index: number) {
-  if (el) {
-    lyricLines.value[index] = el as HTMLElement
-  }
-}
 
 function formatTime(seconds: number) {
   const mins = Math.floor(seconds / 60)
@@ -166,10 +138,14 @@ function handleVolumeChange(e: Event) {
       <!-- Playback Controls -->
       <section class="w-full max-w-[360px] flex items-center justify-around mb-12">
         <UButton
-          icon="i-lucide-shuffle"
+          :icon="musicStore.shuffle ? 'i-lucide-shuffle' : 'i-lucide-shuffle'"
           variant="ghost"
-          color="neutral"
-          class="text-white/30 hover:text-white"
+          :color="musicStore.shuffle ? 'primary' : 'neutral'"
+          :class="[
+            'transition-all duration-300',
+            musicStore.shuffle ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(57,197,187,0.5)]' : 'text-white/30 hover:text-white'
+          ]"
+          @click="musicStore.toggleShuffle"
         />
 
         <div class="flex items-center gap-6">
@@ -178,7 +154,8 @@ function handleVolumeChange(e: Event) {
             variant="ghost"
             color="neutral"
             size="xl"
-            class="text-white hover:scale-110"
+            class="text-white hover:scale-110 active:scale-90"
+            @click="musicStore.playPrev"
           />
           <button
             class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-black shadow-xl hover:scale-105 active:scale-95 transition-all"
@@ -195,83 +172,29 @@ function handleVolumeChange(e: Event) {
             variant="ghost"
             color="neutral"
             size="xl"
-            class="text-white hover:scale-110"
+            class="text-white hover:scale-110 active:scale-90"
+            @click="musicStore.playNext(false)"
           />
         </div>
 
         <UButton
-          icon="i-lucide-repeat"
+          :icon="musicStore.loopMode === 'one' ? 'i-lucide-repeat-1' : 'i-lucide-repeat'"
           variant="ghost"
-          color="neutral"
-          class="text-white/30 hover:text-white"
+          :color="musicStore.loopMode !== 'none' ? 'primary' : 'neutral'"
+          :class="[
+            'transition-all duration-300',
+            musicStore.loopMode !== 'none' ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(57,197,187,0.5)]' : 'text-white/30 hover:text-white'
+          ]"
+          @click="musicStore.toggleLoopMode"
         />
       </section>
 
-      <!-- Advanced Lyrics Focus Mode -->
-      <section
-        class="w-full max-w-[380px] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
-        :class="isLyricsExpanded ? 'max-h-[800px]' : 'max-h-[400px]'"
-      >
-        <div class="bg-white/[0.03] border border-white/10 rounded-[40px] p-8 backdrop-blur-3xl relative overflow-hidden group/lyrics">
-          <div class="flex justify-between items-center mb-6">
-            <h3 class="flex items-center gap-2 text-[10px] font-black tracking-[0.3em] uppercase text-cyan-400">
-              <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-[0_0_8px_#39C5BB] animate-pulse" />
-              Immersion Lyrics
-            </h3>
-            <UButton
-              :icon="isLyricsExpanded ? 'i-lucide-minimize-2' : 'i-lucide-maximize-2'"
-              variant="ghost"
-              color="neutral"
-              class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white"
-              @click="isLyricsExpanded = !isLyricsExpanded"
-            />
-          </div>
-
-          <div
-            ref="lyricsContainer"
-            class="flex flex-col gap-6 overflow-y-auto max-h-[300px] transition-all duration-700 custom-scrollbar relative px-2"
-            :class="isLyricsExpanded ? 'max-h-[600px]' : 'max-h-[160px]'"
-          >
-            <div
-              v-if="musicStore.lyrics.length > 0"
-              class="space-y-4 pb-20"
-            >
-              <div
-                v-for="(line, index) in musicStore.lyrics"
-                :key="index"
-                :ref="(el: any) => setLyricRef(el, index)"
-                :class="[
-                  'transition-all duration-700 cursor-default px-4 py-3 rounded-2xl flex flex-col gap-1.5',
-                  musicStore.currentLyricIndex === index
-                    ? 'text-white translate-x-2 bg-white/[0.07] shadow-lg'
-                    : 'text-white/20 blur-[0.5px] hover:blur-0 hover:text-white/60'
-                ]"
-              >
-                <div
-                  v-for="(subLine, subIdx) in line.rawLines"
-                  :key="subIdx"
-                  :class="[
-                    'font-black leading-tight transition-colors duration-500',
-                    subIdx === 0 ? 'text-[18px] md:text-[21px]' : 'text-[14px] opacity-60 font-bold'
-                  ]"
-                  :style="musicStore.currentLyricIndex === index && subIdx === 0 ? { color: activeColor } : {}"
-                >
-                  {{ subLine }}
-                </div>
-              </div>
-            </div>
-            <div
-              v-else
-              class="h-40 flex items-center justify-center text-white/20 text-xs italic tracking-widest font-black uppercase"
-            >
-              No lyric signals detected
-            </div>
-          </div>
-
-          <!-- Bottom Fading -->
-          <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
-        </div>
-      </section>
+      <!-- Independent Lyrics Module -->
+      <MusicLyrics />
+      <!-- Global Misskey-Style Lyrics Window -->
+      <MusicLyricsWindow />
+      <!-- Audio Info Analysis Window -->
+      <MusicInfoWindow />
 
       <!-- Additional Toolbar -->
       <footer class="w-full max-w-[360px] flex items-center justify-center gap-10 mt-12 mb-6 opacity-40 hover:opacity-100 transition-opacity">
@@ -292,6 +215,7 @@ function handleVolumeChange(e: Event) {
           variant="ghost"
           color="neutral"
           size="sm"
+          @click="musicStore.isMusicInfoWindowOpen = true"
         />
       </footer>
     </div>
