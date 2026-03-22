@@ -36,49 +36,56 @@ function setPreviewRef(el: Element | null, index: number) {
 
 <template>
   <div class="music-lyrics-module w-full max-w-[540px] px-2">
-    <!-- Immersive Container (Zero Border) -->
     <div class="relative overflow-hidden group/lyrics">
       <!-- Minimal Floating Header -->
-      <div class="flex justify-between items-center mb-6 px-4">
-        <h3 class="flex items-center gap-2 text-[10px] font-black tracking-[0.4em] text-white/40 uppercase drop-shadow-md">
-          <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_10px_#39C5BB] animate-pulse" />
+      <div class="flex justify-between items-center mb-10 px-4">
+        <h3 class="flex items-center gap-2 text-[10px] font-black tracking-[0.4em] uppercase drop-shadow-md" :style="{ color: musicStore.textColor, opacity: 0.4 }">
+          <span class="w-1.5 h-1.5 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.3)] animate-pulse" :style="{ backgroundColor: musicStore.textColor }" />
           Immersion Lyrics
         </h3>
         <UButton
-          icon="i-lucide-picture-in-picture-2"
+          icon="i-material-symbols-picture-in-picture-alt"
           variant="ghost"
           color="neutral"
-          class="w-10 h-10 rounded-full hover:bg-white/10 text-white/40 hover:text-white transition-all active:scale-90"
+          class="w-10 h-10 rounded-full hover:bg-white/10 transition-all active:scale-90"
+          :style="{ color: musicStore.textColor, opacity: 0.4 }"
           @click.stop="musicStore.isLyricsWindowOpen = true"
         />
       </div>
 
-      <!-- Immersive Spotify-Style Lyrics List -->
+      <!-- Immersive Scrolling List with 3-Line Focus -->
       <div
         ref="previewContainer"
-        class="flex flex-col gap-6 overflow-hidden pointer-events-none max-h-[420px] relative px-4 mask-fade-v"
+        class="flex flex-col overflow-hidden pointer-events-none min-h-[320px] max-h-[320px] relative px-4 mask-fade-v scroll-smooth"
       >
-        <div v-if="musicStore.lyrics.length > 0" class="space-y-6 pb-40 pt-10">
+        <div v-if="musicStore.lyrics.length > 0" class="flex flex-col gap-4 py-32">
           <div
             v-for="(line, index) in musicStore.lyrics"
             :key="index"
             :ref="(el: any) => setPreviewRef(el, index)"
+            class="transition-all duration-700 flex flex-col items-center transform-gpu will-change-all"
             :class="[
-              'transition-all duration-700 flex flex-col gap-2 transform-gpu will-change-transform',
-              musicStore.currentLyricIndex === index
-                ? 'opacity-100 scale-105 translate-x-1'
-                : 'opacity-25 blur-[2.5px] scale-95'
+              index === musicStore.currentLyricIndex
+                ? 'opacity-100 scale-110 font-extrabold translate-y-0' 
+                : Math.abs(index - musicStore.currentLyricIndex) === 1
+                ? 'opacity-20 scale-90 blur-[1.5px] font-bold'
+                : 'opacity-0 scale-75 blur-md pointer-events-none'
             ]"
           >
-            <div
-              v-for="(subLine, subIdx) in line.rawLines"
-              :key="subIdx"
-              :class="[
-                'font-black leading-tight text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] antialiased',
-                subIdx === 0 ? 'text-[24px] md:text-[28px] tracking-tight' : 'text-[14px] md:text-[16px] opacity-70 font-bold'
-              ]"
-            >
-              {{ subLine }}
+            <div class="flex flex-col items-center w-full text-center py-2">
+              <div
+                v-for="(subLine, subIdx) in line.rawLines"
+                :key="subIdx"
+                :class="[
+                  'leading-tight drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] antialiased transition-all duration-700 font-black',
+                  index === musicStore.currentLyricIndex
+                    ? (subIdx === 0 ? 'text-[28px] md:text-[34px] tracking-tight' : 'text-[16px] md:text-[18px] opacity-80 mt-2') 
+                    : (subIdx === 0 ? 'text-[20px] md:text-[24px] tracking-normal' : 'text-[12px] md:text-[14px] opacity-40 mt-1')
+                ]"
+                :style="{ color: musicStore.textColor }"
+              >
+                {{ subLine }}
+              </div>
             </div>
           </div>
         </div>
@@ -98,18 +105,22 @@ function setPreviewRef(el: Element | null, index: number) {
   mask-image: linear-gradient(
     to bottom,
     transparent 0%,
-    black 15%,
-    black 85%,
+    black 30%,
+    black 70%,
     transparent 100%
   );
 }
 
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
+.will-change-all {
+  will-change: transform, opacity, filter;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+/* Hide scrollbar but keep scroll functionality */
+.previewContainer {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.previewContainer::-webkit-scrollbar {
+  display: none;
 }
 </style>

@@ -28,7 +28,7 @@ const instanceStore = useInstanceStore()
           >
           <UIcon
             v-else
-            name="i-lucide-zap"
+            name="i-material-symbols-bolt"
             class="w-16 h-16 text-white"
           />
         </div>
@@ -40,7 +40,7 @@ const instanceStore = useInstanceStore()
       </h1>
       <div class="inline-flex items-center gap-2 bg-black/5 dark:bg-white/5 px-4 py-1.5 rounded-full mb-8 border border-white/20 dark:border-white/5">
         <UIcon
-          name="i-lucide-at-sign"
+          name="i-material-symbols-alternate-email"
           class="w-4 h-4 text-cyan-500"
         />
         <span class="text-sm font-bold text-gray-600 dark:text-gray-400 tracking-wider">

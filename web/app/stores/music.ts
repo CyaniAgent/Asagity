@@ -35,20 +35,30 @@ export const useMusicStore = defineStore('music', () => {
   // New Playback States
   const shuffle = ref(false)
   const loopMode = ref<'none' | 'one' | 'all'>('none')
-  const playlist = ref<Track[]>([])
+  
+  const defaultPlaylist: Track[] = [
+    { id: 'track-0', title: 'MusicTest0', artist: 'Local Track', albumArt: '', duration: 0, url: '/sounds/MusicTest0.mp3' },
+    { id: 'track-1', title: 'MusicTest1', artist: 'Local Track', albumArt: '', duration: 0, url: '/sounds/MusicTest1.mp3' },
+    { id: 'track-2', title: 'MusicTest2', artist: 'Local Track', albumArt: '', duration: 0, url: '/sounds/MusicTest2.mp3' }
+  ]
+  
+  const playlist = ref<Track[]>(defaultPlaylist)
   const currentIndex = ref(0)
 
   // UI States
   const isLyricsWindowOpen = ref(false)
   const isMusicInfoWindowOpen = ref(false)
+  const isPlaylistWindowOpen = ref(false)
+  const themeColor = ref('#39C5BB')
+  const textColor = ref('#FFFFFF')
 
   const currentTrack = ref<Track>({
-    id: '1',
+    id: 'loading',
     title: 'Loading...',
     artist: 'Loading...',
     albumArt: 'https://images.microcms-assets.io/assets/2665b63c437a44f4a35048d2eb4b7b3b/0cc8e4b8a9f34a41b7cc1d83049b4c05/tell-your-world.jpg',
     duration: 0,
-    url: '/sounds/MusicTest.mp3'
+    url: '/sounds/MusicTest0.mp3' // Default to first track
   })
 
   // HTML5 Audio handle (Client-side only)
@@ -140,6 +150,11 @@ export const useMusicStore = defineStore('music', () => {
         album: metadata.common.album
       }
 
+      // Extract colors from cover
+      if (import.meta.client) {
+        await extractColor(albumArt)
+      }
+
       // Check for lyrics in metadata
       if (metadata.common.lyrics && metadata.common.lyrics.length > 0) {
         const lyric = metadata.common.lyrics[0]
@@ -217,6 +232,52 @@ export const useMusicStore = defineStore('music', () => {
     if (audio) {
       audio.volume = value / 100
     }
+  }
+
+  async function extractColor(imageSrc: string) {
+    if (!import.meta.client) return
+
+    return new Promise<void>((resolve) => {
+      const img = new Image()
+      // For blobs or same-origin, this is fine
+      img.src = imageSrc
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return resolve()
+
+        // Downsample to get average color
+        canvas.width = 10
+        canvas.height = 10
+        ctx.drawImage(img, 0, 0, 10, 10)
+
+        const data = ctx.getImageData(0, 0, 10, 10).data
+        let r = 0, g = 0, b = 0
+
+        for (let i = 0; i < data.length; i += 4) {
+          r += data[i] ?? 0
+          g += (data[i + 1] ?? 0)
+          b += (data[i + 2] ?? 0)
+        }
+
+        const count = data.length / 4
+        r = Math.floor(r / count)
+        g = Math.floor(g / count)
+        b = Math.floor(b / count)
+
+        themeColor.value = `rgb(${r}, ${g}, ${b})`
+
+        // Relative luminance: 0.2126*R + 0.7152*G + 0.0722*B
+        const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b)
+        // If brightness > 140, use black text for better contrast
+        textColor.value = luminance > 140 ? '#000000' : '#FFFFFF'
+
+        resolve()
+      }
+
+      img.onerror = () => resolve()
+    })
   }
 
   // Playback Control Logic
@@ -320,6 +381,10 @@ export const useMusicStore = defineStore('music', () => {
     currentIndex,
     isLyricsWindowOpen,
     isMusicInfoWindowOpen,
+    isPlaylistWindowOpen,
+    themeColor,
+
+    textColor,
     audioQuality,
     seek,
     togglePlay,

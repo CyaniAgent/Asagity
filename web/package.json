@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "@iconify-json/ic": "^1.2.4",
+    "@iconify-json/material-symbols": "^1.2.63",
     "@nuxt/eslint": "^1.15.2",
     "@types/node": "^25.5.0",
     "eslint": "^10.0.3",

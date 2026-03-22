@@ -60,83 +60,65 @@ function handleLyricClick(timestamp: number) {
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition name="window-pop">
-      <div
-        v-if="musicStore.isLyricsWindowOpen"
-        :style="style"
-        class="fixed z-[9999] w-[450px] h-[650px] flex flex-col bg-[#121212]/95 backdrop-blur-3xl border border-white/5 rounded-[32px] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.8)] resizable"
-      >
-        <!-- Immersive Background for Window -->
-        <div class="absolute inset-0 z-0 opacity-40 pointer-events-none">
-          <img :src="musicStore.currentTrack.albumArt" class="w-full h-full object-cover blur-[80px]" alt="">
-          <div class="absolute inset-0 bg-black/60" />
-        </div>
-
-        <!-- Draggable Content (Relative to ensure visibility over backdrop) -->
-        <div class="relative z-10 flex flex-col h-full bg-transparent">
-          <!-- Draggable Header -->
-          <div
-            ref="handleRef"
-            class="h-16 flex items-center justify-between px-6 cursor-move touch-none border-b border-white/5"
-          >
-            <div class="flex items-center gap-3">
-              <UIcon name="i-lucide-baseline" class="w-4 h-4 text-cyan-500" />
-              <div class="flex flex-col">
-                <span class="text-[10px] font-black tracking-[0.2em] text-white/60 select-none uppercase">Lyrics Universe</span>
-                <span class="text-[9px] font-bold text-cyan-500/80 truncate max-w-[200px]">{{ musicStore.currentTrack.title }}</span>
-              </div>
-            </div>
-            <UButton
-              icon="i-lucide-x"
-              variant="ghost"
-              color="neutral"
-              class="w-8 h-8 rounded-full hover:bg-white/10 text-white/40 hover:text-white transition-colors"
-              @click.stop="musicStore.isLyricsWindowOpen = false"
-            />
-          </div>
-
-          <!-- Lyrics List (Spotify Focus Blur Style) -->
-          <div
-            ref="lyricsContainer"
-            class="flex-1 overflow-y-auto custom-scrollbar px-8 py-10 mask-fade-v"
-          >
-            <div v-if="musicStore.lyrics.length > 0" class="flex flex-col gap-6 pb-40">
-              <div
-                v-for="(line, index) in musicStore.lyrics"
-                :key="index"
-                :ref="(el: any) => setLyricRef(el, index)"
-                class="transition-all duration-700 cursor-pointer flex flex-col gap-2 transform-gpu will-change-transform"
-                :class="[
-                  musicStore.currentLyricIndex === index
-                    ? 'opacity-100 scale-105 translate-x-2'
-                    : 'opacity-20 blur-[2.5px] scale-95'
-                ]"
-                @click="handleLyricClick(line.timestamp)"
-              >
-                <div
-                  v-for="(subLine, subIdx) in line.rawLines"
-                  :key="subIdx"
-                  :class="[
-                    'font-black text-white drop-shadow-2xl antialiased',
-                    subIdx === 0 ? 'text-[26px] md:text-[30px] leading-tight tracking-tight' : 'text-[16px] md:text-[18px] opacity-60 mt-1 font-bold'
-                  ]"
-                >
-                  {{ subLine }}
-                </div>
-              </div>
-            </div>
-            <div v-else class="h-full flex items-center justify-center text-white/10 italic font-black tracking-[0.3em]">
-              No lyrical data
-            </div>
-          </div>
-        </div>
-
-        <!-- Fading overlay for bottom -->
-        <div class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 to-transparent pointer-events-none rounded-b-[32px] z-20" />
+  <AppFreeWindow
+    id="lyrics"
+    v-model="musicStore.isLyricsWindowOpen"
+    title="Lyrics Window"
+    icon="i-material-symbols-format-color-text"
+    :initial-width="400"
+    :initial-height="600"
+  >
+    <!-- Track Info -->
+    <div class="p-6 pb-2 shrink-0 flex items-center gap-4 bg-gradient-to-b from-black/20 to-transparent">
+      <img :src="musicStore.currentTrack.albumArt" class="w-14 h-14 rounded-2xl object-cover shadow-lg" alt="">
+      <div class="flex flex-col overflow-hidden">
+        <h2 class="text-lg font-black truncate">{{ musicStore.currentTrack.title }}</h2>
+        <p class="text-[12px] font-bold truncate opacity-60">{{ musicStore.currentTrack.artist || 'Unknown Artist' }}</p>
       </div>
-    </Transition>
-  </Teleport>
+    </div>
+
+    <!-- Lyrics List with Click-to-Seek -->
+    <div
+      ref="lyricsContainer"
+      class="flex-1 overflow-y-auto custom-scrollbar px-10 pb-20 pt-4"
+    >
+      <div v-if="musicStore.lyrics.length > 0" class="flex flex-col gap-4">
+        <div
+          v-for="(line, index) in musicStore.lyrics"
+          :key="index"
+          :ref="(el: any) => setLyricRef(el, index)"
+          class="transition-all duration-500 cursor-pointer py-1 group relative origin-left"
+          :class="[
+            musicStore.currentLyricIndex === index
+              ? 'scale-[1.15] opacity-100 font-extrabold'
+              : 'opacity-40 hover:opacity-80 scale-100'
+          ]"
+          @click="handleLyricClick(line.timestamp)"
+        >
+          <div
+            v-for="(subLine, subIdx) in line.rawLines"
+            :key="subIdx"
+            :class="[
+              'transition-colors duration-300',
+              subIdx === 0 ? 'text-2xl' : 'text-sm opacity-60 mt-1'
+            ]"
+          >
+            {{ subLine }}
+          </div>
+          <!-- Click Indicator (Hover) -->
+          <div class="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            <UIcon name="i-material-symbols-play-arrow" class="w-4 h-4 opacity-50" />
+          </div>
+        </div>
+      </div>
+      <div v-else class="h-full flex items-center justify-center opacity-20 italic font-black uppercase tracking-[0.3em]">
+        No lyrical data
+      </div>
+    </div>
+    
+    <!-- Fading overlay for bottom -->
+    <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/40 to-transparent pointer-events-none rounded-b-[32px]" />
+  </AppFreeWindow>
 </template>
 
 <style scoped>

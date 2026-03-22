@@ -64,14 +64,14 @@ const mockPosts = [
         <div class="flex justify-between items-center mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
           <div class="flex gap-1 text-cyan-500">
             <UButton
-              icon="i-lucide-image"
+              icon="i-material-symbols-image"
               color="neutral"
               variant="ghost"
               size="sm"
               class="hover:bg-cyan-50 dark:hover:bg-cyan-900/30 rounded-full"
             />
             <UButton
-              icon="i-lucide-smile"
+              icon="i-material-symbols-sentiment-satisfied"
               color="neutral"
               variant="ghost"
               size="sm"

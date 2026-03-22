@@ -1,42 +1,68 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useEventListener } from '@vueuse/core'
+import { useRoute } from 'vue-router'
 import { useInstanceStore } from '~/stores/instance'
 import { useSplitViewStore } from '~/stores/splitView'
 import { useMusicStore } from '~/stores/music'
 
+const route = useRoute()
+
 const navigation = [
   [
-    { label: '时间线', icon: 'i-lucide-home', to: '/' },
-    { label: '话题', icon: 'i-lucide-hash', to: '/topic' },
-    { label: '云盘', icon: 'i-lucide-cloud', to: '/drive' }
+    { label: '时间线', icon: 'i-material-symbols-home', to: '/' },
+    { label: '话题', icon: 'i-material-symbols-tag', to: '/topic' },
+    { label: '云盘', icon: 'i-material-symbols-cloud', to: '/drive' }
   ],
   [
-    { label: '聊天', icon: 'i-lucide-message-square', to: '/chat' },
-    { label: '公告', icon: 'i-lucide-megaphone', to: '/announcement' },
-    { label: '社团', icon: 'i-lucide-users', to: '/orgs' }
+    { label: '聊天', icon: 'i-material-symbols-chat', to: '/chat' },
+    { label: '公告', icon: 'i-material-symbols-campaign', to: '/announcement' },
+    { label: '社团', icon: 'i-material-symbols-group', to: '/orgs' }
   ],
   [
-    { label: '设置', icon: 'i-lucide-settings', to: '/settings' },
-    { label: '更多', icon: 'i-lucide-more-horizontal', to: '/more' },
-    { label: '控制台', icon: 'i-lucide-terminal', to: '/panel' }
+    { label: '设置', icon: 'i-material-symbols-settings', to: '/settings' },
+    { label: '更多', icon: 'i-material-symbols-more-horiz', to: '/more' },
+    { label: '控制台', icon: 'i-material-symbols-terminal', to: '/panel' }
   ]
 ]
 
-const tabs = [
+// Timeline Top Tabs
+const timelineTabs = [
   [
-    { label: '动态', icon: 'i-ic-sharp-public', to: '/', exact: true },
-    { label: '已关注', icon: 'i-ic-baseline-person-outline', to: '/followed' },
-    { label: '仅本实例', icon: 'i-lucide-server', to: '/local' }
+    { label: '动态', icon: 'i-material-symbols-public', to: '/', exact: true },
+    { label: '已关注', icon: 'i-material-symbols-person', to: '/followed' },
+    { label: '仅本实例', icon: 'i-material-symbols-dns', to: '/local' }
   ]
 ]
+
+// Settings Top Tabs
+const settingsTabs = [
+  [
+    { label: '本用户', icon: 'i-material-symbols-person', to: '/settings/profile' },
+    { label: 'Skyline 云盘', icon: 'i-material-symbols-cloud', to: '/settings/drive' },
+    { label: '安全与隐私', icon: 'i-material-symbols-gpp-maybe', to: '/settings/security' },
+    { label: '通知', icon: 'i-material-symbols-notifications', to: '/settings/notifications' },
+    { label: '主题与显示', icon: 'i-material-symbols-palette', to: '/settings/theme' },
+    { label: '声音', icon: 'i-material-symbols-volume-up', to: '/settings/sound' },
+    { label: '插件', icon: 'i-material-symbols-extension', to: '/settings/plugins' },
+    { label: '三方连接', icon: 'i-material-symbols-link', to: '/settings/connections' },
+    { label: '其他', icon: 'i-material-symbols-more-horiz', to: '/settings/other' }
+  ]
+]
+
+// Determine which tabs to show based on the active route
+const currentHeaderTabs = computed(() => {
+  if (route.path.startsWith('/settings')) {
+    return settingsTabs
+  }
+  return timelineTabs
+})
 
 const profileTabs = [
   [
-    { label: '首页', icon: 'i-lucide-house', slot: 'home' },
-    { label: '动态', icon: 'i-lucide-scroll-text', slot: 'posts' },
-    { label: '文件', icon: 'i-lucide-folder', slot: 'files' },
-    { label: 'Raw 数据', icon: 'i-lucide-code', slot: 'raw' }
+    { label: '首页', icon: 'i-material-symbols-home', slot: 'home' },
+    { label: '动态', icon: 'i-material-symbols-article', slot: 'posts' },
+    { label: '文件', icon: 'i-material-symbols-folder', slot: 'files' },
+    { label: 'Raw 数据', icon: 'i-material-symbols-code', slot: 'raw' }
   ]
 ]
 
@@ -66,11 +92,11 @@ useEventListener('mouseup', () => {
 
 function getSplitViewIcon(type: string | null) {
   switch (type) {
-    case 'post': return 'i-lucide-scroll-text'
-    case 'user': return 'i-lucide-user'
-    case 'music': return 'i-lucide-music'
-    case 'notifications': return 'i-lucide-bell'
-    default: return 'i-lucide-layout-panel-right'
+    case 'post': return 'i-material-symbols-article'
+    case 'user': return 'i-material-symbols-person'
+    case 'music': return 'i-material-symbols-music-note'
+    case 'notifications': return 'i-material-symbols-notifications'
+    default: return 'i-material-symbols-dock-to-left'
   }
 }
 
@@ -102,7 +128,7 @@ function getSplitViewTitle(type: string | null) {
           >
           <UIcon
             v-else
-            name="i-lucide-zap"
+            name="i-material-symbols-bolt"
             class="w-7 h-7 text-white"
           />
         </div>
@@ -180,7 +206,7 @@ function getSplitViewTitle(type: string | null) {
             </div>
           </div>
           <UButton
-            icon="i-lucide-x"
+            icon="i-material-symbols-close"
             color="neutral"
             variant="ghost"
             class="rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 hover:text-red-500"
@@ -191,7 +217,7 @@ function getSplitViewTitle(type: string | null) {
 
       <div class="p-4 shrink-0">
         <UButton
-          icon="i-lucide-send"
+          icon="i-material-symbols-send"
           label="发布"
           color="primary"
           size="xl"
@@ -206,11 +232,12 @@ function getSplitViewTitle(type: string | null) {
       <header class="h-16 flex justify-between items-center px-6 shrink-0 z-10 transition-colors">
         <!-- 左/中：子导航栏 (context-aware) -->
         <div class="flex items-center">
-          <!-- Timeline tabs (left view active or split closed) -->
+          <!-- Timeline & Settings tabs (left view active or split closed) -->
           <UNavigationMenu
             v-if="!splitViewStore.isOpen || splitViewStore.activeView === 'left'"
-            :items="tabs"
-            class="w-full"
+            :items="currentHeaderTabs"
+            class="w-full flex-nowrap overflow-x-auto custom-scrollbar no-scrollbar"
+            style="mask-image: linear-gradient(to right, white 90%, transparent);"
           />
           <!-- Profile tabs (right view active, showing user) -->
           <div
@@ -240,7 +267,7 @@ function getSplitViewTitle(type: string | null) {
           <!-- Post detail tabs (right view active, showing post) -->
           <UNavigationMenu
             v-else
-            :items="tabs"
+            :items="currentHeaderTabs"
             class="w-full"
           />
         </div>
@@ -267,7 +294,7 @@ function getSplitViewTitle(type: string | null) {
               </div>
             </div>
             <UButton
-              :icon="musicStore.isPlaying ? 'i-lucide-pause' : 'i-lucide-play'"
+              :icon="musicStore.isPlaying ? 'i-material-symbols-pause' : 'i-material-symbols-play-arrow'"
               color="neutral"
               variant="ghost"
               size="xs"
@@ -282,7 +309,7 @@ function getSplitViewTitle(type: string | null) {
             @click="splitViewStore.openNotifications()"
           >
             <UButton
-              icon="i-lucide-bell"
+              icon="i-material-symbols-notifications"
               color="neutral"
               variant="ghost"
               class="cursor-pointer"
@@ -362,7 +389,7 @@ function getSplitViewTitle(type: string | null) {
                 class="px-4 py-2 flex justify-end items-center gap-1 border-b border-gray-100 dark:border-gray-800 shrink-0"
               >
                 <UButton
-                  icon="i-lucide-rotate-cw"
+                  icon="i-material-symbols-refresh"
                   color="neutral"
                   variant="ghost"
                   size="xs"
@@ -370,7 +397,7 @@ function getSplitViewTitle(type: string | null) {
                   @click="splitViewStore.triggerRefresh()"
                 />
                 <UButton
-                  :icon="splitViewStore.isMaximized ? 'i-lucide-minimize-2' : 'i-lucide-maximize-2'"
+                  :icon="splitViewStore.isMaximized ? 'i-material-symbols-close-fullscreen' : 'i-material-symbols-open-in-full'"
                   color="neutral"
                   variant="ghost"
                   size="xs"
@@ -379,7 +406,7 @@ function getSplitViewTitle(type: string | null) {
                 />
                 <div class="w-px h-3 bg-gray-200 dark:bg-gray-800 mx-1" />
                 <UButton
-                  icon="i-lucide-x"
+                  icon="i-material-symbols-close"
                   color="neutral"
                   variant="ghost"
                   size="xs"

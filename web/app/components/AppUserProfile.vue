@@ -19,7 +19,7 @@ const profileTabs = [
         用户资料
       </h2>
       <UButton
-        icon="i-lucide-x"
+        icon="i-material-symbols-close"
         color="neutral"
         variant="ghost"
         class="hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 transition-colors rounded-full"
@@ -76,7 +76,7 @@ const profileTabs = [
             class="rounded-full px-8 font-black shadow-[0_0_20px_rgba(57,197,187,0.3)] transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(57,197,187,0.6)] bg-gradient-to-r from-[#39C5BB] to-[#14c9c9] border-none text-white"
           />
           <UButton
-            icon="i-lucide-more-horizontal"
+            icon="i-material-symbols-more-horiz"
             variant="ghost"
             color="neutral"
             class="rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -91,7 +91,7 @@ const profileTabs = [
             {{ splitViewStore.currentUser.displayName }}
             <UIcon
               v-if="splitViewStore.currentUser.isVerified"
-              name="i-lucide-check-circle-2"
+              name="i-material-symbols-check-circle"
               class="w-5 h-5 text-cyan-500"
             />
           </h2>
@@ -115,7 +115,7 @@ const profileTabs = [
             class="flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400"
           >
             <UIcon
-              name="i-lucide-map-pin"
+              name="i-material-symbols-location-on"
               class="w-4 h-4 text-cyan-500"
             />
             {{ splitViewStore.currentUser.location }}
@@ -125,7 +125,7 @@ const profileTabs = [
             class="flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400"
           >
             <UIcon
-              name="i-lucide-cake"
+              name="i-material-symbols-cake"
               class="w-4 h-4 text-pink-400"
             />
             {{ splitViewStore.currentUser.birthday }}
@@ -135,7 +135,7 @@ const profileTabs = [
             class="flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400"
           >
             <UIcon
-              name="i-lucide-calendar"
+              name="i-material-symbols-event"
               class="w-4 h-4 text-cyan-500"
             />
             注册于 {{ splitViewStore.currentUser.joinedAt }}

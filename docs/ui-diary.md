@@ -90,5 +90,69 @@
     - **效果**：`scale(0.9) translateY(30px) -> scale(1) translateY(0)`，配合 `opacity` 实现呼吸感的开启体验。
 - **交互回馈**：歌词选中项高亮背景与模糊滤镜同步更新，确保焦点明确。
 
+### 7.4 动态配色规范 (Dynamic Color Protocol)
+- **色域提取**：通过 Canvas 下采样 (10x10) 获取专辑封面主导色作为 `themeColor`。
+- **亮度感应 (Luminance Sensing)**：
+    - **公式**：`0.2126*R + 0.7152*G + 0.0722*B`。
+    - **阈值**：亮度 > 140 时强制切换 `textColor` 为黑，否则为白。
+- **组件同步**：全局 `Teleport` 窗口通过 Vue 属性绑定实时同步 `textColor`，确保跨组件视觉统一。
+
 ---
-*Updated by Antigravity Divine Engineer - 2026-03-21*
+*Updated by Antigravity Divine Engineer - 2026-03-22*
+
+---
+
+## 8. 歌词系统精修 (Lyrics System Refinement)
+
+### 8.1 QQ音乐风格歌词展示
+- **歌词窗口 (`MusicLyricsWindow.vue`)**：移除所有边框，采用纯透明无框风格。歌词显示基于透明度与字体缩放区分当前行/非当前行，无背景气泡，完全靠排版和大小差异传达层级。
+- **主播放器三行歌词预览 (`MusicLyrics.vue`)**：保留完整 DOM 节点列表（不按索引裁切），通过 `watch` + `scrollToActive` 实现流畅滚动动画，非焦点行通过 `opacity: 0 / height: 0` 隐藏以保留动效（CSS 过渡生效的前提是节点始终存在）。
+
+### 8.2 统一自由窗口架构 (`AppFreeWindow.vue`)
+- **核心设计**：提取为可复用基础组件，集成 `useDraggable`（拖拽）+ 自定义 Resize Handle（四角/四边缩放）。
+- **使用方**：`MusicLyricsWindow`、`MusicInfoWindow`、`MusicPlaylistWindow` 三大浮窗统一基于此组件搭建，确保样式无边框、交互一致。
+
+---
+
+## 9. 歌单系统 (Playlist Architecture)
+
+- **数据层 (`music.ts`)**：`playlist` 数组预置三首测试曲目（`MusicTest0/1/2`）；新增 `isPlaylistWindowOpen` 状态位；`playNext(forced)` / `playPrev()` 同时支持随机 (Shuffle) 与循环 (Loop: one/all/none) 三种播放模式。
+- **播放列表浮窗 (`MusicPlaylistWindow.vue`)**：基于 `AppFreeWindow`，显示待播队列；当前正在播放曲目高亮 + 动画闪烁；悬停显示"播放"图标，双击立即切换。
+- **控制区**："循环"按钮旁新增"播放列表"切换按钮，二者成对排布于控制台右侧。
+
+---
+
+## 10. 设置模块 (Settings Module)
+
+### 10.1 动态顶栏子导航
+- **路由感知逻辑 (`default.vue`)**：新增 `currentHeaderTabs` 计算属性，检测 `route.path.startsWith('/settings')` 并切换到设置专属的 9 个分类标签（本用户、Skyline 云盘、安全与隐私等），离开设置路由则恢复时间线标签。
+- **视觉优化**：标签栏添加 `overflow-x-auto` 横向滚动 + `mask-image` 右侧边缘渐隐。
+
+### 10.2 本用户设置页 (`/settings/profile.vue`)
+- **头像/横幅分离布局**：`flex-col sm:flex-row` 响应式架构，头像卡片固定在左 (`w-48 shrink-0`)，横幅 Banner 填充右侧剩余空间 (`flex-1`)，彻底解决旧设计中叠加导致的上下交叠问题。
+- **单行排版表单**：`flex flex-col gap-5 w-full` 强制所有 `UFormGroup` 独占一行，解决 Nuxt UI 默认 inline 折叠导致多个输入框挤在同一行的视觉错乱。
+- **账户危险区**：底部独立 `border-t` 分隔区，包含"设置配置"、"清除缓存"和醒目的 `error` 色"登出此帐号"按钮。
+
+---
+
+## 11. Material Design 3 图标迁移 (MD3 Icon Migration)
+
+- **全局替换**：通过脚本对 `./app/` 内所有 `.vue` 和 `.ts` 文件执行 `i-lucide-*` → `i-material-symbols-*` 的映射替换（共 80+ 处）。
+- **关键映射表**：
+
+| Lucide | Material Symbols |
+| :--- | :--- |
+| `message-circle` | `chat-bubble` |
+| `corner-down-right` | `subdirectory-arrow-right` |
+| `map-pin` | `location-on` |
+| `repeat-2` | `repeat` |
+| `speaker` | `volume-up` |
+| `volume-x` | `volume-off` |
+| `calendar` | `event` |
+| `check-circle-2` | `check-circle` |
+
+- **依赖修复**：安装缺失的 `@iconify-json/material-symbols` 包，图标方可在 Nuxt Icon local 模式下正常离线加载。
+- **时间线剩余图标**：将 `i-ic-sharp-public` / `i-ic-baseline-person-outline` 统一切换至 M3 对应的 `public` / `person`。
+
+---
+*Updated by Antigravity Divine Engineer - 2026-03-22*

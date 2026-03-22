@@ -104,7 +104,7 @@ function handleUserClick(e: MouseEvent) {
           >
             <span class="text-[11px] font-medium bg-cyan-50 dark:bg-cyan-950/30 text-cyan-600 dark:text-cyan-400 px-1.5 py-0.5 rounded border border-cyan-100 dark:border-cyan-800/50 flex items-center gap-1">
               <UIcon
-                name="i-lucide-globe"
+                name="i-material-symbols-public"
                 class="w-3 h-3"
               />
               {{ post.author.instance }}
@@ -127,7 +127,7 @@ function handleUserClick(e: MouseEvent) {
         class="flex items-center gap-1 text-[13px] text-gray-500 mb-0.5 mt-0.5"
       >
         <UIcon
-          name="i-lucide-corner-down-right"
+          name="i-material-symbols-subdirectory-arrow-right"
           class="w-4 h-4 text-cyan-500 bg-cyan-50 dark:bg-cyan-900/40 rounded p-0.5"
         />
         <span class="flex items-center gap-1">
@@ -152,7 +152,7 @@ function handleUserClick(e: MouseEvent) {
       <div class="flex items-center gap-4 mt-2 -ml-2 text-gray-500">
         <!-- 回复 (Reply) -->
         <UButton
-          icon="i-lucide-message-circle"
+          icon="i-material-symbols-chat-bubble"
           :label="post.metrics.replies ? String(post.metrics.replies) : ''"
           color="neutral"
           variant="ghost"
@@ -161,7 +161,7 @@ function handleUserClick(e: MouseEvent) {
         />
         <!-- 转帖 (Repost) -->
         <UButton
-          icon="i-lucide-repeat-2"
+          icon="i-material-symbols-repeat"
           :label="post.metrics.reposts ? String(post.metrics.reposts) : ''"
           color="neutral"
           variant="ghost"
@@ -170,7 +170,7 @@ function handleUserClick(e: MouseEvent) {
         />
         <!-- 表情回应 (Reaction) -->
         <UButton
-          icon="i-lucide-plus"
+          icon="i-material-symbols-add"
           :label="post.metrics.reactions ? String(post.metrics.reactions) : ''"
           color="neutral"
           variant="ghost"
@@ -179,7 +179,7 @@ function handleUserClick(e: MouseEvent) {
         />
         <!-- 更多 (More) -->
         <UButton
-          icon="i-lucide-more-horizontal"
+          icon="i-material-symbols-more-horiz"
           color="neutral"
           variant="ghost"
           size="sm"

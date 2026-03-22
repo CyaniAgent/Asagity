@@ -25,7 +25,7 @@ const tabs = [
         帖子详情
       </h2>
       <UButton
-        icon="i-lucide-x"
+        icon="i-material-symbols-close"
         color="neutral"
         variant="ghost"
         class="hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 transition-colors rounded-full"

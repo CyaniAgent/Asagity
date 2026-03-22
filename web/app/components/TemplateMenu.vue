@@ -37,7 +37,7 @@
     <UButton
       label="Starter"
       variant="subtle"
-      trailing-icon="i-lucide-chevron-down"
+      trailing-icon="i-material-symbols-keyboard-arrow-down"
       size="xs"
       class="-mb-[6px] font-semibold rounded-full truncate"
       :class="[open && 'bg-primary/15']"

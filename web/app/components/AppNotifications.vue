@@ -22,12 +22,12 @@ const filteredNotifications = computed(() => {
 
 function getIcon(type: NotificationType) {
   switch (type) {
-    case 'mention': return 'i-lucide-at-sign'
-    case 'tip': return 'i-lucide-coins'
-    case 'system': return 'i-lucide-info'
-    case 'reblog': return 'i-lucide-repeat'
-    case 'reaction': return 'i-lucide-heart'
-    default: return 'i-lucide-bell'
+    case 'mention': return 'i-material-symbols-alternate-email'
+    case 'tip': return 'i-material-symbols-savings'
+    case 'system': return 'i-material-symbols-info'
+    case 'reblog': return 'i-material-symbols-repeat'
+    case 'reaction': return 'i-material-symbols-favorite'
+    default: return 'i-material-symbols-notifications'
   }
 }
 
@@ -53,7 +53,7 @@ function formatDate(dateStr: string) {
       <div class="flex items-center gap-3">
         <div class="w-8 h-8 rounded-full bg-primary-500/10 dark:bg-primary-500/20 flex items-center justify-center">
           <UIcon
-            name="i-lucide-bell"
+            name="i-material-symbols-notifications"
             class="text-primary-500 dark:text-primary-400 w-4 h-4"
           />
         </div>
@@ -71,7 +71,7 @@ function formatDate(dateStr: string) {
           @click="notificationStore.markAllAsRead()"
         />
         <UButton
-          icon="i-lucide-x"
+          icon="i-material-symbols-close"
           variant="ghost"
           color="neutral"
           class="rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-900/60 dark:text-white"
@@ -191,7 +191,7 @@ function formatDate(dateStr: string) {
         class="flex flex-col items-center justify-center py-20 opacity-20"
       >
         <UIcon
-          name="i-lucide-inbox"
+          name="i-material-symbols-inbox"
           class="w-16 h-16 mb-4 text-gray-900 dark:text-white"
         />
         <p class="text-sm font-black tracking-widest">
