@@ -41,5 +41,10 @@ export default defineNuxtConfig({
         braceStyle: '1tbs'
       }
     }
+  },
+
+  devServer: {
+    host: '::',
+    port: 2000
   }
 })

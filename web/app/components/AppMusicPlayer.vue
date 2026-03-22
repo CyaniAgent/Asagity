@@ -30,33 +30,33 @@ function handleVolumeChange(e: Event) {
 </script>
 
 <template>
-  <div class="relative flex flex-col h-full bg-black text-white overflow-hidden font-sans select-none">
+  <div class="relative flex flex-col h-full bg-white dark:bg-gray-950 text-gray-900 dark:text-white overflow-hidden font-sans select-none">
     <!-- Immersive Blurred Backdrop -->
     <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
       <img
         :src="musicStore.currentTrack.albumArt"
-        class="w-full h-full object-cover scale-150 blur-[80px] opacity-40 transition-all duration-1000"
+        class="w-full h-full object-cover scale-150 blur-[80px] opacity-40 transition-all duration-1000 dark:opacity-40"
         alt=""
       >
-      <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
+      <div class="absolute inset-0 bg-gradient-to-b from-white/60 via-white/40 to-white/80 dark:from-black/60 dark:via-black/40 dark:to-black/80" />
     </div>
 
     <!-- Absolute Navigation Header -->
     <header class="absolute top-0 left-0 right-0 h-20 flex items-center justify-between px-6 z-50 pointer-events-auto">
       <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10">
+        <div class="w-8 h-8 rounded-full bg-gray-900/5 dark:bg-white/10 backdrop-blur-md flex items-center justify-center border border-gray-900/5 dark:border-white/10">
           <UIcon
             name="i-lucide-music"
-            class="text-cyan-400 w-4 h-4"
+            class="text-cyan-500 w-4 h-4"
           />
         </div>
-        <span class="text-[11px] font-black uppercase tracking-[0.3em] text-white/60">Now Playing</span>
+        <span class="text-[11px] font-black uppercase tracking-[0.3em] text-gray-900/40 dark:text-white/60">Now Playing</span>
       </div>
       <UButton
         icon="i-lucide-x"
         color="neutral"
         variant="ghost"
-        class="w-10 h-10 rounded-full hover:bg-white/10 text-white transition-all active:scale-90"
+        class="w-10 h-10 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-900/60 dark:text-white transition-all active:scale-90"
         @click="splitViewStore.close()"
       />
     </header>
@@ -66,15 +66,15 @@ function handleVolumeChange(e: Event) {
       <!-- Loading Overlay -->
       <div
         v-if="musicStore.isLoading"
-        class="absolute inset-0 bg-black/60 backdrop-blur-md z-40 flex items-center justify-center"
+        class="absolute inset-0 bg-white/60 dark:bg-black/60 backdrop-blur-md z-40 flex items-center justify-center"
       >
         <div class="flex flex-col items-center gap-6">
           <UIcon
             name="i-lucide-loader-2"
             class="w-12 h-12 text-cyan-500 animate-spin"
           />
-          <p class="text-xs font-black tracking-[0.2em] uppercase text-white/70">
-            Asagity Rendering...
+          <p class="text-xs font-black tracking-[0.2em] text-gray-900/50 dark:text-white/70">
+            Asagity rendering...
           </p>
         </div>
       </div>
@@ -85,31 +85,31 @@ function handleVolumeChange(e: Event) {
           class="absolute inset-0 bg-cyan-500/20 rounded-[40px] blur-[50px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000"
           :style="{ backgroundColor: `${activeColor}33` }"
         />
-        <div class="relative w-full h-full rounded-[40px] overflow-hidden shadow-[0_30px_60px_-12px_rgba(0,0,0,0.8)] border border-white/10 transition-transform duration-700 ease-out group-hover:scale-[1.02]">
+        <div class="relative w-full h-full rounded-[40px] overflow-hidden shadow-[0_30px_60px_-12px_rgba(0,0,0,0.15)] dark:shadow-[0_30px_60px_-12px_rgba(0,0,0,0.8)] border border-gray-900/5 dark:border-white/10 transition-transform duration-700 ease-out group-hover:scale-[1.02]">
           <img
             :src="musicStore.currentTrack.albumArt"
             class="w-full h-full object-cover transition-all duration-700"
             alt="Album Art"
           >
-          <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+          <div class="absolute inset-0 bg-gradient-to-t from-black/20 dark:from-black/40 to-transparent" />
         </div>
       </section>
 
       <!-- Track Information -->
       <section class="w-full max-w-[340px] mb-8 space-y-1 text-center md:text-left">
-        <h1 class="text-2xl md:text-3xl font-black tracking-tight leading-tight text-white/95 truncate">
+        <h1 class="text-2xl md:text-3xl font-black tracking-tight leading-tight text-gray-900 dark:text-white/95 truncate">
           {{ musicStore.currentTrack.title }}
         </h1>
-        <p class="text-lg font-bold text-white/50 truncate flex items-center justify-center md:justify-start gap-2">
+        <p class="text-lg font-bold text-gray-900/40 dark:text-white/50 truncate flex items-center justify-center md:justify-start gap-2">
           <span>{{ musicStore.currentTrack.artist || 'Unknown Artist' }}</span>
-          <span class="w-1 h-1 bg-white/20 rounded-full" />
-          <span class="text-sm opacity-60">Hi-Res</span>
+          <span class="w-1 h-1 bg-gray-900/10 dark:bg-white/20 rounded-full" />
+          <span class="text-sm opacity-60">Hi-res</span>
         </p>
       </section>
 
       <!-- Interactive Seeker & Time -->
       <section class="w-full max-w-[360px] mb-8 space-y-3">
-        <div class="relative w-full h-1.5 bg-white/10 rounded-full group cursor-pointer">
+        <div class="relative w-full h-1.5 bg-gray-900/5 dark:bg-white/10 rounded-full group cursor-pointer">
           <input
             type="range"
             :min="0"
@@ -129,7 +129,7 @@ function handleVolumeChange(e: Event) {
             :style="{ left: `${musicStore.progressPercentage}%` }"
           />
         </div>
-        <div class="flex justify-between text-[10px] font-black tracking-widest text-white/40 font-mono">
+        <div class="flex justify-between text-[10px] font-black tracking-widest text-gray-900/30 dark:text-white/40 font-mono">
           <span>{{ formatTime(musicStore.progress) }}</span>
           <span>{{ formatTime(musicStore.currentTrack.duration) }}</span>
         </div>
@@ -143,7 +143,7 @@ function handleVolumeChange(e: Event) {
           :color="musicStore.shuffle ? 'primary' : 'neutral'"
           :class="[
             'transition-all duration-300',
-            musicStore.shuffle ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(57,197,187,0.5)]' : 'text-white/30 hover:text-white'
+            musicStore.shuffle ? 'text-cyan-500 drop-shadow-[0_0_8px_rgba(57,197,187,0.3)]' : 'text-gray-900/20 dark:text-white/30 hover:text-gray-900 dark:hover:text-white'
           ]"
           @click="musicStore.toggleShuffle"
         />
@@ -154,11 +154,11 @@ function handleVolumeChange(e: Event) {
             variant="ghost"
             color="neutral"
             size="xl"
-            class="text-white hover:scale-110 active:scale-90"
+            class="text-gray-900 dark:text-white hover:scale-110 active:scale-90"
             @click="musicStore.playPrev"
           />
           <button
-            class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-black shadow-xl hover:scale-105 active:scale-95 transition-all"
+            class="w-16 h-16 bg-gray-900 dark:bg-white rounded-full flex items-center justify-center text-white dark:text-gray-900 shadow-xl hover:scale-105 active:scale-95 transition-all"
             @click="musicStore.togglePlay"
           >
             <UIcon
@@ -172,7 +172,7 @@ function handleVolumeChange(e: Event) {
             variant="ghost"
             color="neutral"
             size="xl"
-            class="text-white hover:scale-110 active:scale-90"
+            class="text-gray-900 dark:text-white hover:scale-110 active:scale-90"
             @click="musicStore.playNext(false)"
           />
         </div>
@@ -183,7 +183,7 @@ function handleVolumeChange(e: Event) {
           :color="musicStore.loopMode !== 'none' ? 'primary' : 'neutral'"
           :class="[
             'transition-all duration-300',
-            musicStore.loopMode !== 'none' ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(57,197,187,0.5)]' : 'text-white/30 hover:text-white'
+            musicStore.loopMode !== 'none' ? 'text-cyan-500 drop-shadow-[0_0_8px_rgba(57,197,187,0.3)]' : 'text-gray-900/20 dark:text-white/30 hover:text-gray-900 dark:hover:text-white'
           ]"
           @click="musicStore.toggleLoopMode"
         />
@@ -197,24 +197,27 @@ function handleVolumeChange(e: Event) {
       <MusicInfoWindow />
 
       <!-- Additional Toolbar -->
-      <footer class="w-full max-w-[360px] flex items-center justify-center gap-10 mt-12 mb-6 opacity-40 hover:opacity-100 transition-opacity">
+      <footer class="w-full max-w-[360px] flex items-center justify-center gap-10 mt-12 mb-6 opacity-30 hover:opacity-100 transition-opacity">
         <UButton
           icon="i-lucide-share-2"
           variant="ghost"
           color="neutral"
           size="sm"
+          class="text-gray-900 dark:text-white"
         />
         <UButton
           icon="i-lucide-settings-2"
           variant="ghost"
           color="neutral"
           size="sm"
+          class="text-gray-900 dark:text-white"
         />
         <UButton
           icon="i-lucide-info"
           variant="ghost"
           color="neutral"
           size="sm"
+          class="text-gray-900 dark:text-white"
           @click="musicStore.isMusicInfoWindowOpen = true"
         />
       </footer>
@@ -227,8 +230,11 @@ function handleVolumeChange(e: Event) {
   width: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.05);
   border-radius: 10px;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
 }
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;

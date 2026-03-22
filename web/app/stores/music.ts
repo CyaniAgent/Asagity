@@ -37,7 +37,7 @@ export const useMusicStore = defineStore('music', () => {
   const loopMode = ref<'none' | 'one' | 'all'>('none')
   const playlist = ref<Track[]>([])
   const currentIndex = ref(0)
-  
+
   // UI States
   const isLyricsWindowOpen = ref(false)
   const isMusicInfoWindowOpen = ref(false)
@@ -92,18 +92,18 @@ export const useMusicStore = defineStore('music', () => {
   const audioQuality = computed(() => {
     const { container, bitrate } = currentTrack.value
     if (!container) return 'Unknown'
-    
+
     const c = container.toUpperCase()
     const isLossless = ['FLAC', 'WAV', 'ALAC', 'AIFF', 'MONKEY\'S AUDIO'].includes(c)
     if (isLossless) return 'Lossless'
-    
+
     if (c === 'MPEG' || c === 'ADTS' || c === 'M4A' || c === 'MP4') {
       if (!bitrate) return 'Unknown'
       const kbps = bitrate / 1000
       if (kbps <= 128) return 'MP3 Normal'
       return 'MP3 HQ'
     }
-    
+
     return container
   })
 

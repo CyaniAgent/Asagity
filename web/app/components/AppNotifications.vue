@@ -47,14 +47,14 @@ function formatDate(dateStr: string) {
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-[#121212] text-white overflow-hidden font-sans">
+  <div class="flex flex-col h-full bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white overflow-hidden font-sans">
     <!-- Header -->
-    <div class="px-6 py-4 border-b border-white/5 bg-black/20 backdrop-blur-md shrink-0 flex items-center justify-between z-10">
+    <div class="px-6 py-4 border-b border-gray-100 dark:border-white/5 bg-white/40 dark:bg-black/20 backdrop-blur-md shrink-0 flex items-center justify-between z-10">
       <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-full bg-primary-500/20 flex items-center justify-center">
+        <div class="w-8 h-8 rounded-full bg-primary-500/10 dark:bg-primary-500/20 flex items-center justify-center">
           <UIcon
             name="i-lucide-bell"
-            class="text-primary-400 w-4 h-4"
+            class="text-primary-500 dark:text-primary-400 w-4 h-4"
           />
         </div>
         <h2 class="text-lg font-black tracking-tight">
@@ -67,27 +67,27 @@ function formatDate(dateStr: string) {
           variant="ghost"
           color="neutral"
           size="xs"
-          class="text-xs text-white/40 hover:text-white"
+          class="text-xs text-gray-900/40 dark:text-white/40 hover:text-gray-900 dark:hover:text-white"
           @click="notificationStore.markAllAsRead()"
         />
         <UButton
           icon="i-lucide-x"
           variant="ghost"
           color="neutral"
-          class="rounded-full hover:bg-white/10"
+          class="rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-900/60 dark:text-white"
           @click="splitViewStore.close()"
         />
       </div>
     </div>
 
     <!-- Tabs -->
-    <div class="px-4 py-2 bg-black/10 shrink-0 border-b border-white/5">
+    <div class="px-4 py-2 bg-gray-100/50 dark:bg-black/10 shrink-0 border-b border-gray-100 dark:border-white/5">
       <div class="flex gap-1">
         <button
           v-for="tab in tabs"
           :key="tab.value"
           class="px-4 py-1.5 rounded-full text-xs font-bold transition-all"
-          :class="activeTab === tab.value ? 'bg-primary-500 text-white shadow-lg' : 'text-white/40 hover:bg-white/5 hover:text-white'"
+          :class="activeTab === tab.value ? 'bg-primary-500 text-white shadow-lg' : 'text-gray-900/40 dark:text-white/40 hover:bg-black/5 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'"
           @click="activeTab = tab.value as any"
         >
           {{ tab.label }}
@@ -104,8 +104,8 @@ function formatDate(dateStr: string) {
           class="group relative p-4 rounded-3xl border transition-all duration-300 hover:scale-[1.01]"
           :class="[
             notify.isRead
-              ? 'bg-white/[0.02] border-white/5 grayscale-[0.5] opacity-80'
-              : 'bg-white/[0.05] border-primary-500/20 shadow-lg ring-1 ring-primary-500/10'
+              ? 'bg-white/40 dark:bg-white/[0.02] border-gray-100 dark:border-white/5 grayscale-[0.3] opacity-80'
+              : 'bg-white dark:bg-white/[0.05] border-primary-500/20 shadow-sm dark:shadow-lg ring-1 ring-primary-500/10'
           ]"
           @click="notificationStore.markAsRead(notify.id)"
         >
@@ -123,9 +123,9 @@ function formatDate(dateStr: string) {
                   :src="notify.user.avatar"
                   :alt="notify.user.name"
                   size="md"
-                  class="ring-2 ring-white/10"
+                  class="ring-2 ring-gray-100 dark:ring-white/10"
                 />
-                <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#121212] flex items-center justify-center p-0.5">
+                <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-white dark:bg-[#121212] flex items-center justify-center p-0.5 shadow-sm">
                   <UIcon
                     :name="getIcon(notify.type)"
                     :class="['w-3.5 h-3.5', getIconColor(notify.type)]"
@@ -134,7 +134,7 @@ function formatDate(dateStr: string) {
               </template>
               <div
                 v-else
-                class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center"
+                class="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-white/5 flex items-center justify-center"
               >
                 <UIcon
                   :name="getIcon(notify.type)"
@@ -150,19 +150,19 @@ function formatDate(dateStr: string) {
                   <span v-if="notify.user">{{ notify.user.name }}</span>
                   <span
                     v-else
-                    class="text-primary-400"
+                    class="text-primary-600 dark:text-primary-400"
                   >系统通知</span>
                   <span
                     v-if="notify.user"
-                    class="text-white/30 font-bold text-xs"
+                    class="text-gray-900/30 dark:text-white/30 font-bold text-xs"
                   >@{{ notify.user.username }}</span>
                 </div>
-                <span class="text-[10px] font-bold text-white/20 whitespace-nowrap">{{ formatDate(notify.createdAt) }}</span>
+                <span class="text-[10px] font-bold text-gray-900/20 dark:text-white/20 whitespace-nowrap">{{ formatDate(notify.createdAt) }}</span>
               </div>
 
-              <div class="text-sm text-white/70 leading-relaxed break-words">
+              <div class="text-sm text-gray-900/70 dark:text-white/70 leading-relaxed break-words">
                 <template v-if="notify.type === 'mention' && notify.post">
-                  提及了你：<span class="text-white font-medium">{{ notify.post.content }}</span>
+                  提及了你：<span class="text-gray-900 dark:text-white font-medium">{{ notify.post.content }}</span>
                 </template>
                 <template v-else>
                   {{ notify.content }}
@@ -178,7 +178,7 @@ function formatDate(dateStr: string) {
                   label="点击查看详情"
                   variant="link"
                   size="xs"
-                  class="p-0 text-primary-400 hover:text-primary-300 font-bold text-[11px]"
+                  class="p-0 text-primary-600 dark:text-primary-400 hover:text-primary-500 dark:hover:text-primary-300 font-bold text-[11px]"
                 />
               </div>
             </div>
@@ -192,9 +192,9 @@ function formatDate(dateStr: string) {
       >
         <UIcon
           name="i-lucide-inbox"
-          class="w-16 h-16 mb-4"
+          class="w-16 h-16 mb-4 text-gray-900 dark:text-white"
         />
-        <p class="text-sm font-black tracking-widest uppercase">
+        <p class="text-sm font-black tracking-widest">
           暂时没有相关通知
         </p>
       </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, nextTick, onBeforeUpdate, onMounted } from 'vue'
+import { ref, watch, nextTick, onBeforeUpdate } from 'vue'
 import { useDraggable, useWindowSize } from '@vueuse/core'
 import { useMusicStore } from '~/stores/music'
 
@@ -67,32 +67,43 @@ const activeColor = '#39C5BB'
       <div
         v-if="musicStore.isLyricsWindowOpen"
         :style="style"
-        class="fixed z-[9999] w-[400px] h-[600px] flex flex-col bg-[#121212]/95 backdrop-blur-3xl border border-white/10 rounded-[32px] overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.8)] resizable"
+        class="fixed z-[9999] w-[400px] h-[600px] flex flex-col bg-white/95 dark:bg-[#121212]/95 backdrop-blur-3xl border border-gray-100 dark:border-white/10 rounded-[32px] overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.8)] resizable"
       >
         <!-- Draggable Header -->
         <div
           ref="handleRef"
-          class="h-14 flex items-center justify-between px-6 bg-white/5 border-b border-white/5 cursor-move touch-none"
+          class="h-14 flex items-center justify-between px-6 bg-gray-50/50 dark:bg-white/5 border-b border-gray-100 dark:border-white/5 cursor-move touch-none"
         >
           <div class="flex items-center gap-2">
-            <UIcon name="i-lucide-baseline" class="w-4 h-4 text-cyan-400" />
-            <span class="text-xs font-black uppercase tracking-[0.2em] text-white/60 select-none">Lyrics Window</span>
+            <UIcon
+              name="i-lucide-baseline"
+              class="w-4 h-4 text-cyan-500"
+            />
+            <span class="text-xs font-black tracking-[0.2em] text-gray-900/60 dark:text-white/60 select-none">Lyrics window</span>
           </div>
           <UButton
             icon="i-lucide-x"
             variant="ghost"
             color="neutral"
-            class="w-8 h-8 rounded-full hover:bg-white/20 text-white/60 hover:text-white transition-colors"
+            class="w-8 h-8 rounded-full hover:bg-black/5 dark:hover:bg-white/20 text-gray-900/40 dark:text-white/60 hover:text-gray-900 dark:hover:text-white transition-colors"
             @click.stop="musicStore.isLyricsWindowOpen = false"
           />
         </div>
 
         <!-- Track Info -->
-        <div class="p-6 pb-2 shrink-0 flex items-center gap-4 bg-gradient-to-b from-white/5 to-transparent">
-          <img :src="musicStore.currentTrack.albumArt" class="w-14 h-14 rounded-2xl object-cover shadow-lg border border-white/10" alt="">
+        <div class="p-6 pb-2 shrink-0 flex items-center gap-4 bg-gradient-to-b from-gray-50/50 dark:from-white/5 to-transparent">
+          <img
+            :src="musicStore.currentTrack.albumArt"
+            class="w-14 h-14 rounded-2xl object-cover shadow-lg border border-gray-100 dark:border-white/10"
+            alt=""
+          >
           <div class="flex flex-col overflow-hidden">
-            <h2 class="text-lg font-black text-white/95 truncate">{{ musicStore.currentTrack.title }}</h2>
-            <p class="text-[10px] font-bold text-cyan-400 uppercase tracking-[0.2em] truncate">{{ musicStore.currentTrack.artist || 'Unknown Artist' }}</p>
+            <h2 class="text-lg font-black text-gray-900 dark:text-white/95 truncate">
+              {{ musicStore.currentTrack.title }}
+            </h2>
+            <p class="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 tracking-[0.2em] truncate">
+              {{ musicStore.currentTrack.artist || 'Unknown Artist' }}
+            </p>
           </div>
         </div>
 
@@ -101,16 +112,19 @@ const activeColor = '#39C5BB'
           ref="lyricsContainer"
           class="flex-1 overflow-y-auto custom-scrollbar px-6 pb-32"
         >
-          <div v-if="musicStore.lyrics.length > 0" class="flex flex-col gap-6 py-6">
+          <div
+            v-if="musicStore.lyrics.length > 0"
+            class="flex flex-col gap-6 py-6"
+          >
             <div
               v-for="(line, index) in musicStore.lyrics"
               :key="index"
               :ref="(el: any) => setLyricRef(el, index)"
-              class="transition-all duration-500 cursor-pointer p-5 rounded-[24px] hover:bg-white/5 active:scale-95 group"
+              class="transition-all duration-500 cursor-pointer p-5 rounded-[24px] hover:bg-black/5 dark:hover:bg-white/5 active:scale-95 group"
               :class="[
                 musicStore.currentLyricIndex === index
-                  ? 'scale-105 bg-white/10 shadow-[0_0_30px_rgba(57,197,187,0.1)] border border-white/10'
-                  : 'text-white/20 hover:text-white/60'
+                  ? 'scale-105 bg-gray-50 dark:bg-white/10 shadow-sm dark:shadow-[0_0_30px_rgba(57,197,187,0.1)] border border-gray-100 dark:border-white/10'
+                  : 'text-gray-900/40 dark:text-white/20 hover:text-gray-900/70 dark:hover:text-white/60'
               ]"
               @click="handleLyricClick(line.timestamp)"
             >
@@ -127,17 +141,23 @@ const activeColor = '#39C5BB'
               </div>
               <!-- Click Indicator (Hover) -->
               <div class="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                <UIcon name="i-lucide-play-circle" class="w-6 h-6 text-cyan-400/50" />
+                <UIcon
+                  name="i-lucide-play-circle"
+                  class="w-6 h-6 text-cyan-500/50"
+                />
               </div>
             </div>
           </div>
-          <div v-else class="h-full flex items-center justify-center text-white/10 italic font-black uppercase tracking-[0.3em]">
+          <div
+            v-else
+            class="h-full flex items-center justify-center text-gray-900/10 dark:text-white/10 italic font-black tracking-[0.3em]"
+          >
             No lyrical data
           </div>
         </div>
-        
+
         <!-- Fading overlay for bottom -->
-        <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/60 to-transparent pointer-events-none rounded-b-[32px]" />
+        <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white/60 dark:from-black/60 to-transparent pointer-events-none rounded-b-[32px]" />
       </div>
     </Transition>
   </Teleport>
@@ -148,23 +168,23 @@ const activeColor = '#39C5BB'
   width: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.05);
   border-radius: 10px;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+.window-pop-enter-active {
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.window-pop-leave-active {
+  transition: all 0.3s cubic-bezier(0.36, 0, 0.66, -0.56);
+}
+.window-pop-enter-from, .window-pop-leave-to {
+  opacity: 0;
+  transform: scale(0.9) translateY(20px);
 }
 .resizable {
   resize: both;
-}
-
-/* Window Pop Animation */
-.window-pop-enter-active {
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.window-pop-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.window-pop-enter-from,
-.window-pop-leave-to {
-  opacity: 0;
-  transform: scale(0.9) translateY(30px) !important;
 }
 </style>
