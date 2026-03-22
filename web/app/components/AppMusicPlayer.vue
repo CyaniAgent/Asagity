@@ -38,7 +38,7 @@ function handleVolumeChange(e: Event) {
         class="w-full h-full object-cover scale-150 blur-[80px] opacity-40 transition-all duration-1000 dark:opacity-40"
         alt=""
       >
-      <div class="absolute inset-0 bg-gradient-to-b from-white/60 via-white/40 to-white/80 dark:from-black/60 dark:via-black/40 dark:to-black/80" />
+      <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/60 dark:from-black/60 dark:via-black/40 dark:to-black/80" />
     </div>
 
     <!-- Absolute Navigation Header -->
