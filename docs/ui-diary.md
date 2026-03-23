@@ -1,4 +1,4 @@
-# Asagity SSS-Rank UI Diary
+# Asagity UI Diary
 
 本文档记录了 Asagity 项目的核心 UI 设计规范与布局逻辑，旨在确保跨设备开发时视觉与交互体验的高度一致性。
 
