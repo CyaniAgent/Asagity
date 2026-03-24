@@ -25,6 +25,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
     activeTab.value = 'comments'
     activeView.value = 'right'
     isMaximized.value = false
+    rightPanelWidth.value = 50 // 重置为默认宽度
   }
 
   function openUser(user: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -35,6 +36,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
     profileTab.value = 'home'
     activeView.value = 'right'
     isMaximized.value = false
+    rightPanelWidth.value = 50 // 重置为默认宽度
   }
 
   function openMusic() {
@@ -44,6 +46,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
     isOpen.value = true
     activeView.value = 'right'
     isMaximized.value = false
+    rightPanelWidth.value = 38 // 音乐播放器采用更窄的默认宽度 (38%)
   }
 
   function openNotifications() {
@@ -53,6 +56,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
     isOpen.value = true
     activeView.value = 'right'
     isMaximized.value = false
+    rightPanelWidth.value = 40 // 通知中心采用更窄的默认宽度 (40%)
   }
 
   function close() {
