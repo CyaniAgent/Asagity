@@ -73,7 +73,7 @@ const recommendedUsers = [
 
 const federatedInstances = [
   { domain: 'misskey.io', protocol: 'ActivityPub', active: 842 },
-  { domain: 'asagity.net', protocol: 'Asagity', active: 531 },
+  { domain: 'asagity.net', protocol: 'NeoLinkage', active: 531 },
   { domain: 'mastodon.social', protocol: 'ActivityPub', active: 322 }
 ]
 </script>
@@ -143,7 +143,7 @@ const federatedInstances = [
             <div class="flex flex-col">
               <span
                 class="text-[14px] font-bold text-gray-800 dark:text-gray-200 group-hover:text-cyan-500 transition-colors">#{{
-                topic.name }}</span>
+                  topic.name }}</span>
               <span class="text-[11px] font-bold text-gray-400">{{ topic.posts }} posts</span>
             </div>
             <UIcon
@@ -180,7 +180,7 @@ const federatedInstances = [
       <div
         class="bg-white/50 dark:bg-gray-900/50 backdrop-blur-md rounded-[24px] border border-white/30 dark:border-gray-800/50 p-5 shadow-sm hover:shadow-md transition-shadow">
         <h3
-          class="text-[13px] font-black tracking-widest text-gray-500 dark:text-gray-400 uppercase mb-4 flex items-center gap-1.5">
+          class="text-[13px] font-black tracking-widest text-gray-500 dark:text-gray-400 mb-4 flex items-center gap-1.5">
           <UIcon name="i-material-symbols-hub" class="w-4 h-4 text-purple-500" /> 联合实例
         </h3>
         <div class="flex flex-col gap-3">
@@ -189,9 +189,9 @@ const federatedInstances = [
             <div class="flex flex-col">
               <span
                 class="text-[13px] font-bold text-gray-800 dark:text-gray-200 group-hover:text-cyan-500 transition-colors">{{
-                instance.domain }}</span>
+                  instance.domain }}</span>
               <div class="flex items-center gap-1.5 mt-0.5">
-                <span class="px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider"
+                <span class="px-1.5 py-0.5 rounded-md text-[9px] font-black tracking-wider"
                   :class="instance.protocol === 'ActivityPub' ? 'bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400' : 'bg-cyan-100 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-400'">
                   {{ instance.protocol }}
                 </span>
