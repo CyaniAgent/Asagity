@@ -9,6 +9,40 @@ It is a working architecture guide for how the backend should evolve as new modu
 The main design goal is to keep business logic out of HTTP handlers and out of infrastructure glue.
 The backend should be modular enough for Drive, Drop, social features, and federation to grow independently without fragmenting the codebase.
 
+## Current `core` Structure
+
+The current backend directory is still early, but it already shows the intended concerns:
+
+```text
+core/
+  api/
+  assets/
+  components/
+    drive/
+    drop/
+  config/
+  connections/
+    activitypub/
+    neolinkage/
+  database/
+  models/
+  services/
+  main.go
+```
+
+This is useful because it means the project is not starting from a blank folder.
+The existing structure already suggests:
+
+- `api` as HTTP-facing entrypoints
+- `config` as configuration management
+- `database` as persistence bootstrap
+- `models` as shared data models
+- `services` as business logic
+- `connections` as protocol or external integration adapters
+- `components/drive` and `components/drop` as early domain placeholders
+
+The architecture below should therefore be read as an evolution path from this structure, not as an instruction to immediately discard it.
+
 ## Design Principles
 
 ### 1. Domain-first modules
@@ -70,9 +104,10 @@ Repositories should not:
 Storage backends, queue clients, cache clients, and federation transport should be abstracted behind interfaces where business domains depend on them.
 This is especially important for Drive and Drop because the product already promises multiple storage backends.
 
-## Recommended Top-Level Layout
+## Recommended Evolution Direction
 
-The backend should evolve toward a structure similar to:
+The backend should evolve from the current flat layout toward a clearer modular layout.
+The likely long-term destination is:
 
 ```text
 core/
@@ -95,6 +130,16 @@ core/
   migrations/
   pkg/
 ```
+
+In practical terms, the migration path should be gradual:
+
+1. keep the current top-level folders working
+2. make `api`, `services`, `models`, and `connections` more disciplined
+3. move domain-specific code out of generic folders and into module-owned packages
+4. split API runtime and worker runtime when queue processing becomes real
+
+That means the current structure is acceptable as a transitional stage.
+The real issue is not folder names alone, but whether ownership and dependencies stay clean.
 
 ## Layer Overview
 
@@ -134,6 +179,9 @@ Responsibilities:
 
 This layer should know about modules, but not contain domain logic itself.
 
+In the current codebase, some of this responsibility is still implicitly inside `main.go`.
+That is fine for now, but it should eventually be extracted out of bootstrap code.
+
 ### `internal/platform`
 
 Shared infrastructure layer.
@@ -157,10 +205,21 @@ Responsibilities:
 - generic utilities
 - external adapter implementations
 
+In the current `core` structure, the closest existing folders are:
+
+- `config`
+- `database`
+- part of `connections`
+
+These can be treated as the present-day seeds of `internal/platform`.
+
 ### `internal/module`
 
 Domain modules live here.
 Each module should own its HTTP handlers, services, repositories, models, and queue hooks where applicable.
+
+In the current `core` structure, `components/drive` and `components/drop` already point in this direction.
+Those folders should be treated as the first domain modules rather than as generic utility components.
 
 ## Module Shape
 
@@ -191,6 +250,28 @@ Suggested responsibilities:
 - `module.go`: route registration and dependency wiring for the module
 
 Not every module needs every folder on day one, but the structure should be reserved.
+
+For the current repository, a shorter transitional shape is acceptable.
+For example, during the first refactor a module may temporarily look like:
+
+```text
+core/components/drop/
+  api/
+  service/
+  model/
+```
+
+or:
+
+```text
+core/components/drive/
+  handler/
+  service/
+  repository/
+```
+
+The important point is not exact naming.
+The important point is that Drive code lives with Drive, and Drop code lives with Drop, instead of being spread across unrelated top-level folders.
 
 ## Core Runtime Flows
 
@@ -235,6 +316,12 @@ Key responsibilities:
 - public meta endpoint
 
 This module already has a partial model and should be the first to become a full module.
+
+Given the current structure, `instance` can begin by growing out of:
+
+- `models/setting.go`
+- `database/db.go`
+- a future `api` handler for instance metadata
 
 ## `auth`
 
@@ -373,9 +460,19 @@ Key responsibilities:
 
 This module should depend on local domains like `user`, `note`, and `drive`, but those domains should not depend on federation internals.
 
+Given the current structure, `connections/activitypub` is the obvious seed for this module.
+It should eventually be folded into a more explicit federation-owned package structure rather than remaining a loose integration folder.
+
 ## Infrastructure Modules
 
 The following should exist in `internal/platform` rather than business modules.
+
+Until the backend is refactored into `internal/platform`, the current mapping can be treated like this:
+
+- `core/config` -> future `platform/config`
+- `core/database` -> future `platform/database`
+- `core/connections` -> future `platform` adapters or federation-owned transport packages, depending on the integration
+- `core/services` -> temporary service layer until services are moved into module ownership
 
 ## `config`
 
@@ -505,12 +602,12 @@ The queue runtime is shared, but job semantics belong to the module that owns th
 
 To move from the current codebase to this structure, the first refactor should be:
 
-1. create `cmd/api` and move current startup there
-2. move database and Redis setup into `internal/platform`
+1. keep `main.go` as the only entrypoint for now, but stop putting more composition logic into it
+2. formalize `api`, `services`, `models`, and `connections` responsibilities so they do not overlap
 3. convert current settings model into an `instance` module
-4. introduce shared HTTP response and error helpers
-5. add module registration points in `internal/app`
-6. start `drive` and `drop` as the first full domain modules
+4. treat `components/drive` and `components/drop` as real domain modules and move new code there first
+5. introduce shared HTTP response and error helpers in the API layer
+6. only after that, consider extracting `cmd/api`, `cmd/worker`, and `internal/platform`
 
 ## Architecture Decisions For Current Project
 
@@ -519,6 +616,7 @@ Given the current repository and product direction, the following decisions are 
 - use a modular monolith, not microservices
 - keep one API process and one worker process
 - separate Drive and Drop into two modules
+- evolve from the current `core` layout incrementally instead of rewriting folder structure up front
 - make queue processing a first-class runtime, not an afterthought
 - delay federation until local social and file domains are stable
 - keep handlers thin and place real logic in services
