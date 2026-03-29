@@ -59,6 +59,16 @@ const driveTabs = [
   ]
 ]
 
+// Console Top Tabs
+const panelTabs = [
+  [
+    { label: '概览', icon: 'i-material-symbols-dashboard', to: '/panel', exact: true },
+    { label: '实例设置', icon: 'i-material-symbols-settings-applications', to: '/panel/settings' },
+    { label: '管理', icon: 'i-material-symbols-manage-accounts', to: '/panel/manage' },
+    { label: '关于', icon: 'i-material-symbols-info', to: '/panel/about' }
+  ]
+]
+
 // Determine which tabs to show based on the active route
 const currentHeaderTabs = computed(() => {
   if (route.path.startsWith('/settings')) {
@@ -66,6 +76,9 @@ const currentHeaderTabs = computed(() => {
   }
   if (route.path.startsWith('/drive')) {
     return driveTabs
+  }
+  if (route.path.startsWith('/panel')) {
+    return panelTabs
   }
   return timelineTabs
 })
@@ -307,8 +320,7 @@ const moreMenuGroups = [
         <div class="flex items-center">
           <!-- Timeline & Settings tabs (left view active or split closed) -->
           <UNavigationMenu v-if="!splitViewStore.isOpen || splitViewStore.activeView === 'left'"
-            :items="currentHeaderTabs" class="w-full flex-nowrap overflow-x-auto custom-scrollbar no-scrollbar"
-            style="mask-image: linear-gradient(to right, white 90%, transparent);" />
+            :items="currentHeaderTabs" class="w-full flex-nowrap overflow-x-auto custom-scrollbar no-scrollbar" />
           <!-- Profile tabs (right view active, showing user) -->
           <div v-else-if="splitViewStore.activeView === 'right' && splitViewStore.currentRightViewType === 'user'"
             class="flex items-center">
@@ -337,7 +349,7 @@ const moreMenuGroups = [
             <img :src="musicStore.currentTrack.albumArt"
               class="w-6 h-6 rounded-full object-cover shrink-0 shadow-sm transition-transform duration-700"
               :class="musicStore.isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''" alt="Art">
-            <div class="w-24 overflow-hidden mask-image:linear-gradient(to_right,white_80%,transparent)">
+            <div class="w-24 overflow-hidden">
               <div class="text-xs font-bold whitespace-nowrap inline-block text-gray-800 dark:text-gray-100"
                 :class="musicStore.isPlaying ? 'animate-[marquee_10s_linear_infinite]' : ''">
                 {{ musicStore.currentTrack.title }}

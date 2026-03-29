@@ -23,12 +23,14 @@
     "@vueuse/nuxt": "14.2.1",
     "buffer": "^6.0.3",
     "date-fns": "^4.1.0",
+    "echarts": "^6.0.0",
     "lrc-kit": "^1.2.1",
     "mfm-js": "^0.25.0",
     "music-metadata": "^11.12.3",
     "nuxt": "^4.3.1",
     "pinia": "^3.0.4",
-    "tailwindcss": "^4.2.1"
+    "tailwindcss": "^4.2.1",
+    "vue-echarts": "^8.0.1"
   },
   "devDependencies": {
     "@iconify-json/ic": "^1.2.4",
