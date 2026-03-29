@@ -32,6 +32,15 @@ const formattedTotal = computed(() => formatBytes(totalCapacityMB, 'MB'))
 const progressPercentage = computed(() => (usedCapacityMB / totalCapacityMB) * 100)
 
 const isGridView = ref(false)
+const currentPath = ref([
+  { id: 'root', name: '我的云盘', icon: 'i-material-symbols-cloud' },
+  { id: 'f1', name: 'Images', icon: 'i-material-symbols-folder' }
+])
+
+function navigateToPath(index: number) {
+  // 模拟路径跳转：截断到点击的索引级别
+  currentPath.value = currentPath.value.slice(0, index + 1)
+}
 
 // 初始数据
 const folders = [
@@ -59,10 +68,9 @@ const unifiedItems = computed(() => {
 </script>
 
 <template>
-  <div class="h-full flex flex-col gap-6 animate-[fade-in_0.4s_ease-out]">
+  <div class="h-full flex flex-col gap-2 animate-[fade-in_0.4s_ease-out]">
     <!-- Header Controls (Refined: No Logo/Title) -->
-    <div
-      class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md p-6 rounded-[30px] border border-gray-200/50 dark:border-gray-800/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)] shrink-0">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-2 py-1 shrink-0">
 
       <!-- Left: Capacity Progress (Occupies title space) -->
       <div class="flex flex-col gap-2 w-full md:w-80 shrink-0">
@@ -87,13 +95,33 @@ const unifiedItems = computed(() => {
         <UButton icon="i-material-symbols-create-new-folder" color="neutral" variant="ghost"
           class="rounded-full w-10 h-10 flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 text-gray-400 hover:text-cyan-500 transition-colors" />
         <div class="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-2" />
-        <UButton :icon="isGridView ? 'i-material-symbols-view-list' : 'i-material-symbols-grid-view'" color="neutral"
+        <UButton :icon="isGridView ? 'i-material-symbols-grid-view' : 'i-material-symbols-view-list'" color="neutral"
           variant="ghost" class="rounded-full w-10 h-10 flex items-center justify-center transition-colors"
           :class="isGridView ? 'text-gray-400 hover:bg-black/5 dark:hover:bg-white/10 hover:text-cyan-500' : 'text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-500/10 hover:bg-cyan-100 dark:hover:bg-cyan-500/20'"
           @click="isGridView = !isGridView" />
         <UButton icon="i-material-symbols-upload" label="上传文件" color="primary" size="lg"
           class="rounded-full shadow-[0_0_15px_rgba(57,197,187,0.4)] hover:shadow-[0_0_25px_rgba(57,197,187,0.7)] hover:scale-105 transition-all px-6 font-bold ml-2" />
       </div>
+    </div>
+
+    <!-- macOS Style Directory Navigation (Breadcrumbs) -->
+    <div class="flex items-center gap-1.5 px-2 py-2 scroll-x-auto scrollbar-hide">
+      <template v-for="(path, index) in currentPath" :key="path.id">
+        <div class="flex items-center gap-2 group cursor-pointer" @click="navigateToPath(index)">
+          <div
+            class="flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all duration-300 group-hover:bg-cyan-50 dark:group-hover:bg-cyan-500/10 active:scale-95">
+            <UIcon :name="path.icon" class="w-4 h-4"
+              :class="index === currentPath.length - 1 ? 'text-cyan-500 dark:text-cyan-400' : 'text-gray-400 group-hover:text-cyan-500'" />
+            <span class="text-[13px] font-bold tracking-wide transition-colors"
+              :class="index === currentPath.length - 1 ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400 group-hover:text-cyan-600 dark:group-hover:text-cyan-400'">
+              {{ path.name }}
+            </span>
+          </div>
+        </div>
+        <!-- Chevron Separator (Don't show after the last item) -->
+        <UIcon v-if="index < currentPath.length - 1" name="i-material-symbols-chevron-right"
+          class="w-4 h-4 text-gray-300 dark:text-gray-700" />
+      </template>
     </div>
 
     <!-- Unified Content Area -->
@@ -133,7 +161,7 @@ const unifiedItems = computed(() => {
             </div>
 
             <div
-              class="col-span-2 hidden md:block text-right pr-4 text-[13px] font-black text-gray-500 dark:text-gray-400 font-mono">
+              class="col-span-2 hidden md:block text-right pr-4 text-[13px] font-black text-gray-500 dark:text-gray-400">
               {{ formatBytes(item.sizeMB, 'MB') }}
             </div>
 

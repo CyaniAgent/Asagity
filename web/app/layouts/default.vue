@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useInstanceStore } from '~/stores/instance'
 import { useSplitViewStore } from '~/stores/splitView'
 import { useMusicStore } from '~/stores/music'
+import { onClickOutside, useElementBounding } from '@vueuse/core'
 
 const route = useRoute()
 
@@ -41,7 +42,7 @@ const settingsTabs = [
     { label: 'Skyline 云盘', icon: 'i-material-symbols-cloud', to: '/settings/drive' },
     { label: '安全与隐私', icon: 'i-material-symbols-gpp-maybe', to: '/settings/security' },
     { label: '通知', icon: 'i-material-symbols-notifications', to: '/settings/notifications' },
-    { label: '主题与显示', icon: 'i-material-symbols-palette', to: '/settings/theme' },
+    { label: '个性化', icon: 'i-material-symbols-palette', to: '/settings/personalization' },
     { label: '声音', icon: 'i-material-symbols-volume-up', to: '/settings/sound' },
     { label: '插件', icon: 'i-material-symbols-extension', to: '/settings/plugins' },
     { label: '三方连接', icon: 'i-material-symbols-link', to: '/settings/connections' },
@@ -121,6 +122,54 @@ function getSplitViewTitle(type: string | null) {
     default: return '未知视图'
   }
 }
+
+// "More" popover state
+const moreMenuOpen = ref(false)
+const moreMenuRef = ref<any>(null) // Inside v-for, this becomes an array
+const moreMenuPanelRef = ref<HTMLElement | null>(null)
+
+// Extract the single element from the ref array
+const moreMenuAnchor = computed(() => {
+  const el = moreMenuRef.value
+  return Array.isArray(el) ? el[0] : el
+})
+
+const { top, right } = useElementBounding(moreMenuAnchor)
+
+const toggleMoreMenu = (e: MouseEvent) => {
+  // Toggle the menu. We don't stop propagation here so onClickOutside can see it,
+  // but we'll handle the logic to prevent a double-toggle if needed.
+  moreMenuOpen.value = !moreMenuOpen.value
+}
+
+onClickOutside(moreMenuPanelRef, (e) => {
+  if (!moreMenuOpen.value) return
+  
+  const anchor = moreMenuAnchor.value
+  // If we click the toggle button, its own handler will handle it.
+  // We check if the click target is the button OR contained within the button.
+  if (anchor && (anchor === e.target || anchor.contains(e.target as Node))) return
+  
+  moreMenuOpen.value = false
+})
+
+// "More" Menu feature groups (Misskey-inspired)
+const moreMenuGroups = [
+  [
+    { label: '收藏', icon: 'i-material-symbols-star-outline', to: '/bookmarks' },
+    { label: 'Mini App', icon: 'i-material-symbols-widgets-outline', to: '/miniapp' },
+    { label: '多维码', icon: 'i-material-symbols-qr-code', to: '/qrcode' },
+    { label: '小游戏', icon: 'i-material-symbols-sports-esports-outline', to: '/games' }
+  ],
+  [
+    { label: '图集', icon: 'i-material-symbols-photo-library-outline', to: '/albums' },
+    { label: '成就', icon: 'i-material-symbols-military-tech-outline', to: '/achievements' }
+  ],
+  [
+    { label: '开发者', icon: 'i-material-symbols-terminal', to: '/developer' },
+    { label: '关于', icon: 'i-material-symbols-help-outline', to: '/about' }
+  ]
+]
 </script>
 
 <template>
@@ -153,13 +202,63 @@ function getSplitViewTitle(type: string | null) {
       <!-- 中间 导航 -->
       <nav class="flex-1 px-3 py-2 overflow-y-auto custom-scrollbar flex flex-col gap-3">
         <div v-for="(group, gIdx) in navigation" :key="gIdx" class="flex flex-col gap-0.5">
-          <NuxtLink v-for="item in group" :key="item.to" :to="item.to"
-            class="flex items-center gap-4 px-4 py-2.5 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-gray-700 dark:text-gray-300 font-bold group/nav"
-            active-class="bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
-            <UIcon :name="item.icon"
-              class="w-[22px] h-[22px] opacity-70 group-hover/nav:opacity-100 transition-opacity" />
-            <span class="text-[15px] tracking-wide">{{ item.label }}</span>
-          </NuxtLink>
+          <template v-for="item in group" :key="item.label">
+            <!-- Special Case: "More" — hand-rolled popover -->
+            <div v-if="item.label === '更多'" ref="moreMenuRef" class="w-full">
+              <button type="button"
+                class="flex items-center gap-4 px-4 py-2.5 rounded-2xl w-full text-left transition-colors font-bold"
+                :class="moreMenuOpen
+                  ? 'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400'
+                  : 'hover:bg-black/5 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300'"
+                @click="toggleMoreMenu">
+                <UIcon :name="item.icon" class="w-[22px] h-[22px] opacity-70 shrink-0" />
+                <span class="text-[15px] tracking-wide">{{ item.label }}</span>
+                <UIcon name="i-material-symbols-chevron-right"
+                  class="w-4 h-4 ml-auto opacity-40 transition-transform duration-200"
+                  :class="{ 'rotate-90': moreMenuOpen }" />
+              </button>
+
+              <!-- Popover Panel -->
+              <ClientOnly>
+                <Teleport to="body">
+                  <Transition enter-active-class="transition duration-150 ease-out"
+                    enter-from-class="opacity-0 scale-95 translate-x-2"
+                    enter-to-class="opacity-100 scale-100 translate-x-0"
+                    leave-active-class="transition duration-100 ease-in"
+                    leave-from-class="opacity-100 scale-100 translate-x-0"
+                    leave-to-class="opacity-0 scale-95 translate-x-2">
+                    <div v-show="moreMenuOpen" ref="moreMenuPanelRef" class="fixed z-[100] w-52 origin-top-left"
+                      :style="{ top: `${top}px`, left: `${right + 12}px` }">
+                      <div
+                        class="rounded-2xl border border-white/20 dark:border-gray-700/50 bg-white/80 dark:bg-gray-900/90 backdrop-blur-xl shadow-2xl shadow-black/20 overflow-hidden py-1.5">
+                        <template v-for="(grp, gi) in moreMenuGroups" :key="gi">
+                          <div class="px-1">
+                            <NuxtLink v-for="feat in grp" :key="feat.label" :to="feat.to"
+                              class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-cyan-50 dark:hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors"
+                              @click="moreMenuOpen = false">
+                              <UIcon :name="feat.icon" class="w-[18px] h-[18px] shrink-0 opacity-70" />
+                              {{ feat.label }}
+                            </NuxtLink>
+                          </div>
+                          <div v-if="gi < moreMenuGroups.length - 1"
+                            class="h-px bg-gray-100 dark:bg-gray-800 mx-2 my-1" />
+                        </template>
+                      </div>
+                    </div>
+                  </Transition>
+                </Teleport>
+              </ClientOnly>
+            </div>
+
+            <!-- Standard Navigation Link -->
+            <NuxtLink v-else :to="item.to"
+              class="flex items-center gap-4 px-4 py-2.5 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-gray-700 dark:text-gray-300 font-bold group/nav"
+              active-class="bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
+              <UIcon :name="item.icon"
+                class="w-[22px] h-[22px] opacity-70 group-hover/nav:opacity-100 transition-opacity" />
+              <span class="text-[15px] tracking-wide">{{ item.label }}</span>
+            </NuxtLink>
+          </template>
           <div v-if="gIdx < navigation.length - 1" class="h-px bg-gray-200 dark:bg-white/10 my-2.5 mx-3" />
         </div>
       </nav>
