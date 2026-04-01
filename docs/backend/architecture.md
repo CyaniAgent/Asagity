@@ -187,6 +187,43 @@ Misskey's flatter ActivityPub layout is workable, but for this project it would 
 
 For Neo Linkage, the directory should exist now but remain a placeholder until the protocol itself is ready to be designed and implemented.
 
+## Auth And Identity Notes
+
+The authentication design currently assumes:
+
+- open registration is allowed without requiring an email address
+- if a user registers with an email address, registration must complete a 6-digit email verification step
+- login supports `username`, `pubid`, and `email`
+- internal user id and public user id are different fields
+- `pubid` is the external-facing identifier for display, search, and user-facing login
+- `pubid` follows the format `usr_` + 8 random characters
+- `pubid` is mutable, but can only be changed 5 times per month
+- `username` is not mutable in the current design
+- access token is returned to the frontend and stored in memory
+- refresh token is stored in an `HttpOnly` cookie
+- access token lifetime is `30m`
+- refresh token lifetime is `30d`
+- `/api/auth/me` only relies on access token
+- `/api/auth/refresh` is the only refresh endpoint
+- temporary registration context between register and email verification is stored in Redis
+- email verification code lifetime is `15m`
+- 5 failed email verification attempts disable email-based login for `15m`
+- during email-login cooldown, the account can still log in by `pubid + password`
+- during email-login cooldown, `username + password` and `email + password` are both blocked
+
+This means the user domain should distinguish between:
+
+- internal id: backend-owned primary identity key
+- public id: externally visible user-facing identifier
+
+Suggested field split:
+
+- `id`: internal backend id
+- `pubid`: public user-facing id
+- `username`: human-readable local account name
+
+For the current project, `auth` and `user` should be the first modules that move from placeholder status into actual implementation.
+
 ### `internal/platform`
 
 Shared infrastructure layer.
