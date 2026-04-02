@@ -4,17 +4,45 @@ import { definePageMeta } from '#imports'
 
 definePageMeta({ layout: false })
 
-const email = ref('')
+const { post } = useApi()
+const userStore = useUserStore()
+const router = useRouter()
+const toast = useToast()
+
+const identifier = ref('')
 const password = ref('')
 const loading = ref(false)
 
-const handleLogin = () => {
+const handleLogin = async () => {
+  if (!identifier.value || !password.value) return
+  
   loading.value = true
-  // Mock login delay
-  setTimeout(() => {
+  try {
+    const data = await post('/api/auth/login', {
+      identifier: identifier.value,
+      password: password.value
+    })
+    
+    userStore.setAuth(data)
+    toast.add({
+      title: '认证成功 (SYNC)',
+      description: `欢迎回来, ${data.user.username}!`,
+      color: 'success',
+      icon: 'i-material-symbols-check-circle'
+    })
+    
+    // Redirect to main panel
+    router.push('/')
+  } catch (err: any) {
+    toast.add({
+      title: '认证失败 (FAILED)',
+      description: err.message || '凭证验证失败，请检查输入。',
+      color: 'error',
+      icon: 'i-material-symbols-error'
+    })
+  } finally {
     loading.value = false
-    // Route to main app ideally: router.push('/')
-  }, 1000)
+  }
 }
 </script>
 
@@ -60,7 +88,7 @@ const handleLogin = () => {
             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <UIcon name="i-material-symbols-person" class="w-5 h-5 text-gray-500" />
             </div>
-            <input type="text" v-model="email" required
+            <input type="text" v-model="identifier" required
                    class="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all shadow-inner"
                    placeholder="syskuku@asagity.net">
           </div>

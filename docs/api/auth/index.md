@@ -17,7 +17,8 @@ It is based on the current confirmed decisions:
 - registration without email is allowed
 - registration with email requires a 6-digit email verification step
 - `pubid` follows the format `usr_` + 8 random characters
-- `pubid` can be changed up to 5 times per month
+- `pubid` can be changed up to 5 times per natural month
+- old `pubid` values are not reusable
 - `username` is not mutable in the current design
 - temporary registration context is stored in Redis
 - email verification code lifetime is 15 minutes
@@ -48,7 +49,7 @@ Suggested ownership split:
 ### Login on trusted device
 
 1. client submits identifier, password, and device info
-2. server resolves user by `id`, `username`, or `email`
+2. server resolves user by `pubid`, `username`, or `email`
 3. server validates password
 4. server recognizes trusted device
 5. server issues access token and refresh token
@@ -173,7 +174,7 @@ Notes:
 - `new_pubid`
 - `changed_at`
 
-This table is optional in the first implementation, but recommended if pubid history and monthly change enforcement need auditability.
+This table is required for natural-month quota enforcement and for making old public ids permanently non-reusable.
 
 ### `user_groups`
 
@@ -226,6 +227,13 @@ Suggested `purpose` values:
 - `login_new_device`
 - `register_with_email`
 
+Behavior notes:
+
+- failed verification attempts are counted at the account level
+- after 5 wrong codes, `username` and `email` login must be blocked for 15 minutes
+- `pubid` login remains available during the cooldown window
+- resending a code should create a new challenge and invalidate the previous one
+
 ### Redis temporary registration context
 
 For registration with email, the preferred flow is:
@@ -245,6 +253,7 @@ Recommended Redis contents:
 - expiration timestamp
 
 Recommended TTL: `15m`
+Recommended cache strategy for pubid change quota: use the database as source of truth and Redis only as a monthly counter cache.
 
 ## Response Envelope
 
@@ -311,7 +320,7 @@ If `email` is present, registration must complete a 6-digit email verification s
     "accessTokenExpiresIn": 1800,
     "user": {
       "id": "internal-id",
-      "pubid": "A1b2C3d4E5f6G7h8I9j0",
+      "pubid": "usr_A1b2C3d4",
       "name": "SK",
       "username": "syskuku",
       "email": null,
@@ -379,7 +388,7 @@ Complete registration when the user chose to register with an email address.
     "accessTokenExpiresIn": 1800,
     "user": {
       "id": "internal-id",
-      "pubid": "A1b2C3d4E5f6G7h8I9j0",
+      "pubid": "usr_A1b2C3d4",
       "name": "SK",
       "username": "syskuku",
       "email": "syskuku@asagity.net",
@@ -431,7 +440,7 @@ Login with public id, username, or email.
     "accessTokenExpiresIn": 1800,
     "user": {
       "id": "internal-id",
-      "pubid": "A1b2C3d4E5f6G7h8I9j0",
+      "pubid": "usr_A1b2C3d4",
       "name": "SK",
       "username": "syskuku",
       "email": "syskuku@asagity.net",
@@ -466,7 +475,7 @@ Login with public id, username, or email.
 - if the account has no bound email, login can complete directly
 - if the account has a bound email and the device is new, login must stop at challenge creation
 - no refresh token should be set before the challenge is completed
-- if the account is under email-login cooldown, email login must be rejected for 15 minutes
+- if the account is under email-login cooldown, username and email login must be rejected for 15 minutes
 
 ## `POST /api/auth/login/verify-email`
 
@@ -493,7 +502,7 @@ Complete login from a new device using a 6-digit email code.
     "accessTokenExpiresIn": 1800,
     "user": {
       "id": "internal-id",
-      "pubid": "A1b2C3d4E5f6G7h8I9j0",
+      "pubid": "usr_A1b2C3d4",
       "name": "SK",
       "username": "syskuku",
       "email": "syskuku@asagity.net",
@@ -603,7 +612,7 @@ This endpoint is required for SSR auth restoration.
   "data": {
     "user": {
       "id": "internal-id",
-      "pubid": "A1b2C3d4E5f6G7h8I9j0",
+      "pubid": "usr_A1b2C3d4",
       "name": "SK",
       "username": "syskuku",
       "email": "syskuku@asagity.net",
@@ -672,7 +681,7 @@ These points are still not fully specified and can be decided later without bloc
 - exact JWT signing algorithm and key rotation strategy
 - whether logout revokes only the current refresh token or the whole replacement chain
 - whether device fingerprint format is fully frontend-defined or normalized on the backend
-- exact Redis key naming scheme for temporary registration context and email-login cooldown state
+- exact Redis key naming scheme for temporary registration context, resend cooldowns, and monthly pubid quota cache
 
 ## Recommended First Implementation Scope
 

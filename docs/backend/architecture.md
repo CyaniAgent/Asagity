@@ -197,7 +197,8 @@ The authentication design currently assumes:
 - internal user id and public user id are different fields
 - `pubid` is the external-facing identifier for display, search, and user-facing login
 - `pubid` follows the format `usr_` + 8 random characters
-- `pubid` is mutable, but can only be changed 5 times per month
+- `pubid` is mutable, but can only be changed 5 times per natural month
+- old `pubid` values are permanently non-reusable
 - `username` is not mutable in the current design
 - access token is returned to the frontend and stored in memory
 - refresh token is stored in an `HttpOnly` cookie
@@ -210,6 +211,8 @@ The authentication design currently assumes:
 - 5 failed email verification attempts disable email-based login for `15m`
 - during email-login cooldown, the account can still log in by `pubid + password`
 - during email-login cooldown, `username + password` and `email + password` are both blocked
+- failed email verification attempts are counted at the account level
+- pubid monthly change quota should use the database as source of truth, with Redis only as a cache
 
 This means the user domain should distinguish between:
 

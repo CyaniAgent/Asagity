@@ -16,6 +16,7 @@ type Config struct {
 	RedisAddr     string
 	RedisPassword string
 	RedisDB       int
+	JwtSecret     string
 }
 
 func Load() (Config, error) {
@@ -31,6 +32,7 @@ func Load() (Config, error) {
 		RedisAddr:     envOrDefault("REDIS_ADDR", "localhost:6379"),
 		RedisPassword: os.Getenv("REDIS_PASSWORD"),
 		RedisDB:       0,
+		JwtSecret:     envOrDefault("JWT_SECRET", "asagity_secret_miku_39"),
 	}, nil
 }
 

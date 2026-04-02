@@ -3,16 +3,17 @@ package auth
 import (
 	"net/http"
 
-	"github.com/CyaniAgent/Asagity/core/internal/module/auth/handler"
-	"github.com/CyaniAgent/Asagity/core/internal/module/auth/repository"
+	authrepository "github.com/CyaniAgent/Asagity/core/internal/module/auth/repository"
 	"github.com/CyaniAgent/Asagity/core/internal/module/auth/service"
+	userrepository "github.com/CyaniAgent/Asagity/core/internal/module/user/repository"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/database"
 )
 
 func Register(mux *http.ServeMux, cfg config.Config, clients *database.Clients) {
-	repo := repository.New(clients)
-	svc := service.New(repo, cfg)
+	authRepo := authrepository.New(clients)
+	userRepo := userrepository.New(clients)
+	svc := service.New(authRepo, userRepo, cfg)
 	h := handler.New(svc)
 
 	mux.HandleFunc("/api/auth/register", h.Register)

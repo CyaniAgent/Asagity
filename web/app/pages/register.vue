@@ -4,19 +4,48 @@ import { definePageMeta } from '#imports'
 
 definePageMeta({ layout: false })
 
+const { post } = useApi()
+const userStore = useUserStore()
+const router = useRouter()
+const toast = useToast()
+
 const email = ref('')
 const username = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 const loading = ref(false)
 
-const handleRegister = () => {
+const handleRegister = async () => {
+  if (password.value !== confirmPassword.value) return
+  
   loading.value = true
-  // Mock registration delay
-  setTimeout(() => {
+  try {
+    const data = await post('/api/auth/register', {
+      username: username.value,
+      email: email.value,
+      password: password.value
+    })
+    
+    userStore.setAuth(data)
+    toast.add({
+      title: '初始化成功 (INITIALIZED)',
+      description: '欢迎来到 Asagity 枢纽, 你的节点已激活!',
+      color: 'success',
+      icon: 'i-material-symbols-check-circle'
+    })
+    
+    // Redirect to main panel
+    router.push('/')
+  } catch (err: any) {
+    toast.add({
+      title: '初始化失败 (FAILED)',
+      description: err.message || '注册请求被拒绝，请检查输入。',
+      color: 'error',
+      icon: 'i-material-symbols-error'
+    })
+  } finally {
     loading.value = false
-    // Route to welcome/main
-  }, 1000)
+  }
 }
 </script>
 

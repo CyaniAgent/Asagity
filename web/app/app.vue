@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { useInstanceStore } from '~/stores/instance'
+import { useUserStore } from '~/stores/user'
 
 const instanceStore = useInstanceStore()
+const userStore = useUserStore()
+
+// Restore session on load
+onMounted(() => {
+  userStore.fetchMe()
+})
 
 useHead({
   meta: [
