@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/CyaniAgent/Asagity/core/internal/module/auth/dto"
-	"github.com/CyaniAgent/Asagity/core/internal/module/auth/model"
 	authrepo "github.com/CyaniAgent/Asagity/core/internal/module/auth/repository"
 	usermodel "github.com/CyaniAgent/Asagity/core/internal/module/user/model"
 	userrepo "github.com/CyaniAgent/Asagity/core/internal/module/user/repository"

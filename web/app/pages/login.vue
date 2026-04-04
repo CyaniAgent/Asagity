@@ -7,7 +7,7 @@ definePageMeta({ layout: false })
 const { post } = useApi()
 const userStore = useUserStore()
 const router = useRouter()
-const toast = useToast()
+const toast = useAppToast()
 
 const identifier = ref('')
 const password = ref('')

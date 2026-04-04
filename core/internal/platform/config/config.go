@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/joho/godotenv"
 )
@@ -20,15 +21,15 @@ type Config struct {
 }
 
 func Load() (Config, error) {
-	_ = godotenv.Load()
+	loadEnv()
 
 	return Config{
 		ServerPort:    envOrDefault("SERVER_PORT", "2048"),
 		DBHost:        envOrDefault("DB_HOST", "localhost"),
 		DBPort:        envOrDefault("DB_PORT", "5432"),
-		DBUser:        envOrDefault("DB_USER", "postgres"),
-		DBPassword:    os.Getenv("DB_PASSWORD"),
-		DBName:        envOrDefault("DB_NAME", "asagity"),
+		DBUser:        envOrDefault("DB_USER", "asagity"),
+		DBPassword:    envOrDefault("DB_PASSWORD", "example_password"),
+		DBName:        envOrDefault("DB_NAME", "asagity_db"),
 		RedisAddr:     envOrDefault("REDIS_ADDR", "localhost:6379"),
 		RedisPassword: os.Getenv("REDIS_PASSWORD"),
 		RedisDB:       0,
@@ -42,4 +43,20 @@ func envOrDefault(key string, fallback string) string {
 	}
 
 	return fallback
+}
+
+func loadEnv() {
+	candidates := []string{".env"}
+
+	if cwd, err := os.Getwd(); err == nil {
+		candidates = append(candidates, filepath.Join(cwd, ".env"))
+		candidates = append(candidates, filepath.Join(cwd, "..", ".env"))
+	}
+
+	for _, path := range candidates {
+		if _, err := os.Stat(path); err == nil {
+			_ = godotenv.Overload(path)
+			return
+		}
+	}
 }

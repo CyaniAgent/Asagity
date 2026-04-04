@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import { useInstanceStore } from '~/stores/instance'
 import { useUserStore } from '~/stores/user'
+import { useSystemStore } from '~/stores/system'
 
 const instanceStore = useInstanceStore()
 const userStore = useUserStore()
+const systemStore = useSystemStore()
 
 // Restore session on load
-onMounted(() => {
-  userStore.fetchMe()
+onMounted(async () => {
+  // Start the background guardian
+  systemStore.startHeartbeat()
+  
+  // Try to restore user session
+  await userStore.fetchMe()
 })
 
 useHead({
@@ -36,6 +42,7 @@ useSeoMeta({
 <template>
   <UApp>
     <AppSplashScreen />
+    <AppErrorDialog />
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>

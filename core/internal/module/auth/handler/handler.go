@@ -3,12 +3,10 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 
 	"github.com/CyaniAgent/Asagity/core/internal/module/auth/dto"
 	"github.com/CyaniAgent/Asagity/core/internal/module/auth/service"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/httpx"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 type Handler struct {
@@ -67,4 +65,22 @@ func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, res)
 }
 
-// ... other placeholders
+func (h *Handler) VerifyRegisterEmail(w http.ResponseWriter, r *http.Request) {
+	httpx.WriteError(w, http.StatusNotImplemented, "NOT_IMPLEMENTED", "register email verification is not implemented yet")
+}
+
+func (h *Handler) VerifyLoginEmail(w http.ResponseWriter, r *http.Request) {
+	httpx.WriteError(w, http.StatusNotImplemented, "NOT_IMPLEMENTED", "login email verification is not implemented yet")
+}
+
+func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
+	httpx.WriteError(w, http.StatusNotImplemented, "NOT_IMPLEMENTED", "token refresh is not implemented yet")
+}
+
+func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
+	httpx.WriteError(w, http.StatusNotImplemented, "NOT_IMPLEMENTED", "logout is not implemented yet")
+}
+
+func (h *Handler) LogoutAll(w http.ResponseWriter, r *http.Request) {
+	httpx.WriteError(w, http.StatusNotImplemented, "NOT_IMPLEMENTED", "logout-all is not implemented yet")
+}

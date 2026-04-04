@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useCookie } from '#app'
+import { useSystemStore } from '~/stores/system'
 
 export const useUserStore = defineStore('user', () => {
   // Real token management
@@ -44,16 +45,38 @@ export const useUserStore = defineStore('user', () => {
   // Action to fetch me on init
   const fetchMe = async () => {
     if (!accessToken.value) return
-    
+
+    // Dev mode bypass: If it's our mock token, assume we are connected
+    if (accessToken.value === 'dev_mock_token_39') {
+      isLoggedIn.value = true
+      return
+    }
+
     const api = useApi()
+    const systemStore = useSystemStore()
+
     try {
       const userData = await api.get('/api/auth/me')
       user.value = userData
       userProfileCookie.value = userData
       isLoggedIn.value = true
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to fetch user profile:', err)
-      logout()
+
+      const errMsg = err.message || ''
+      // Detect severe network failure (server unreachable)
+      if (errMsg.toLowerCase().includes('fetch failed') || errMsg.toLowerCase().includes('network error') || errMsg.toLowerCase().includes('failed to fetch')) {
+        systemStore.triggerOfflineFallback()
+      } else {
+        // If it was a 401 or other logic error...
+        // If we are using the developer mock token, just ignore the 401 and stay logged in.
+        if (accessToken.value === 'dev_mock_token_39') {
+          isLoggedIn.value = true
+        } else {
+          // Real token but failed (e.g. expired) -> logout
+          logout()
+        }
+      }
     }
   }
 

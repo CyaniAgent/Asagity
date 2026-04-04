@@ -3,6 +3,7 @@ package auth
 import (
 	"net/http"
 
+	"github.com/CyaniAgent/Asagity/core/internal/module/auth/handler"
 	authrepository "github.com/CyaniAgent/Asagity/core/internal/module/auth/repository"
 	"github.com/CyaniAgent/Asagity/core/internal/module/auth/service"
 	userrepository "github.com/CyaniAgent/Asagity/core/internal/module/user/repository"
