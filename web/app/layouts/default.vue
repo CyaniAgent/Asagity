@@ -4,10 +4,12 @@ import { useRoute } from 'vue-router'
 import { useInstanceStore } from '~/stores/instance'
 import { useSplitViewStore } from '~/stores/splitView'
 import { useMusicStore } from '~/stores/music'
+import { useSystemStore } from '~/stores/system'
 import { useIconCache } from '~/composables/useIconCache'
-import { onClickOutside, useElementBounding } from '@vueuse/core'
+import { onClickOutside, useElementBounding, useEventListener } from '@vueuse/core'
 
 const route = useRoute()
+const systemStore = useSystemStore()
 
 const navigation = [
   [
@@ -159,12 +161,12 @@ const toggleMoreMenu = (e: MouseEvent) => {
 
 onClickOutside(moreMenuPanelRef, (e) => {
   if (!moreMenuOpen.value) return
-  
+
   const anchor = moreMenuAnchor.value
   // If we click the toggle button, its own handler will handle it.
   // We check if the click target is the button OR contained within the button.
   if (anchor && (anchor === e.target || anchor.contains(e.target as Node))) return
-  
+
   moreMenuOpen.value = false
 })
 
@@ -224,8 +226,7 @@ const moreMenuGroups = [
                 class="flex items-center gap-4 px-4 py-2.5 rounded-2xl w-full text-left transition-colors font-bold"
                 :class="moreMenuOpen
                   ? 'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400'
-                  : 'hover:bg-black/5 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300'"
-                @click="toggleMoreMenu">
+                  : 'hover:bg-black/5 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300'" @click="toggleMoreMenu">
                 <UIcon :name="item.icon" class="w-[22px] h-[22px] opacity-70 shrink-0" />
                 <span class="text-[15px] tracking-wide">{{ item.label }}</span>
                 <UIcon name="i-material-symbols-chevron-right"
@@ -344,6 +345,16 @@ const moreMenuGroups = [
 
         <!-- 右侧：小组件 -->
         <div class="flex items-center gap-4">
+          <!-- Dimension Signal (Core Status) - Independent -->
+          <div
+            class="flex items-center justify-center w-8 h-8 rounded-full bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm transition-all hover:scale-110 cursor-help group"
+            :title="systemStore.isBackendOnline ? '服务端已连接 (Asagity NET Online)' : '服务端已断开 (Asagity NET Offline)'">
+            <UIcon
+              :name="systemStore.isBackendOnline ? 'i-material-symbols-android-wifi-3-bar-rounded' : 'i-material-symbols-android-wifi-3-bar-off-rounded'"
+              class="w-4 h-4 transition-colors duration-500"
+              :class="systemStore.isBackendOnline ? 'text-green-400' : 'text-red-400 animate-pulse'" />
+          </div>
+
           <!-- 音乐播放器组件 (联动 musicStore) -->
           <div
             class="flex items-center gap-2 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-full pr-2 pl-1 py-1 border border-white/20 dark:border-gray-700/50 shadow-sm transition-all hover:scale-105 cursor-pointer group"

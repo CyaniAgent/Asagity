@@ -2,10 +2,12 @@
 import { computed } from 'vue'
 import { useMusicStore } from '~/stores/music'
 import { useSplitViewStore } from '~/stores/splitView'
+import { useSystemStore } from '~/stores/system'
 import MusicLyrics from '~/components/MusicLyrics.vue'
 
 const musicStore = useMusicStore()
 const splitViewStore = useSplitViewStore()
+const systemStore = useSystemStore()
 
 // Dynamic theme color from album art
 const activeColor = computed(() => musicStore.themeColor)
@@ -52,7 +54,9 @@ function handleVolumeChange(e: Event) {
             class="text-cyan-500 w-4 h-4"
           />
         </div>
-        <span class="text-[11px] font-black uppercase tracking-[0.3em] opacity-40">Now Playing</span>
+        <div class="flex flex-col">
+          <span class="text-[11px] font-black uppercase tracking-[0.3em] opacity-40">Now Playing</span>
+        </div>
       </div>
       <UButton
         icon="i-material-symbols-close"

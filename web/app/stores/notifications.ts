@@ -64,9 +64,25 @@ export const useNotificationStore = defineStore('notification', () => {
     notifications.value.forEach(n => n.isRead = true)
   }
 
+  function addNotification(notification: Omit<Notification, 'id' | 'createdAt' | 'isRead'>) {
+    const newNotify: Notification = {
+      id: Math.random().toString(36).substring(2, 9),
+      createdAt: new Date().toISOString(),
+      isRead: false,
+      ...notification
+    }
+    notifications.value.unshift(newNotify)
+    
+    // Limit to 50 recent notifications
+    if (notifications.value.length > 50) {
+      notifications.value = notifications.value.slice(0, 50)
+    }
+  }
+
   return {
     notifications,
     markAsRead,
-    markAllAsRead
+    markAllAsRead,
+    addNotification
   }
 })

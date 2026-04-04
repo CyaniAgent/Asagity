@@ -34,7 +34,9 @@ export const useSystemStore = defineStore('system', () => {
            title: '连接已恢复 (ONLINE)',
            description: '感知到服务端在线，系统功能已全面回复。',
            color: 'success',
-           icon: 'i-material-symbols-cloud-done-rounded'
+           icon: 'i-material-symbols-cloud-done-rounded',
+           silent: true,
+           persist: false
          })
       }
     }
