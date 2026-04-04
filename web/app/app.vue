@@ -2,6 +2,7 @@
 import { useInstanceStore } from '~/stores/instance'
 import { useUserStore } from '~/stores/user'
 import { useSystemStore } from '~/stores/system'
+import { useIconCache } from '~/composables/useIconCache'
 
 const instanceStore = useInstanceStore()
 const userStore = useUserStore()
@@ -9,8 +10,15 @@ const systemStore = useSystemStore()
 
 // Restore session on load
 onMounted(async () => {
+  const { getIconUrl } = useIconCache()
+  
   // Start the background guardian
   systemStore.startHeartbeat()
+  
+  // Pre-fetch/Cache instance logo
+  if (instanceStore.logoURL) {
+    getIconUrl(instanceStore.logoURL)
+  }
   
   // Try to restore user session
   await userStore.fetchMe()

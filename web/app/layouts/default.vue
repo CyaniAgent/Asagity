@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { useInstanceStore } from '~/stores/instance'
 import { useSplitViewStore } from '~/stores/splitView'
 import { useMusicStore } from '~/stores/music'
+import { useIconCache } from '~/composables/useIconCache'
 import { onClickOutside, useElementBounding } from '@vueuse/core'
 
 const route = useRoute()
@@ -95,6 +96,7 @@ const profileTabs = [
 const instanceStore = useInstanceStore()
 const splitViewStore = useSplitViewStore()
 const musicStore = useMusicStore()
+const { getIconUrl } = useIconCache()
 const containerRef = ref<HTMLElement | null>(null)
 
 function startResizing() {
@@ -193,7 +195,7 @@ const moreMenuGroups = [
       <NuxtLink to="/about" class="h-24 flex items-center px-6 shrink-0 group/logo cursor-pointer relative block">
         <div
           class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-primary-600 rounded-[18px] flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover/logo:rotate-6 group-hover/logo:scale-110 transition-all duration-300 overflow-hidden ring-2 ring-white/20">
-          <img v-if="instanceStore.logoURL" :src="instanceStore.logoURL" class="w-full h-full object-cover">
+          <img v-if="instanceStore.logoURL" :src="getIconUrl(instanceStore.logoURL)" class="w-full h-full object-cover">
           <UIcon v-else name="i-material-symbols-bolt" class="w-7 h-7 text-white" />
         </div>
 

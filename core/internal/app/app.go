@@ -6,6 +6,7 @@ import (
 	authmodule "github.com/CyaniAgent/Asagity/core/internal/module/auth"
 	instancemodule "github.com/CyaniAgent/Asagity/core/internal/module/instance"
 	usermodule "github.com/CyaniAgent/Asagity/core/internal/module/user"
+	assetmodule "github.com/CyaniAgent/Asagity/core/internal/module/asset"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/database"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/httpx"
@@ -22,6 +23,7 @@ func New(cfg config.Config, clients *database.Clients) *App {
 	instancemodule.Register(mux, cfg, clients)
 	authmodule.Register(mux, cfg, clients)
 	usermodule.Register(mux, cfg, clients)
+	assetmodule.Register(mux, cfg, clients)
 
 	return &App{mux: mux, cfg: cfg}
 }
