@@ -155,4 +155,16 @@
 - **时间线剩余图标**：将 `i-ic-sharp-public` / `i-ic-baseline-person-outline` 统一切换至 M3 对应的 `public` / `person`。
 
 ---
-*Updated by Antigravity Divine Engineer - 2026-03-22*
+
+## 12. 图标持久化与后端缓存 (Icon Persistence & Backend Caching)
+
+### 12.1 架构下沉 (Logic Migration)
+- **Go 后端接管**：将原本位于 Nuxt Nitro 的图标代理与缓存逻辑迁移至 Go 后端 (`core`)。新增 `Asset` 模块统一处理远程资源的下载、MD5 哈希重命名与磁盘持久化。
+- **高性能中转**：前端通过 `/api/asset/icon?url=...` 发起请求，Go 后端利用原生 `http` 客户端实现极速抓取，大幅降低前端 Nitro 服务的压力。
+
+### 12.2 跨项目资产共享 (Cross-Project Asset Storage)
+- **存储对齐**：为了确保“图标即前端资源”的逻辑，Go 后端利用相对路径直接将缓存文件写入前端项目文件夹 `web/app/assets/icons`。
+- **离线韧性**：由 `useIconCache` 组合器统一封装。一旦图标下载完成，即便远程源失效，后端依然能从前端挂载的文件系统中秒级读取并返回。
+
+---
+*Updated by Antigravity Divine Engineer - 2026-04-04*

@@ -9,6 +9,46 @@ It is a working architecture guide for how the backend should evolve as new modu
 The main design goal is to keep business logic out of HTTP handlers and out of infrastructure glue.
 The backend should be modular enough for Drive, Drop, social features, and federation to grow independently without fragmenting the codebase.
 
+## Current Code Status
+
+The repository is already on the modular-monolith path described here.
+
+Implemented structure now includes:
+
+- `core/cmd/api`
+- `core/cmd/worker`
+- `core/internal/app`
+- `core/internal/platform/config`
+- `core/internal/platform/database`
+- `core/internal/platform/httpx`
+- `core/internal/module/instance`
+- `core/internal/module/auth`
+- `core/internal/module/user`
+- `core/internal/module/asset`
+- `core/internal/app/connections/activitypub/inbox`
+- `core/internal/app/connections/activitypub/deliver`
+- `core/internal/app/connections/neolinkage`
+
+Currently registered modules in the API process are:
+
+- `instance`
+- `auth`
+- `user`
+
+`asset` exists in the tree as an early utility module, but is not yet a major domain anchor in the roadmap.
+
+The backend currently exposes a minimal health path through the `instance` module:
+
+- `GET /healthz`
+
+The frontend development path now assumes:
+
+```text
+browser -> Nuxt dev server (:2000) -> dev proxy -> Go API (:2048)
+```
+
+That is why health and API routes should stay stable and should not be duplicated across modules.
+
 ## Design Principles
 
 ### 1. Domain-first modules
@@ -226,6 +266,7 @@ Suggested field split:
 - `username`: human-readable local account name
 
 For the current project, `auth` and `user` should be the first modules that move from placeholder status into actual implementation.
+`instance` is already ahead of them in terms of bootstrap endpoints, but still needs real settings-backed behavior.
 
 ### `internal/platform`
 
@@ -661,12 +702,18 @@ This structure is mainly designed to avoid these failure modes:
 
 The next concrete backend implementation should start from:
 
-- `instance` module
-- `drive` module
-- `drop` module
+- `auth` module completion
+- `user` module completion
+- `instance` settings completion
+- `drive` module scaffolding
+- `drop` module scaffolding
 - `app/connections/activitypub/inbox`
 - `app/connections/activitypub/deliver`
 - `platform/storage`
 - `platform/queue`
 
-That set provides the best path from current code to a usable backend without premature federation complexity.
+That order reflects the current repository more accurately:
+
+- `instance` already exposes bootstrap endpoints
+- `auth` and `user` already have models and routes, but still need real business completion
+- `drive` and `drop` are the next major untouched domains

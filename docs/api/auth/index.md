@@ -1,147 +1,259 @@
-# Auth API Draft
+# Auth API
 
 ## Purpose
 
-This document defines the first backend API draft for authentication and registration in Asagity.
+This document describes both:
 
-It is based on the current confirmed decisions:
+- the confirmed target design for Asagity authentication
+- the current implementation status in the repository
 
-- login supports `username`, `pubid`, and `email`
-- registration supports `username`, `email`, and `password`
-- registration auto-logs the user in
+These two are intentionally kept together because the code is still in a bootstrap phase.
+
+## Current Implementation Status
+
+### Implemented endpoints
+
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+
+### Registered but still placeholder endpoints
+
+- `POST /api/auth/register/verify-email`
+- `POST /api/auth/login/verify-email`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
+- `POST /api/auth/logout-all`
+
+These placeholder endpoints currently return `501 Not Implemented`.
+
+### Current prototype limitations
+
+- current register DTO still requires `email`
+- current login service resolves `email` and `username`, but not `pubid` yet
+- refresh-token cookie rotation is not implemented yet
+- email challenge flow is not implemented yet
+- Redis registration context is not implemented yet
+- device trust flow is not implemented yet
+
+## Confirmed Target Rules
+
+- login must support `username`, `pubid`, and `email`
+- internal `id` and public `pubid` are different fields
+- `pubid` format is `usr_` + 8 random characters
+- `pubid` is mutable, but only 5 times per natural month
+- old `pubid` values are permanently non-reusable
+- `username` is currently immutable
+- registration without email must be allowed
+- registration with email must complete a 6-digit email verification step
+- registration success should auto-login the user
 - access token is returned to the frontend and stored in memory
 - refresh token is stored in an `HttpOnly` cookie
-- new device login triggers email verification if the account has a bound email
-- trusted devices can log in again without repeating email verification
-- email verification uses a 6-digit code
-- registration without email is allowed
-- registration with email requires a 6-digit email verification step
-- `pubid` follows the format `usr_` + 8 random characters
-- `pubid` can be changed up to 5 times per natural month
-- old `pubid` values are not reusable
-- `username` is not mutable in the current design
+- access token lifetime is `30m`
+- refresh token lifetime is `30d`
+- `/api/auth/me` only uses access token
+- `/api/auth/refresh` is the only refresh endpoint
+- device identity uses both frontend fingerprint and backend-observed metadata
+- new-device login with a bound email requires email verification
+- failed email verification attempts are counted at the account level
+- after 5 wrong codes, `username` and `email` login are blocked for 15 minutes
+- `pubid + password` remains available during the cooldown window
+- resending a code must create a new challenge and invalidate the previous one
 - temporary registration context is stored in Redis
-- email verification code lifetime is 15 minutes
-- 5 failed email code attempts disable email login for 15 minutes
+- monthly pubid quota uses the database as source of truth and Redis only as cache
 - the first administrator is created by Setup Wizard, not by normal registration
 
-## Module Ownership
+## Current Route Set
 
-Suggested ownership split:
+### `POST /api/auth/register`
 
-- `module/auth`: register, login, refresh, logout, me, login challenge, device trust
-- `module/user`: user profile, public user data, user group data
+Current status:
 
-## High-Level Flow
+- implemented as bootstrap logic
+- returns success envelope with auth payload
 
-### Registration
+Current prototype request:
 
-1. client submits username, email, password, and device info
-2. server validates input and uniqueness
-3. if no email is provided, server creates user immediately
-4. if email is provided, server creates an email verification challenge first
-5. after verification, server creates user
-6. server creates or updates trusted device entry
-7. server issues access token and refresh token
-8. server returns access token and current user
-9. server sets refresh token in `HttpOnly` cookie
+```json
+{
+  "username": "syskuku",
+  "email": "syskuku@asagity.net",
+  "password": "plain-password"
+}
+```
 
-### Login on trusted device
+Current prototype response shape:
 
-1. client submits identifier, password, and device info
-2. server resolves user by `pubid`, `username`, or `email`
-3. server validates password
-4. server recognizes trusted device
-5. server issues access token and refresh token
+```json
+{
+  "ok": true,
+  "data": {
+    "access_token": "jwt-token",
+    "refresh_token": "refresh-token-placeholder",
+    "user": {
+      "id": "internal-id",
+      "pub_id": "usr_A1b2C3d4",
+      "username": "syskuku",
+      "name": "",
+      "avatar_url": ""
+    }
+  }
+}
+```
 
-### Login on new device with bound email
+Target behavior:
 
-1. client submits identifier, password, and device info
-2. server resolves user and validates password
-3. server detects unknown or untrusted device
-4. server creates email verification challenge
-5. server sends 6-digit code to bound email
-6. server returns `requiresEmailVerification = true`
-7. client submits challenge id and code
-8. server verifies code, trusts device, and issues tokens
+- if `email` is omitted, registration completes immediately
+- if `email` is present, registration should require email verification before final user creation
 
-### Email login cooldown
+### `POST /api/auth/register/verify-email`
 
-If a user enters the wrong 6-digit code 5 times:
+Current status:
 
-1. email-based login for that account is disabled for 15 minutes
-2. login by `email + password` should be rejected during that window
-3. login by `pubid + password` is still allowed
+- registered
+- currently returns `501`
 
-This rule is designed to limit repeated mailbox-targeted attacks without fully locking the account.
+Target request:
 
-### Session recovery
+```json
+{
+  "challengeId": "challenge-id",
+  "code": "123456"
+}
+```
 
-1. SSR request arrives without valid in-memory access token
-2. frontend sends refresh cookie
-3. server verifies refresh token
-4. server rotates refresh token and returns new access token
-5. frontend requests `/api/auth/me`
+Target behavior:
 
-## Identifier Rules
+- verify challenge
+- load temporary registration context from Redis
+- create user
+- trust current device
+- issue tokens
 
-The login request field should be called `identifier`.
+### `POST /api/auth/login`
 
-The backend resolves it in this order:
+Current status:
 
-1. exact public id match
-2. exact username match
-3. exact email match
+- implemented as bootstrap logic
+- currently supports `username` and `email`
 
-This avoids frontend coupling to one identifier type.
+Current prototype request:
 
-If the account is currently under email-login cooldown:
+```json
+{
+  "identifier": "syskuku",
+  "password": "plain-password"
+}
+```
 
-- `pubid` login is still allowed
-- `username` login should also be blocked during the cooldown window
-- `email` login should be blocked until cooldown expires
+Current prototype response shape:
 
-## Token Strategy
+```json
+{
+  "ok": true,
+  "data": {
+    "access_token": "jwt-token",
+    "refresh_token": "refresh-token-placeholder",
+    "user": {
+      "id": "internal-id",
+      "pub_id": "usr_A1b2C3d4",
+      "username": "syskuku",
+      "name": "",
+      "avatar_url": ""
+    }
+  }
+}
+```
 
-### Access Token
+Target behavior:
 
-- returned in JSON response
-- intended for frontend memory storage only
-- short-lived
-- lifetime: `30m`
+- resolve by `pubid`, then `username`, then `email`
+- if account has bound email and device is new, return challenge instead of tokens
+- if account is in email-login cooldown, reject `username` and `email` login
 
-### Refresh Token
+### `POST /api/auth/login/verify-email`
 
-- stored in `HttpOnly` cookie
-- long-lived
-- must be persisted as hash in the database
-- should rotate on every refresh
-- should be bound to a device record
-- lifetime: `30d`
+Current status:
 
-### Recommended cookie settings
+- registered
+- currently returns `501`
 
-- `HttpOnly`
-- `Secure` in production
-- `SameSite=Lax` or stricter depending on deployment
-- scoped to auth refresh path if desired
+Target request:
 
-## Device Trust Model
+```json
+{
+  "challengeId": "challenge-id",
+  "code": "123456",
+  "deviceFingerprint": "browser-stable-id",
+  "deviceName": "Chrome on Windows"
+}
+```
 
-Device identity should use both:
+### `POST /api/auth/refresh`
 
-- frontend-provided `deviceFingerprint`
-- backend-observed metadata such as `userAgent` and IP address
+Current status:
 
-The fingerprint is the primary stable key.
-UA and IP are supporting evidence and audit context.
+- registered
+- currently returns `501`
 
-A device is considered trusted when:
+Target behavior:
 
-- it has successfully completed login before, or
-- it has passed email challenge verification
+- read refresh token from `HttpOnly` cookie
+- rotate refresh token
+- return a new access token
 
-## Suggested Data Model
+### `POST /api/auth/logout`
+
+Current status:
+
+- registered
+- currently returns `501`
+
+Target behavior:
+
+- revoke current refresh-token chain for the device
+- clear refresh-token cookie
+
+### `POST /api/auth/logout-all`
+
+Current status:
+
+- registered
+- currently returns `501`
+
+Target behavior:
+
+- revoke all active device sessions for the current user
+
+### `GET /api/auth/me`
+
+Current status:
+
+- implemented
+- reads current user id from access-token middleware context
+
+Current prototype response shape:
+
+```json
+{
+  "ok": true,
+  "data": {
+    "id": "internal-id",
+    "pub_id": "usr_A1b2C3d4",
+    "username": "syskuku",
+    "name": "",
+    "avatar_url": ""
+  }
+}
+```
+
+Target behavior:
+
+- return fuller user profile data
+- remain access-token only
+- be used by SSR auth restoration
+
+## Data Model
 
 ### `users`
 
@@ -156,15 +268,13 @@ A device is considered trusted when:
 - `user_group_id`
 - `created_at`
 
-Notes:
+### `user_groups`
 
-- `id` is an internal backend-owned identifier
-- `pubid` follows the format `usr_` + 8 random characters
-- `pubid` is the user-facing id used for external display, search, and public-id login
-- `username` must be unique
-- `username` is currently immutable
-- `email` should be unique when present
-- no separate account status field is required in the first version
+- `id`
+- `name`
+- `code`
+- `description`
+- `created_at`
 
 ### `user_pubid_changes`
 
@@ -173,16 +283,6 @@ Notes:
 - `old_pubid`
 - `new_pubid`
 - `changed_at`
-
-This table is required for natural-month quota enforcement and for making old public ids permanently non-reusable.
-
-### `user_groups`
-
-- `id`
-- `name`
-- `code`
-- `description`
-- `created_at`
 
 ### `auth_devices`
 
@@ -222,42 +322,43 @@ This table is required for natural-month quota enforcement and for making old pu
 - `verified_at`
 - `created_at`
 
-Suggested `purpose` values:
+Suggested purpose values:
 
 - `login_new_device`
 - `register_with_email`
 
-Behavior notes:
+## Redis Use
 
-- failed verification attempts are counted at the account level
-- after 5 wrong codes, `username` and `email` login must be blocked for 15 minutes
-- `pubid` login remains available during the cooldown window
-- resending a code should create a new challenge and invalidate the previous one
+### Registration context
 
-### Redis temporary registration context
+Used between:
 
-For registration with email, the preferred flow is:
+- `POST /api/auth/register`
+- `POST /api/auth/register/verify-email`
 
-- `POST /api/auth/register` creates a Redis registration context
-- `POST /api/auth/register/verify-email` consumes that context after code verification
-
-Recommended Redis contents:
+Stored fields should include:
 
 - `name`
 - `username`
 - `email`
-- `password_hash` or equivalent protected temporary credential material
+- `password_hash` or equivalent protected material
 - `device_fingerprint`
 - `device_name`
-- creation timestamp
-- expiration timestamp
+- `created_at`
+- `expires_at`
 
 Recommended TTL: `15m`
-Recommended cache strategy for pubid change quota: use the database as source of truth and Redis only as a monthly counter cache.
 
-## Response Envelope
+### Additional Redis roles
 
-Suggested response style:
+- resend cooldown state
+- monthly pubid quota cache
+
+Database remains the source of truth for quota enforcement.
+
+## Current Response Conventions
+
+The backend currently wraps success responses as:
 
 ```json
 {
@@ -266,375 +367,45 @@ Suggested response style:
 }
 ```
 
-Suggested error style:
+The backend currently wraps error responses as:
 
 ```json
 {
   "ok": false,
   "error": {
-    "code": "AUTH_INVALID_CREDENTIALS",
-    "message": "Identifier or password is incorrect."
+    "code": "SOME_CODE",
+    "message": "Human-readable message"
   }
 }
 ```
 
-## Endpoints
+The current codebase uses snake_case JSON field names in auth payloads, such as:
 
-## `POST /api/auth/register`
+- `access_token`
+- `refresh_token`
+- `pub_id`
+- `avatar_url`
 
-Start registration.
+## Frontend Integration Notes
 
-If `email` is omitted, registration completes immediately and logs the user in.
-If `email` is present, registration must complete a 6-digit email verification step first.
+### Current frontend behavior
 
-### Request body
+- login page posts to `/api/auth/login`
+- register page posts to `/api/auth/register`
+- user store expects snake_case auth fields today
+- frontend dev server now proxies `/api` and `/healthz` to the Go backend in development
 
-```json
-{
-  "name": "SK",
-  "username": "syskuku",
-  "email": "syskuku@asagity.net",
-  "password": "plain-password",
-  "deviceFingerprint": "browser-stable-id",
-  "deviceName": "Chrome on Windows"
-}
-```
+### SSR/auth note
 
-### Validation
+The target SSR flow remains:
 
-- `username` required
-- `username` matches `[A-Za-z0-9_]+`
-- `password` required
-- `password` minimum length `8`
-- `email` optional
-- username must be unique
-- email must be unique when provided
+1. try current in-memory access token
+2. if missing or expired, call `/api/auth/refresh`
+3. if refresh succeeds, store new access token in memory
+4. call `/api/auth/me`
+5. hydrate frontend user store
 
-### Success response without email
-
-```json
-{
-  "ok": true,
-  "data": {
-    "accessToken": "access-token",
-    "accessTokenExpiresIn": 1800,
-    "user": {
-      "id": "internal-id",
-      "pubid": "usr_A1b2C3d4",
-      "name": "SK",
-      "username": "syskuku",
-      "email": null,
-      "avatarUrl": "",
-      "description": "",
-      "userGroup": {
-        "id": "member",
-        "code": "member",
-        "name": "Member"
-      },
-      "createdAt": "2026-04-01T12:00:00Z"
-    }
-  }
-}
-```
-
-### Success response with email verification required
-
-```json
-{
-  "ok": true,
-  "data": {
-    "requiresEmailVerification": true,
-    "challengeId": "challenge-id",
-    "maskedEmail": "sy***@asagity.net"
-  }
-}
-```
-
-### Side effects without email
-
-- creates user
-- assigns default user group
-- creates trusted device
-- sets refresh token cookie
-
-### Side effects with email
-
-- creates email challenge
-- creates Redis registration context
-- sends 6-digit verification code
-- does not create refresh token yet
-- does not create the final user session yet
-
-## `POST /api/auth/register/verify-email`
-
-Complete registration when the user chose to register with an email address.
-
-### Request body
-
-```json
-{
-  "challengeId": "challenge-id",
-  "code": "123456"
-}
-```
-
-### Success response
-
-```json
-{
-  "ok": true,
-  "data": {
-    "accessToken": "access-token",
-    "accessTokenExpiresIn": 1800,
-    "user": {
-      "id": "internal-id",
-      "pubid": "usr_A1b2C3d4",
-      "name": "SK",
-      "username": "syskuku",
-      "email": "syskuku@asagity.net",
-      "avatarUrl": "",
-      "description": "",
-      "userGroup": {
-        "id": "member",
-        "code": "member",
-        "name": "Member"
-      },
-      "createdAt": "2026-04-01T12:00:00Z"
-    }
-  }
-}
-```
-
-### Side effects
-
-- verifies email challenge
-- loads temporary registration context from Redis
-- creates user
-- assigns default user group
-- creates trusted device
-- sets refresh token cookie
-
-## `POST /api/auth/login`
-
-Login with public id, username, or email.
-
-### Request body
-
-```json
-{
-  "identifier": "syskuku",
-  "password": "plain-password",
-  "deviceFingerprint": "browser-stable-id",
-  "deviceName": "Chrome on Windows"
-}
-```
-
-### Success response on trusted device
-
-```json
-{
-  "ok": true,
-  "data": {
-    "requiresEmailVerification": false,
-    "accessToken": "access-token",
-    "accessTokenExpiresIn": 1800,
-    "user": {
-      "id": "internal-id",
-      "pubid": "usr_A1b2C3d4",
-      "name": "SK",
-      "username": "syskuku",
-      "email": "syskuku@asagity.net",
-      "avatarUrl": "",
-      "description": "",
-      "userGroup": {
-        "id": "member",
-        "code": "member",
-        "name": "Member"
-      },
-      "createdAt": "2026-04-01T12:00:00Z"
-    }
-  }
-}
-```
-
-### Success response when email verification is required
-
-```json
-{
-  "ok": true,
-  "data": {
-    "requiresEmailVerification": true,
-    "challengeId": "challenge-id",
-    "maskedEmail": "sy***@asagity.net"
-  }
-}
-```
-
-### Notes
-
-- if the account has no bound email, login can complete directly
-- if the account has a bound email and the device is new, login must stop at challenge creation
-- no refresh token should be set before the challenge is completed
-- if the account is under email-login cooldown, username and email login must be rejected for 15 minutes
-
-## `POST /api/auth/login/verify-email`
-
-Complete login from a new device using a 6-digit email code.
-
-### Request body
-
-```json
-{
-  "challengeId": "challenge-id",
-  "code": "123456",
-  "deviceFingerprint": "browser-stable-id",
-  "deviceName": "Chrome on Windows"
-}
-```
-
-### Success response
-
-```json
-{
-  "ok": true,
-  "data": {
-    "accessToken": "access-token",
-    "accessTokenExpiresIn": 1800,
-    "user": {
-      "id": "internal-id",
-      "pubid": "usr_A1b2C3d4",
-      "name": "SK",
-      "username": "syskuku",
-      "email": "syskuku@asagity.net",
-      "avatarUrl": "",
-      "description": "",
-      "userGroup": {
-        "id": "member",
-        "code": "member",
-        "name": "Member"
-      },
-      "createdAt": "2026-04-01T12:00:00Z"
-    }
-  }
-}
-```
-
-### Side effects
-
-- marks challenge as verified
-- creates or updates trusted device
-- sets refresh token cookie
-
-## `POST /api/auth/refresh`
-
-Rotate refresh token and return a new access token.
-
-### Request
-
-- no JSON body required in the first version
-- reads refresh token from `HttpOnly` cookie
-
-### Success response
-
-```json
-{
-  "ok": true,
-  "data": {
-    "accessToken": "new-access-token",
-    "accessTokenExpiresIn": 1800
-  }
-}
-```
-
-### Side effects
-
-- validates refresh token
-- rotates refresh token
-- sets new refresh token cookie
-- updates device `last_seen_at`
-
-## `POST /api/auth/logout`
-
-Logout the current device session.
-
-### Request
-
-- access token required
-- refresh token cookie required if refresh token revocation is device-scoped
-
-### Success response
-
-```json
-{
-  "ok": true,
-  "data": {
-    "loggedOut": true
-  }
-}
-```
-
-### Side effects
-
-- revokes current refresh token chain for the active device session
-- clears refresh token cookie
-
-## `POST /api/auth/logout-all`
-
-Optional but strongly recommended.
-Logout all devices for the current user.
-
-### Success response
-
-```json
-{
-  "ok": true,
-  "data": {
-    "loggedOutAll": true
-  }
-}
-```
-
-## `GET /api/auth/me`
-
-Return the currently authenticated user.
-
-This endpoint is required for SSR auth restoration.
-
-### Request
-
-- access token required
-
-### Success response
-
-```json
-{
-  "ok": true,
-  "data": {
-    "user": {
-      "id": "internal-id",
-      "pubid": "usr_A1b2C3d4",
-      "name": "SK",
-      "username": "syskuku",
-      "email": "syskuku@asagity.net",
-      "avatarUrl": "",
-      "description": "",
-      "userGroup": {
-        "id": "member",
-        "code": "member",
-        "name": "Member"
-      },
-      "createdAt": "2026-04-01T12:00:00Z"
-    }
-  }
-}
-```
-
-## `POST /api/auth/email/send-code`
-
-Optional shared endpoint if later used for non-login email verification flows.
-
-For the first version, login challenge creation inside `/api/auth/login` is enough.
-This endpoint should remain reserved unless another email verification flow is added.
+This flow is not fully implemented yet because refresh-token cookie logic is still pending.
 
 ## Suggested Error Codes
 
@@ -652,53 +423,11 @@ This endpoint should remain reserved unless another email verification flow is a
 - `AUTH_REFRESH_TOKEN_REVOKED`
 - `AUTH_DEVICE_FINGERPRINT_REQUIRED`
 
-## SSR Integration Notes
+## Immediate Next Steps
 
-The frontend should not rely only on Pinia boolean state.
-
-Recommended SSR flow:
-
-1. try current access token in memory
-2. if missing or expired, call `/api/auth/refresh`
-3. if refresh succeeds, store new access token in memory
-4. call `/api/auth/me`
-5. hydrate frontend user store from `/me`
-6. if refresh fails, redirect to `/login` or `/welcome`
-
-## Frontend Mapping Notes
-
-The current frontend pages already imply these fields:
-
-- login page wants one `identifier` field even though the variable name is still `email`
-- register page wants `username`, `email`, `password`, and `confirmPassword`
-- middleware expects a durable login state
-- user store will need to expand beyond `isLoggedIn`, `username`, and `avatar`
-
-## Current Open Points
-
-These points are still not fully specified and can be decided later without blocking the first auth implementation:
-
-- exact JWT signing algorithm and key rotation strategy
-- whether logout revokes only the current refresh token or the whole replacement chain
-- whether device fingerprint format is fully frontend-defined or normalized on the backend
-- exact Redis key naming scheme for temporary registration context, resend cooldowns, and monthly pubid quota cache
-
-## Recommended First Implementation Scope
-
-Implement first:
-
-1. `POST /api/auth/register`
-2. `POST /api/auth/register/verify-email`
-3. `POST /api/auth/login`
-4. `POST /api/auth/login/verify-email`
-5. `POST /api/auth/refresh`
-6. `POST /api/auth/logout`
-7. `GET /api/auth/me`
-
-Delay for later:
-
-- forgot password
-- captcha
-- invitation-only registration
-- full device management UI
-- configurable 2FA settings
+1. align register DTO with optional email
+2. add `pubid` lookup to login service
+3. implement Redis registration context
+4. implement email challenge creation and verification
+5. implement refresh-token cookie flow
+6. replace placeholder auth endpoints with real logic

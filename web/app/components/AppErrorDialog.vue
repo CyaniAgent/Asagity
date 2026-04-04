@@ -4,12 +4,21 @@ import { watch, ref, onMounted } from 'vue'
 
 const systemStore = useSystemStore()
 const audioRef = ref<HTMLAudioElement | null>(null)
+const restoredAudioRef = ref<HTMLAudioElement | null>(null)
 
-// Play sounds when modal pops up
+// Play error sound when modal pops up
 watch(() => systemStore.showConnectionErrorModal, (isOpen) => {
   if (isOpen && audioRef.value) {
     audioRef.value.currentTime = 0
-    audioRef.value.play().catch(e => console.warn('Audio playback prevented by browser:', e))
+    audioRef.value.play().catch(e => console.warn('Error audio playback blocked:', e))
+  }
+})
+
+// Play restored sound when backend comes back online
+watch(() => systemStore.isBackendOnline, (isOnline, oldVal) => {
+  if (isOnline && oldVal === false && restoredAudioRef.value) {
+    restoredAudioRef.value.currentTime = 0
+    restoredAudioRef.value.play().catch(e => console.warn('Restored audio playback blocked:', e))
   }
 })
 
@@ -63,8 +72,9 @@ const handleAcknowledge = () => {
       </div>
     </Transition>
 
-    <!-- Hidden audio element -->
+    <!-- Hidden audio elements -->
     <audio ref="audioRef" src="/sounds/YunaAyase/sys_error.wav" preload="auto"></audio>
+    <audio ref="restoredAudioRef" src="/sounds/YunaAyase/sys_net_restored.wav" preload="auto"></audio>
   </Teleport>
 </template>
 

@@ -2,136 +2,188 @@
 
 ## Purpose
 
-This document defines the backend delivery route for Asagity.
-It is based on the current repository state:
-
-- `core` currently contains only bootstrap code, database wiring, and instance settings
-- `web` already contains product-facing pages for timeline, drive, drop, notifications, panel, and settings
-- `docs/api/drive/drop.md` already defines the first concrete backend draft for upload ingest
-
-The goal is to avoid building the backend as a set of disconnected APIs.
-Instead, the backend should grow in layers: foundation first, then file capabilities, then social core, then federation.
+This document tracks the backend delivery route for Asagity based on the repository state as of now.
+It is no longer only a speculative plan.
+It records what already exists, what is partially in place, and what should be built next.
 
 ## Current State
 
-### Already present
+### Implemented now
 
-- Go backend bootstrap
-- PostgreSQL connection via GORM
-- Redis connection
-- instance settings model and default seed
+- `core/cmd/api` and `core/cmd/worker` entrypoints exist
+- `core/internal/app` assembles module registration
+- PostgreSQL and Redis are initialized through `internal/platform/database`
+- database auto-migration already includes:
+  - `instance_settings`
+  - `users`
+  - `user_groups`
+  - `user_pubid_changes`
+  - `auth_devices`
+  - `auth_refresh_tokens`
+  - `auth_email_challenges`
+- shared HTTP helpers and middleware exist under `internal/platform/httpx`
+- these modules already have backend skeletons:
+  - `instance`
+  - `auth`
+  - `user`
+  - `asset`
+- protocol placeholder packages already exist:
+  - `internal/app/connections/activitypub/inbox`
+  - `internal/app/connections/activitypub/deliver`
+  - `internal/app/connections/neolinkage`
+- basic endpoints already exist:
+  - `GET /`
+  - `GET /healthz`
+  - `GET /api/meta/version`
+  - `GET /api/meta/instance`
+  - `POST /api/auth/register`
+  - `POST /api/auth/login`
+  - `GET /api/auth/me`
 
-### Not yet present
+### Present but still placeholder-level
 
-- API routing structure
-- authentication and session model
-- user model
-- drive and drop persistence
-- storage backend abstraction
-- task queue workers
-- timeline, post, reaction, follow, and notification APIs
-- ActivityPub implementation
+- `POST /api/auth/register/verify-email`
+- `POST /api/auth/login/verify-email`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
+- `POST /api/auth/logout-all`
+- `GET /api/users/me`
 
-## Backend Priorities
+These routes compile and register, but some still return `501 Not Implemented` or simplified bootstrap responses.
 
-The recommended order is:
+### Frontend-backend integration status
 
-1. establish backend foundation and API conventions
-2. expose instance and settings APIs
-3. implement Skyline Drive file domain
-4. implement Drop upload sessions and resumable transfer
-5. add asynchronous processing with queue workers
-6. implement local social core
-7. implement notification center
-8. implement federation and ActivityPub delivery
+- frontend dev server runs on port `2000`
+- backend API runs on port `2048`
+- Nuxt dev proxy now forwards:
+  - `/api` -> `http://localhost:2048`
+  - `/healthz` -> `http://localhost:2048/healthz`
+- frontend health heartbeat depends on `GET /healthz`
 
-This order is intentional:
+This means the basic connectivity path is now:
 
-- Drive and Drop are already documented and clearly scoped
-- the frontend can be connected to real data early
-- social federation is the most complex part and depends on stable local models first
+```text
+browser -> Nuxt dev server (:2000) -> dev proxy -> Go API (:2048)
+```
 
-## Phase 0: Foundation
+## What Is Still Missing
 
-### Target
+- true refresh-token cookie flow
+- Redis-backed registration context
+- email challenge generation and verification
+- pubid login path
+- device trust management
+- SSR refresh flow
+- Drive and Drop modules
+- queue runtime
+- local social APIs
+- federation logic
 
-Turn `core` from a bootstrap program into a structured service.
+## Delivery Priorities
 
-### Deliverables
+The current recommended order is:
 
-- consistent HTTP router and route grouping
-- config loader and environment validation
-- structured error response format
-- request logging and request ID middleware
-- health check and readiness endpoints
-- shared database and Redis access patterns
-- repository and service layer conventions
+1. stabilize auth and user foundation
+2. complete instance metadata and settings
+3. build Drive domain
+4. build Drop resumable transfer
+5. add queue and background jobs
+6. build local social core
+7. build notifications
+8. build federation
 
-### Suggested APIs
+This differs slightly from the earliest draft because auth and user are now partially implemented and are already blocking frontend progress.
 
-- `GET /healthz`
-- `GET /readyz`
-- `GET /api/meta/version`
+## Phase 0: Service Foundation
+
+### Status
+
+Partially complete.
+
+### Already done
+
+- startup split into `cmd/api` and `cmd/worker`
+- shared config loader
+- database and Redis bootstrap
+- JSON envelope helpers
+- auth middleware skeleton
+- health check endpoint
+- module registration through `internal/app`
+
+### Still needed
+
+- request logging
+- request ID middleware
+- readiness endpoint `GET /readyz`
+- stronger config validation
+- cleaner error mapping and typed domain errors
 
 ### Exit Criteria
 
-- backend starts with explicit config validation
-- APIs return a stable JSON envelope
-- new modules can be added without editing unrelated startup code
+- backend starts with explicit validation
+- health and readiness checks are both stable
+- infrastructure concerns stop leaking into module code
 
-## Phase 1: Instance Metadata And Settings
+## Phase 1: Auth, User, And Instance
 
-### Why first
+### Status
 
-The frontend layout already depends on instance name, alias, description, version, and logo.
-This is the smallest useful slice to replace hardcoded frontend state.
+In progress.
 
-### Deliverables
+### Already done
 
-- public instance metadata endpoint
-- admin or owner settings read/update endpoints
-- logo and branding metadata fields
-- cached instance settings reads
+- user model, group model, and pubid history model
+- auth device, refresh token, and email challenge models
+- instance version and instance metadata endpoints
+- register, login, and me handlers
+
+### Still needed
+
+- register with optional email instead of mandatory email in prototype DTO
+- pubid login support
+- Redis registration context
+- email verification flow for register and login
+- refresh-token rotation
+- logout and logout-all
+- trusted device logic
+- owner/setup-wizard bootstrap relationship
+- real instance settings update endpoints
 
 ### Suggested APIs
 
 - `GET /api/meta/instance`
+- `GET /api/meta/version`
 - `GET /api/settings/instance`
 - `PATCH /api/settings/instance`
-
-### Data scope
-
-- instance name
-- short alias
-- description
-- version label
-- logo URL
-- privacy policy URL
-- terms of service URL
-- contact URI
+- `POST /api/auth/register`
+- `POST /api/auth/register/verify-email`
+- `POST /api/auth/login`
+- `POST /api/auth/login/verify-email`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
+- `POST /api/auth/logout-all`
+- `GET /api/auth/me`
 
 ### Exit Criteria
 
-- frontend instance store can switch from mock state to server data
-- panel and settings pages can read and update instance-level metadata
+- frontend login and registration pages can use real backend flows
+- SSR session restoration works
+- instance store can stop relying on mock metadata
 
 ## Phase 2: Skyline Drive Core
 
-### Why next
+### Status
 
-Drive is one of the clearest product promises in the README and already has a dedicated page in the frontend.
-Before resumable upload, the backend needs a file domain and a storage abstraction.
+Not started.
 
 ### Deliverables
 
 - drive folder model
 - drive file model
-- path and hierarchy support
-- file and folder listing
-- capacity usage statistics
-- folder creation and metadata update
-- file metadata retrieval
-- storage backend abstraction for local and S3-compatible storage
+- hierarchy and path handling
+- file listing and metadata
+- usage statistics
+- storage abstraction
 
 ### Suggested APIs
 
@@ -142,35 +194,18 @@ Before resumable upload, the backend needs a file domain and a storage abstracti
 - `DELETE /api/drive/files/:id`
 - `GET /api/drive/usage`
 
-### Exit Criteria
-
-- drive page can render real folders and files
-- usage bar and breadcrumb navigation can be backed by server data
-- storage writes and file records are no longer mixed into one-off code paths
-
 ## Phase 3: Drop Upload Sessions
 
-### Why next
+### Status
 
-Drop is already documented and has stronger backend requirements than the rest of the UI.
-It also establishes patterns needed later for media attachments in posts.
+Documented, not implemented.
 
-### Non-negotiable constraints
+### Hard requirements
 
 - authenticated users only
-- internet transfer, not LAN discovery for now
-- resumable upload is required
-- sender, receiver, and management concepts all exist, but initial implementation can focus on session and upload plumbing first
-
-### Deliverables
-
-- upload intent creation
-- upload session persistence
-- chunked upload endpoints
-- upload progress tracking
-- resume support
-- complete, cancel, and expire flows
-- final file commit into drive storage
+- internet transfer only for now
+- resumable upload is mandatory
+- sender, receiver, and session concepts all exist
 
 ### Suggested APIs
 
@@ -182,168 +217,93 @@ It also establishes patterns needed later for media attachments in posts.
 - `GET /api/drop/receiver/inbox`
 - `GET /api/drop/session/:id`
 
-### Exit Criteria
-
-- large file upload works with interruption and resume
-- upload session status survives process restarts
-- completed uploads create drive file records
-
 ## Phase 4: Queue And Background Processing
 
-### Why after Drop
+### Status
 
-As soon as uploads exist, synchronous request handlers become the wrong place for expensive follow-up work.
-The README already points to Asynq, so this phase should formalize that direction.
+Not started.
 
 ### Deliverables
 
 - Asynq integration
-- task producer and worker separation
 - upload finalize jobs
-- hash verification jobs
-- cleanup jobs for expired sessions and stale parts
-- media inspection or thumbnail generation hooks
-
-### Suggested job groups
-
-- `drop.finalize`
-- `drop.cleanup_expired`
-- `drive.generate_preview`
-- `drive.verify_object`
-- `federation.deliver`
-
-### Exit Criteria
-
-- request latency is decoupled from heavy background work
-- retries and failure handling are visible and controlled
+- expired-session cleanup
+- object verification
+- media inspection hooks
 
 ## Phase 5: Local Social Core
 
-### Why only now
+### Status
 
-Federation should not be the first social milestone.
-The project needs correct local models first: users, posts, reactions, follows, timelines, and media attachments.
+Not started.
 
 ### Deliverables
 
-- user model
-- account profile endpoints
-- note or post model
-- local timeline query
-- reply support
-- repost support
-- reaction support
-- attachment references into drive files
-
-### Suggested APIs
-
-- `GET /api/users/:id`
-- `GET /api/timeline/home`
-- `GET /api/timeline/local`
-- `POST /api/notes`
-- `GET /api/notes/:id`
-- `POST /api/notes/:id/reply`
-- `POST /api/notes/:id/repost`
-- `POST /api/notes/:id/reactions`
-
-### Exit Criteria
-
-- timeline page can run on real backend data
-- post detail and user profile views can be connected without frontend-only mocks
+- user-facing profile endpoints
+- note model
+- local timeline
+- replies, reposts, reactions
+- media attachment references into Drive
 
 ## Phase 6: Notifications
 
-### Why separate from social core
+### Status
 
-Notifications depend on social events but should remain its own module.
-The frontend already expects typed notifications with read state and filtering.
+Not started.
 
 ### Deliverables
 
 - notification persistence
-- unread counters
-- mark-read and mark-all-read operations
-- typed notification rendering payloads
-
-### Suggested APIs
-
-- `GET /api/notifications`
-- `POST /api/notifications/:id/read`
-- `POST /api/notifications/read-all`
-- `GET /api/notifications/unread-count`
-
-### Exit Criteria
-
-- notification center can replace frontend mock data
-- timeline actions generate user-visible notification events
+- unread counts
+- read operations
 
 ## Phase 7: Federation
 
-### Why last
+### Status
 
-ActivityPub is core to the product vision but should be built on top of stable local domains.
-Trying to build federation before local drive, post, user, and queue infrastructure will create avoidable rework.
+Directory structure prepared, implementation not started.
 
 ### Deliverables
 
-- actor representation
-- inbox and outbox handling
-- object serialization
-- remote fetch and delivery workers
-- signature verification
-- idempotency and retry handling
-- remote account and remote object persistence
-
-### Exit Criteria
-
-- local posts can be delivered outward
-- remote activities can be accepted and applied safely
-- queue-backed federation retries are operational
-
-## Cross-Cutting Work
-
-These concerns should be introduced early and expanded phase by phase:
-
-- authentication and authorization
-- audit logging for destructive actions
-- API versioning rules
-- rate limiting
-- object storage policy
-- observability and metrics
-- test strategy for repository, service, and HTTP layers
-
-## Suggested Milestone Cuts
-
-### Milestone A: Service Base
-
-- Phase 0
-- Phase 1
-
-### Milestone B: Drive MVP
-
-- Phase 2
-- minimum of Phase 3
-
-### Milestone C: Upload Production Readiness
-
-- full Phase 3
-- Phase 4
-
-### Milestone D: Local Social MVP
-
-- Phase 5
-- Phase 6
-
-### Milestone E: Federation Alpha
-
-- Phase 7
+- shared federation domain
+- ActivityPub inbox handling
+- ActivityPub delivery
+- remote actor/object persistence
+- retryable outbound queue flow
+- Neo Linkage remains placeholder until protocol design exists
 
 ## Immediate Next Work
 
-The next backend work should focus on:
+The next backend work should be:
 
-1. defining the backend module structure
-2. defining route ownership by module
-3. introducing a service and repository split
-4. implementing instance metadata APIs
-5. preparing the Drive and Drop modules as the first real business domains
+1. finish auth DTO and service alignment with the confirmed product rules
+2. implement Redis registration context and email challenges
+3. implement refresh-token cookie flow
+4. convert `instance` from bootstrap metadata to real settings-backed responses
+5. begin `drive` module scaffolding after auth is usable
+
+## Practical Milestones
+
+### Milestone A: Auth Bootstrap
+
+- complete Phase 0
+- complete auth and user parts of Phase 1
+
+### Milestone B: Drive MVP
+
+- complete Phase 2
+- start Phase 3
+
+### Milestone C: Upload Reliability
+
+- complete Phase 3
+- complete Phase 4
+
+### Milestone D: Local Social MVP
+
+- complete Phase 5
+- complete Phase 6
+
+### Milestone E: Federation Alpha
+
+- begin Phase 7 after local domains are stable
