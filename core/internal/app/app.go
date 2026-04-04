@@ -19,6 +19,12 @@ type App struct {
 func New(cfg config.Config, clients *database.Clients) *App {
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		httpx.WriteJSON(w, http.StatusOK, map[string]string{
+			"status": "ok",
+		})
+	})
+
 	instancemodule.Register(mux, cfg, clients)
 	authmodule.Register(mux, cfg, clients)
 	usermodule.Register(mux, cfg, clients)

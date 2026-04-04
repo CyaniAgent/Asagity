@@ -1,9 +1,7 @@
 export const useApi = () => {
   const userStore = useUserStore()
   const runtimeConfig = useRuntimeConfig()
-  
-  // Base URL for the Go Core
-  const baseURL = 'http://localhost:2048'
+  const baseURL = runtimeConfig.public.apiBase || ''
 
   const request = async <T = any>(url: string, options: any = {}) => {
     // Inject Authorization header if token exists

@@ -46,5 +46,24 @@ export default defineNuxtConfig({
   devServer: {
     host: '::',
     port: 2000
+  },
+
+  runtimeConfig: {
+    public: {
+      apiBase: ''
+    }
+  },
+
+  nitro: {
+    devProxy: {
+      '/api': {
+        target: 'http://localhost:2048',
+        changeOrigin: true
+      },
+      '/healthz': {
+        target: 'http://localhost:2048/healthz',
+        changeOrigin: true
+      }
+    }
   }
 })

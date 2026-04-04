@@ -43,18 +43,14 @@ export const useSystemStore = defineStore('system', () => {
   // The Heartbeat Engine
   async function checkBackendHealth() {
     try {
-      // Direct fetch to health endpoint on port 2048
-      const res = await $fetch('http://localhost:2048/healthz', {
+      await $fetch('/healthz', {
         method: 'GET',
         timeout: 2000,
-        // Ensure no cache to get real status
         headers: { 'Cache-Control': 'no-cache' }
       })
-      
-      // If we are here, port 2048 responded
+
       restoreOnlineMode()
     } catch (err) {
-      // If port 2048 is not occupied/available, it throws
       triggerOfflineFallback()
     }
   }
