@@ -19,8 +19,7 @@ const instanceStore = useInstanceStore()
     <div class="z-10 bg-white/60 dark:bg-gray-900/60 backdrop-blur-2xl px-12 py-16 rounded-[40px] border border-white/40 dark:border-white/10 shadow-[0_20px_50px_rgba(34,211,238,0.1)] flex flex-col items-center max-w-2xl text-center">
       <!-- 动态 Logo 容器 -->
       <div class="relative group mb-8">
-        <div class="absolute inset-0 bg-gradient-to-tr from-cyan-400 to-primary-600 rounded-[32px] blur-xl opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
-        <div class="relative w-32 h-32 bg-gradient-to-br from-cyan-400 to-primary-600 rounded-[32px] flex items-center justify-center shadow-2xl overflow-hidden ring-4 ring-white/50 dark:ring-white/10 transform transition-transform duration-500 group-hover:scale-105 group-hover:-rotate-3">
+        <div class="relative w-32 h-32 flex items-center justify-center transform transition-transform duration-500 group-hover:scale-105">
           <img
             v-if="instanceStore.logoURL"
             :src="instanceStore.logoURL"

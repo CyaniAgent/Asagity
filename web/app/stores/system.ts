@@ -5,13 +5,31 @@ export const useSystemStore = defineStore('system', () => {
   const isBackendOnline = ref(true)
   const isFrontendOnlyMode = ref(false)
   const showConnectionErrorModal = ref(false)
+  const isDevMode = ref(false)
   const heartbeatInterval = ref<any>(null)
 
   // Triggered when an API call fails due to severe network issues
   function triggerOfflineFallback() {
-    if (isBackendOnline.value) {
+    if (isBackendOnline.value && !isDevMode.value) {
       isBackendOnline.value = false
       showConnectionErrorModal.value = true
+    }
+  }
+
+  // Developer Mode (Mock Backend Mode)
+  function enableDevMode() {
+    isDevMode.value = true
+    isBackendOnline.value = true
+    showConnectionErrorModal.value = false
+    
+    if (process.client) {
+      const toast = useAppToast()
+      toast.add({
+        title: '已进入开发模式',
+        description: '该模式仅供开发时使用，刷新即可退出。',
+        color: 'warning',
+        icon: 'i-material-symbols-terminal-rounded'
+      })
     }
   }
 
@@ -23,11 +41,15 @@ export const useSystemStore = defineStore('system', () => {
 
   // Restore normal operations
   function restoreOnlineMode() {
-    if (!isBackendOnline.value) {
+    if (!isBackendOnline.value || isDevMode.value) {
       isBackendOnline.value = true
       isFrontendOnlyMode.value = false
       showConnectionErrorModal.value = false
       
+      // If we were in dev mode, we stay in dev mode until refresh
+      // but if the backend actually comes back, we can just be normal
+      isDevMode.value = false 
+
       if (process.client) {
          const toast = useAppToast()
          toast.add({
@@ -44,6 +66,8 @@ export const useSystemStore = defineStore('system', () => {
 
   // The Heartbeat Engine
   async function checkBackendHealth() {
+    if (isDevMode.value) return // Don't check if in dev mode
+
     try {
       await $fetch('/healthz', {
         method: 'GET',
@@ -79,8 +103,10 @@ export const useSystemStore = defineStore('system', () => {
   return {
     isBackendOnline,
     isFrontendOnlyMode,
+    isDevMode,
     showConnectionErrorModal,
     triggerOfflineFallback,
+    enableDevMode,
     enableFrontendOnlyMode,
     restoreOnlineMode,
     startHeartbeat,

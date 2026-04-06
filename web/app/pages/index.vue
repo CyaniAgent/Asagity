@@ -181,7 +181,7 @@ const federatedInstances = [
         class="bg-white/50 dark:bg-gray-900/50 backdrop-blur-md rounded-[24px] border border-white/30 dark:border-gray-800/50 p-5 shadow-sm hover:shadow-md transition-shadow">
         <h3
           class="text-[13px] font-black tracking-widest text-gray-500 dark:text-gray-400 mb-4 flex items-center gap-1.5">
-          <UIcon name="i-material-symbols-hub" class="w-4 h-4 text-purple-500" /> 联合实例
+          <UIcon name="i-material-symbols-hub" class="w-4 h-4 text-purple-500" /> Asagity NET
         </h3>
         <div class="flex flex-col gap-3">
           <div v-for="(instance, idx) in federatedInstances" :key="idx"

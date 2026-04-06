@@ -22,8 +22,27 @@ watch(() => systemStore.isBackendOnline, (isOnline, oldVal) => {
   }
 })
 
+const pressTimer = ref<any>(null)
+
+const handleRefreshStart = () => {
+  pressTimer.value = setTimeout(() => {
+    systemStore.enableDevMode()
+  }, 3000)
+}
+
+const handleRefreshEnd = () => {
+  if (pressTimer.value) {
+    clearTimeout(pressTimer.value)
+    pressTimer.value = null
+  }
+}
+
 const handleRefresh = () => {
-  window.location.reload()
+  // If the timer didn't fire (short press), standard refresh
+  if (pressTimer.value) {
+    handleRefreshEnd()
+    window.location.reload()
+  }
 }
 
 const handleAcknowledge = () => {
@@ -60,7 +79,15 @@ const handleAcknowledge = () => {
           <!-- Actions -->
           <div class="px-6 pb-6 pt-2 flex items-center justify-end gap-2">
             <!-- Text Button for Refresh -->
-            <button @click="handleRefresh" class="px-3 py-2.5 rounded-full text-[#ffb4ab] hover:bg-[#ffb4ab]/10 font-bold tracking-wider text-sm transition-colors active:scale-95">
+            <button 
+              @click="handleRefresh" 
+              @mousedown="handleRefreshStart"
+              @mouseup="handleRefreshEnd"
+              @mouseleave="handleRefreshEnd"
+              @touchstart.passive="handleRefreshStart"
+              @touchend.passive="handleRefreshEnd"
+              class="px-3 py-2.5 rounded-full text-[#ffb4ab] hover:bg-[#ffb4ab]/10 font-bold tracking-wider text-sm transition-colors active:scale-95 select-none"
+            >
               刷新
             </button>
             <!-- Filled Tonal / Primary Button for OK -->

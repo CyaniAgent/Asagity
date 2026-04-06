@@ -2,11 +2,11 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 export const useInstanceStore = defineStore('instance', () => {
-  const name = ref('Asagity Example')
-  const alias = ref('example.asagity.io')
-  const description = ref('A production-ready starter template powered by Nuxt UI. Build beautiful, accessible, and performant applications in minutes, not hours.')
+  const name = ref('Asagity')
+  const alias = ref('asagity.io')
+  const description = ref('Asagity - 一个为创作者与梦想家打造的多维社交平台。连接、分享，并构建属于你的世界。')
   const version = ref('Ver 2026.Indevelopment')
-  const logoURL = ref('https://avatars.githubusercontent.com/u/739984?v=4') // Default placeholder or null
+  const logoURL = ref('/favicon.ico') // Use local favicon as logo
 
   function setName(newName: string) {
     name.value = newName

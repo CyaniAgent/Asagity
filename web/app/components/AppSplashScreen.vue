@@ -32,7 +32,7 @@ onMounted(() => {
 
         <div class="relative z-10 flex flex-col items-center animate-fade-in-up">
            <!-- Instance Logo -->
-           <div class="w-32 h-32 bg-gradient-to-br from-cyan-400 to-primary-600 rounded-[32px] flex items-center justify-center shadow-2xl overflow-hidden ring-4 ring-gray-900/5 dark:ring-white/10 mb-10 transform scale-100 hover:scale-105 transition-transform duration-500">
+           <div class="w-32 h-32 flex items-center justify-center mb-10 transform scale-100 hover:scale-105 transition-transform duration-500">
             <img v-if="instanceStore.logoURL" :src="instanceStore.logoURL" class="w-full h-full object-cover">
             <UIcon v-else name="i-material-symbols-bolt" class="w-16 h-16 text-white" />
           </div>

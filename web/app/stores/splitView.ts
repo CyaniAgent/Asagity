@@ -7,12 +7,14 @@ export const useSplitViewStore = defineStore('splitView', () => {
   const currentPost = ref<any>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const currentUser = ref<any>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const currentChat = ref<any>(null)
   const activeTab = ref('comments')
   const profileTab = ref('home')
   const rightPanelWidth = ref(50) // Percentage
   const isResizing = ref(false)
   const activeView = ref<'left' | 'right'>('left')
-  const currentRightViewType = ref<'post' | 'user' | 'music' | 'notifications' | null>(null)
+  const currentRightViewType = ref<'post' | 'user' | 'music' | 'notifications' | 'chat' | null>(null)
 
   const isMaximized = ref(false)
   const refreshKey = ref(0)
@@ -20,6 +22,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
   function openPost(post: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
     currentPost.value = post
     currentUser.value = null
+    currentChat.value = null
     currentRightViewType.value = 'post'
     isOpen.value = true
     activeTab.value = 'comments'
@@ -31,6 +34,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
   function openUser(user: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
     currentUser.value = user
     currentPost.value = null
+    currentChat.value = null
     currentRightViewType.value = 'user'
     isOpen.value = true
     profileTab.value = 'home'
@@ -39,9 +43,21 @@ export const useSplitViewStore = defineStore('splitView', () => {
     rightPanelWidth.value = 50 // 重置为默认宽度
   }
 
+  function openChat(chat: any) {
+    currentChat.value = chat
+    currentPost.value = null
+    currentUser.value = null
+    currentRightViewType.value = 'chat'
+    isOpen.value = true
+    activeView.value = 'right'
+    isMaximized.value = false
+    rightPanelWidth.value = 45 // 聊天界面默认 45% (更宽裕一点)
+  }
+
   function openMusic() {
     currentPost.value = null
     currentUser.value = null
+    currentChat.value = null
     currentRightViewType.value = 'music'
     isOpen.value = true
     activeView.value = 'right'
@@ -52,6 +68,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
   function openNotifications() {
     currentPost.value = null
     currentUser.value = null
+    currentChat.value = null
     currentRightViewType.value = 'notifications'
     isOpen.value = true
     activeView.value = 'right'
@@ -103,6 +120,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
     isOpen,
     currentPost,
     currentUser,
+    currentChat,
     activeTab,
     profileTab,
     rightPanelWidth,
@@ -115,6 +133,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
     openUser,
     openMusic,
     openNotifications,
+    openChat,
     close,
     toggleMaximize,
     triggerRefresh,

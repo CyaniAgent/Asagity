@@ -13,7 +13,7 @@ const systemStore = useSystemStore()
 
 const navigation = [
   [
-    { label: '时间线', icon: 'i-material-symbols-home', to: '/' },
+    { label: '时间线', icon: 'i-material-symbols-home', to: '/', activePaths: ['/', '/followed', '/local'] },
     { label: '话题', icon: 'i-material-symbols-tag', to: '/topic' },
     { label: 'Skyline 云盘', icon: 'i-material-symbols-cloud', to: '/drive' }
   ],
@@ -29,12 +29,35 @@ const navigation = [
   ]
 ]
 
+// Navigation Highlight Logic
+const isItemActive = (item: any) => {
+  if (item.label === '更多') {
+    return moreMenuGroups.flat().some(feat => route.path.startsWith(feat.to))
+  }
+  
+  if (item.activePaths) {
+    return item.activePaths.some((p: string) => p === '/' ? route.path === '/' : route.path.startsWith(p))
+  }
+  
+  if (item.to === '/') return route.path === '/'
+  return route.path.startsWith(item.to)
+}
+
 // Timeline Top Tabs
 const timelineTabs = [
   [
     { label: '动态', icon: 'i-material-symbols-public', to: '/', exact: true },
     { label: '已关注', icon: 'i-material-symbols-person', to: '/followed' },
     { label: '仅本实例', icon: 'i-material-symbols-dns', to: '/local' }
+  ]
+]
+
+// Chat Top Tabs
+const chatTabs = [
+  [
+    { label: '消息', icon: 'i-material-symbols-chat', to: '/chat', exact: true },
+    { label: '通讯录', icon: 'i-material-symbols-contacts', to: '/chat/contacts' },
+    { label: 'Asagity Meet', icon: 'i-material-symbols-video-camera-front', to: '/chat/meet' }
   ]
 ]
 
@@ -68,12 +91,16 @@ const panelTabs = [
     { label: '概览', icon: 'i-material-symbols-dashboard', to: '/panel', exact: true },
     { label: '实例设置', icon: 'i-material-symbols-settings-applications', to: '/panel/settings' },
     { label: '管理', icon: 'i-material-symbols-manage-accounts', to: '/panel/manage' },
+    { label: 'Asagity NET', icon: 'i-material-symbols-hub', to: '/panel/net' },
     { label: '关于', icon: 'i-material-symbols-info', to: '/panel/about' }
   ]
 ]
 
 // Determine which tabs to show based on the active route
 const currentHeaderTabs = computed(() => {
+  if (route.path.startsWith('/chat')) {
+    return chatTabs
+  }
   if (route.path.startsWith('/settings')) {
     return settingsTabs
   }
@@ -195,8 +222,7 @@ const moreMenuGroups = [
     <aside class="w-64 h-full flex flex-col shrink-0 z-20">
       <!-- 顶部 Logo -->
       <NuxtLink to="/about" class="h-24 flex items-center px-6 shrink-0 group/logo cursor-pointer relative block">
-        <div
-          class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-primary-600 rounded-[18px] flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover/logo:rotate-6 group-hover/logo:scale-110 transition-all duration-300 overflow-hidden ring-2 ring-white/20">
+        <div class="w-12 h-12 flex items-center justify-center group-hover/logo:scale-110 transition-all duration-300">
           <img v-if="instanceStore.logoURL" :src="getIconUrl(instanceStore.logoURL)" class="w-full h-full object-cover">
           <UIcon v-else name="i-material-symbols-bolt" class="w-7 h-7 text-white" />
         </div>
@@ -223,8 +249,8 @@ const moreMenuGroups = [
             <!-- Special Case: "More" — hand-rolled popover -->
             <div v-if="item.label === '更多'" ref="moreMenuRef" class="w-full">
               <button type="button"
-                class="flex items-center gap-4 px-4 py-2.5 rounded-2xl w-full text-left transition-colors font-bold"
-                :class="moreMenuOpen
+                class="flex items-center gap-4 px-4 py-2.5 rounded-2xl w-full text-left transition-colors font-bold group/nav"
+                :class="moreMenuOpen || isItemActive(item)
                   ? 'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400'
                   : 'hover:bg-black/5 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300'" @click="toggleMoreMenu">
                 <UIcon :name="item.icon" class="w-[22px] h-[22px] opacity-70 shrink-0" />
@@ -268,10 +294,13 @@ const moreMenuGroups = [
 
             <!-- Standard Navigation Link -->
             <NuxtLink v-else :to="item.to"
-              class="flex items-center gap-4 px-4 py-2.5 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-gray-700 dark:text-gray-300 font-bold group/nav"
-              active-class="bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
+              class="flex items-center gap-4 px-4 py-2.5 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors font-bold group/nav"
+              :class="isItemActive(item)
+                ? 'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400'
+                : 'text-gray-700 dark:text-gray-300'">
               <UIcon :name="item.icon"
-                class="w-[22px] h-[22px] opacity-70 group-hover/nav:opacity-100 transition-opacity" />
+                class="w-[22px] h-[22px] transition-opacity"
+                :class="isItemActive(item) ? 'opacity-100' : 'opacity-70 group-hover/nav:opacity-100'" />
               <span class="text-[15px] tracking-wide">{{ item.label }}</span>
             </NuxtLink>
           </template>
@@ -450,6 +479,8 @@ const moreMenuGroups = [
                 <AppNotifications
                   v-else-if="splitViewStore.currentRightViewType === 'notifications' && splitViewStore.isOpen"
                   :key="`notif-${splitViewStore.refreshKey}`" />
+                <AppChatDetail v-else-if="splitViewStore.currentRightViewType === 'chat' && splitViewStore.isOpen"
+                  :key="`chat-${splitViewStore.refreshKey}`" />
               </div>
             </div>
           </div>
