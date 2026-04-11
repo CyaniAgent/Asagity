@@ -43,8 +43,8 @@ function getTitle(type: string | null) {
 
 function handleRefresh() {
   if (props.disableTransfer) {
-     emit('refresh')
-     return
+    emit('refresh')
+    return
   }
   if (props.mode === 'split') splitViewStore.triggerRefresh()
   else freeWindowStore.triggerRefresh()
@@ -72,7 +72,7 @@ function handleClose() {
 
 function switchMode() {
   if (props.disableTransfer) return
-  
+
   if (props.mode === 'split') {
     freeWindowStore.openFromContext(splitViewStore.currentRightViewType, {
       post: splitViewStore.currentPost,
@@ -90,13 +90,13 @@ function switchMode() {
     splitViewStore.currentChat = freeWindowStore.currentChat
     splitViewStore.activeTab = freeWindowStore.activeTab
     splitViewStore.profileTab = freeWindowStore.profileTab
-    
+
     splitViewStore.isOpen = true
     splitViewStore.isMaximized = false
     splitViewStore.activeView = 'right'
-    if(freeWindowStore.currentViewType === 'music') splitViewStore.rightPanelWidth = 38
-    else if(freeWindowStore.currentViewType === 'notifications') splitViewStore.rightPanelWidth = 40
-    else if(freeWindowStore.currentViewType === 'chat') splitViewStore.rightPanelWidth = 45
+    if (freeWindowStore.currentViewType === 'music') splitViewStore.rightPanelWidth = 38
+    else if (freeWindowStore.currentViewType === 'notifications') splitViewStore.rightPanelWidth = 40
+    else if (freeWindowStore.currentViewType === 'chat') splitViewStore.rightPanelWidth = 45
     else splitViewStore.rightPanelWidth = 50
 
     freeWindowStore.close()
@@ -106,49 +106,103 @@ function switchMode() {
 
 <template>
   <div class="px-4 py-3 flex justify-between items-center bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200/50 dark:border-white/5 shrink-0 drag-handle rounded-t-[30px] select-none">
-    
     <div class="flex items-center gap-2 overflow-hidden max-w-[50%]">
       <div class="w-7 h-7 rounded-full bg-white dark:bg-white/10 flex items-center justify-center shrink-0 shadow-sm border border-gray-100 dark:border-white/5">
-        <UIcon :name="getIcon(type)" class="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+        <UIcon
+          :name="getIcon(type)"
+          class="w-4 h-4 text-cyan-600 dark:text-cyan-400"
+        />
       </div>
       <span class="text-[13px] font-black text-gray-800 dark:text-white truncate tracking-wide">
         {{ getTitle(type) }}
       </span>
-      <span v-if="mode === 'split' && !disableTransfer" class="hidden sm:inline-flex px-1.5 py-0.5 rounded-md bg-cyan-100 dark:bg-cyan-500/20 text-[9px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-widest shrink-0 ml-1">
+      <span
+        v-if="mode === 'split' && !disableTransfer"
+        class="hidden sm:inline-flex px-1.5 py-0.5 rounded-md bg-cyan-100 dark:bg-cyan-500/20 text-[9px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-widest shrink-0 ml-1"
+      >
         Split
       </span>
-      <span v-else class="hidden sm:inline-flex px-1.5 py-0.5 rounded-md bg-purple-100 dark:bg-purple-500/20 text-[9px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest shrink-0 ml-1">
+      <span
+        v-else
+        class="hidden sm:inline-flex px-1.5 py-0.5 rounded-md bg-purple-100 dark:bg-purple-500/20 text-[9px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest shrink-0 ml-1"
+      >
         Window
       </span>
     </div>
 
     <div class="flex items-center gap-1.5 shrink-0">
-      <UTooltip text="刷新" :popper="{ placement: 'bottom' }">
-        <UButton icon="i-material-symbols-refresh" color="neutral" variant="ghost" size="xs"
-          class="rounded-full text-gray-500 hover:text-cyan-600 dark:text-gray-400 dark:hover:text-cyan-400 hover:bg-black/5 dark:hover:bg-white/10" @click="handleRefresh" />
-      </UTooltip>
-      
-      <UTooltip v-if="!disableTransfer" :text="mode === 'split' ? '在自由窗口打开' : '在拆分视图中打开'" :popper="{ placement: 'bottom' }">
-        <UButton :icon="mode === 'split' ? 'i-material-symbols-tab-move' : 'i-material-symbols-dock-to-right'" color="neutral" variant="ghost" size="xs"
-          class="rounded-full text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-black/5 dark:hover:bg-white/10" @click="switchMode" />
+      <UTooltip
+        text="刷新"
+        :popper="{ placement: 'bottom' }"
+      >
+        <UButton
+          icon="i-material-symbols-refresh"
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          class="rounded-full text-gray-500 hover:text-cyan-600 dark:text-gray-400 dark:hover:text-cyan-400 hover:bg-black/5 dark:hover:bg-white/10"
+          @click="handleRefresh"
+        />
       </UTooltip>
 
-      <UTooltip v-if="mode === 'free'" text="最小化" :popper="{ placement: 'bottom' }">
-        <UButton icon="i-material-symbols-minimize" color="neutral" variant="ghost" size="xs"
-          class="rounded-full text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10" @click="toggleMinimize" />
+      <UTooltip
+        v-if="!disableTransfer"
+        :text="mode === 'split' ? '在自由窗口打开' : '在拆分视图中打开'"
+        :popper="{ placement: 'bottom' }"
+      >
+        <UButton
+          :icon="mode === 'split' ? 'i-material-symbols-tab-move' : 'i-material-symbols-dock-to-right'"
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          class="rounded-full text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-black/5 dark:hover:bg-white/10"
+          @click="switchMode"
+        />
       </UTooltip>
 
-      <UTooltip :text="isMaximized ? '还原' : (mode === 'split' ? '展开' : '最大化')" :popper="{ placement: 'bottom' }">
-        <UButton :icon="isMaximized ? 'i-material-symbols-close-fullscreen' : 'i-material-symbols-open-in-full'"
-          color="neutral" variant="ghost" size="xs" 
-          class="rounded-full text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10" @click="toggleMaximize" />
+      <UTooltip
+        v-if="mode === 'free'"
+        text="最小化"
+        :popper="{ placement: 'bottom' }"
+      >
+        <UButton
+          icon="i-material-symbols-minimize"
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          class="rounded-full text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10"
+          @click="toggleMinimize"
+        />
+      </UTooltip>
+
+      <UTooltip
+        :text="isMaximized ? '还原' : (mode === 'split' ? '展开' : '最大化')"
+        :popper="{ placement: 'bottom' }"
+      >
+        <UButton
+          :icon="isMaximized ? 'i-material-symbols-close-fullscreen' : 'i-material-symbols-open-in-full'"
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          class="rounded-full text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10"
+          @click="toggleMaximize"
+        />
       </UTooltip>
 
       <div class="w-px h-3.5 bg-gray-200 dark:bg-gray-700 mx-0.5" />
-      
-      <UTooltip text="关闭" :popper="{ placement: 'bottom-end' }">
-        <UButton icon="i-material-symbols-close" color="error" variant="ghost" size="xs"
-          class="rounded-full text-gray-400 hover:text-white hover:bg-red-500 transition-colors" @click="handleClose" />
+
+      <UTooltip
+        text="关闭"
+        :popper="{ placement: 'bottom-end' }"
+      >
+        <UButton
+          icon="i-material-symbols-close"
+          color="error"
+          variant="ghost"
+          size="xs"
+          class="rounded-full text-gray-400 hover:text-white hover:bg-red-500 transition-colors"
+          @click="handleClose"
+        />
       </UTooltip>
     </div>
   </div>

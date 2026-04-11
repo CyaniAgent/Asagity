@@ -35,13 +35,13 @@ export const useMusicStore = defineStore('music', () => {
   // New Playback States
   const shuffle = ref(false)
   const loopMode = ref<'none' | 'one' | 'all'>('none')
-  
+
   const defaultPlaylist: Track[] = [
     { id: 'track-0', title: 'MusicTest0', artist: 'Local Track', albumArt: '', duration: 0, url: '/sounds/MusicTest0.mp3' },
     { id: 'track-1', title: 'MusicTest1', artist: 'Local Track', albumArt: '', duration: 0, url: '/sounds/MusicTest1.mp3' },
     { id: 'track-2', title: 'MusicTest2', artist: 'Local Track', albumArt: '', duration: 0, url: '/sounds/MusicTest2.mp3' }
   ]
-  
+
   const playlist = ref<Track[]>(defaultPlaylist)
   const currentIndex = ref(0)
 

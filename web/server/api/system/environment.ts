@@ -6,7 +6,7 @@ const startupTime = new Date().getTime()
 
 export default defineEventHandler(async (event) => {
   // Try to use process.env mapping for Docker, else fallback to OS defaults or systeminformation
-  
+
   // systeminformation OS info can take a bit so we'll fetch basic stuff
   const osInfo = await si.osInfo()
   const cpuInfo = await si.cpu()
@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
   const platform = process.env.HOST_OS || osInfo.distro || os.type()
   const release = process.env.HOST_OS_VERSION || osInfo.release || os.release()
   const arch = process.env.HOST_ARCH || osInfo.arch || os.arch()
-  
+
   const uptimeSeconds = (new Date().getTime() - startupTime) / 1000
 
   return {

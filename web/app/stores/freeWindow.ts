@@ -9,15 +9,15 @@ export const useFreeWindowStore = defineStore('freeWindow', () => {
   const currentUser = ref<any>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const currentChat = ref<any>(null)
-  
+
   const activeTab = ref('comments')
   const profileTab = ref('home')
-  
+
   const currentViewType = ref<'post' | 'user' | 'music' | 'notifications' | 'chat' | 'admin_database' | null>(null)
   const isMaximized = ref(false)
   const isMinimized = ref(false)
   const refreshKey = ref(0)
-  
+
   // Position constraints for Draggable
   const position = ref({ x: window?.innerWidth ? window.innerWidth / 2 - 200 : 100, y: 100 })
 
@@ -28,7 +28,7 @@ export const useFreeWindowStore = defineStore('freeWindow', () => {
     currentChat.value = data.chat || null
     activeTab.value = tabs.activeTab || 'comments'
     profileTab.value = tabs.profileTab || 'home'
-    
+
     isMinimized.value = false
     isOpen.value = true
   }

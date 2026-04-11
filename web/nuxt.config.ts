@@ -16,36 +16,12 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
-  routeRules: {
-    '/': { prerender: true }
-  },
-
-  compatibilityDate: '2025-01-15',
-
-  vite: {
-    optimizeDeps: {
-      include: [
-        'date-fns',
-        'date-fns/locale',
-        'mfm-js',
-        'music-metadata',
-        'lrc-kit'
-      ]
-    }
-  },
-
-  eslint: {
-    config: {
-      stylistic: {
-        commaDangle: 'never',
-        braceStyle: '1tbs'
-      }
-    }
-  },
-
-  devServer: {
-    host: '::',
-    port: 2000
+  colorMode: {
+    preference: 'system',
+    fallback: 'dark',
+    classSuffix: '',
+    dataValue: 'theme',
+    storageKey: 'asagity-color-mode'
   },
 
   runtimeConfig: {
@@ -53,6 +29,17 @@ export default defineNuxtConfig({
       apiBase: ''
     }
   },
+
+  routeRules: {
+    '/': { prerender: true }
+  },
+
+  devServer: {
+    host: '::',
+    port: 2000
+  },
+
+  compatibilityDate: '2025-01-15',
 
   nitro: {
     devProxy: {
@@ -63,6 +50,32 @@ export default defineNuxtConfig({
       '/healthz': {
         target: 'http://localhost:2048/healthz',
         changeOrigin: true
+      }
+    }
+  },
+
+  vite: {
+    optimizeDeps: {
+      include: [
+        'date-fns',
+        'date-fns/locale',
+        'mfm-js',
+        'music-metadata',
+        'lrc-kit',
+        'echarts/core',
+        'echarts/renderers',
+        'echarts/charts',
+        'echarts/components',
+        'vue-echarts'
+      ]
+    }
+  },
+
+  eslint: {
+    config: {
+      stylistic: {
+        commaDangle: 'never',
+        braceStyle: '1tbs'
       }
     }
   }

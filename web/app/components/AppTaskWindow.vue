@@ -43,16 +43,26 @@ function handleClose() {
     :icon="freeWindowIcon"
     @close="handleClose"
   >
-    <AppUserProfile v-if="freeWindowStore.currentViewType === 'user'"
-      :key="`user-${freeWindowStore.refreshKey}`" />
-    <AppPostDetail v-else-if="freeWindowStore.currentViewType === 'post'"
-      :key="`post-${freeWindowStore.refreshKey}`" />
+    <AppUserProfile
+      v-if="freeWindowStore.currentViewType === 'user'"
+      :key="`user-${freeWindowStore.refreshKey}`"
+    />
+    <AppPostDetail
+      v-else-if="freeWindowStore.currentViewType === 'post'"
+      :key="`post-${freeWindowStore.refreshKey}`"
+    />
     <AppMusicPlayer v-else-if="freeWindowStore.currentViewType === 'music'" />
-    <AppNotifications v-else-if="freeWindowStore.currentViewType === 'notifications'"
-      :key="`notif-${freeWindowStore.refreshKey}`" />
-    <AppChatDetail v-else-if="freeWindowStore.currentViewType === 'chat'"
-      :key="`chat-${freeWindowStore.refreshKey}`" />
-    <AppDatabaseDetails v-else-if="freeWindowStore.currentViewType === 'admin_database'"
-      :key="`admindb-${freeWindowStore.refreshKey}`" />
+    <AppNotifications
+      v-else-if="freeWindowStore.currentViewType === 'notifications'"
+      :key="`notif-${freeWindowStore.refreshKey}`"
+    />
+    <AppChatDetail
+      v-else-if="freeWindowStore.currentViewType === 'chat'"
+      :key="`chat-${freeWindowStore.refreshKey}`"
+    />
+    <AppDatabaseDetails
+      v-else-if="freeWindowStore.currentViewType === 'admin_database'"
+      :key="`admindb-${freeWindowStore.refreshKey}`"
+    />
   </AppFreeWindow>
 </template>

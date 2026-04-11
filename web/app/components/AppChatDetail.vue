@@ -30,11 +30,9 @@ const sendMessage = () => {
 
 <template>
   <div class="flex flex-col h-full bg-white dark:bg-gray-900 border-none relative font-sans">
-    
     <!-- Message List Area (Scrollable) -->
     <!-- The trick is padding-bottom to avoid the floating island blocking last messages -->
     <div class="flex-1 overflow-y-auto px-6 pt-6 pb-32 flex flex-col gap-5 custom-scrollbar">
-      
       <!-- Contact Info Card (Instead of sticky header) -->
       <div class="mb-10 px-2 flex flex-col items-center text-center animate-[fade-in-up_0.6s_ease-out]">
         <div class="relative mb-4">
@@ -44,28 +42,38 @@ const sendMessage = () => {
             size="xl"
             class="ring-[4px] ring-cyan-500/20 shadow-2xl"
           />
-          <div 
+          <div
             v-if="splitViewStore.currentChat?.online"
             class="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-green-500 border-[3px] border-white dark:border-gray-900 shadow-sm"
           />
         </div>
         <h2 class="text-xl font-black text-gray-900 dark:text-gray-100 flex items-center justify-center gap-2">
           {{ splitViewStore.currentChat?.name || 'Unknown' }}
-          <UIcon name="i-material-symbols-verified-rounded" class="w-5 h-5 text-cyan-500" />
+          <UIcon
+            name="i-material-symbols-verified-rounded"
+            class="w-5 h-5 text-cyan-500"
+          />
         </h2>
         <div class="flex flex-wrap justify-center gap-2 mt-2">
-           <span v-if="splitViewStore.currentChat?.isGroup" class="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 text-[10px] uppercase font-black tracking-widest">
-              {{ splitViewStore.currentChat?.members }} Members Group
-           </span>
-           <span class="text-[10px] uppercase font-black tracking-widest text-cyan-600 dark:text-cyan-400">
-             End-to-End Encrypted
-           </span>
+          <span
+            v-if="splitViewStore.currentChat?.isGroup"
+            class="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 text-[10px] uppercase font-black tracking-widest"
+          >
+            {{ splitViewStore.currentChat?.members }} Members Group
+          </span>
+          <span class="text-[10px] uppercase font-black tracking-widest text-cyan-600 dark:text-cyan-400">
+            End-to-End Encrypted
+          </span>
         </div>
-        <div class="h-px w-24 bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-800 to-transparent mt-6 mb-2"></div>
+        <div class="h-px w-24 bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-800 to-transparent mt-6 mb-2" />
       </div>
-      
+
       <!-- ALL MESSAGES ALIGNED TO THE LEFT -->
-      <div v-for="msg in messages" :key="msg.id" class="flex items-start gap-4 max-w-[85%] group">
+      <div
+        v-for="msg in messages"
+        :key="msg.id"
+        class="flex items-start gap-4 max-w-[85%] group"
+      >
         <!-- Avatar for everyone -->
         <UAvatar
           :src="msg.isMe ? 'https://avatars.githubusercontent.com/u/739984?v=4' : (splitViewStore.currentChat?.avatar || 'https://avatars.githubusercontent.com/u/1024025?v=4')"
@@ -77,66 +85,95 @@ const sendMessage = () => {
         <div class="flex flex-col gap-1 min-w-0">
           <!-- Name & Time -->
           <div class="flex items-center gap-2 px-1">
-            <span class="text-xs font-bold" :class="msg.isMe ? 'text-cyan-500' : 'text-gray-700 dark:text-gray-300'">
+            <span
+              class="text-xs font-bold"
+              :class="msg.isMe ? 'text-cyan-500' : 'text-gray-700 dark:text-gray-300'"
+            >
               {{ msg.isMe ? 'Me' : (splitViewStore.currentChat?.name || 'User') }}
             </span>
             <span class="text-[10px] text-gray-400 font-medium">{{ msg.time }}</span>
           </div>
 
           <!-- Bubble -->
-          <div 
+          <div
             class="px-4 py-3 rounded-[20px] rounded-tl-sm text-[15px] leading-relaxed shadow-sm transition-transform group-hover:-translate-y-0.5"
-            :class="msg.isMe 
-              ? 'bg-cyan-500 text-white shadow-cyan-500/20' 
+            :class="msg.isMe
+              ? 'bg-cyan-500 text-white shadow-cyan-500/20'
               : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-black/5'"
           >
             {{ msg.text }}
           </div>
 
           <!-- Read status (only for "Me" messages) -->
-          <div v-if="msg.isMe" class="px-2 text-[10px] font-bold tracking-wider uppercase flex items-center justify-start h-3">
-             <span v-if="msg.read" class="text-cyan-500/70">Read</span>
+          <div
+            v-if="msg.isMe"
+            class="px-2 text-[10px] font-bold tracking-wider uppercase flex items-center justify-start h-3"
+          >
+            <span
+              v-if="msg.read"
+              class="text-cyan-500/70"
+            >Read</span>
           </div>
         </div>
       </div>
-
     </div>
 
     <!-- Floating Input Island (Absolute at bottom) -->
     <div class="absolute bottom-6 left-0 right-0 px-6 pointer-events-none">
       <div class="pointer-events-auto bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border border-gray-200 dark:border-gray-800 shadow-2xl shadow-black/10 rounded-[28px] p-2 flex flex-col gap-2 transition-all">
-        
         <!-- Textarea / Input wrapper -->
         <div class="flex items-end gap-2 px-2 pb-1">
-          <textarea 
+          <textarea
             v-model="newMessage"
-            placeholder="Type a message..." 
+            placeholder="Type a message..."
             class="w-full bg-transparent border-none focus:ring-0 resize-none text-[15px] max-h-32 min-h-[44px] py-3 text-gray-800 dark:text-gray-200 placeholder-gray-400 custom-scrollbar leading-tight font-medium"
             rows="1"
             @keydown.enter.prevent="sendMessage"
-          ></textarea>
-          
+          />
+
           <!-- Send Button (Floating inside textarea area) -->
-          <button 
-            @click="sendMessage"
+          <button
             class="w-10 h-10 shrink-0 rounded-full flex items-center justify-center transition-all shadow-md active:scale-95 mb-0.5"
             :class="newMessage.trim() ? 'bg-cyan-500 text-white shadow-cyan-500/30' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'"
+            @click="sendMessage"
           >
-            <UIcon name="i-material-symbols-send-rounded" class="w-5 h-5" />
+            <UIcon
+              name="i-material-symbols-send-rounded"
+              class="w-5 h-5"
+            />
           </button>
         </div>
 
         <!-- Tool Island -->
         <div class="flex items-center gap-1.5 px-2 pb-1">
-           <UButton icon="i-material-symbols-add-circle-outline" color="neutral" variant="ghost" class="text-gray-400 hover:text-cyan-500 rounded-full" />
-           <UButton icon="i-material-symbols-image-outline" color="neutral" variant="ghost" class="text-gray-400 hover:text-cyan-500 rounded-full" />
-           <div class="flex-1"></div>
-           <UButton icon="i-material-symbols-call-outline" color="neutral" variant="ghost" class="text-gray-400 hover:text-cyan-500 rounded-full" />
-           <UButton icon="i-material-symbols-videocam-outline" color="neutral" variant="ghost" class="text-gray-400 hover:text-cyan-500 rounded-full" />
+          <UButton
+            icon="i-material-symbols-add-circle-outline"
+            color="neutral"
+            variant="ghost"
+            class="text-gray-400 hover:text-cyan-500 rounded-full"
+          />
+          <UButton
+            icon="i-material-symbols-image-outline"
+            color="neutral"
+            variant="ghost"
+            class="text-gray-400 hover:text-cyan-500 rounded-full"
+          />
+          <div class="flex-1" />
+          <UButton
+            icon="i-material-symbols-call-outline"
+            color="neutral"
+            variant="ghost"
+            class="text-gray-400 hover:text-cyan-500 rounded-full"
+          />
+          <UButton
+            icon="i-material-symbols-videocam-outline"
+            color="neutral"
+            variant="ghost"
+            class="text-gray-400 hover:text-cyan-500 rounded-full"
+          />
         </div>
       </div>
     </div>
-
   </div>
 </template>
 

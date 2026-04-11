@@ -55,17 +55,25 @@ const handleAcknowledge = () => {
 <template>
   <Teleport to="body">
     <Transition name="fade">
-      <div v-if="systemStore.showConnectionErrorModal" class="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-auto">
+      <div
+        v-if="systemStore.showConnectionErrorModal"
+        class="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-auto"
+      >
         <!-- Backdrop -->
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" @click.stop></div>
+        <div
+          class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+          @click.stop
+        />
 
         <!-- M3 Dialog Surface -->
         <div class="relative bg-[#2b2930] w-[90%] max-w-[400px] rounded-[28px] overflow-hidden shadow-2xl flex flex-col pointer-events-auto transform transition-transform scale-100 animate-pop">
-          
           <!-- Icon / Header -->
           <div class="pt-6 px-6 flex flex-col items-center">
             <div class="w-12 h-12 rounded-full bg-[#ffb4ab] flex items-center justify-center text-[#690005] mb-4">
-              <UIcon name="i-material-symbols-cloud-off-rounded" class="w-6 h-6" />
+              <UIcon
+                name="i-material-symbols-cloud-off-rounded"
+                class="w-6 h-6"
+              />
             </div>
             <h2 class="text-2xl font-bold text-[#e6e1e5] text-center tracking-wide">
               无法连接到服务端
@@ -81,19 +89,22 @@ const handleAcknowledge = () => {
           <!-- Actions -->
           <div class="px-6 pb-6 pt-2 flex items-center justify-end gap-2">
             <!-- Text Button for Refresh -->
-            <button 
-              @click="handleRefresh" 
+            <button
+              class="px-3 py-2.5 rounded-full text-[#ffb4ab] hover:bg-[#ffb4ab]/10 font-bold tracking-wider text-sm transition-colors active:scale-95 select-none"
+              @click="handleRefresh"
               @mousedown="handleRefreshStart"
               @mouseup="handleRefreshEnd"
               @mouseleave="handleRefreshEnd"
               @touchstart.passive="handleRefreshStart"
               @touchend.passive="handleRefreshEnd"
-              class="px-3 py-2.5 rounded-full text-[#ffb4ab] hover:bg-[#ffb4ab]/10 font-bold tracking-wider text-sm transition-colors active:scale-95 select-none"
             >
               刷新
             </button>
             <!-- Filled Tonal / Primary Button for OK -->
-            <button @click="handleAcknowledge" class="px-5 py-2.5 rounded-full bg-[#ffb4ab] text-[#690005] hover:bg-[#ffb4ab]/90 font-bold tracking-wider text-sm transition-transform active:scale-95 shadow-sm shadow-[#ffb4ab]/20">
+            <button
+              class="px-5 py-2.5 rounded-full bg-[#ffb4ab] text-[#690005] hover:bg-[#ffb4ab]/90 font-bold tracking-wider text-sm transition-transform active:scale-95 shadow-sm shadow-[#ffb4ab]/20"
+              @click="handleAcknowledge"
+            >
               好的
             </button>
           </div>
@@ -102,8 +113,16 @@ const handleAcknowledge = () => {
     </Transition>
 
     <!-- Hidden audio elements -->
-    <audio ref="audioRef" src="/sounds/YunaAyase/sys_error.wav" preload="auto"></audio>
-    <audio ref="restoredAudioRef" src="/sounds/YunaAyase/sys_net_restored.wav" preload="auto"></audio>
+    <audio
+      ref="audioRef"
+      src="/sounds/YunaAyase/sys_error.wav"
+      preload="auto"
+    />
+    <audio
+      ref="restoredAudioRef"
+      src="/sounds/YunaAyase/sys_net_restored.wav"
+      preload="auto"
+    />
   </Teleport>
 </template>
 

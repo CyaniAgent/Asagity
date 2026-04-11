@@ -72,7 +72,7 @@ export const useNotificationStore = defineStore('notification', () => {
       ...notification
     }
     notifications.value.unshift(newNotify)
-    
+
     // Limit to 50 recent notifications
     if (notifications.value.length > 50) {
       notifications.value = notifications.value.slice(0, 50)

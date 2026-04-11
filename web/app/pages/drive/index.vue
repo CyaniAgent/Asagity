@@ -15,7 +15,7 @@ function formatBytes(value: number, inputUnit: 'B' | 'KB' | 'MB' | 'GB' | 'TB' =
 
   const units = ['B', 'KB', 'MB', 'GB', 'TB']
   const unitFactor: Record<typeof inputUnit, number> = {
-    'B': 1, 'KB': 1024, 'MB': 1024 ** 2, 'GB': 1024 ** 3, 'TB': 1024 ** 4
+    B: 1, KB: 1024, MB: 1024 ** 2, GB: 1024 ** 3, TB: 1024 ** 4
   }
 
   const bytes = value * unitFactor[inputUnit]
@@ -71,89 +71,142 @@ const unifiedItems = computed(() => {
   <div class="h-full flex flex-col gap-2 animate-[fade-in_0.4s_ease-out]">
     <!-- Header Controls (Refined: No Logo/Title) -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-2 py-1 shrink-0">
-
       <!-- Left: Capacity Progress (Occupies title space) -->
       <div class="flex flex-col gap-2 w-full md:w-80 shrink-0">
         <div
-          class="flex justify-between items-center text-[10px] font-black tracking-[0.1em] text-gray-500 dark:text-gray-400">
+          class="flex justify-between items-center text-[10px] font-black tracking-[0.1em] text-gray-500 dark:text-gray-400"
+        >
           <span class="flex items-center gap-1.5">
-            <UIcon name="i-material-symbols-cloud" class="w-3 h-3" /> {{ formattedUsed }} used
+            <UIcon
+              name="i-material-symbols-cloud"
+              class="w-3 h-3"
+            /> {{ formattedUsed }} used
           </span>
           <span>{{ formattedTotal }} total</span>
         </div>
         <div class="h-2.5 w-full bg-gray-200 dark:bg-gray-700/50 rounded-full overflow-hidden shadow-inner">
           <div
             class="h-full bg-gradient-to-r from-cyan-400 to-primary-500 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(57,197,187,0.5)]"
-            :style="{ width: `${progressPercentage}%` }" />
+            :style="{ width: `${progressPercentage}%` }"
+          />
         </div>
       </div>
 
       <!-- Right: Actions -->
       <div class="flex items-center gap-2 w-full md:w-auto justify-end shrink-0">
-        <UButton icon="i-material-symbols-refresh" color="neutral" variant="ghost"
-          class="rounded-full w-10 h-10 flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 text-gray-400 hover:text-cyan-500 transition-colors" />
-        <UButton icon="i-material-symbols-create-new-folder" color="neutral" variant="ghost"
-          class="rounded-full w-10 h-10 flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 text-gray-400 hover:text-cyan-500 transition-colors" />
+        <UButton
+          icon="i-material-symbols-refresh"
+          color="neutral"
+          variant="ghost"
+          class="rounded-full w-10 h-10 flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 text-gray-400 hover:text-cyan-500 transition-colors"
+        />
+        <UButton
+          icon="i-material-symbols-create-new-folder"
+          color="neutral"
+          variant="ghost"
+          class="rounded-full w-10 h-10 flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 text-gray-400 hover:text-cyan-500 transition-colors"
+        />
         <div class="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-2" />
-        <UButton :icon="isGridView ? 'i-material-symbols-grid-view' : 'i-material-symbols-view-list'" color="neutral"
-          variant="ghost" class="rounded-full w-10 h-10 flex items-center justify-center transition-colors"
+        <UButton
+          :icon="isGridView ? 'i-material-symbols-grid-view' : 'i-material-symbols-view-list'"
+          color="neutral"
+          variant="ghost"
+          class="rounded-full w-10 h-10 flex items-center justify-center transition-colors"
           :class="isGridView ? 'text-gray-400 hover:bg-black/5 dark:hover:bg-white/10 hover:text-cyan-500' : 'text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-500/10 hover:bg-cyan-100 dark:hover:bg-cyan-500/20'"
-          @click="isGridView = !isGridView" />
-        <UButton icon="i-material-symbols-upload" label="上传文件" color="primary" size="lg"
-          class="rounded-full shadow-[0_0_15px_rgba(57,197,187,0.4)] hover:shadow-[0_0_25px_rgba(57,197,187,0.7)] hover:scale-105 transition-all px-6 font-bold ml-2" />
+          @click="isGridView = !isGridView"
+        />
+        <UButton
+          icon="i-material-symbols-upload"
+          label="上传文件"
+          color="primary"
+          size="lg"
+          class="rounded-full shadow-[0_0_15px_rgba(57,197,187,0.4)] hover:shadow-[0_0_25px_rgba(57,197,187,0.7)] hover:scale-105 transition-all px-6 font-bold ml-2"
+        />
       </div>
     </div>
 
     <!-- macOS Style Directory Navigation (Breadcrumbs) -->
     <div class="flex items-center gap-1.5 px-2 py-2 scroll-x-auto scrollbar-hide">
-      <template v-for="(path, index) in currentPath" :key="path.id">
-        <div class="flex items-center gap-2 group cursor-pointer" @click="navigateToPath(index)">
+      <template
+        v-for="(path, index) in currentPath"
+        :key="path.id"
+      >
+        <div
+          class="flex items-center gap-2 group cursor-pointer"
+          @click="navigateToPath(index)"
+        >
           <div
-            class="flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all duration-300 group-hover:bg-cyan-50 dark:group-hover:bg-cyan-500/10 active:scale-95">
-            <UIcon :name="path.icon" class="w-4 h-4"
-              :class="index === currentPath.length - 1 ? 'text-cyan-500 dark:text-cyan-400' : 'text-gray-400 group-hover:text-cyan-500'" />
-            <span class="text-[13px] font-bold tracking-wide transition-colors"
-              :class="index === currentPath.length - 1 ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400 group-hover:text-cyan-600 dark:group-hover:text-cyan-400'">
+            class="flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all duration-300 group-hover:bg-cyan-50 dark:group-hover:bg-cyan-500/10 active:scale-95"
+          >
+            <UIcon
+              :name="path.icon"
+              class="w-4 h-4"
+              :class="index === currentPath.length - 1 ? 'text-cyan-500 dark:text-cyan-400' : 'text-gray-400 group-hover:text-cyan-500'"
+            />
+            <span
+              class="text-[13px] font-bold tracking-wide transition-colors"
+              :class="index === currentPath.length - 1 ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400 group-hover:text-cyan-600 dark:group-hover:text-cyan-400'"
+            >
               {{ path.name }}
             </span>
           </div>
         </div>
         <!-- Chevron Separator (Don't show after the last item) -->
-        <UIcon v-if="index < currentPath.length - 1" name="i-material-symbols-chevron-right"
-          class="w-4 h-4 text-gray-300 dark:text-gray-700" />
+        <UIcon
+          v-if="index < currentPath.length - 1"
+          name="i-material-symbols-chevron-right"
+          class="w-4 h-4 text-gray-300 dark:text-gray-700"
+        />
       </template>
     </div>
 
     <!-- Unified Content Area -->
     <div class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-4 pb-10 pr-2">
-
       <!-- List View (Unified) -->
-      <div v-if="!isGridView"
-        class="flex flex-col bg-white/60 dark:bg-gray-800/40 backdrop-blur-sm rounded-[30px] border border-gray-100 dark:border-gray-700/50 overflow-hidden shadow-sm">
+      <div
+        v-if="!isGridView"
+        class="flex flex-col bg-white/60 dark:bg-gray-800/40 backdrop-blur-sm rounded-[30px] border border-gray-100 dark:border-gray-700/50 overflow-hidden shadow-sm"
+      >
         <div
-          class="grid grid-cols-12 gap-4 px-6 md:px-8 py-4 border-b border-gray-100/80 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-900/50 text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest sticky top-0 z-10">
+          class="grid grid-cols-12 gap-4 px-6 md:px-8 py-4 border-b border-gray-100/80 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-900/50 text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest sticky top-0 z-10"
+        >
           <div class="col-span-12 md:col-span-6 flex items-center">
             名称
-            <UIcon name="i-material-symbols-arrow-drop-down" class="ml-1 w-4 h-4" />
+            <UIcon
+              name="i-material-symbols-arrow-drop-down"
+              class="ml-1 w-4 h-4"
+            />
           </div>
-          <div class="col-span-3 hidden md:block">修改日期</div>
-          <div class="col-span-2 hidden md:block text-right pr-4">大小</div>
-          <div class="col-span-1 hidden md:block"></div>
+          <div class="col-span-3 hidden md:block">
+            修改日期
+          </div>
+          <div class="col-span-2 hidden md:block text-right pr-4">
+            大小
+          </div>
+          <div class="col-span-1 hidden md:block" />
         </div>
 
         <div class="flex flex-col divide-y divide-gray-50 dark:divide-gray-700/30">
-          <div v-for="item in unifiedItems" :key="item.id"
-            class="grid grid-cols-12 gap-4 px-6 md:px-8 py-3.5 items-center hover:bg-white dark:hover:bg-gray-800 transition-colors cursor-pointer group">
+          <div
+            v-for="item in unifiedItems"
+            :key="item.id"
+            class="grid grid-cols-12 gap-4 px-6 md:px-8 py-3.5 items-center hover:bg-white dark:hover:bg-gray-800 transition-colors cursor-pointer group"
+          >
             <div class="col-span-12 md:col-span-6 flex items-center gap-4 overflow-hidden">
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors"
-                :class="item.type === 'folder' ? 'bg-cyan-50 dark:bg-cyan-500/10' : 'bg-gray-100 dark:bg-gray-700/50 group-hover:bg-cyan-50 dark:group-hover:bg-cyan-500/10'">
-                <UIcon :name="item.type === 'folder' ? 'i-material-symbols-folder' : 'i-material-symbols-draft-rounded'"
+              <div
+                class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors"
+                :class="item.type === 'folder' ? 'bg-cyan-50 dark:bg-cyan-500/10' : 'bg-gray-100 dark:bg-gray-700/50 group-hover:bg-cyan-50 dark:group-hover:bg-cyan-500/10'"
+              >
+                <UIcon
+                  :name="item.type === 'folder' ? 'i-material-symbols-folder' : 'i-material-symbols-draft-rounded'"
                   class="w-5.5 h-5.5 transition-colors"
-                  :class="item.type === 'folder' ? 'text-cyan-500 dark:text-cyan-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-cyan-500'" />
+                  :class="item.type === 'folder' ? 'text-cyan-500 dark:text-cyan-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-cyan-500'"
+                />
               </div>
               <span
-                class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">{{
-                  item.name }}</span>
+                class="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors"
+              >{{
+                item.name }}</span>
             </div>
 
             <div class="col-span-3 hidden md:block text-[13px] font-semibold text-gray-500 dark:text-gray-400">
@@ -161,46 +214,62 @@ const unifiedItems = computed(() => {
             </div>
 
             <div
-              class="col-span-2 hidden md:block text-right pr-4 text-[13px] font-black text-gray-500 dark:text-gray-400">
+              class="col-span-2 hidden md:block text-right pr-4 text-[13px] font-black text-gray-500 dark:text-gray-400"
+            >
               {{ formatBytes(item.sizeMB, 'MB') }}
             </div>
 
             <div
-              class="col-span-1 hidden md:block flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-              <UButton icon="i-material-symbols-more-vert" color="neutral" variant="ghost"
-                class="rounded-full w-8 h-8 flex items-center justify-center" @click.stop="" />
+              class="col-span-1 hidden md:block flex justify-end opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <UButton
+                icon="i-material-symbols-more-vert"
+                color="neutral"
+                variant="ghost"
+                class="rounded-full w-8 h-8 flex items-center justify-center"
+                @click.stop=""
+              />
             </div>
           </div>
         </div>
       </div>
 
       <!-- Grid View (Unified) -->
-      <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-5 px-1">
-        <div v-for="item in unifiedItems" :key="item.id"
-          class="flex flex-col bg-white/60 dark:bg-gray-800/40 backdrop-blur-sm rounded-[24px] border border-gray-100 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:border-cyan-300 dark:hover:border-cyan-500/50 transition-all shadow-sm hover:shadow-md cursor-pointer group overflow-hidden">
-
+      <div
+        v-else
+        class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-5 px-1"
+      >
+        <div
+          v-for="item in unifiedItems"
+          :key="item.id"
+          class="flex flex-col bg-white/60 dark:bg-gray-800/40 backdrop-blur-sm rounded-[24px] border border-gray-100 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:border-cyan-300 dark:hover:border-cyan-500/50 transition-all shadow-sm hover:shadow-md cursor-pointer group overflow-hidden"
+        >
           <div
             class="h-28 flex items-center justify-center border-b border-gray-100/80 dark:border-gray-700/50 group-hover:bg-cyan-50 dark:group-hover:bg-cyan-500/10 transition-colors"
-            :class="item.type === 'folder' ? 'bg-cyan-50/30 dark:bg-gray-900/40' : 'bg-gray-50 dark:bg-gray-900/40'">
-            <UIcon :name="item.type === 'folder' ? 'i-material-symbols-folder' : 'i-material-symbols-draft-rounded'"
+            :class="item.type === 'folder' ? 'bg-cyan-50/30 dark:bg-gray-900/40' : 'bg-gray-50 dark:bg-gray-900/40'"
+          >
+            <UIcon
+              :name="item.type === 'folder' ? 'i-material-symbols-folder' : 'i-material-symbols-draft-rounded'"
               class="w-12 h-12 transition-all group-hover:scale-110 duration-500"
-              :class="item.type === 'folder' ? 'text-cyan-400' : 'text-gray-300 dark:text-gray-600 group-hover:text-cyan-500'" />
+              :class="item.type === 'folder' ? 'text-cyan-400' : 'text-gray-300 dark:text-gray-600 group-hover:text-cyan-500'"
+            />
           </div>
 
           <div class="p-4 flex flex-col gap-1">
             <span
-              class="text-[13px] font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+              class="text-[13px] font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors"
+            >
               {{ item.name }}
             </span>
             <div
-              class="flex items-center justify-between mt-1 text-[10px] font-black tracking-wider text-gray-400 dark:text-gray-500 uppercase">
+              class="flex items-center justify-between mt-1 text-[10px] font-black tracking-wider text-gray-400 dark:text-gray-500 uppercase"
+            >
               <span>{{ format(item.modifiedAt, 'MM-dd') }}</span>
               <span>{{ formatBytes(item.sizeMB, 'MB') }}</span>
             </div>
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </template>

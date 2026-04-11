@@ -20,9 +20,9 @@ export const useAppToast = () => {
     }
 
     // Play the notification sound if not silent
-    if (process.client && !options.silent) {
+    if (import.meta.client && !options.silent) {
       const audio = new Audio('/sounds/YunaAyase/ca.wav')
-      audio.play().catch(e => {
+      audio.play().catch((e) => {
         // Handle browser autoplay restriction gracefully
         console.warn('Audio playback prevented by browser:', e)
       })

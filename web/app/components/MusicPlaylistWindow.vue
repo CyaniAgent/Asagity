@@ -22,11 +22,13 @@ function playTrack(index: number) {
   >
     <!-- Playlist Scrollable Area -->
     <div class="flex-1 overflow-y-auto custom-scrollbar p-4 flex flex-col gap-2 relative z-10">
-      
       <!-- Current Track Header Info -->
       <div class="mb-4 px-2 select-none">
         <h3 class="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mb-2 flex items-center gap-2">
-          <span class="w-1.5 h-1.5 rounded-full" :style="{ backgroundColor: musicStore.textColor }" />
+          <span
+            class="w-1.5 h-1.5 rounded-full"
+            :style="{ backgroundColor: musicStore.textColor }"
+          />
           Current Queue
         </h3>
         <p class="text-xs font-bold opacity-60">
@@ -40,8 +42,8 @@ function playTrack(index: number) {
         :key="track.id"
         class="group flex items-center justify-between p-3 rounded-2xl cursor-pointer transition-all duration-300 select-none"
         :class="[
-          musicStore.currentIndex === index 
-            ? 'bg-white/10 shadow-md scale-[1.02]' 
+          musicStore.currentIndex === index
+            ? 'bg-white/10 shadow-md scale-[1.02]'
             : 'hover:bg-white/5 opacity-60 hover:opacity-100 hover:-translate-x-1'
         ]"
         @dblclick="playTrack(index)"
@@ -50,23 +52,26 @@ function playTrack(index: number) {
         <div class="flex items-center gap-4 overflow-hidden">
           <!-- Status Icon -->
           <div class="w-6 h-6 shrink-0 flex items-center justify-center opacity-70">
-            <UIcon 
-              v-if="musicStore.currentIndex === index && musicStore.isPlaying" 
-              name="i-material-symbols-volume-up" 
-              class="w-4 h-4 text-cyan-500 animate-pulse drop-shadow-[0_0_5px_rgba(57,197,187,0.5)]" 
+            <UIcon
+              v-if="musicStore.currentIndex === index && musicStore.isPlaying"
+              name="i-material-symbols-volume-up"
+              class="w-4 h-4 text-cyan-500 animate-pulse drop-shadow-[0_0_5px_rgba(57,197,187,0.5)]"
               :style="{ color: musicStore.themeColor }"
             />
-            <UIcon 
-              v-else-if="musicStore.currentIndex === index && !musicStore.isPlaying" 
-              name="i-material-symbols-volume-off" 
-              class="w-4 h-4" 
+            <UIcon
+              v-else-if="musicStore.currentIndex === index && !musicStore.isPlaying"
+              name="i-material-symbols-volume-off"
+              class="w-4 h-4"
             />
-            <span v-else class="text-xs font-bold font-mono">{{ index + 1 }}</span>
+            <span
+              v-else
+              class="text-xs font-bold font-mono"
+            >{{ index + 1 }}</span>
           </div>
 
           <!-- Track Text -->
           <div class="flex flex-col min-w-0">
-            <span 
+            <span
               class="text-sm font-black truncate transition-colors duration-300"
               :class="musicStore.currentIndex === index ? 'text-cyan-500 drop-shadow-sm' : ''"
               :style="musicStore.currentIndex === index ? { color: musicStore.themeColor, filter: 'brightness(1.5)' } : {}"
@@ -90,7 +95,6 @@ function playTrack(index: number) {
           />
         </div>
       </div>
-
     </div>
 
     <!-- Fade Overlay -->

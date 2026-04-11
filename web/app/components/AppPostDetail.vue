@@ -19,7 +19,6 @@ const tabs = [
 
 <template>
   <div class="flex flex-col h-full bg-white dark:bg-gray-900 border-l border-gray-200/50 dark:border-gray-800/50">
-
     <!-- Body - Scrollable content -->
     <div class="flex-1 overflow-y-auto custom-scrollbar">
       <!-- Original Post -->

@@ -13,7 +13,6 @@ const profileTabs = [
 
 <template>
   <div class="flex flex-col h-full bg-white dark:bg-gray-900 overflow-hidden">
-
     <!-- Scrollable content area -->
     <div
       v-if="splitViewStore.currentUser"

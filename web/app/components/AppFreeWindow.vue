@@ -17,7 +17,7 @@ const emit = defineEmits(['update:modelValue', 'close'])
 
 const isOpen = computed({
   get: () => props.modelValue ?? true,
-  set: (val) => emit('update:modelValue', val)
+  set: val => emit('update:modelValue', val)
 })
 
 const isMaximized = ref(false)
@@ -64,7 +64,7 @@ const windowStyle = computed(() => {
   if (isMinimized.value) {
     return { display: 'none' }
   }
-  
+
   if (isMaximized.value) {
     return {
       top: '16px',
@@ -74,13 +74,13 @@ const windowStyle = computed(() => {
       transform: 'none'
     }
   }
-  
+
   // Clamped position to prevent losing the window
   const w = props.initialWidth || 450
   const h = props.initialHeight || 650
   const clampedX = Math.min(Math.max(0, position.value.x), windowWidth.value - 100)
   const clampedY = Math.min(Math.max(0, position.value.y), windowHeight.value - 50)
-  
+
   return {
     left: `${clampedX}px`,
     top: `${clampedY}px`,
@@ -93,27 +93,32 @@ const windowStyle = computed(() => {
 <template>
   <Teleport to="body">
     <Transition name="fade-window">
-      <div v-show="isOpen" 
-          ref="el" 
-          class="fixed z-[9990] flex flex-col rounded-[30px] border shadow-[0_10px_40px_rgba(0,0,0,0.15)] overflow-hidden transition-all"
-          :class="[
-            isMaximized ? 'duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]' : 'duration-0',
-            isMinimized ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100',
-            /* 响应式主题色绑定：为歌词等窗口提供无缝玻璃拟态质感 */
-            'bg-white/90 dark:bg-gray-900/90 backdrop-blur-3xl border-gray-200/50 dark:border-gray-800/80'
-          ]"
-          :style="windowStyle">
-        
+      <div
+        v-show="isOpen"
+        ref="el"
+        class="fixed z-[9990] flex flex-col rounded-[30px] border shadow-[0_10px_40px_rgba(0,0,0,0.15)] overflow-hidden transition-all"
+        :class="[
+          isMaximized ? 'duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]' : 'duration-0',
+          isMinimized ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100',
+          /* 响应式主题色绑定：为歌词等窗口提供无缝玻璃拟态质感 */
+          'bg-white/90 dark:bg-gray-900/90 backdrop-blur-3xl border-gray-200/50 dark:border-gray-800/80'
+        ]"
+        :style="windowStyle"
+      >
         <!-- Drag Handle / Header -->
-        <div ref="handle" class="shrink-0 w-full" :class="{ 'cursor-default': isMaximized }">
-          <AppWindowHeader 
-            mode="free" 
+        <div
+          ref="handle"
+          class="shrink-0 w-full"
+          :class="{ 'cursor-default': isMaximized }"
+        >
+          <AppWindowHeader
+            mode="free"
             :type="type || null"
-            :customTitle="title"
-            :customIcon="icon"
-            :isMaximized="isMaximized"
-            :isMinimized="isMinimized"
-            :disableTransfer="disableTransfer"
+            :custom-title="title"
+            :custom-icon="icon"
+            :is-maximized="isMaximized"
+            :is-minimized="isMinimized"
+            :disable-transfer="disableTransfer"
             @close="close"
             @toggle-maximize="toggleMaximize"
             @toggle-minimize="toggleMinimize"
@@ -122,7 +127,7 @@ const windowStyle = computed(() => {
 
         <!-- Render Custom Content -->
         <div class="flex-1 overflow-auto custom-scrollbar relative flex flex-col">
-          <slot></slot>
+          <slot />
         </div>
       </div>
     </Transition>

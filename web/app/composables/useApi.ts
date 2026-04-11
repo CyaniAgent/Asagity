@@ -6,7 +6,7 @@ export const useApi = () => {
   const request = async <T = any>(url: string, options: any = {}) => {
     // Inject Authorization header if token exists
     const headers = {
-      ...options.headers,
+      ...options.headers
     }
 
     if (userStore.accessToken) {
@@ -17,7 +17,7 @@ export const useApi = () => {
       const response = await $fetch<any>(url, {
         baseURL,
         ...options,
-        headers,
+        headers
       })
 
       // Go backend uses { ok: boolean, data: any, error?: any } envelope
@@ -36,6 +36,6 @@ export const useApi = () => {
     get: <T = any>(url: string, options?: any) => request<T>(url, { ...options, method: 'GET' }),
     post: <T = any>(url: string, body?: any, options?: any) => request<T>(url, { ...options, method: 'POST', body }),
     put: <T = any>(url: string, body?: any, options?: any) => request<T>(url, { ...options, method: 'PUT', body }),
-    delete: <T = any>(url: string, options?: any) => request<T>(url, { ...options, method: 'DELETE' }),
+    delete: <T = any>(url: string, options?: any) => request<T>(url, { ...options, method: 'DELETE' })
   }
 }

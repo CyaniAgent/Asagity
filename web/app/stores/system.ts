@@ -15,7 +15,7 @@ export const useSystemStore = defineStore('system', () => {
   // Initialization Sequence
   async function initSequence() {
     if (isInitialized.value && !initError.value) return
-    
+
     // Reset state for potential retry
     initError.value = null
     initProgress.value = 0
@@ -24,17 +24,17 @@ export const useSystemStore = defineStore('system', () => {
     try {
       // Step 1: Internal Client Preparation (Non-network)
       initProgress.value = 20
-      
+
       // Step 2: Pre-load Essential Assets (Sounds, etc) - STRICT MODE
       initProgress.value = 50
-      if (process.client) {
+      if (import.meta.client) {
         const assetsToLoad = [
           '/sounds/YunaAyase/ca.wav',
           '/sounds/YunaAyase/sys_error.wav',
           '/sounds/YunaAyase/sys_net_restored.wav'
         ]
-        
-        await Promise.all(assetsToLoad.map(url => {
+
+        await Promise.all(assetsToLoad.map((url) => {
           return new Promise((resolve, reject) => {
             const audio = new Audio()
             audio.addEventListener('canplaythrough', () => {
@@ -46,26 +46,25 @@ export const useSystemStore = defineStore('system', () => {
             }, { once: true })
             audio.src = url
             audio.load()
-            
+
             // Timeout safety for the promise
             setTimeout(() => reject(new Error(`Loading timed out for: ${url}`)), 10000)
           })
         }))
       }
-      
+
       // Step 3: Local Database / Metadata Readiness
       initProgress.value = 80
-      
+
       // Finalizing
       setTimeout(() => {
         initProgress.value = 100
         isInitialized.value = true
-        
+
         // AUTO-ENTRY: Automatically call launchApp after initialization
         // This will start the heartbeat ONLY after client is fully ready
         launchApp()
       }, 500)
-
     } catch (err: any) {
       console.error('Asagity Initialization Failed:', err)
       initError.value = err.message || 'Unknown initialization error'
@@ -76,9 +75,9 @@ export const useSystemStore = defineStore('system', () => {
   // Launch the application (Triggered by user gesture)
   function launchApp() {
     if (!isInitialized.value) return
-    
+
     // Unlock Audio Context for modern browsers
-    if (process.client) {
+    if (import.meta.client) {
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext
       if (AudioContext) {
         const audioCtx = new AudioContext()
@@ -86,7 +85,7 @@ export const useSystemStore = defineStore('system', () => {
           audioCtx.resume()
         }
       }
-      
+
       // Play a tiny silent sound to further ensure the context is "warm"
       const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA')
       silentAudio.play().catch(() => {})
@@ -109,8 +108,8 @@ export const useSystemStore = defineStore('system', () => {
     isDevMode.value = true
     isBackendOnline.value = true
     showConnectionErrorModal.value = false
-    
-    if (process.client) {
+
+    if (import.meta.client) {
       const toast = useAppToast()
       toast.add({
         title: '已进入开发模式',
@@ -133,28 +132,28 @@ export const useSystemStore = defineStore('system', () => {
       isBackendOnline.value = true
       isFrontendOnlyMode.value = false
       showConnectionErrorModal.value = false
-      
+
       // If we were in dev mode, we stay in dev mode until refresh
       // but if the backend actually comes back, we can just be normal
-      isDevMode.value = false 
+      isDevMode.value = false
 
-      if (process.client) {
-         const toast = useAppToast()
-         toast.add({
-           title: '连接已恢复 (ONLINE)',
-           description: '感知到服务端在线，系统功能已全面回复。',
-           color: 'success',
-           icon: 'i-material-symbols-cloud-done-rounded',
-           silent: !hasLaunched.value, // Don't play sound if not launched
-           persist: false
-         })
+      if (import.meta.client) {
+        const toast = useAppToast()
+        toast.add({
+          title: '连接已恢复 (ONLINE)',
+          description: '感知到服务端在线，系统功能已全面回复。',
+          color: 'success',
+          icon: 'i-material-symbols-cloud-done-rounded',
+          silent: !hasLaunched.value, // Don't play sound if not launched
+          persist: false
+        })
       }
     }
   }
 
   // The Heartbeat Engine
   async function checkBackendHealth() {
-    // We now allow health checks even in Dev Mode to support "Auto-Exit" 
+    // We now allow health checks even in Dev Mode to support "Auto-Exit"
     // when the real backend comes back online.
 
     try {
@@ -164,7 +163,7 @@ export const useSystemStore = defineStore('system', () => {
         headers: { 'Cache-Control': 'no-cache' }
       })
 
-      // If we were in Dev Mode and the check succeeds, restoreOnlineMode 
+      // If we were in Dev Mode and the check succeeds, restoreOnlineMode
       // will set isDevMode to false and play the restoration sound.
       restoreOnlineMode()
     } catch (err) {
@@ -177,10 +176,10 @@ export const useSystemStore = defineStore('system', () => {
 
   function startHeartbeat() {
     if (heartbeatInterval.value) return
-    
+
     // Initial check
     checkBackendHealth()
-    
+
     // Regular polling every 5 seconds
     heartbeatInterval.value = setInterval(() => {
       checkBackendHealth()

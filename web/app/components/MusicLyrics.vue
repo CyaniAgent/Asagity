@@ -39,8 +39,14 @@ function setPreviewRef(el: Element | null, index: number) {
     <div class="relative overflow-hidden group/lyrics">
       <!-- Minimal Floating Header -->
       <div class="flex justify-between items-center mb-10 px-4">
-        <h3 class="flex items-center gap-2 text-[10px] font-black tracking-[0.4em] uppercase drop-shadow-md" :style="{ color: musicStore.textColor, opacity: 0.4 }">
-          <span class="w-1.5 h-1.5 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.3)] animate-pulse" :style="{ backgroundColor: musicStore.textColor }" />
+        <h3
+          class="flex items-center gap-2 text-[10px] font-black tracking-[0.4em] uppercase drop-shadow-md"
+          :style="{ color: musicStore.textColor, opacity: 0.4 }"
+        >
+          <span
+            class="w-1.5 h-1.5 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.3)] animate-pulse"
+            :style="{ backgroundColor: musicStore.textColor }"
+          />
           Immersion Lyrics
         </h3>
         <UButton
@@ -58,7 +64,10 @@ function setPreviewRef(el: Element | null, index: number) {
         ref="previewContainer"
         class="flex flex-col overflow-hidden pointer-events-none min-h-[320px] max-h-[320px] relative px-4 mask-fade-v scroll-smooth"
       >
-        <div v-if="musicStore.lyrics.length > 0" class="flex flex-col gap-4 py-32">
+        <div
+          v-if="musicStore.lyrics.length > 0"
+          class="flex flex-col gap-4 py-32"
+        >
           <div
             v-for="(line, index) in musicStore.lyrics"
             :key="index"
@@ -66,10 +75,10 @@ function setPreviewRef(el: Element | null, index: number) {
             class="transition-all duration-700 flex flex-col items-center transform-gpu will-change-all"
             :class="[
               index === musicStore.currentLyricIndex
-                ? 'opacity-100 scale-110 font-extrabold translate-y-0' 
+                ? 'opacity-100 scale-110 font-extrabold translate-y-0'
                 : Math.abs(index - musicStore.currentLyricIndex) === 1
-                ? 'opacity-20 scale-90 blur-[1.5px] font-bold'
-                : 'opacity-0 scale-75 blur-md pointer-events-none'
+                  ? 'opacity-20 scale-90 blur-[1.5px] font-bold'
+                  : 'opacity-0 scale-75 blur-md pointer-events-none'
             ]"
           >
             <div class="flex flex-col items-center w-full text-center py-2">
@@ -79,7 +88,7 @@ function setPreviewRef(el: Element | null, index: number) {
                 :class="[
                   'leading-tight drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] antialiased transition-all duration-700 font-black',
                   index === musicStore.currentLyricIndex
-                    ? (subIdx === 0 ? 'text-[28px] md:text-[34px] tracking-tight' : 'text-[16px] md:text-[18px] opacity-80 mt-2') 
+                    ? (subIdx === 0 ? 'text-[28px] md:text-[34px] tracking-tight' : 'text-[16px] md:text-[18px] opacity-80 mt-2')
                     : (subIdx === 0 ? 'text-[20px] md:text-[24px] tracking-normal' : 'text-[12px] md:text-[14px] opacity-40 mt-1')
                 ]"
                 :style="{ color: musicStore.textColor }"

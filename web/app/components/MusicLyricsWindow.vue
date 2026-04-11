@@ -71,10 +71,18 @@ function handleLyricClick(timestamp: number) {
   >
     <!-- Track Info -->
     <div class="p-6 pb-2 shrink-0 flex items-center gap-4 bg-gradient-to-b from-black/20 to-transparent">
-      <img :src="musicStore.currentTrack.albumArt" class="w-14 h-14 rounded-2xl object-cover shadow-lg" alt="">
+      <img
+        :src="musicStore.currentTrack.albumArt"
+        class="w-14 h-14 rounded-2xl object-cover shadow-lg"
+        alt=""
+      >
       <div class="flex flex-col overflow-hidden">
-        <h2 class="text-lg font-black truncate">{{ musicStore.currentTrack.title }}</h2>
-        <p class="text-[12px] font-bold truncate opacity-60">{{ musicStore.currentTrack.artist || 'Unknown Artist' }}</p>
+        <h2 class="text-lg font-black truncate">
+          {{ musicStore.currentTrack.title }}
+        </h2>
+        <p class="text-[12px] font-bold truncate opacity-60">
+          {{ musicStore.currentTrack.artist || 'Unknown Artist' }}
+        </p>
       </div>
     </div>
 
@@ -83,7 +91,10 @@ function handleLyricClick(timestamp: number) {
       ref="lyricsContainer"
       class="flex-1 overflow-y-auto custom-scrollbar px-10 pb-20 pt-4"
     >
-      <div v-if="musicStore.lyrics.length > 0" class="flex flex-col gap-4">
+      <div
+        v-if="musicStore.lyrics.length > 0"
+        class="flex flex-col gap-4"
+      >
         <div
           v-for="(line, index) in musicStore.lyrics"
           :key="index"
@@ -108,15 +119,21 @@ function handleLyricClick(timestamp: number) {
           </div>
           <!-- Click Indicator (Hover) -->
           <div class="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            <UIcon name="i-material-symbols-play-arrow" class="w-4 h-4 opacity-50" />
+            <UIcon
+              name="i-material-symbols-play-arrow"
+              class="w-4 h-4 opacity-50"
+            />
           </div>
         </div>
       </div>
-      <div v-else class="h-full flex items-center justify-center opacity-20 italic font-black uppercase tracking-[0.3em]">
+      <div
+        v-else
+        class="h-full flex items-center justify-center opacity-20 italic font-black uppercase tracking-[0.3em]"
+      >
         No lyrical data
       </div>
     </div>
-    
+
     <!-- Fading overlay for bottom -->
     <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/40 to-transparent pointer-events-none rounded-b-[32px]" />
   </AppFreeWindow>

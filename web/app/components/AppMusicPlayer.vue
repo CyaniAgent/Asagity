@@ -31,12 +31,15 @@ function handleVolumeChange(e: Event) {
 </script>
 
 <template>
-  <div 
+  <div
     class="relative flex flex-col h-full overflow-hidden font-sans select-none transition-colors duration-1000"
     :style="{ color: textColor }"
   >
     <!-- Immersive Blurred Backdrop -->
-    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none transition-colors duration-1000" :style="{ backgroundColor: musicStore.themeColor }">
+    <div
+      class="absolute inset-0 z-0 overflow-hidden pointer-events-none transition-colors duration-1000"
+      :style="{ backgroundColor: musicStore.themeColor }"
+    >
       <img
         :src="musicStore.currentTrack.albumArt"
         class="w-full h-full object-cover scale-150 blur-[100px] opacity-60 transition-all duration-1000"
@@ -104,12 +107,18 @@ function handleVolumeChange(e: Event) {
 
       <!-- Track Information -->
       <section class="w-full max-w-[340px] mb-8 space-y-1 text-center md:text-left">
-        <h1 class="text-2xl md:text-3xl font-black tracking-tight leading-tight truncate" :style="{ color: textColor }">
+        <h1
+          class="text-2xl md:text-3xl font-black tracking-tight leading-tight truncate"
+          :style="{ color: textColor }"
+        >
           {{ musicStore.currentTrack.title }}
         </h1>
         <p class="text-lg font-bold truncate flex items-center justify-center md:justify-start gap-2 opacity-60">
           <span>{{ musicStore.currentTrack.artist || 'Unknown Artist' }}</span>
-          <span class="w-1 h-1 rounded-full" :style="{ backgroundColor: textColor }" />
+          <span
+            class="w-1 h-1 rounded-full"
+            :style="{ backgroundColor: textColor }"
+          />
           <span class="text-sm">Hi-res</span>
         </p>
       </section>

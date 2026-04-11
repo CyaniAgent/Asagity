@@ -51,11 +51,15 @@ const qualityColors: Record<string, string> = {
           >
         </div>
         <div class="flex flex-col min-w-0">
-          <h2 class="text-xl font-black leading-tight truncate">{{ musicStore.currentTrack.title }}</h2>
-          <p class="text-sm font-bold opacity-60 truncate">{{ musicStore.currentTrack.artist || 'Unknown Artist' }}</p>
+          <h2 class="text-xl font-black leading-tight truncate">
+            {{ musicStore.currentTrack.title }}
+          </h2>
+          <p class="text-sm font-bold opacity-60 truncate">
+            {{ musicStore.currentTrack.artist || 'Unknown Artist' }}
+          </p>
           <div
             class="mt-3 self-start px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
-            :style="{ 
+            :style="{
               color: musicStore.textColor,
               backgroundColor: `${musicStore.textColor}1A`
             }"
@@ -68,29 +72,46 @@ const qualityColors: Record<string, string> = {
       <!-- Technical Specs -->
       <div class="grid grid-cols-2 gap-4">
         <div class="bg-black/10 rounded-2xl p-4 transition-colors hover:bg-white/5">
-          <p class="text-[9px] font-black uppercase tracking-widest opacity-30 mb-1">Container</p>
-          <p class="text-sm font-bold">{{ musicStore.currentTrack.container || 'Unknown' }}</p>
+          <p class="text-[9px] font-black uppercase tracking-widest opacity-30 mb-1">
+            Container
+          </p>
+          <p class="text-sm font-bold">
+            {{ musicStore.currentTrack.container || 'Unknown' }}
+          </p>
         </div>
         <div class="bg-black/10 rounded-2xl p-4 transition-colors hover:bg-white/5">
-          <p class="text-[9px] font-black uppercase tracking-widest opacity-30 mb-1">Codec</p>
-          <p class="text-sm font-bold">{{ musicStore.currentTrack.codec || 'N/A' }}</p>
+          <p class="text-[9px] font-black uppercase tracking-widest opacity-30 mb-1">
+            Codec
+          </p>
+          <p class="text-sm font-bold">
+            {{ musicStore.currentTrack.codec || 'N/A' }}
+          </p>
         </div>
         <div class="bg-black/10 rounded-2xl p-4 transition-colors hover:bg-white/5">
-          <p class="text-[9px] font-black uppercase tracking-widest opacity-30 mb-1">Bitrate</p>
+          <p class="text-[9px] font-black uppercase tracking-widest opacity-30 mb-1">
+            Bitrate
+          </p>
           <p class="text-sm font-bold font-mono opacity-90">
             {{ formatKbps(musicStore.currentTrack.bitrate) }}
           </p>
         </div>
         <div class="bg-black/10 rounded-2xl p-4 transition-colors hover:bg-white/5">
-          <p class="text-[9px] font-black uppercase tracking-widest opacity-30 mb-1">Sampling</p>
-          <p class="text-sm font-bold opacity-90">{{ formatSampleRate(musicStore.currentTrack.sampleRate) }}</p>
+          <p class="text-[9px] font-black uppercase tracking-widest opacity-30 mb-1">
+            Sampling
+          </p>
+          <p class="text-sm font-bold opacity-90">
+            {{ formatSampleRate(musicStore.currentTrack.sampleRate) }}
+          </p>
         </div>
       </div>
 
       <!-- ID3 Tags -->
       <div class="space-y-4">
         <h3 class="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 flex items-center gap-2">
-          <span class="w-1 h-3 rounded-full" :style="{ backgroundColor: musicStore.textColor }" />
+          <span
+            class="w-1 h-3 rounded-full"
+            :style="{ backgroundColor: musicStore.textColor }"
+          />
           Meta Registry
         </h3>
         <div class="space-y-3">

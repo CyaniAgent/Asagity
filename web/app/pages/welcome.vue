@@ -146,26 +146,39 @@ async function handleDeveloperEnter() {
           <div class="absolute top-0 right-0 w-[200px] h-[200px] bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none" />
 
           <div class="flex items-center gap-3 mb-8">
-            <UIcon name="i-material-symbols-gpp-good" class="w-6 h-6 text-cyan-400" />
-            <h2 class="text-xl font-black text-white tracking-wider">Instance Covenant</h2>
+            <UIcon
+              name="i-material-symbols-gpp-good"
+              class="w-6 h-6 text-cyan-400"
+            />
+            <h2 class="text-xl font-black text-white tracking-wider">
+              Instance Covenant
+            </h2>
           </div>
 
           <div class="flex-1 overflow-y-auto pr-4 custom-scrollbar">
             <div class="space-y-6 text-sm text-gray-300 font-medium">
               <section>
-                <h3 class="text-cyan-400 font-bold mb-2 uppercase tracking-wide text-xs">I. Respect the Skyline</h3>
+                <h3 class="text-cyan-400 font-bold mb-2 uppercase tracking-wide text-xs">
+                  I. Respect the Skyline
+                </h3>
                 <p>Welcome to Instance #10241207. Treat all interconnected users with absolute respect. No harassment, spam, or malicious dimensional rifts will be tolerated.</p>
               </section>
               <section>
-                <h3 class="text-cyan-400 font-bold mb-2 uppercase tracking-wide text-xs">II. Content Directives</h3>
+                <h3 class="text-cyan-400 font-bold mb-2 uppercase tracking-wide text-xs">
+                  II. Content Directives
+                </h3>
                 <p>Ensure your drops and media strictly adhere to the SSS-Rank creative directives. Tag your raw feeds appropriately. NSFW content must be shielded behind CW (Content Warnings).</p>
               </section>
               <section>
-                <h3 class="text-cyan-400 font-bold mb-2 uppercase tracking-wide text-xs">III. Privacy &amp; The Matrix</h3>
+                <h3 class="text-cyan-400 font-bold mb-2 uppercase tracking-wide text-xs">
+                  III. Privacy &amp; The Matrix
+                </h3>
                 <p>We respect your encrypted data. Use our E2EE drop system responsibly. System administrators will never decrypt private datastreams without a core warrant.</p>
               </section>
               <section>
-                <h3 class="text-cyan-400 font-bold mb-2 uppercase tracking-wide text-xs">IV. Federal Obligations</h3>
+                <h3 class="text-cyan-400 font-bold mb-2 uppercase tracking-wide text-xs">
+                  IV. Federal Obligations
+                </h3>
                 <p>As a node strictly connected to ActivityPub, you represent Asagity when federating with other servers. Keep the signal pure.</p>
               </section>
             </div>
@@ -178,13 +191,19 @@ async function handleDeveloperEnter() {
             <span class="text-xs font-bold text-gray-400">Initialize your Identity</span>
           </div>
 
-          <NuxtLink to="/register" @click.stop>
+          <NuxtLink
+            to="/register"
+            @click.stop
+          >
             <button class="w-full bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-black tracking-widest py-4 rounded-2xl shadow-[0_0_20px_rgba(57,197,187,0.4)] hover:shadow-[0_0_30px_rgba(57,197,187,0.6)] transition-all transform hover:-translate-y-1 active:translate-y-0 text-sm">
               Create Account
             </button>
           </NuxtLink>
 
-          <NuxtLink to="/login" @click.stop>
+          <NuxtLink
+            to="/login"
+            @click.stop
+          >
             <button class="w-full bg-white/10 hover:bg-white/20 text-white font-bold tracking-widest py-3.5 rounded-2xl border border-white/10 transition-all text-sm">
               Login
             </button>
@@ -201,7 +220,10 @@ async function handleDeveloperEnter() {
             class="w-full bg-transparent hover:bg-fuchsia-500/10 text-gray-400 hover:text-fuchsia-400 font-bold tracking-wider py-3 rounded-2xl border border-dashed border-gray-600 hover:border-fuchsia-500/50 transition-all text-xs flex items-center justify-center gap-2 group"
             @click.stop="handleDeveloperEnter"
           >
-            <UIcon name="i-material-symbols-code-blocks-outline" class="w-4 h-4 group-hover:animate-pulse" />
+            <UIcon
+              name="i-material-symbols-code-blocks-outline"
+              class="w-4 h-4 group-hover:animate-pulse"
+            />
             Direct Enter (Dev)
           </button>
         </div>

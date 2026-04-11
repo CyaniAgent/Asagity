@@ -12,7 +12,7 @@ export default defineNuxtRouteMiddleware((to) => {
   if (systemStore.isFrontendOnlyMode) {
     const offlineAllowedPaths = ['/', '/settings', '/about']
     if (!offlineAllowedPaths.includes(to.path) && !publicPages.includes(to.path)) {
-      if (process.client) {
+      if (import.meta.client) {
         const toast = useAppToast()
         toast.add({
           title: '访问受限 (RESTRICTED)',
