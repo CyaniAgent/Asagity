@@ -4,20 +4,23 @@ import { useCookie } from '#app'
 import { useSystemStore } from '~/stores/system'
 
 export const useUserStore = defineStore('user', () => {
-  // Real token management
-  const accessTokenCookie = useCookie<string | null>('asagity_access_token', { maxAge: 60 * 60 * 72 }) // 72h
+  const accessTokenCookie = useCookie<string | null>('asagity_access_token', { maxAge: 60 * 30 })
+  const refreshTokenCookie = useCookie<string | null>('asagity_refresh_token', { maxAge: 60 * 60 * 24 * 30 })
   const userProfileCookie = useCookie<any | null>('asagity_user_profile')
 
   const isLoggedIn = ref(!!accessTokenCookie.value)
   const accessToken = ref(accessTokenCookie.value)
+  const refreshToken = ref(refreshTokenCookie.value)
   const user = ref<any | null>(userProfileCookie.value)
 
   const username = computed(() => user.value?.username || '')
   const avatar = computed(() => user.value?.avatar_url || '')
 
-  function setAuth(data: { access_token: string, user: any }) {
+  function setAuth(data: { access_token: string, refresh_token: string, user: any }) {
     accessToken.value = data.access_token
+    refreshToken.value = data.refresh_token
     accessTokenCookie.value = data.access_token
+    refreshTokenCookie.value = data.refresh_token
     user.value = data.user
     userProfileCookie.value = data.user
     isLoggedIn.value = true
@@ -26,6 +29,7 @@ export const useUserStore = defineStore('user', () => {
   function developerEnter() {
     setAuth({
       access_token: 'dev_mock_token_39',
+      refresh_token: 'dev_mock_refresh_39',
       user: {
         username: 'Developer',
         name: 'Asagity Dev',
@@ -34,19 +38,45 @@ export const useUserStore = defineStore('user', () => {
     })
   }
 
-  function logout() {
+  async function logout() {
+    const api = useApi()
+    try {
+      if (refreshToken.value) {
+        await api.post('/api/auth/logout', { refresh_token: refreshToken.value })
+      }
+    } catch {
+    }
+
     accessToken.value = null
+    refreshToken.value = null
     accessTokenCookie.value = null
+    refreshTokenCookie.value = null
     user.value = null
     userProfileCookie.value = null
     isLoggedIn.value = false
   }
 
-  // Action to fetch me on init
+  async function refreshAccessToken() {
+    if (!refreshToken.value) return false
+
+    const api = useApi()
+    try {
+      const data = await api.post<{ access_token: string, refresh_token: string, user: any }>('/api/auth/refresh', {
+        refresh_token: refreshToken.value
+      })
+      accessToken.value = data.access_token
+      refreshToken.value = data.refresh_token
+      accessTokenCookie.value = data.access_token
+      refreshTokenCookie.value = data.refresh_token
+      return true
+    } catch {
+      return false
+    }
+  }
+
   const fetchMe = async () => {
     if (!accessToken.value) return
 
-    // Dev mode bypass: If it's our mock token, assume we are connected
     if (accessToken.value === 'dev_mock_token_39') {
       isLoggedIn.value = true
       return
@@ -64,17 +94,18 @@ export const useUserStore = defineStore('user', () => {
       console.error('Failed to fetch user profile:', err)
 
       const errMsg = err.message || ''
-      // Detect severe network failure (server unreachable)
       if (errMsg.toLowerCase().includes('fetch failed') || errMsg.toLowerCase().includes('network error') || errMsg.toLowerCase().includes('failed to fetch')) {
         systemStore.triggerOfflineFallback()
       } else {
-        // If it was a 401 or other logic error...
-        // If we are using the developer mock token, just ignore the 401 and stay logged in.
         if (accessToken.value === 'dev_mock_token_39') {
           isLoggedIn.value = true
         } else {
-          // Real token but failed (e.g. expired) -> logout
-          logout()
+          const refreshed = await refreshAccessToken()
+          if (!refreshed) {
+            logout()
+          } else {
+            await fetchMe()
+          }
         }
       }
     }
@@ -83,12 +114,14 @@ export const useUserStore = defineStore('user', () => {
   return {
     isLoggedIn,
     accessToken,
+    refreshToken,
     user,
     username,
     avatar,
     setAuth,
     developerEnter,
     logout,
+    refreshAccessToken,
     fetchMe
   }
 })

@@ -1,0 +1,117 @@
+# Asagity Podman Compose Configuration
+# Usage: podman compose -f container/podman/podman-compose.yaml up -d
+
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:18.3-alpine3.23
+    container_name: asagity_postgres
+    env_file:
+      - ./container/podman/podman.env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-asagity}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-example_password}
+      POSTGRES_DB: ${POSTGRES_DB:-asagity_db}
+      PGDATA: /var/lib/postgresql/data/pgdata
+      TZ: ${TZ:-Asia/Shanghai}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-asagity} -d ${POSTGRES_DB:-asagity_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      app: asagity
+      service: postgres
+
+  redis:
+    image: redis:8.6.2-alpine
+    container_name: asagity_redis
+    env_file:
+      - ./container/podman/podman.env
+    command: redis-server --requirepass ${REDIS_PASSWORD:-} --appendonly yes
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      app: asagity
+      service: redis
+
+  asagity:
+    image: docker.io/library/golang:1.23-alpine
+    container_name: asagity_api
+    command: sh -c "apk add --no-cache git && cd /app && go run ."
+    working_dir: /app
+    env_file:
+      - ./container/podman/podman.env
+    environment:
+      SERVER_PORT: ${SERVER_PORT:-2048}
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: ${POSTGRES_USER:-asagity}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-example_password}
+      DB_NAME: ${POSTGRES_DB:-asagity_db}
+      REDIS_ADDR: redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      JWT_SECRET: ${JWT_SECRET:-asagity_secret_miku_39}
+      DRIVE_STORAGE_PATH: /app/storage/drive
+      # Host system info for Podman
+      HOST_HOSTNAME: ${HOST_HOSTNAME:-}
+      HOST_OS: ${HOST_OS:-}
+      HOST_OS_VERSION: ${HOST_OS_VERSION:-}
+      HOST_ARCH: ${HOST_ARCH:-}
+      HOST_CPU: ${HOST_CPU:-}
+      HOST_MEMORY: ${HOST_MEMORY:-}
+      TZ: ${TZ:-Asia/Shanghai}
+    ports:
+      - "${SERVER_PORT:-2048}:${SERVER_PORT:-2048}"
+    volumes:
+      - asagity_storage:/app/storage
+      - ../../:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      app: asagity
+      service: api
+
+volumes:
+  postgres_data:
+    driver: local
+    labels:
+      app: asagity
+  redis_data:
+    driver: local
+    labels:
+      app: asagity
+  asagity_storage:
+    driver: local
+    labels:
+      app: asagity
+
+networks:
+  default:
+    driver: bridge
+    labels:
+      app: asagity

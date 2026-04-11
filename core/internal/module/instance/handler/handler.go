@@ -51,3 +51,7 @@ func (h *Handler) AdminDatabaseStats(w http.ResponseWriter, r *http.Request) {
 	}
 	httpx.WriteJSON(w, http.StatusOK, stats)
 }
+
+func (h *Handler) SystemEnvironment(w http.ResponseWriter, r *http.Request) {
+	httpx.WriteJSON(w, http.StatusOK, h.service.SystemEnvironment())
+}

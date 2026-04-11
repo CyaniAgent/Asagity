@@ -11,8 +11,16 @@ type RegisterRequest struct {
 }
 
 type LoginRequest struct {
-	Identifier string `json:"identifier" validate:"required"` // Username or Email
+	Identifier string `json:"identifier" validate:"required"`
 	Password   string `json:"password" validate:"required"`
+}
+
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
+type LogoutRequest struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
 }
 
 type AuthResponse struct {

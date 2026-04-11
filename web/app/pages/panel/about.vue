@@ -33,17 +33,18 @@ const { data: dbStats, pending: pendingDB } = useAsyncData<DatabaseStat[]>('admi
   baseURL: config.public.apiBase
 }))
 
-// 3. 获取运行环境 (Nitro API)
+// 3. 获取运行环境 (Go API)
 const { data: envInfo, pending: pendingEnv } = useAsyncData<{
   hostname: string
   platform: string
+  os_version: string
   arch: string
   cpu: string
-  node_version: string
-  startup_time: number
-  uptime_seconds: number
-  docker: boolean
-}>('system-env', () => $fetch('/api/system/environment'))
+  memory: string
+  is_container: boolean
+}>('system-env', () => $fetch('/api/system/environment', {
+  baseURL: config.public.apiBase
+}))
 
 const topTables = computed(() => {
   if (!dbStats.value) return []
@@ -57,13 +58,6 @@ const maxTableSize = computed(() => {
 
 function openDatabaseDetails() {
   freeWindowStore.openFromContext('admin_database', {}, {})
-}
-
-function formatUptime(seconds: number) {
-  const d = Math.floor(seconds / (3600 * 24))
-  const h = Math.floor((seconds % (3600 * 24)) / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  return `${d > 0 ? d + 'd ' : ''}${h}h ${m}m`
 }
 </script>
 
@@ -249,26 +243,26 @@ function formatUptime(seconds: number) {
             </div>
             <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-gray-800">
               <p class="text-[10px] font-bold text-gray-400 uppercase">
-                Node 版本
+                CPU
               </p>
-              <p class="text-sm font-bold text-gray-900 dark:text-white font-mono">
-                {{ envInfo.node_version }}
-              </p>
-            </div>
-            <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-gray-800">
-              <p class="text-[10px] font-bold text-gray-400 uppercase">
-                运行时间
-              </p>
-              <p class="text-sm font-bold text-cyan-600 dark:text-cyan-400">
-                {{ formatUptime(envInfo.uptime_seconds) }}
+              <p class="text-sm font-bold text-gray-900 dark:text-white truncate">
+                {{ envInfo.cpu || 'Unknown' }}
               </p>
             </div>
             <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-gray-800">
               <p class="text-[10px] font-bold text-gray-400 uppercase">
-                启动时间
+                内存
               </p>
               <p class="text-sm font-bold text-gray-900 dark:text-white">
-                {{ new Date(envInfo.startup_time).toLocaleString() }}
+                {{ envInfo.memory || 'Unknown' }}
+              </p>
+            </div>
+            <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-gray-800">
+              <p class="text-[10px] font-bold text-gray-400 uppercase">
+                容器环境
+              </p>
+              <p class="text-sm font-bold text-cyan-600 dark:text-cyan-400">
+                {{ envInfo.is_container ? '是' : '否' }}
               </p>
             </div>
           </div>

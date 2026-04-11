@@ -49,6 +49,58 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, res)
 }
 
+func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
+	var req dto.RefreshRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
+		return
+	}
+
+	res, err := h.service.Refresh(req.RefreshToken)
+	if err != nil {
+		httpx.WriteError(w, http.StatusUnauthorized, "REFRESH_FAILED", err.Error())
+		return
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, res)
+}
+
+func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
+	userID := httpx.FromContext(r.Context())
+	if userID == "" {
+		httpx.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "User not authenticated")
+		return
+	}
+
+	var req dto.LogoutRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
+		return
+	}
+
+	if err := h.service.Logout(req.RefreshToken); err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "LOGOUT_FAILED", err.Error())
+		return
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+func (h *Handler) LogoutAll(w http.ResponseWriter, r *http.Request) {
+	userID := httpx.FromContext(r.Context())
+	if userID == "" {
+		httpx.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "User not authenticated")
+		return
+	}
+
+	if err := h.service.LogoutAll(userID); err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "LOGOUT_ALL_FAILED", err.Error())
+		return
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
 func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 	userID := httpx.FromContext(r.Context())
 	if userID == "" {
@@ -71,16 +123,4 @@ func (h *Handler) VerifyRegisterEmail(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) VerifyLoginEmail(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteError(w, http.StatusNotImplemented, "NOT_IMPLEMENTED", "login email verification is not implemented yet")
-}
-
-func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
-	httpx.WriteError(w, http.StatusNotImplemented, "NOT_IMPLEMENTED", "token refresh is not implemented yet")
-}
-
-func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
-	httpx.WriteError(w, http.StatusNotImplemented, "NOT_IMPLEMENTED", "logout is not implemented yet")
-}
-
-func (h *Handler) LogoutAll(w http.ResponseWriter, r *http.Request) {
-	httpx.WriteError(w, http.StatusNotImplemented, "NOT_IMPLEMENTED", "logout-all is not implemented yet")
 }

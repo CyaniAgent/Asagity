@@ -14,7 +14,7 @@ import (
 func Register(mux *http.ServeMux, cfg config.Config, clients *database.Clients) {
 	authRepo := authrepository.New(clients)
 	userRepo := userrepository.New(clients)
-	svc := service.New(authRepo, userRepo, cfg)
+	svc := service.New(authRepo, userRepo, clients.Redis, cfg)
 	h := handler.New(svc)
 
 	mux.HandleFunc("/api/auth/register", h.Register)

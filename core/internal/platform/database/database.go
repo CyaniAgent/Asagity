@@ -17,6 +17,7 @@ import (
 	usermodel "github.com/CyaniAgent/Asagity/core/internal/module/user/model"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/config"
 	"github.com/redis/go-redis/v9"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -60,7 +61,55 @@ func Open(cfg config.Config) (*Clients, error) {
 		return nil, err
 	}
 
+	if err := seedInitialData(db); err != nil {
+		return nil, err
+	}
+
 	return &Clients{DB: db, Redis: rdb}, nil
+}
+
+func seedInitialData(db *gorm.DB) error {
+	var count int64
+	db.Model(&usermodel.UserGroup{}).Count(&count)
+	if count == 0 {
+		userGroups := []usermodel.UserGroup{
+			{ID: "admin", Name: "Administrator", Code: "admin", Description: "System administrators", CreatedAt: time.Now()},
+			{ID: "moderator", Name: "Moderator", Code: "moderator", Description: "Content moderators", CreatedAt: time.Now()},
+			{ID: "default", Name: "User", Code: "user", Description: "Regular users", CreatedAt: time.Now()},
+		}
+		if err := db.Create(&userGroups).Error; err != nil {
+			return err
+		}
+	}
+
+	var userCount int64
+	db.Model(&usermodel.User{}).Count(&userCount)
+	if userCount == 0 {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("Asagity1234"), bcrypt.DefaultCost)
+		if err != nil {
+			return err
+		}
+
+		instanceUser := &usermodel.User{
+			ID:          "00000000000000000000000000000001",
+			PubID:       "usr_instance",
+			Username:    "instance",
+			Email:       stringPtr("instance@asagity.local"),
+			PasswdHash:  string(hashedPassword),
+			UserGroupID: "admin",
+			Name:        "Instance Administrator",
+			CreatedAt:   time.Now(),
+		}
+		if err := db.Create(instanceUser).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func stringPtr(s string) *string {
+	return &s
 }
 
 func ensureServices(cfg config.Config) error {

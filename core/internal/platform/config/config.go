@@ -19,6 +19,12 @@ type Config struct {
 	RedisDB          int
 	JwtSecret        string
 	DriveStoragePath string
+	HostHostname     string
+	HostOS           string
+	HostOSVersion    string
+	HostArch         string
+	HostCPU          string
+	HostMemory       string
 }
 
 func Load() (Config, error) {
@@ -36,6 +42,12 @@ func Load() (Config, error) {
 		RedisDB:          0,
 		JwtSecret:        envOrDefault("JWT_SECRET", "asagity_secret_miku_39"),
 		DriveStoragePath: envOrDefault("DRIVE_STORAGE_PATH", "./storage/drive"),
+		HostHostname:     os.Getenv("HOST_HOSTNAME"),
+		HostOS:           os.Getenv("HOST_OS"),
+		HostOSVersion:    os.Getenv("HOST_OS_VERSION"),
+		HostArch:         os.Getenv("HOST_ARCH"),
+		HostCPU:          os.Getenv("HOST_CPU"),
+		HostMemory:       os.Getenv("HOST_MEMORY"),
 	}, nil
 }
 

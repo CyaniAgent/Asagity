@@ -35,3 +35,15 @@ func (s *Service) GetAllSettings() ([]model.InstanceSetting, error) {
 func (s *Service) GetDatabaseStats() ([]repository.DatabaseStat, error) {
 	return s.repo.GetDatabaseStats()
 }
+
+func (s *Service) SystemEnvironment() dto.SystemEnvironmentResponse {
+	return dto.SystemEnvironmentResponse{
+		Hostname:    s.cfg.HostHostname,
+		Platform:    s.cfg.HostOS,
+		OSVersion:   s.cfg.HostOSVersion,
+		Arch:        s.cfg.HostArch,
+		CPU:         s.cfg.HostCPU,
+		Memory:      s.cfg.HostMemory,
+		IsContainer: s.cfg.HostHostname != "",
+	}
+}
