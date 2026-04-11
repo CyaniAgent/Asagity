@@ -12,6 +12,7 @@ import (
 	"time"
 
 	authmodel "github.com/CyaniAgent/Asagity/core/internal/module/auth/model"
+	drivemodel "github.com/CyaniAgent/Asagity/core/internal/module/drive/model"
 	instancemodel "github.com/CyaniAgent/Asagity/core/internal/module/instance/model"
 	usermodel "github.com/CyaniAgent/Asagity/core/internal/module/user/model"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/config"
@@ -53,6 +54,8 @@ func Open(cfg config.Config) (*Clients, error) {
 		&authmodel.Device{},
 		&authmodel.RefreshToken{},
 		&authmodel.EmailChallenge{},
+		&drivemodel.DriveFile{},
+		&drivemodel.DriveUsage{},
 	); err != nil {
 		return nil, err
 	}

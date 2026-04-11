@@ -4,8 +4,8 @@ import { ref, computed } from 'vue'
 const isDropping = ref(false)
 
 // 1. Radar & Spatial Logic
-// Simulate discovered devices. We calculate angle and radius.
-// Devices owned by the user can orbit closer (radius 160). Public peers orbit further (radius 280).
+// Separate different devices/users with distance
+// Own devices: radius 200-280, Instance users: radius 400-500, Remote instances: radius 600+
 interface PeerNode {
   id: string
   displayName: string
@@ -13,14 +13,24 @@ interface PeerNode {
   system: string
   avatar: string
   isSelf?: boolean
+  isInstance?: boolean
+  isRemote?: boolean
   radius: number
   angle: number // degrees
 }
 
 const discoveredNodes = ref<PeerNode[]>([
-  { id: '1', displayName: '绝对领域SK', username: 'syskuku', system: 'iPhone', avatar: 'https://avatars.githubusercontent.com/u/739984?v=4', isSelf: true, radius: 180, angle: -45 },
-  { id: '2', displayName: 'Yuna', username: 'yuna_ayase', system: 'macOS', avatar: 'https://avatars.githubusercontent.com/u/10?v=4', radius: 320, angle: 60 },
-  { id: '3', displayName: '静流', username: 'shizuru_official', system: 'Android', avatar: 'https://avatars.githubusercontent.com/u/11?v=4', radius: 320, angle: 160 }
+  // Own devices (closest orbit)
+  { id: '1', displayName: 'Windows Desktop', username: 'syskuku', system: 'Windows', avatar: 'https://avatars.githubusercontent.com/u/739984?v=4', isSelf: true, radius: 220, angle: 0 },
+  { id: '2', displayName: 'iPhone 15', username: 'syskuku', system: 'iOS', avatar: 'https://avatars.githubusercontent.com/u/10?v=4', isSelf: true, radius: 260, angle: 120 },
+  { id: '3', displayName: 'MacBook Pro', username: 'syskuku', system: 'macOS', avatar: 'https://avatars.githubusercontent.com/u/11?v=4', isSelf: true, radius: 240, angle: 240 },
+  // Instance users (middle orbit)
+  { id: '4', displayName: 'Yuna Ayase', username: 'yuna_ayase', system: 'Web', avatar: 'https://avatars.githubusercontent.com/u/12?v=4', isInstance: true, radius: 420, angle: 45 },
+  { id: '5', displayName: '静流', username: 'shizuru_official', system: 'Android', avatar: 'https://avatars.githubusercontent.com/u/13?v=4', isInstance: true, radius: 460, angle: 165 },
+  { id: '6', displayName: 'Miku Producer', username: 'miku39', system: 'Web', avatar: 'https://avatars.githubusercontent.com/u/14?v=4', isInstance: true, radius: 440, angle: 285 },
+  // Remote instances (outer orbit)
+  { id: '7', displayName: 'misskey.io', username: 'remote', system: 'Instance', avatar: 'https://avatars.githubusercontent.com/u/15?v=4', isRemote: true, radius: 620, angle: 90 },
+  { id: '8', displayName: 'mastodon.social', username: 'remote', system: 'Instance', avatar: 'https://avatars.githubusercontent.com/u/16?v=4', isRemote: true, radius: 650, angle: 270 },
 ])
 
 // 2. Transferred Tasks Management (Floating Bottom Queue)
@@ -104,28 +114,149 @@ const queueExpanded = ref(true)
       </h2>
     </div>
 
+    <!-- Page Top-Right: Transfer Task Manager -->
+    <div class="absolute top-4 right-4 z-50 w-80 max-h-[300px] flex flex-col pointer-events-none">
+      <div
+        class="w-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-2xl rounded-[24px] border border-white/40 dark:border-gray-700/50 shadow-[0_10px_40px_rgba(0,0,0,0.15)] overflow-hidden pointer-events-auto transition-all duration-500"
+        :class="queueExpanded ? 'max-h-[280px]' : 'max-h-[52px]'"
+      >
+        <!-- Header / Toggle -->
+        <div
+          class="h-13 px-4 cursor-pointer flex items-center justify-between hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+          @click="queueExpanded = !queueExpanded"
+        >
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 rounded-full bg-cyan-50 dark:bg-cyan-900/30 flex items-center justify-center shrink-0">
+              <UIcon
+                name="i-material-symbols-sync-alt"
+                class="w-4 h-4 text-cyan-600 dark:text-cyan-400"
+                :class="activeTasks.some(t => t.state === 'active') ? 'animate-spin' : ''"
+              />
+            </div>
+            <div class="flex flex-col">
+              <span class="text-sm font-black text-gray-900 dark:text-white">Active Transfers</span>
+              <span class="text-[10px] font-bold text-cyan-500 tracking-wide">{{ activeTasks.filter(t => t.state === 'active').length }} Active</span>
+            </div>
+          </div>
+          <UButton
+            :icon="queueExpanded ? 'i-material-symbols-keyboard-arrow-up' : 'i-material-symbols-keyboard-arrow-down'"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            class="rounded-full pointer-events-none"
+          />
+        </div>
+
+        <!-- Task List Body -->
+        <div v-show="queueExpanded" class="px-3 pb-3 custom-scrollbar flex flex-col gap-2 max-h-[220px] overflow-y-auto">
+          <div
+            v-for="task in activeTasks"
+            :key="task.id"
+            class="bg-white/80 dark:bg-gray-800/80 rounded-[16px] p-3 shadow-sm border border-gray-100 dark:border-gray-700/50 mb-1 relative overflow-hidden group"
+          >
+            <div
+              v-if="task.state === 'active' || task.state === 'paused'"
+              class="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-50/50 dark:from-cyan-900/10 to-transparent transition-all duration-300"
+              :style="{ width: `${task.progress}%` }"
+            />
+
+            <div class="relative z-10 flex gap-3 items-center">
+              <div class="relative shrink-0">
+                <UAvatar
+                  :src="task.targetAvatar"
+                  size="sm"
+                />
+                <div
+                  class="absolute -bottom-1 -right-1 rounded-full p-0.5"
+                  :class="task.direction === 'send' ? 'bg-cyan-500 text-white' : 'bg-primary-500 text-white'"
+                >
+                  <UIcon
+                    :name="task.direction === 'send' ? 'i-material-symbols-upload' : 'i-material-symbols-download'"
+                    class="w-2.5 h-2.5"
+                  />
+                </div>
+              </div>
+
+              <div class="flex-1 min-w-0 pr-6">
+                <div class="flex items-center justify-between gap-2 mb-1">
+                  <span
+                    class="text-xs font-bold text-gray-800 dark:text-gray-100 truncate"
+                    :title="task.fileName"
+                  >{{ task.fileName }}</span>
+                  <span
+                    v-if="task.state === 'paused'"
+                    class="text-[9px] font-black uppercase text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full shrink-0"
+                  >Paused</span>
+                  <span
+                    v-else
+                    class="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 shrink-0"
+                  >{{ task.speed }}</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <div class="flex-1 h-1 bg-gray-200/50 dark:bg-gray-700/50 rounded-full overflow-hidden">
+                    <div
+                      class="h-full rounded-full transition-all duration-300"
+                      :class="task.state === 'paused' ? 'bg-amber-400' : 'bg-cyan-500'"
+                      :style="{ width: `${task.progress}%` }"
+                    />
+                  </div>
+                  <span class="text-[9px] font-bold text-gray-500 shrink-0">{{ task.progress }}%</span>
+                </div>
+              </div>
+
+              <!-- Pause / Control action -->
+              <div
+                class="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-gray-800 rounded-full shadow-md"
+                :class="(task.state === 'paused') ? '!opacity-100' : ''"
+              >
+                <UButton
+                  :icon="task.state === 'active' ? 'i-material-symbols-pause' : 'i-material-symbols-play-arrow'"
+                  color="neutral"
+                  :variant="task.state === 'paused' ? 'solid' : 'ghost'"
+                  size="xs"
+                  class="rounded-full"
+                  :class="task.state === 'paused' ? 'bg-cyan-500 text-white hover:bg-cyan-600' : 'hover:bg-amber-500/10 hover:text-amber-500'"
+                  @click.stop="toggleTaskPause(task.id)"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Center Coordinate System: Radar Rings -->
     <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[60%] pointer-events-none z-0">
-      <!-- Inner Ring (Self Devices) -->
+      <!-- Ring 1: My Devices (cyan) -->
       <div
-        class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[360px] h-[360px] rounded-full border border-cyan-500/20 dark:border-cyan-400/10 shadow-[inset_0_0_40px_rgba(57,197,187,0.05)]"
-        :class="{ 'border-cyan-400/60 scale-[1.02] shadow-[0_0_50px_rgba(57,197,187,0.2)] dark:shadow-[inset_0_0_60px_rgba(57,197,187,0.15)]': isDropping }"
+        class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] rounded-full border-2 border-cyan-400/30 dark:border-cyan-500/20 shadow-[inset_0_0_60px_rgba(57,197,187,0.08)]"
+        :class="{ 'border-cyan-400/60 scale-[1.01] shadow-[0_0_60px_rgba(57,197,187,0.25)]': isDropping }"
       />
-      <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[10px] text-cyan-600/40 dark:text-cyan-400/40 font-bold -mt-[180px] bg-white/50 dark:bg-gray-900/50 px-2 rounded-full backdrop-blur-sm">
+      <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[10px] text-cyan-600/50 dark:text-cyan-400/50 font-bold -mt-[260px] bg-white/60 dark:bg-gray-900/60 px-3 py-1 rounded-full backdrop-blur-sm border border-cyan-200/30 dark:border-cyan-800/30">
         My Devices
       </div>
 
-      <!-- Outer Ring (Public Instance Devices) -->
+      <!-- Ring 2: Instance Users (purple) -->
       <div
-        class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[640px] h-[640px] rounded-full border border-gray-300/50 dark:border-gray-700/50"
-        :class="{ 'border-cyan-800/60 scale-[1.01]': isDropping }"
+        class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] rounded-full border border-purple-300/30 dark:border-purple-500/20"
+        :class="{ 'border-purple-400/50 scale-[1.005]': isDropping }"
       />
-      <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[10px] text-gray-500/40 dark:text-gray-400/40 font-bold -mt-[320px] bg-white/50 dark:bg-gray-900/50 px-2 rounded-full backdrop-blur-sm">
-        Nearby / Instance
+      <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[10px] text-purple-500/60 dark:text-purple-400/60 font-bold -mt-[450px] bg-white/60 dark:bg-gray-900/60 px-3 py-1 rounded-full backdrop-blur-sm border border-purple-200/30 dark:border-purple-800/30">
+        Instance Users
+      </div>
+
+      <!-- Ring 3: Remote Instances (gray) -->
+      <div
+        class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[1300px] h-[1300px] rounded-full border border-gray-300/20 dark:border-gray-600/20"
+        :class="{ 'border-gray-400/40 scale-[1.003]': isDropping }"
+      />
+      <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[10px] text-gray-500/50 dark:text-gray-400/50 font-bold -mt-[650px] bg-white/60 dark:bg-gray-900/60 px-3 py-1 rounded-full backdrop-blur-sm border border-gray-200/30 dark:border-gray-700/30">
+        Remote Instances
       </div>
 
       <!-- Pulsing Wave (Radar Sweep Animation) -->
-      <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[120px] h-[120px] rounded-full border-2 border-cyan-400/30 animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]" />
+      <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[140px] h-[140px] rounded-full border-2 border-cyan-400/40 dark:border-cyan-500/30 animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]" />
     </div>
 
     <!-- Central Node (Sun) -->
@@ -176,134 +307,36 @@ const queueExpanded = ref(true)
           <UAvatar
             :src="peer.avatar"
             :size="peer.isSelf ? 'xl' : 'lg'"
-            class="shadow-[0_4px_15px_rgba(0,0,0,0.1)] transition-all"
-            :class="peer.isSelf ? 'ring-2 ring-cyan-400/50' : 'ring-2 ring-white dark:ring-gray-700'"
+            class="shadow-[0_4px_15px_rgba(0,0,0,0.15)] transition-all"
+            :class="{
+              'ring-2 ring-cyan-400/60': peer.isSelf,
+              'ring-2 ring-purple-400/50': peer.isInstance,
+              'ring-2 ring-gray-400/50': peer.isRemote
+            }"
           />
 
           <div class="absolute -bottom-1 -right-1 z-20 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full p-0.5 shadow-sm">
             <UIcon
-              :name="peer.system === 'iPhone' ? 'i-simple-icons-apple' : peer.system === 'macOS' ? 'i-simple-icons-apple' : 'i-simple-icons-android'"
+              :name="peer.isRemote ? 'i-material-symbols-cloud' : peer.system === 'iOS' || peer.system === 'macOS' ? 'i-simple-icons-apple' : peer.system === 'Android' ? 'i-simple-icons-android' : 'i-material-symbols-desktop-windows'"
               class="w-3.5 h-3.5 text-gray-500 dark:text-gray-400"
             />
           </div>
 
+          <!-- Type badge -->
           <div
-            class="mt-2 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl px-3 py-1 rounded-xl shadow-lg border border-white/50 dark:border-gray-700/50 flex flex-col items-center text-center opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none"
+            v-if="peer.isInstance || peer.isRemote"
+            class="absolute -top-1 -left-1 z-20 px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase"
+            :class="peer.isInstance ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/50 dark:text-purple-300' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'"
+          >
+            {{ peer.isRemote ? 'Remote' : 'Instance' }}
+          </div>
+
+          <div
+            class="mt-2 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl px-3 py-1.5 rounded-xl shadow-lg border border-white/50 dark:border-gray-700/50 flex flex-col items-center text-center opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none"
             :class="{ 'opacity-100': isDropping }"
           >
             <span class="text-xs font-black text-gray-900 dark:text-white">{{ peer.displayName }}</span>
-            <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400">{{ peer.system }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Floating Task Manager (Bottom Drawer) -->
-    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-[600px] flex flex-col justify-end pointer-events-none">
-      <div
-        class="w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl rounded-[32px] border border-white/40 dark:border-gray-700/50 shadow-[0_10px_40px_rgba(0,0,0,0.1)] overflow-hidden pointer-events-auto transition-all duration-500"
-        :class="queueExpanded ? 'max-h-[400px]' : 'max-h-[64px]'"
-      >
-        <!-- Header / Toggle -->
-        <div
-          class="h-16 px-6 cursor-pointer flex items-center justify-between hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-          @click="queueExpanded = !queueExpanded"
-        >
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-full bg-cyan-50 dark:bg-cyan-900/30 flex items-center justify-center shrink-0">
-              <UIcon
-                name="i-material-symbols-sync-alt"
-                class="w-4 h-4 text-cyan-600 dark:text-cyan-400"
-                :class="activeTasks.some(t => t.state === 'active') ? 'animate-spin' : ''"
-              />
-            </div>
-            <div class="flex flex-col">
-              <span class="text-sm font-black text-gray-900 dark:text-white">Active Transfers</span>
-              <span class="text-[10px] font-bold text-cyan-500 tracking-wide">{{ activeTasks.filter(t => t.state === 'active').length }} Ongoing • {{ activeTasks.filter(t => t.state === 'paused').length }} Paused</span>
-            </div>
-          </div>
-          <UButton
-            :icon="queueExpanded ? 'i-material-symbols-keyboard-arrow-down' : 'i-material-symbols-keyboard-arrow-up'"
-            color="neutral"
-            variant="ghost"
-            class="rounded-full pointer-events-none"
-          />
-        </div>
-
-        <!-- Task List Body -->
-        <div class="px-3 pb-3 custom-scrollbar flex flex-col gap-2 relative">
-          <div
-            v-for="task in activeTasks"
-            :key="task.id"
-            class="bg-white/90 dark:bg-gray-800/90 rounded-[20px] p-3 shadow-sm border border-gray-100 dark:border-gray-700/50 mb-1 relative overflow-hidden group"
-          >
-            <div
-              v-if="task.state === 'active' || task.state === 'paused'"
-              class="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-50/50 dark:from-cyan-900/10 to-transparent transition-all duration-300"
-              :style="{ width: `${task.progress}%` }"
-            />
-
-            <div class="relative z-10 flex gap-4 items-center">
-              <div class="relative shrink-0">
-                <UAvatar
-                  :src="task.targetAvatar"
-                  size="md"
-                />
-                <div
-                  class="absolute -bottom-1 -right-1 rounded-full p-0.5"
-                  :class="task.direction === 'send' ? 'bg-cyan-500 text-white' : 'bg-primary-500 text-white'"
-                >
-                  <UIcon
-                    :name="task.direction === 'send' ? 'i-material-symbols-upload' : 'i-material-symbols-download'"
-                    class="w-3 h-3"
-                  />
-                </div>
-              </div>
-
-              <div class="flex-1 min-w-0 pr-8">
-                <div class="flex items-center justify-between gap-2 mb-1">
-                  <span
-                    class="text-sm font-bold text-gray-800 dark:text-gray-100 truncate w-[150px] md:w-[200px]"
-                    :title="task.fileName"
-                  >{{ task.fileName }}</span>
-                  <span
-                    v-if="task.state === 'paused'"
-                    class="text-[10px] font-black uppercase text-amber-500 bg-amber-500/10 px-2 rounded-full"
-                  >Paused</span>
-                  <span
-                    v-else
-                    class="text-[11px] font-bold text-cyan-600 dark:text-cyan-400"
-                  >{{ task.speed }}</span>
-                </div>
-
-                <div class="flex items-center gap-3">
-                  <div class="flex-1 h-1.5 bg-gray-200/50 dark:bg-gray-700/50 rounded-full overflow-hidden">
-                    <div
-                      class="h-full rounded-full transition-all duration-300"
-                      :class="task.state === 'paused' ? 'bg-amber-400' : 'bg-cyan-500'"
-                      :style="{ width: `${task.progress}%` }"
-                    />
-                  </div>
-                  <span class="text-[10px] font-bold text-gray-500">{{ task.progress }}%</span>
-                </div>
-              </div>
-
-              <!-- Pause / Control action -->
-              <div
-                class="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-gray-800 rounded-full shadow-md"
-                :class="(task.state === 'paused') ? '!opacity-100' : ''"
-              >
-                <UButton
-                  :icon="task.state === 'active' ? 'i-material-symbols-pause' : 'i-material-symbols-play-arrow'"
-                  color="neutral"
-                  :variant="task.state === 'paused' ? 'solid' : 'ghost'"
-                  size="xs"
-                  class="rounded-full"
-                  :class="task.state === 'paused' ? 'bg-cyan-500 text-white hover:bg-cyan-600' : 'hover:bg-amber-500/10 hover:text-amber-500'"
-                  @click.stop="toggleTaskPause(task.id)"
-                />
-              </div>
-            </div>
+            <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400">{{ peer.username }}</span>
           </div>
         </div>
       </div>

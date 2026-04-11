@@ -3,10 +3,11 @@ package app
 import (
 	"net/http"
 
+	assetmodule "github.com/CyaniAgent/Asagity/core/internal/module/asset"
 	authmodule "github.com/CyaniAgent/Asagity/core/internal/module/auth"
+	drivemodule "github.com/CyaniAgent/Asagity/core/internal/module/drive"
 	instancemodule "github.com/CyaniAgent/Asagity/core/internal/module/instance"
 	usermodule "github.com/CyaniAgent/Asagity/core/internal/module/user"
-	assetmodule "github.com/CyaniAgent/Asagity/core/internal/module/asset"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/database"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/httpx"
@@ -24,6 +25,7 @@ func New(cfg config.Config, clients *database.Clients) *App {
 	authmodule.Register(mux, cfg, clients)
 	usermodule.Register(mux, cfg, clients)
 	assetmodule.Register(mux, cfg, clients)
+	drivemodule.Register(mux, cfg, clients)
 
 	return &App{mux: mux, cfg: cfg}
 }

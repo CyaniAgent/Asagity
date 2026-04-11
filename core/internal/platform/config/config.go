@@ -8,32 +8,34 @@ import (
 )
 
 type Config struct {
-	ServerPort    string
-	DBHost        string
-	DBPort        string
-	DBUser        string
-	DBPassword    string
-	DBName        string
-	RedisAddr     string
-	RedisPassword string
-	RedisDB       int
-	JwtSecret     string
+	ServerPort       string
+	DBHost           string
+	DBPort           string
+	DBUser           string
+	DBPassword       string
+	DBName           string
+	RedisAddr        string
+	RedisPassword    string
+	RedisDB          int
+	JwtSecret        string
+	DriveStoragePath string
 }
 
 func Load() (Config, error) {
 	loadEnv()
 
 	return Config{
-		ServerPort:    envOrDefault("SERVER_PORT", "2048"),
-		DBHost:        envOrDefault("DB_HOST", "localhost"),
-		DBPort:        envOrDefault("DB_PORT", "5432"),
-		DBUser:        envOrDefault("DB_USER", "asagity"),
-		DBPassword:    envOrDefault("DB_PASSWORD", "example_password"),
-		DBName:        envOrDefault("DB_NAME", "asagity_db"),
-		RedisAddr:     envOrDefault("REDIS_ADDR", "localhost:6379"),
-		RedisPassword: os.Getenv("REDIS_PASSWORD"),
-		RedisDB:       0,
-		JwtSecret:     envOrDefault("JWT_SECRET", "asagity_secret_miku_39"),
+		ServerPort:       envOrDefault("SERVER_PORT", "2048"),
+		DBHost:           envOrDefault("DB_HOST", "localhost"),
+		DBPort:           envOrDefault("DB_PORT", "5432"),
+		DBUser:           envOrDefault("DB_USER", "asagity"),
+		DBPassword:       envOrDefault("DB_PASSWORD", "example_password"),
+		DBName:           envOrDefault("DB_NAME", "asagity_db"),
+		RedisAddr:        envOrDefault("REDIS_ADDR", "localhost:6379"),
+		RedisPassword:    os.Getenv("REDIS_PASSWORD"),
+		RedisDB:          0,
+		JwtSecret:        envOrDefault("JWT_SECRET", "asagity_secret_miku_39"),
+		DriveStoragePath: envOrDefault("DRIVE_STORAGE_PATH", "./storage/drive"),
 	}, nil
 }
 
