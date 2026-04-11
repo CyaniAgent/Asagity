@@ -29,6 +29,7 @@
     "music-metadata": "^11.12.3",
     "nuxt": "^4.3.1",
     "pinia": "^3.0.4",
+    "systeminformation": "^5.31.5",
     "tailwindcss": "^4.2.1",
     "vue-echarts": "^8.0.1"
   },
@@ -37,6 +38,7 @@
     "@iconify-json/material-symbols": "^1.2.63",
     "@nuxt/eslint": "^1.15.2",
     "@types/node": "^25.5.0",
+    "@types/systeminformation": "^3.54.1",
     "eslint": "^10.0.3",
     "typescript": "^5.9.3",
     "vue-tsc": "^3.2.5"

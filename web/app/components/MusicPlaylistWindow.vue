@@ -18,6 +18,7 @@ function playTrack(index: number) {
     :initial-width="380"
     :initial-height="520"
     :z-index="10001"
+    disable-transfer
   >
     <!-- Playlist Scrollable Area -->
     <div class="flex-1 overflow-y-auto custom-scrollbar p-4 flex flex-col gap-2 relative z-10">

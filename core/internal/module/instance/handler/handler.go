@@ -33,3 +33,21 @@ func (h *Handler) Version(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Meta(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, h.service.Meta())
 }
+
+func (h *Handler) AdminInstanceSettings(w http.ResponseWriter, r *http.Request) {
+	settings, err := h.service.GetAllSettings()
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", err.Error())
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, settings)
+}
+
+func (h *Handler) AdminDatabaseStats(w http.ResponseWriter, r *http.Request) {
+	stats, err := h.service.GetDatabaseStats()
+	if err != nil {
+		httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", err.Error())
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, stats)
+}

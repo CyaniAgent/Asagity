@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/CyaniAgent/Asagity/core/internal/module/instance/dto"
+	"github.com/CyaniAgent/Asagity/core/internal/module/instance/model"
 	"github.com/CyaniAgent/Asagity/core/internal/module/instance/repository"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/config"
 )
@@ -25,4 +26,12 @@ func (s *Service) Meta() dto.MetaResponse {
 		Alias:       "",
 		Description: "Asagity instance metadata is not configured yet.",
 	}
+}
+
+func (s *Service) GetAllSettings() ([]model.InstanceSetting, error) {
+	return s.repo.GetAllSettings()
+}
+
+func (s *Service) GetDatabaseStats() ([]repository.DatabaseStat, error) {
+	return s.repo.GetDatabaseStats()
 }

@@ -36,6 +36,7 @@ const qualityColors: Record<string, string> = {
     :initial-width="360"
     :initial-height="500"
     :z-index="10000"
+    disable-transfer
   >
     <!-- Main Content -->
     <div class="p-8 space-y-8 overflow-y-auto custom-scrollbar flex-1">

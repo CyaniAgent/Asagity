@@ -19,4 +19,7 @@ func Register(mux *http.ServeMux, cfg config.Config, clients *database.Clients) 
 	mux.HandleFunc("/healthz", h.Health)
 	mux.HandleFunc("/api/meta/version", h.Version)
 	mux.HandleFunc("/api/meta/instance", h.Meta)
+	
+	mux.HandleFunc("GET /api/admin/system/instance", h.AdminInstanceSettings)
+	mux.HandleFunc("GET /api/admin/system/database", h.AdminDatabaseStats)
 }

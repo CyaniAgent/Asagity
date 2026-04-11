@@ -31,35 +31,38 @@ const sendMessage = () => {
 <template>
   <div class="flex flex-col h-full bg-white dark:bg-gray-900 border-none relative font-sans">
     
-    <!-- Header (Sticky) -->
-    <div class="h-16 shrink-0 flex items-center justify-between px-6 border-b border-gray-100 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md sticky top-0 z-10 transition-colors">
-      <div class="flex items-center gap-4">
-        <UAvatar
-          :src="splitViewStore.currentChat?.avatar || 'https://avatars.githubusercontent.com/u/1024025?v=4'"
-          :alt="splitViewStore.currentChat?.name || 'Chat Avatar'"
-          size="md"
-          class="ring-2 ring-transparent transition-all"
-        />
-        <div class="flex flex-col">
-          <span class="font-bold text-gray-900 dark:text-gray-100 text-base leading-tight flex items-center gap-2">
-            {{ splitViewStore.currentChat?.name || 'Unknown' }}
-            <span v-if="splitViewStore.currentChat?.isGroup" class="px-1.5 pt-0.5 pb-0 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-500 text-[10px] uppercase font-black tracking-wider">
-              {{ splitViewStore.currentChat?.members }} Members
-            </span>
-          </span>
-          <span class="text-xs text-cyan-500 font-medium">
-            {{ splitViewStore.currentChat?.online ? 'Online' : 'Offline' }}
-          </span>
-        </div>
-      </div>
-      <div>
-        <UButton icon="i-material-symbols-more-vert" color="neutral" variant="ghost" class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" />
-      </div>
-    </div>
-
     <!-- Message List Area (Scrollable) -->
     <!-- The trick is padding-bottom to avoid the floating island blocking last messages -->
     <div class="flex-1 overflow-y-auto px-6 pt-6 pb-32 flex flex-col gap-5 custom-scrollbar">
+      
+      <!-- Contact Info Card (Instead of sticky header) -->
+      <div class="mb-10 px-2 flex flex-col items-center text-center animate-[fade-in-up_0.6s_ease-out]">
+        <div class="relative mb-4">
+          <UAvatar
+            :src="splitViewStore.currentChat?.avatar || 'https://avatars.githubusercontent.com/u/1024025?v=4'"
+            :alt="splitViewStore.currentChat?.name || 'Chat Avatar'"
+            size="xl"
+            class="ring-[4px] ring-cyan-500/20 shadow-2xl"
+          />
+          <div 
+            v-if="splitViewStore.currentChat?.online"
+            class="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-green-500 border-[3px] border-white dark:border-gray-900 shadow-sm"
+          />
+        </div>
+        <h2 class="text-xl font-black text-gray-900 dark:text-gray-100 flex items-center justify-center gap-2">
+          {{ splitViewStore.currentChat?.name || 'Unknown' }}
+          <UIcon name="i-material-symbols-verified-rounded" class="w-5 h-5 text-cyan-500" />
+        </h2>
+        <div class="flex flex-wrap justify-center gap-2 mt-2">
+           <span v-if="splitViewStore.currentChat?.isGroup" class="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 text-[10px] uppercase font-black tracking-widest">
+              {{ splitViewStore.currentChat?.members }} Members Group
+           </span>
+           <span class="text-[10px] uppercase font-black tracking-widest text-cyan-600 dark:text-cyan-400">
+             End-to-End Encrypted
+           </span>
+        </div>
+        <div class="h-px w-24 bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-800 to-transparent mt-6 mb-2"></div>
+      </div>
       
       <!-- ALL MESSAGES ALIGNED TO THE LEFT -->
       <div v-for="msg in messages" :key="msg.id" class="flex items-start gap-4 max-w-[85%] group">

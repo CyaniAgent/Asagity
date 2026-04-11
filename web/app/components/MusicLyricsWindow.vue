@@ -67,6 +67,7 @@ function handleLyricClick(timestamp: number) {
     icon="i-material-symbols-format-color-text"
     :initial-width="400"
     :initial-height="600"
+    disable-transfer
   >
     <!-- Track Info -->
     <div class="p-6 pb-2 shrink-0 flex items-center gap-4 bg-gradient-to-b from-black/20 to-transparent">

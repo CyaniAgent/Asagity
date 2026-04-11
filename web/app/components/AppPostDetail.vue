@@ -19,19 +19,6 @@ const tabs = [
 
 <template>
   <div class="flex flex-col h-full bg-white dark:bg-gray-900 border-l border-gray-200/50 dark:border-gray-800/50">
-    <!-- Header -->
-    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800 shrink-0 bg-gray-50/50 dark:bg-gray-800/20 backdrop-blur">
-      <h2 class="text-lg font-bold text-gray-800 dark:text-gray-100 tracking-wide">
-        帖子详情
-      </h2>
-      <UButton
-        icon="i-material-symbols-close"
-        color="neutral"
-        variant="ghost"
-        class="hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 transition-colors rounded-full"
-        @click="splitViewStore.close()"
-      />
-    </div>
 
     <!-- Body - Scrollable content -->
     <div class="flex-1 overflow-y-auto custom-scrollbar">

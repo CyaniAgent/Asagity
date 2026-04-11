@@ -22,11 +22,14 @@ watch(() => systemStore.isBackendOnline, (isOnline, oldVal) => {
   }
 })
 
+const devModeTriggered = ref(false)
 const pressTimer = ref<any>(null)
 
 const handleRefreshStart = () => {
+  devModeTriggered.value = false
   pressTimer.value = setTimeout(() => {
     systemStore.enableDevMode()
+    devModeTriggered.value = true
   }, 3000)
 }
 
@@ -38,9 +41,8 @@ const handleRefreshEnd = () => {
 }
 
 const handleRefresh = () => {
-  // If the timer didn't fire (short press), standard refresh
-  if (pressTimer.value) {
-    handleRefreshEnd()
+  // Only refresh if we didn't just trigger dev mode via long press
+  if (!devModeTriggered.value) {
     window.location.reload()
   }
 }

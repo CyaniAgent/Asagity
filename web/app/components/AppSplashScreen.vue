@@ -1,71 +1,113 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useInstanceStore } from '~/stores/instance'
+import { useSystemStore } from '~/stores/system'
 
 const instanceStore = useInstanceStore()
-const isVisible = ref(true)
-const isLeaving = ref(false)
+const systemStore = useSystemStore()
 
-onMounted(() => {
-  // Ensure the splash screen is visible for at least 1.5 seconds so the user can enjoy the branding
-  setTimeout(() => {
-    isLeaving.value = true
-    setTimeout(() => {
-      isVisible.value = false
-    }, 500) // Match the transition duration in CSS
-  }, 1500)
-})
+// We don't need a local timeout anymore, the store handles it.
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition name="splash">
-      <div 
-        v-if="isVisible" 
-        class="fixed inset-0 z-[100000] flex flex-col items-center justify-center bg-gray-50 dark:bg-[#0f0f0f] transition-opacity duration-500 overflow-hidden" 
-        :class="{ 'opacity-0': isLeaving }"
-      >
+  <Transition name="splash">
+      <div v-if="!systemStore.hasLaunched"
+        class="fixed inset-0 z-[100000] flex flex-col items-center justify-center bg-gray-50 dark:bg-[#0f0f0f] overflow-hidden">
         <!-- Background Effects -->
         <div class="absolute inset-0 pointer-events-none opacity-40 dark:opacity-20 flex items-center justify-center">
-          <div class="w-[80vw] h-[80vw] max-w-[800px] max-h-[800px] bg-cyan-400/30 rounded-full blur-[120px] animate-pulse" />
+          <div
+            class="w-[80vw] h-[80vw] max-w-[800px] max-h-[800px] bg-cyan-400/30 rounded-full blur-[120px] animate-pulse" />
         </div>
 
         <div class="relative z-10 flex flex-col items-center animate-fade-in-up">
-           <!-- Instance Logo -->
-           <div class="w-32 h-32 flex items-center justify-center mb-10 transform scale-100 hover:scale-105 transition-transform duration-500">
+          <!-- Instance Logo -->
+          <div
+            class="w-32 h-32 flex items-center justify-center mb-10 transform scale-100 hover:scale-105 transition-transform duration-500">
             <img v-if="instanceStore.logoURL" :src="instanceStore.logoURL" class="w-full h-full object-cover">
-            <UIcon v-else name="i-material-symbols-bolt" class="w-16 h-16 text-white" />
+            <UIcon v-else name="i-material-symbols-bolt" class="w-16 h-16 text-cyan-500" />
           </div>
 
           <!-- Welcome Text -->
-          <h1 class="text-3xl font-black text-gray-900 dark:text-white text-center tracking-tight mb-16 drop-shadow-sm leading-snug">
-            <span class="text-gray-900/40 dark:text-white/40 text-xl block mb-2 font-bold tracking-widest">
-              欢迎来到
+          <div class="text-center mb-16">
+            <span class="text-gray-900/40 dark:text-white/40 text-sm block mb-1 font-black tracking-[0.2em] uppercase">
+              Welcome to
             </span>
-            {{ instanceStore.name }}
-          </h1>
+            <h1 class="text-4xl font-black text-gray-900 dark:text-white tracking-tight drop-shadow-sm">
+              {{ instanceStore.name }}
+            </h1>
+          </div>
 
-          <!-- Android Style Indeterminate Circular Progress -->
-          <div class="relative flex flex-col items-center">
-            <svg class="w-12 h-12 text-cyan-500 origin-center loader-circular" viewBox="0 0 50 50">
-              <circle 
-                cx="25" cy="25" r="20" 
-                fill="none" 
-                stroke="currentColor" 
-                stroke-width="4" 
-                stroke-linecap="round" 
-                class="loader-path"
-              />
-            </svg>
-            <div class="mt-4 text-[10px] font-black tracking-widest text-cyan-500/50 uppercase">Loading</div>
+          <!-- Loading View & Error Handling -->
+          <div class="relative flex flex-col items-center min-h-[140px] w-80">
+            <Transition name="fade-scale" mode="out-in">
+              <!-- Success/Loading State -->
+              <div v-if="!systemStore.initError" :key="'loading'" class="flex flex-col items-center w-full">
+                <div
+                  class="w-full h-1 bg-gray-200 dark:bg-white/5 rounded-full overflow-hidden mb-4 border border-black/5 dark:border-white/5">
+                  <div class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500 ease-out"
+                    :style="{ width: `${systemStore.initProgress}%` }"></div>
+                </div>
+                <!-- Unique key ensures clean re-renders -->
+                <div 
+                  class="text-[10px] font-black tracking-[0.3em] text-cyan-500 uppercase flex items-center justify-center gap-2"
+                  :key="systemStore.hasLaunched ? 'launched' : 'loading'"
+                >
+                  <UIcon name="i-material-symbols-sync-rounded" class="w-3 h-3 animate-spin" />
+                  <span>Initializing... {{ systemStore.initProgress }}%</span>
+                </div>
+              </div>
+
+              <!-- Error State -->
+              <div v-else :key="'error'" class="flex flex-col items-center w-full">
+                <div class="w-full h-1 bg-red-500/20 rounded-full overflow-hidden mb-6">
+                  <div class="h-full bg-red-500 w-full animate-pulse"></div>
+                </div>
+                
+                <div class="flex flex-col items-center gap-4 text-center">
+                  <div class="flex items-center gap-2 text-red-500 mb-2">
+                    <UIcon name="i-material-symbols-gpp-maybe" class="w-5 h-5" />
+                    <span class="text-xs font-black tracking-widest uppercase">System Initialization Failed</span>
+                  </div>
+                  
+                  <p class="text-[11px] text-gray-500 dark:text-gray-400 font-medium max-w-[280px] leading-relaxed">
+                    {{ systemStore.initError }}
+                  </p>
+
+                  <UButton
+                    icon="i-material-symbols-replay-rounded"
+                    label="Retry Initialization"
+                    color="error"
+                    variant="soft"
+                    size="sm"
+                    class="mt-4 rounded-xl font-bold px-6 border border-red-500/20"
+                    @click="systemStore.initSequence"
+                  />
+                </div>
+              </div>
+            </Transition>
           </div>
         </div>
       </div>
     </Transition>
-  </Teleport>
 </template>
 
 <style scoped>
+/* Fade Scale Transition for Button Switch */
+.fade-scale-enter-active,
+.fade-scale-leave-active {
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.fade-scale-enter-from {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.fade-scale-leave-to {
+  opacity: 0;
+  transform: scale(1.1);
+}
+
 .splash-enter-from,
 .splash-leave-to {
   opacity: 0;
@@ -80,6 +122,7 @@ onMounted(() => {
     opacity: 0;
     transform: translateY(30px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -108,10 +151,12 @@ onMounted(() => {
     stroke-dasharray: 1, 200;
     stroke-dashoffset: 0;
   }
+
   50% {
     stroke-dasharray: 89, 200;
     stroke-dashoffset: -35px;
   }
+
   100% {
     stroke-dasharray: 89, 200;
     stroke-dashoffset: -124px;

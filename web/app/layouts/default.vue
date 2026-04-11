@@ -34,11 +34,11 @@ const isItemActive = (item: any) => {
   if (item.label === '更多') {
     return moreMenuGroups.flat().some(feat => route.path.startsWith(feat.to))
   }
-  
+
   if (item.activePaths) {
     return item.activePaths.some((p: string) => p === '/' ? route.path === '/' : route.path.startsWith(p))
   }
-  
+
   if (item.to === '/') return route.path === '/'
   return route.path.startsWith(item.to)
 }
@@ -147,25 +147,29 @@ useEventListener('mouseup', () => {
   splitViewStore.isResizing = false
 })
 
-function getSplitViewIcon(type: string | null) {
+const splitViewTitle = computed(() => {
+  const type = splitViewStore.currentRightViewType
+  switch (type) {
+    case 'post': return '帖子详情'
+    case 'user': return splitViewStore.currentUser?.displayName || '用户主页'
+    case 'music': return '音乐播放器'
+    case 'notifications': return '通知中心'
+    case 'chat': return splitViewStore.currentChat?.name || 'Asagity Chat'
+    default: return 'Split View'
+  }
+})
+
+const splitViewIcon = computed(() => {
+  const type = splitViewStore.currentRightViewType
   switch (type) {
     case 'post': return 'i-material-symbols-article'
     case 'user': return 'i-material-symbols-person'
     case 'music': return 'i-material-symbols-music-note'
     case 'notifications': return 'i-material-symbols-notifications'
+    case 'chat': return 'i-material-symbols-forum'
     default: return 'i-material-symbols-dock-to-left'
   }
-}
-
-function getSplitViewTitle(type: string | null) {
-  switch (type) {
-    case 'post': return '帖子详情'
-    case 'user': return '用户主页'
-    case 'music': return '音乐播放器'
-    case 'notifications': return '通知中心'
-    default: return '未知视图'
-  }
-}
+})
 
 // "More" popover state
 const moreMenuOpen = ref(false)
@@ -298,8 +302,7 @@ const moreMenuGroups = [
               :class="isItemActive(item)
                 ? 'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400'
                 : 'text-gray-700 dark:text-gray-300'">
-              <UIcon :name="item.icon"
-                class="w-[22px] h-[22px] transition-opacity"
+              <UIcon :name="item.icon" class="w-[22px] h-[22px] transition-opacity"
                 :class="isItemActive(item) ? 'opacity-100' : 'opacity-70 group-hover/nav:opacity-100'" />
               <span class="text-[15px] tracking-wide">{{ item.label }}</span>
             </NuxtLink>
@@ -320,12 +323,12 @@ const moreMenuGroups = [
           <div class="flex items-center gap-3 overflow-hidden">
             <div
               class="w-8 h-8 rounded-full bg-white dark:bg-white/10 flex items-center justify-center shrink-0 shadow-sm">
-              <UIcon :name="getSplitViewIcon(splitViewStore.currentRightViewType)"
+              <UIcon :name="splitViewIcon"
                 class="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
             </div>
             <div class="flex flex-col overflow-hidden">
               <span class="text-sm font-bold text-gray-900 dark:text-white truncate">
-                {{ getSplitViewTitle(splitViewStore.currentRightViewType) }}
+                {{ splitViewTitle }}
               </span>
               <span class="text-[10px] items-center gap-1 font-semibold text-cyan-600 dark:text-cyan-400/80">
                 Split view
@@ -376,12 +379,19 @@ const moreMenuGroups = [
         <div class="flex items-center gap-4">
           <!-- Dimension Signal (Core Status) - Independent -->
           <div
-            class="flex items-center justify-center w-8 h-8 rounded-full bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm transition-all hover:scale-110 cursor-help group"
+            class="flex items-center gap-2 px-2 h-8 rounded-full bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm transition-all hover:scale-105 cursor-help group"
             :title="systemStore.isBackendOnline ? '服务端已连接 (Asagity NET Online)' : '服务端已断开 (Asagity NET Offline)'">
             <UIcon
               :name="systemStore.isBackendOnline ? 'i-material-symbols-android-wifi-3-bar-rounded' : 'i-material-symbols-android-wifi-3-bar-off-rounded'"
               class="w-4 h-4 transition-colors duration-500"
               :class="systemStore.isBackendOnline ? 'text-green-400' : 'text-red-400 animate-pulse'" />
+
+            <!-- Development Mode Label -->
+            <div v-if="systemStore.isDevMode" class="flex items-center gap-1.5 pr-1 animate-pulse">
+              <div class="w-px h-3 bg-gray-300 dark:bg-gray-600 mx-0.5"></div>
+              <UIcon name="i-material-symbols-terminal-rounded" class="w-3.5 h-3.5 text-cyan-500" />
+              <span class="text-[10px] font-black text-cyan-500 tracking-wider">In Development</span>
+            </div>
           </div>
 
           <!-- 音乐播放器组件 (联动 musicStore) -->
@@ -455,19 +465,14 @@ const moreMenuGroups = [
                 ? 'border-cyan-400/60 shadow-[0_0_0_2px_rgba(34,211,238,0.15),0_4px_20px_rgba(0,0,0,0.03)]'
                 : 'border-gray-200/50 dark:border-gray-800/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)]'
             ]">
-              <!-- Split View Header Controls -->
-              <div v-if="splitViewStore.currentRightViewType !== 'music'"
-                class="px-4 py-2 flex justify-end items-center gap-1 border-b border-gray-100 dark:border-gray-800 shrink-0">
-                <UButton icon="i-material-symbols-refresh" color="neutral" variant="ghost" size="xs"
-                  class="rounded-full text-gray-400 hover:text-cyan-500" @click="splitViewStore.triggerRefresh()" />
-                <UButton
-                  :icon="splitViewStore.isMaximized ? 'i-material-symbols-close-fullscreen' : 'i-material-symbols-open-in-full'"
-                  color="neutral" variant="ghost" size="xs" class="rounded-full text-gray-400 hover:text-cyan-500"
-                  @click="splitViewStore.toggleMaximize()" />
-                <div class="w-px h-3 bg-gray-200 dark:bg-gray-800 mx-1" />
-                <UButton icon="i-material-symbols-close" color="neutral" variant="ghost" size="xs"
-                  class="rounded-full text-gray-400 hover:text-red-500" @click="splitViewStore.close()" />
-              </div>
+              <!-- Unified Split View Header Controls -->
+              <AppWindowHeader v-if="splitViewStore.currentRightViewType !== 'music'"
+                mode="split"
+                :type="splitViewStore.currentRightViewType"
+                :customTitle="splitViewTitle"
+                :customIcon="splitViewIcon"
+                :isMaximized="splitViewStore.isMaximized"
+              />
 
               <!-- Route to correct component based on content type -->
               <div class="flex-1 overflow-hidden">

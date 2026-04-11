@@ -1,122 +1,128 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useDraggable } from '@vueuse/core'
-import { useMusicStore } from '~/stores/music'
+import { ref, computed, watch, onMounted } from 'vue'
+import { useDraggable, useWindowSize } from '@vueuse/core'
 
 const props = defineProps<{
-  id: string
-  title: string
-  icon: string
-  modelValue: boolean
+  modelValue?: boolean
+  title?: string
+  icon?: string
+  type?: string
   initialWidth?: number
   initialHeight?: number
-  initialX?: number
-  initialY?: number
-  zIndex?: number
+  id?: string
+  disableTransfer?: boolean
 }>()
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'close'])
 
-const musicStore = useMusicStore()
+const isOpen = computed({
+  get: () => props.modelValue ?? true,
+  set: (val) => emit('update:modelValue', val)
+})
+
+const isMaximized = ref(false)
+const isMinimized = ref(false)
+
 const el = ref<HTMLElement | null>(null)
 const handle = ref<HTMLElement | null>(null)
 
-// Window State
-const width = ref(props.initialWidth || 400)
-const height = ref(props.initialHeight || 600)
+const { width: windowWidth, height: windowHeight } = useWindowSize()
 
-const { x, y, style } = useDraggable(handle, {
-  initialValue: { 
-    x: props.initialX ?? (typeof window !== 'undefined' ? (window.innerWidth / 2) - (width.value / 2) : 100),
-    y: props.initialY ?? (typeof window !== 'undefined' ? (window.innerHeight / 2) - (height.value / 2) : 100)
-  },
-  preventDefault: true
+// Initial centered position logic
+const initialX = typeof window !== 'undefined' ? (window.innerWidth / 2) - ((props.initialWidth || 450) / 2) : 100
+const initialY = typeof window !== 'undefined' ? (window.innerHeight / 2) - ((props.initialHeight || 600) / 2) : 100
+
+const position = ref({ x: initialX, y: initialY })
+
+// Make Draggable
+const { x, y, style } = useDraggable(el, {
+  initialValue: position.value,
+  handle: handle,
+  onMove(pos) {
+    if (!isMaximized.value) {
+      position.value = pos
+    }
+  }
 })
 
-// Resize Logic
-const isResizing = ref(false)
-function onResizeStart(e: MouseEvent) {
-  e.preventDefault()
-  isResizing.value = true
-  const startWidth = width.value
-  const startHeight = height.value
-  const startX = e.clientX
-  const startY = e.clientY
-
-  const onMouseMove = (moveEvent: MouseEvent) => {
-    width.value = Math.max(280, startWidth + (moveEvent.clientX - startX))
-    height.value = Math.max(300, startHeight + (moveEvent.clientY - startY))
-  }
-
-  const onMouseUp = () => {
-    isResizing.value = false
-    window.removeEventListener('mousemove', onMouseMove)
-    window.removeEventListener('mouseup', onMouseUp)
-  }
-
-  window.addEventListener('mousemove', onMouseMove)
-  window.addEventListener('mouseup', onMouseUp)
-}
-
 function close() {
-  emit('update:modelValue', false)
+  isOpen.value = false
+  emit('close')
 }
+
+function toggleMaximize() {
+  isMaximized.value = !isMaximized.value
+  if (isMaximized.value) isMinimized.value = false
+}
+
+function toggleMinimize() {
+  isMinimized.value = !isMinimized.value
+  if (isMinimized.value) isMaximized.value = false
+}
+
+const windowStyle = computed(() => {
+  if (isMinimized.value) {
+    return { display: 'none' }
+  }
+  
+  if (isMaximized.value) {
+    return {
+      top: '16px',
+      left: '16px',
+      width: 'calc(100vw - 32px)',
+      height: 'calc(100vh - 32px)',
+      transform: 'none'
+    }
+  }
+  
+  // Clamped position to prevent losing the window
+  const w = props.initialWidth || 450
+  const h = props.initialHeight || 650
+  const clampedX = Math.min(Math.max(0, position.value.x), windowWidth.value - 100)
+  const clampedY = Math.min(Math.max(0, position.value.y), windowHeight.value - 50)
+  
+  return {
+    left: `${clampedX}px`,
+    top: `${clampedY}px`,
+    width: `${w}px`,
+    height: `${h}px`
+  }
+})
 </script>
 
 <template>
   <Teleport to="body">
-    <Transition name="window-pop">
-      <div
-        v-if="modelValue"
-        ref="el"
-        :style="[
-          style, 
-          { 
-            width: `${width}px`, 
-            height: `${height}px`, 
-            backgroundColor: musicStore.themeColor, 
-            color: musicStore.textColor,
-            zIndex: zIndex || 9999
-          }
-        ]"
-        class="fixed flex flex-col backdrop-blur-3xl rounded-[32px] overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.5)] select-none pointer-events-auto border-none outline-none"
-      >
-        <!-- Background Blur Layer -->
-        <div class="absolute inset-0 z-0 opacity-40 pointer-events-none">
-          <img :src="musicStore.currentTrack.albumArt" class="w-full h-full object-cover blur-[80px]" alt="">
-          <div class="absolute inset-0 bg-black/60" />
-        </div>
-
-        <!-- Header (Draggable) -->
-        <div
-          ref="handle"
-          class="relative z-20 h-14 flex items-center justify-between px-6 bg-black/10 cursor-move active:cursor-grabbing touch-none"
-        >
-          <div class="flex items-center gap-2">
-            <UIcon :name="icon" class="w-4 h-4 opacity-70" />
-            <span class="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">{{ title }}</span>
-          </div>
-          <UButton
-            icon="i-material-symbols-close"
-            variant="ghost"
-            color="neutral"
-            class="w-8 h-8 rounded-full hover:bg-white/10 opacity-60 hover:opacity-100 transition-all"
-            :style="{ color: musicStore.textColor }"
-            @click.stop="close"
+    <Transition name="fade-window">
+      <div v-show="isOpen" 
+          ref="el" 
+          class="fixed z-[9990] flex flex-col rounded-[30px] border shadow-[0_10px_40px_rgba(0,0,0,0.15)] overflow-hidden transition-all"
+          :class="[
+            isMaximized ? 'duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]' : 'duration-0',
+            isMinimized ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100',
+            /* 响应式主题色绑定：为歌词等窗口提供无缝玻璃拟态质感 */
+            'bg-white/90 dark:bg-gray-900/90 backdrop-blur-3xl border-gray-200/50 dark:border-gray-800/80'
+          ]"
+          :style="windowStyle">
+        
+        <!-- Drag Handle / Header -->
+        <div ref="handle" class="shrink-0 w-full" :class="{ 'cursor-default': isMaximized }">
+          <AppWindowHeader 
+            mode="free" 
+            :type="type || null"
+            :customTitle="title"
+            :customIcon="icon"
+            :isMaximized="isMaximized"
+            :isMinimized="isMinimized"
+            :disableTransfer="disableTransfer"
+            @close="close"
+            @toggle-maximize="toggleMaximize"
+            @toggle-minimize="toggleMinimize"
           />
         </div>
 
-        <!-- Content Slot -->
-        <div class="relative z-10 flex-1 overflow-hidden flex flex-col">
-          <slot />
-        </div>
-
-        <!-- Resize Handle -->
-        <div
-          class="absolute bottom-0 right-0 w-8 h-8 cursor-nwse-resize z-50 flex items-center justify-center group"
-          @mousedown="onResizeStart"
-        >
-          <div class="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-white/50 transition-colors" />
+        <!-- Render Custom Content -->
+        <div class="flex-1 overflow-auto custom-scrollbar relative flex flex-col">
+          <slot></slot>
         </div>
       </div>
     </Transition>
@@ -124,13 +130,12 @@ function close() {
 </template>
 
 <style scoped>
-.window-pop-enter-active {
-  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+.fade-window-enter-active,
+.fade-window-leave-active {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.window-pop-leave-active {
-  transition: all 0.3s cubic-bezier(0.36, 0, 0.66, -0.56);
-}
-.window-pop-enter-from, .window-pop-leave-to {
+.fade-window-enter-from,
+.fade-window-leave-to {
   opacity: 0;
   transform: scale(0.9) translateY(20px);
 }

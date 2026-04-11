@@ -48,40 +48,8 @@ function formatDate(dateStr: string) {
 
 <template>
   <div class="flex flex-col h-full bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white overflow-hidden font-sans">
-    <!-- Header -->
-    <div class="px-6 py-4 border-b border-gray-100 dark:border-white/5 bg-white/40 dark:bg-black/20 backdrop-blur-md shrink-0 flex items-center justify-between z-10">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-full bg-primary-500/10 dark:bg-primary-500/20 flex items-center justify-center">
-          <UIcon
-            name="i-material-symbols-notifications"
-            class="text-primary-500 dark:text-primary-400 w-4 h-4"
-          />
-        </div>
-        <h2 class="text-lg font-black tracking-tight">
-          通知 (Notifications)
-        </h2>
-      </div>
-      <div class="flex items-center gap-2">
-        <UButton
-          label="全部已读"
-          variant="ghost"
-          color="neutral"
-          size="xs"
-          class="text-xs text-gray-900/40 dark:text-white/40 hover:text-gray-900 dark:hover:text-white"
-          @click="notificationStore.markAllAsRead()"
-        />
-        <UButton
-          icon="i-material-symbols-close"
-          variant="ghost"
-          color="neutral"
-          class="rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-900/60 dark:text-white"
-          @click="splitViewStore.close()"
-        />
-      </div>
-    </div>
-
-    <!-- Tabs -->
-    <div class="px-4 py-2 bg-gray-100/50 dark:bg-black/10 shrink-0 border-b border-gray-100 dark:border-white/5">
+    <!-- Tabs & Actions Row -->
+    <div class="px-4 py-2 bg-gray-100/50 dark:bg-black/10 shrink-0 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
       <div class="flex gap-1">
         <button
           v-for="tab in tabs"
@@ -93,6 +61,16 @@ function formatDate(dateStr: string) {
           {{ tab.label }}
         </button>
       </div>
+      
+      <UButton
+        icon="i-material-symbols-done-all"
+        label="全部已读"
+        variant="ghost"
+        color="neutral"
+        size="xs"
+        class="text-[10px] uppercase font-black tracking-widest text-gray-900/40 dark:text-white/40 hover:text-cyan-500"
+        @click="notificationStore.markAllAsRead()"
+      />
     </div>
 
     <!-- Notification List -->

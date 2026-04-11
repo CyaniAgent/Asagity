@@ -9,19 +9,30 @@ const userStore = useUserStore()
 const systemStore = useSystemStore()
 
 // Restore session on load
+// Initial setup
 onMounted(async () => {
-  const { getIconUrl } = useIconCache()
+  // Start the initialization sequence (preloading sounds, checking health, etc.)
+  await systemStore.initSequence()
   
-  // Start the background guardian
-  systemStore.startHeartbeat()
-  
-  // Pre-fetch/Cache instance logo
-  if (instanceStore.logoURL) {
-    getIconUrl(instanceStore.logoURL)
+  // Try to restore user session as part of the readiness check
+  try {
+    await userStore.fetchMe()
+  } catch (e) {
+    console.warn('Session restoration skipped or failed')
   }
-  
-  // Try to restore user session
-  await userStore.fetchMe()
+
+  // GLOBAL AUDIO UNLOCKER: Unlock audio on the very first user interaction
+  if (process.client) {
+    const unlockAudio = () => {
+      systemStore.launchApp() // Re-run launch logic to ensure context is warm
+      window.removeEventListener('click', unlockAudio)
+      window.removeEventListener('touchstart', unlockAudio)
+      window.removeEventListener('keydown', unlockAudio)
+    }
+    window.addEventListener('click', unlockAudio)
+    window.addEventListener('touchstart', unlockAudio)
+    window.addEventListener('keydown', unlockAudio)
+  }
 })
 
 useHead({
@@ -50,7 +61,10 @@ useSeoMeta({
 <template>
   <UApp>
     <AppSplashScreen />
-    <AppErrorDialog />
+    <ClientOnly>
+      <AppErrorDialog />
+      <AppTaskWindow />
+    </ClientOnly>
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>

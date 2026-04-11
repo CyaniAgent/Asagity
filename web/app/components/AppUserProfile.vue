@@ -13,19 +13,6 @@ const profileTabs = [
 
 <template>
   <div class="flex flex-col h-full bg-white dark:bg-gray-900 overflow-hidden">
-    <!-- Sticky Header with close button -->
-    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800 shrink-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur z-20">
-      <h2 class="text-base font-bold text-gray-800 dark:text-gray-100 tracking-wide">
-        用户资料
-      </h2>
-      <UButton
-        icon="i-material-symbols-close"
-        color="neutral"
-        variant="ghost"
-        class="hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 transition-colors rounded-full"
-        @click="splitViewStore.close()"
-      />
-    </div>
 
     <!-- Scrollable content area -->
     <div
