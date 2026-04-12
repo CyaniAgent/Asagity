@@ -30,7 +30,7 @@ const discoveredNodes = ref<PeerNode[]>([
   { id: '6', displayName: 'Miku Producer', username: 'miku39', system: 'Web', avatar: 'https://avatars.githubusercontent.com/u/14?v=4', isInstance: true, radius: 440, angle: 285 },
   // Remote instances (outer orbit)
   { id: '7', displayName: 'misskey.io', username: 'remote', system: 'Instance', avatar: 'https://avatars.githubusercontent.com/u/15?v=4', isRemote: true, radius: 620, angle: 90 },
-  { id: '8', displayName: 'mastodon.social', username: 'remote', system: 'Instance', avatar: 'https://avatars.githubusercontent.com/u/16?v=4', isRemote: true, radius: 650, angle: 270 },
+  { id: '8', displayName: 'mastodon.social', username: 'remote', system: 'Instance', avatar: 'https://avatars.githubusercontent.com/u/16?v=4', isRemote: true, radius: 650, angle: 270 }
 ])
 
 // 2. Transferred Tasks Management (Floating Bottom Queue)
@@ -148,7 +148,10 @@ const queueExpanded = ref(true)
         </div>
 
         <!-- Task List Body -->
-        <div v-show="queueExpanded" class="px-3 pb-3 custom-scrollbar flex flex-col gap-2 max-h-[220px] overflow-y-auto">
+        <div
+          v-show="queueExpanded"
+          class="px-3 pb-3 custom-scrollbar flex flex-col gap-2 max-h-[220px] overflow-y-auto"
+        >
           <div
             v-for="task in activeTasks"
             :key="task.id"
