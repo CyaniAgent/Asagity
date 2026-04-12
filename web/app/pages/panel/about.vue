@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useFreeWindowStore } from '@/stores/freeWindow'
 
 definePageMeta({
@@ -23,18 +23,34 @@ interface DatabaseStat {
   rows: number
 }
 
+const instanceError = ref(false)
+const dbError = ref(false)
+const envError = ref(false)
+
 // 1. 获取实例详细设置 (Go API)
-const { data: instanceSettings, pending: pendingInstance } = useAsyncData<InstanceSetting[]>('admin-instance-settings', () => $fetch('/api/admin/system/instance', {
-  baseURL: config.public.apiBase
-}))
+const { data: instanceSettings, pending: pendingInstance, refresh: refreshInstance } = useAsyncData<InstanceSetting[]>('admin-instance-settings',
+  () => $fetch('/api/admin/system/instance', {
+    baseURL: config.public.apiBase
+  }), {
+    lazy: true,
+    onRequestError: () => { instanceError.value = true },
+    onResponseError: () => { instanceError.value = true }
+  }
+)
 
 // 2. 获取数据库占用 (Go API)
-const { data: dbStats, pending: pendingDB } = useAsyncData<DatabaseStat[]>('admin-db-stats', () => $fetch('/api/admin/system/database', {
-  baseURL: config.public.apiBase
-}))
+const { data: dbStats, pending: pendingDB, refresh: refreshDB } = useAsyncData<DatabaseStat[]>('admin-db-stats',
+  () => $fetch('/api/admin/system/database', {
+    baseURL: config.public.apiBase
+  }), {
+    lazy: true,
+    onRequestError: () => { dbError.value = true },
+    onResponseError: () => { dbError.value = true }
+  }
+)
 
 // 3. 获取运行环境 (Go API)
-const { data: envInfo, pending: pendingEnv } = useAsyncData<{
+const { data: envInfo, pending: pendingEnv, refresh: refreshEnv } = useAsyncData<{
   hostname: string
   platform: string
   os_version: string
@@ -42,9 +58,15 @@ const { data: envInfo, pending: pendingEnv } = useAsyncData<{
   cpu: string
   memory: string
   is_container: boolean
-}>('system-env', () => $fetch('/api/system/environment', {
-  baseURL: config.public.apiBase
-}))
+}>('system-env',
+  () => $fetch('/api/system/environment', {
+    baseURL: config.public.apiBase
+  }), {
+    lazy: true,
+    onRequestError: () => { envError.value = true },
+    onResponseError: () => { envError.value = true }
+  }
+)
 
 const topTables = computed(() => {
   if (!dbStats.value) return []
@@ -59,25 +81,46 @@ const maxTableSize = computed(() => {
 function openDatabaseDetails() {
   freeWindowStore.openFromContext('admin_database', {}, {})
 }
+
+function retryAll() {
+  instanceError.value = false
+  dbError.value = false
+  envError.value = false
+  refreshInstance()
+  refreshDB()
+  refreshEnv()
+}
 </script>
 
 <template>
   <div class="p-6 max-w-6xl mx-auto space-y-6">
-    <div class="flex items-center gap-3 mb-2">
-      <div class="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-        <UIcon
-          name="i-material-symbols-info-outline"
-          class="w-6 h-6 text-cyan-600 dark:text-cyan-400"
-        />
+    <div class="flex items-center justify-between mb-2">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+          <UIcon
+            name="i-material-symbols-info-outline"
+            class="w-6 h-6 text-cyan-600 dark:text-cyan-400"
+          />
+        </div>
+        <div>
+          <h1 class="text-2xl font-black text-gray-900 dark:text-white">
+            关于 Asagity
+          </h1>
+          <p class="text-sm text-gray-500">
+            实例运维状况与系统探针
+          </p>
+        </div>
       </div>
-      <div>
-        <h1 class="text-2xl font-black text-gray-900 dark:text-white">
-          关于 Asagity
-        </h1>
-        <p class="text-sm text-gray-500">
-          实例运维状况与系统探针
-        </p>
-      </div>
+      <UButton
+        v-if="instanceError || dbError || envError"
+        color="red"
+        variant="soft"
+        size="sm"
+        icon="i-material-symbols-refresh"
+        @click="retryAll"
+      >
+        重试
+      </UButton>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -87,12 +130,22 @@ function openDatabaseDetails() {
         :ui="{ body: { padding: 'p-0' } }"
       >
         <template #header>
-          <div class="flex items-center gap-2">
-            <UIcon
-              name="i-material-symbols-settings-suggest"
-              class="text-cyan-500"
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <UIcon
+                name="i-material-symbols-settings-suggest"
+                class="text-cyan-500"
+              />
+              <span class="font-bold">实例详细信息</span>
+            </div>
+            <UButton
+              v-if="instanceError"
+              color="red"
+              variant="ghost"
+              size="xs"
+              icon="i-material-symbols-refresh"
+              @click="refreshInstance(); instanceError = false"
             />
-            <span class="font-bold">实例详细信息</span>
           </div>
         </template>
 
@@ -104,6 +157,18 @@ function openDatabaseDetails() {
             name="i-material-symbols-progress-activity"
             class="animate-spin text-cyan-500 w-6 h-6"
           />
+        </div>
+        <div
+          v-else-if="instanceError"
+          class="p-8 flex flex-col items-center gap-3 text-center"
+        >
+          <UIcon
+            name="i-material-symbols-cloud-off"
+            class="w-10 h-10 text-red-400"
+          />
+          <p class="text-sm text-gray-500">
+            无法连接到后端服务
+          </p>
         </div>
         <div
           v-else
@@ -143,15 +208,25 @@ function openDatabaseDetails() {
                 />
                 <span class="font-bold">数据库详情 (Top 5)</span>
               </div>
-              <UButton
-                color="cyan"
-                variant="ghost"
-                size="xs"
-                icon="i-material-symbols-open-in-new"
-                @click="openDatabaseDetails"
-              >
-                全部记录
-              </UButton>
+              <div class="flex items-center gap-2">
+                <UButton
+                  v-if="dbError"
+                  color="red"
+                  variant="ghost"
+                  size="xs"
+                  icon="i-material-symbols-refresh"
+                  @click="refreshDB(); dbError = false"
+                />
+                <UButton
+                  color="cyan"
+                  variant="ghost"
+                  size="xs"
+                  icon="i-material-symbols-open-in-new"
+                  @click="openDatabaseDetails"
+                >
+                  全部记录
+                </UButton>
+              </div>
             </div>
           </template>
 
@@ -163,6 +238,18 @@ function openDatabaseDetails() {
               name="i-material-symbols-progress-activity"
               class="animate-spin text-cyan-500 w-6 h-6"
             />
+          </div>
+          <div
+            v-else-if="dbError"
+            class="p-6 flex flex-col items-center gap-3 text-center"
+          >
+            <UIcon
+              name="i-material-symbols-cloud-off"
+              class="w-10 h-10 text-red-400"
+            />
+            <p class="text-sm text-gray-500">
+              无法连接到数据库服务
+            </p>
           </div>
           <div
             v-else
@@ -195,12 +282,22 @@ function openDatabaseDetails() {
         <!-- 运行环境 -->
         <UCard>
           <template #header>
-            <div class="flex items-center gap-2">
-              <UIcon
-                name="i-material-symbols-terminal"
-                class="text-cyan-500"
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <UIcon
+                  name="i-material-symbols-terminal"
+                  class="text-cyan-500"
+                />
+                <span class="font-bold">运行环境</span>
+              </div>
+              <UButton
+                v-if="envError"
+                color="red"
+                variant="ghost"
+                size="xs"
+                icon="i-material-symbols-refresh"
+                @click="refreshEnv(); envError = false"
               />
-              <span class="font-bold">运行环境</span>
             </div>
           </template>
 
@@ -212,6 +309,18 @@ function openDatabaseDetails() {
               name="i-material-symbols-progress-activity"
               class="animate-spin text-cyan-500 w-6 h-6"
             />
+          </div>
+          <div
+            v-else-if="envError"
+            class="p-6 flex flex-col items-center gap-3 text-center"
+          >
+            <UIcon
+              name="i-material-symbols-cloud-off"
+              class="w-10 h-10 text-red-400"
+            />
+            <p class="text-sm text-gray-500">
+              无法获取运行环境信息
+            </p>
           </div>
           <div
             v-else-if="envInfo"
