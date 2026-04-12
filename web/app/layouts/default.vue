@@ -96,6 +96,14 @@ const panelTabs = [
   ]
 ]
 
+// Topic Top Tabs
+const topicTabs = [
+  [
+    { label: '话题', icon: 'i-material-symbols-tag', to: '/topic', exact: true },
+    { label: '创建话题', icon: 'i-material-symbols-add-circle', to: '/topic/create' }
+  ]
+]
+
 // Determine which tabs to show based on the active route
 const currentHeaderTabs = computed(() => {
   if (route.path.startsWith('/chat')) {
@@ -109,6 +117,9 @@ const currentHeaderTabs = computed(() => {
   }
   if (route.path.startsWith('/panel')) {
     return panelTabs
+  }
+  if (route.path.startsWith('/topic')) {
+    return topicTabs
   }
   return timelineTabs
 })
