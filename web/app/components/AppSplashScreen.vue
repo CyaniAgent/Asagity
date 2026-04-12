@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
 import { useInstanceStore } from '~/stores/instance'
 import { useSystemStore } from '~/stores/system'
 
 const instanceStore = useInstanceStore()
 const systemStore = useSystemStore()
 
-// We don't need a local timeout anymore, the store handles it.
+function handleRetry() {
+  systemStore.initSequence()
+}
 </script>
 
 <template>
@@ -93,6 +94,15 @@ const systemStore = useSystemStore()
               </div>
 
               <div class="flex flex-col items-center gap-4 text-center">
+                <!-- Error Code Badge -->
+                <div class="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 border border-red-500/30 rounded-full mb-2">
+                  <UIcon
+                    name="i-material-symbols-error"
+                    class="w-4 h-4 text-red-500"
+                  />
+                  <span class="text-xs font-black text-red-500 tracking-widest">{{ systemStore.initErrorCode || 'ERR UNKNOWN' }}</span>
+                </div>
+
                 <div class="flex items-center gap-2 text-red-500 mb-2">
                   <UIcon
                     name="i-material-symbols-gpp-maybe"
@@ -105,15 +115,17 @@ const systemStore = useSystemStore()
                   {{ systemStore.initError }}
                 </p>
 
-                <UButton
-                  icon="i-material-symbols-replay-rounded"
-                  label="Retry Initialization"
-                  color="error"
-                  variant="soft"
-                  size="sm"
-                  class="mt-4 rounded-xl font-bold px-6 border border-red-500/20"
-                  @click="systemStore.initSequence"
-                />
+                <div class="flex items-center gap-3 mt-4">
+                  <UButton
+                    icon="i-material-symbols-replay-rounded"
+                    label="重试"
+                    color="error"
+                    variant="soft"
+                    size="sm"
+                    class="rounded-xl font-bold px-4 border border-red-500/20"
+                    @click="handleRetry"
+                  />
+                </div>
               </div>
             </div>
           </Transition>
