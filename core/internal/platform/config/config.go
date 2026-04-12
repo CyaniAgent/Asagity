@@ -25,6 +25,12 @@ type Config struct {
 	HostArch         string
 	HostCPU          string
 	HostMemory       string
+	MailSMTPHost     string
+	MailSMTPPort     string
+	MailSMTPUser     string
+	MailSMTPPassword string
+	MailFrom         string
+	MailFromName     string
 }
 
 func Load() (Config, error) {
@@ -48,6 +54,12 @@ func Load() (Config, error) {
 		HostArch:         os.Getenv("HOST_ARCH"),
 		HostCPU:          os.Getenv("HOST_CPU"),
 		HostMemory:       os.Getenv("HOST_MEMORY"),
+		MailSMTPHost:     envOrDefault("MAIL_SMTP_HOST", "smtp.gmail.com"),
+		MailSMTPPort:     envOrDefault("MAIL_SMTP_PORT", "587"),
+		MailSMTPUser:     os.Getenv("MAIL_SMTP_USER"),
+		MailSMTPPassword: os.Getenv("MAIL_SMTP_PASSWORD"),
+		MailFrom:         envOrDefault("MAIL_FROM", "noreply@asagity.net"),
+		MailFromName:     envOrDefault("MAIL_FROM_NAME", "Asagity"),
 	}, nil
 }
 

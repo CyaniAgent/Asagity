@@ -41,3 +41,11 @@ func (r *Repository) GetByID(id string) (*model.User, error) {
 	}
 	return &user, nil
 }
+
+func (r *Repository) GetByPubID(pubID string) (*model.User, error) {
+	var user model.User
+	if err := r.db.Where("pub_id = ?", pubID).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}

@@ -43,11 +43,18 @@ It records what already exists, what is partially in place, and what should be b
   - `GET /api/meta/version`
   - `GET /api/meta/instance`
   - `POST /api/auth/register`
+  - `POST /api/auth/register/with-email` (new)
+  - `POST /api/auth/register/verify-email` (new)
   - `POST /api/auth/login`
-  - `GET /api/auth/me`
+  - `POST /api/auth/login/verify-email` (placeholder)
   - `POST /api/auth/refresh`
   - `POST /api/auth/logout`
   - `POST /api/auth/logout-all`
+- **Mail service implemented** (`core/internal/platform/mail/mail.go`):
+  - SMTP configuration support
+  - 6-digit verification code generation
+  - Email templates for registration and login verification
+  - Enable/disable detection
 - **Search infrastructure installed** (go.mod updated):
   - `github.com/blevesearch/bleve/v2` (v2.5.7) - Full-text search engine
   - `github.com/go-ego/gse` (v1.0.2) - Chinese tokenizer
@@ -178,7 +185,7 @@ Partially complete.
 
 ### Status
 
-Mostly complete.
+**Complete** ✅
 
 ### Already done
 
@@ -191,12 +198,17 @@ Mostly complete.
 - Redis-backed refresh token storage
 - initial user seeding (username: `instance`, password: `Asagity1234`)
 - host system info endpoint via `/api/system/environment`
+- **register with optional email (two-step verification)**
+- **pubid login support**
+- **email verification flow for registration**
+- **mail service with SMTP support**
+- **refresh token stored in HttpOnly cookie**
+- **6-digit verification code with 15-minute expiry**
+- **5 attempts limit with 15-minute cooldown**
 
 ### Still needed
 
-- register with optional email instead of mandatory email in prototype DTO
-- pubid login support
-- email verification flow for register and login
+- login email verification for new devices
 - trusted device logic
 - owner/setup-wizard bootstrap relationship
 - real instance settings update endpoints

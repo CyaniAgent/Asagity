@@ -6,7 +6,7 @@ type MessageResponse struct {
 
 type RegisterRequest struct {
 	Username string `json:"username" validate:"required,min=3,max=64"`
-	Email    string `json:"email" validate:"required,email"`
+	Email    string `json:"email" validate:"omitempty,email"`
 	Password string `json:"password" validate:"required,min=8"`
 }
 
@@ -35,4 +35,25 @@ type UserResponse struct {
 	Username  string `json:"username"`
 	Name      string `json:"name"`
 	AvatarURL string `json:"avatar_url"`
+}
+
+type VerifyEmailRequest struct {
+	ChallengeID string `json:"challenge_id" validate:"required"`
+	Code        string `json:"code" validate:"required,len=6"`
+}
+
+type RegisterWithEmailRequest struct {
+	Username string `json:"username" validate:"required,min=3,max=64"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=8"`
+}
+
+type RegisterSendCodeResponse struct {
+	ChallengeID string `json:"challenge_id"`
+	ExpiresAt   string `json:"expires_at"`
+}
+
+type LoginChallengeResponse struct {
+	ChallengeID string `json:"challenge_id"`
+	ExpiresAt   string `json:"expires_at"`
 }

@@ -3,12 +3,8 @@ module github.com/CyaniAgent/Asagity/core
 go 1.26.1
 
 require (
-	github.com/bitxeno/go-cjk-tokenizer v1.0.1
-	github.com/blevesearch/bleve/v2 v2.5.7
-	github.com/go-ego/gse v1.0.2
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
-	github.com/ikawaha/kagome/v2 v2.11.0
 	github.com/joho/godotenv v1.5.1
 	github.com/redis/go-redis/v9 v9.18.0
 	golang.org/x/crypto v0.31.0

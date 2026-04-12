@@ -13,28 +13,33 @@ These two are intentionally kept together because the code is still in a bootstr
 
 ### Implemented endpoints
 
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET /api/auth/me`
+- `POST /api/auth/register` ✅
+- `POST /api/auth/register/with-email` ✅ (new)
+- `POST /api/auth/register/verify-email` ✅ (new)
+- `POST /api/auth/login` ✅
+- `POST /api/auth/login/verify-email` ✅ (placeholder)
+- `POST /api/auth/refresh` ✅ (new - cookie based)
+- `POST /api/auth/logout` ✅ (new - cookie based)
+- `POST /api/auth/logout-all` ✅ (new)
+- `GET /api/auth/me` ✅
 
-### Registered but still placeholder endpoints
+### Implemented Features
 
-- `POST /api/auth/register/verify-email`
-- `POST /api/auth/login/verify-email`
-- `POST /api/auth/refresh`
-- `POST /api/auth/logout`
-- `POST /api/auth/logout-all`
-
-These placeholder endpoints currently return `501 Not Implemented`.
+- registration without email (direct completion)
+- registration with email (two-step: send code → verify → complete)
+- login supports `username`, `email`, and `pubid`
+- refresh token stored in HttpOnly cookie
+- automatic token rotation on refresh
+- logout (current device) and logout-all (all devices)
+- 6-digit verification code with 15-minute expiry
+- 5 attempts limit before cooldown
+- 15-minute cooldown after max attempts
 
 ### Current prototype limitations
 
-- current register DTO still requires `email`
-- current login service resolves `email` and `username`, but not `pubid` yet
-- refresh-token cookie rotation is not implemented yet
-- email challenge flow is not implemented yet
-- Redis registration context is not implemented yet
+- email verification code delivery requires SMTP configuration
 - device trust flow is not implemented yet
+- login email verification (new device) is placeholder
 
 ## Confirmed Target Rules
 
@@ -67,13 +72,19 @@ These placeholder endpoints currently return `501 Not Implemented`.
 
 ### `POST /api/auth/register`
 
-Current status:
+**Status**: Implemented
 
-- implemented as bootstrap logic
-- returns success envelope with auth payload
+Registration without email completes immediately.
 
-Current prototype request:
+Request (without email):
+```json
+{
+  "username": "syskuku",
+  "password": "plain-password"
+}
+```
 
+Request (with email - same endpoint, redirects to verification):
 ```json
 {
   "username": "syskuku",
@@ -82,14 +93,13 @@ Current prototype request:
 }
 ```
 
-Current prototype response shape:
-
+Response (success):
 ```json
 {
   "ok": true,
   "data": {
     "access_token": "jwt-token",
-    "refresh_token": "refresh-token-placeholder",
+    "refresh_token": "refresh-token",
     "user": {
       "id": "internal-id",
       "pub_id": "usr_A1b2C3d4",
@@ -101,44 +111,73 @@ Current prototype response shape:
 }
 ```
 
-Target behavior:
+Note: When email is provided, use `POST /api/auth/register/with-email` instead.
 
-- if `email` is omitted, registration completes immediately
-- if `email` is present, registration should require email verification before final user creation
+### `POST /api/auth/register/with-email`
+
+**Status**: Implemented (new)
+
+Send verification code to email for registration.
+
+Request:
+```json
+{
+  "username": "syskuku",
+  "email": "syskuku@asagity.net",
+  "password": "plain-password"
+}
+```
+
+Response:
+```json
+{
+  "ok": true,
+  "data": {
+    "challenge_id": "challenge-id",
+    "expires_at": "2026-04-12T12:00:00Z"
+  }
+}
+```
 
 ### `POST /api/auth/register/verify-email`
 
-Current status:
+**Status**: Implemented (new)
 
-- registered
-- currently returns `501`
+Verify email code and complete registration.
 
-Target request:
-
+Request:
 ```json
 {
-  "challengeId": "challenge-id",
+  "challenge_id": "challenge-id",
   "code": "123456"
 }
 ```
 
-Target behavior:
-
-- verify challenge
-- load temporary registration context from Redis
-- create user
-- trust current device
-- issue tokens
+Response:
+```json
+{
+  "ok": true,
+  "data": {
+    "access_token": "jwt-token",
+    "refresh_token": "refresh-token",
+    "user": {
+      "id": "internal-id",
+      "pub_id": "usr_A1b2C3d4",
+      "username": "syskuku",
+      "name": "",
+      "avatar_url": ""
+    }
+  }
+}
+```
 
 ### `POST /api/auth/login`
 
-Current status:
+**Status**: Implemented
 
-- implemented as bootstrap logic
-- currently supports `username` and `email`
+Supports `username`, `email`, and `pubid` login.
 
-Current prototype request:
-
+Request:
 ```json
 {
   "identifier": "syskuku",
@@ -146,14 +185,13 @@ Current prototype request:
 }
 ```
 
-Current prototype response shape:
-
+Response:
 ```json
 {
   "ok": true,
   "data": {
     "access_token": "jwt-token",
-    "refresh_token": "refresh-token-placeholder",
+    "refresh_token": "refresh-token",
     "user": {
       "id": "internal-id",
       "pub_id": "usr_A1b2C3d4",
@@ -165,61 +203,83 @@ Current prototype response shape:
 }
 ```
 
-Target behavior:
-
-- resolve by `pubid`, then `username`, then `email`
-- if account has bound email and device is new, return challenge instead of tokens
-- if account is in email-login cooldown, reject `username` and `email` login
+Refresh token is stored in HttpOnly cookie.
 
 ### `POST /api/auth/login/verify-email`
 
-Current status:
+**Status**: Placeholder
 
-- registered
-- currently returns `501`
-
-Target request:
-
-```json
-{
-  "challengeId": "challenge-id",
-  "code": "123456",
-  "deviceFingerprint": "browser-stable-id",
-  "deviceName": "Chrome on Windows"
-}
-```
+Reserved for new-device email verification flow (not yet implemented).
 
 ### `POST /api/auth/refresh`
 
-Current status:
+**Status**: Implemented (new)
 
-- registered
-- currently returns `501`
+Reads refresh token from HttpOnly cookie and rotates it.
 
-Target behavior:
+Request (optional - cookie is preferred):
+```json
+{
+  "refresh_token": "refresh-token"
+}
+```
 
-- read refresh token from `HttpOnly` cookie
-- rotate refresh token
-- return a new access token
+Response:
+```json
+{
+  "ok": true,
+  "data": {
+    "access_token": "new-jwt-token",
+    "refresh_token": "new-refresh-token",
+    "user": {
+      "id": "internal-id",
+      "pub_id": "usr_A1b2C3d4",
+      "username": "syskuku",
+      "name": "",
+      "avatar_url": ""
+    }
+  }
+}
+```
 
 ### `POST /api/auth/logout`
 
-Current status:
+**Status**: Implemented (new)
 
-- registered
-- currently returns `501`
+Revokes current refresh token and clears cookie.
 
-Target behavior:
+Request (optional - cookie is preferred):
+```json
+{
+  "refresh_token": "refresh-token"
+}
+```
 
-- revoke current refresh-token chain for the device
-- clear refresh-token cookie
+Response:
+```json
+{
+  "ok": true,
+  "data": {
+    "status": "ok"
+  }
+}
+```
 
 ### `POST /api/auth/logout-all`
 
-Current status:
+**Status**: Implemented (new)
 
-- registered
-- currently returns `501`
+Revokes all refresh tokens for the user.
+
+Response:
+```json
+{
+  "ok": true,
+  "data": {
+    "status": "ok"
+  }
+}
+```
 
 Target behavior:
 
