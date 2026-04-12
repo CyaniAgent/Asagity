@@ -3,11 +3,13 @@ import { useInstanceStore } from '~/stores/instance'
 import { useUserStore } from '~/stores/user'
 import { useSystemStore } from '~/stores/system'
 import { useThemeStore } from '~/stores/theme'
+import { useSoundManager } from '~/stores/soundManager'
 
 const instanceStore = useInstanceStore()
 const userStore = useUserStore()
 const systemStore = useSystemStore()
 const themeStore = useThemeStore()
+const soundManager = useSoundManager()
 
 onMounted(async () => {
   themeStore.init()
@@ -20,10 +22,15 @@ onMounted(async () => {
     console.warn('Session restoration skipped or failed')
   }
 
+  // Start sound preloading after app is ready (non-blocking)
+  if (import.meta.client) {
+    soundManager.preloadSounds()
+  }
+
   // GLOBAL AUDIO UNLOCKER: Unlock audio on the very first user interaction
   if (import.meta.client) {
     const unlockAudio = () => {
-      systemStore.launchApp() // Re-run launch logic to ensure context is warm
+      systemStore.launchApp()
       window.removeEventListener('click', unlockAudio)
       window.removeEventListener('touchstart', unlockAudio)
       window.removeEventListener('keydown', unlockAudio)

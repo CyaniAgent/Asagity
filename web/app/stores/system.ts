@@ -23,48 +23,15 @@ export const useSystemStore = defineStore('system', () => {
 
     try {
       // Step 1: Internal Client Preparation (Non-network)
-      initProgress.value = 20
+      initProgress.value = 30
 
-      // Step 2: Pre-load Essential Assets (Sounds, etc) - STRICT MODE
-      initProgress.value = 50
-      if (import.meta.client) {
-        const assetsToLoad = [
-          '/sounds/YunaAyase/ca.wav',
-          '/sounds/YunaAyase/sys_error.wav',
-          '/sounds/YunaAyase/sys_net_restored.wav'
-        ]
+      // Step 2: UI Ready - proceed immediately
+      initProgress.value = 100
+      isInitialized.value = true
 
-        await Promise.all(assetsToLoad.map((url) => {
-          return new Promise((resolve, reject) => {
-            const audio = new Audio()
-            audio.addEventListener('canplaythrough', () => {
-              console.log(`Asset loaded: ${url}`)
-              resolve(true)
-            }, { once: true })
-            audio.addEventListener('error', () => {
-              reject(new Error(`Failed to load essential sound: ${url}`))
-            }, { once: true })
-            audio.src = url
-            audio.load()
-
-            // Timeout safety for the promise
-            setTimeout(() => reject(new Error(`Loading timed out for: ${url}`)), 10000)
-          })
-        }))
-      }
-
-      // Step 3: Local Database / Metadata Readiness
-      initProgress.value = 80
-
-      // Finalizing
-      setTimeout(() => {
-        initProgress.value = 100
-        isInitialized.value = true
-
-        // AUTO-ENTRY: Automatically call launchApp after initialization
-        // This will start the heartbeat ONLY after client is fully ready
-        launchApp()
-      }, 500)
+      // AUTO-ENTRY: Automatically call launchApp after initialization
+      // This will start the heartbeat ONLY after client is fully ready
+      launchApp()
     } catch (err: any) {
       console.error('Asagity Initialization Failed:', err)
       initError.value = err.message || 'Unknown initialization error'

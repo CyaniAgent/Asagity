@@ -31,12 +31,18 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
-    '/': { prerender: true }
+    '/': { prerender: true },
+    '/panel': { ssr: false },
+    '/panel/**': { ssr: false }
   },
 
   devServer: {
     host: '::',
     port: 2000
+  },
+
+  experimental: {
+    payloadExtraction: false
   },
 
   compatibilityDate: '2025-01-15',
