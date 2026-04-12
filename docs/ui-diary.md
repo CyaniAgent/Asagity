@@ -165,6 +165,143 @@
 ### 12.2 跨项目资产共享 (Cross-Project Asset Storage)
 - **存储对齐**：为了确保“图标即前端资源”的逻辑，Go 后端利用相对路径直接将缓存文件写入前端项目文件夹 `web/app/assets/icons`。
 - **离线韧性**：由 `useIconCache` 组合器统一封装。一旦图标下载完成，即便远程源失效，后端依然能从前端挂载的文件系统中秒级读取并返回。
+---
+
+*Updated by Antigravity Divine Engineer - 2026-04-04*
 
 ---
-*Updated by Antigravity Divine Engineer - 2026-04-04*
+
+## 13. 初始化流程优化 (Initialization Flow Optimization)
+
+### 13.1 问题诊断
+- **症状**：Splash Screen 卡在 30% 无法进入页面
+- **根因**：`system.ts` 中 `fetchHostInfo()` 调用 `/api/system/environment` 无超时设置，后端不可用时请求挂起
+- **次要问题**：`fetchHostInfo` catch 块使用 `catch {}` 但内部引用未定义的 `err` 变量
+
+### 13.2 解决方案
+- **即时进页**：服务端不可用时，Splash Screen 秒进页面，页面内显示错误弹窗
+- **后台获取**：主机信息改为后台异步获取，不阻塞初始化流程
+- **心跳检测**：后端离线状态由 `checkBackendHealth` 心跳检测处理，触发 `AppErrorDialog` 弹窗
+
+### 13.3 代码变更
+```typescript
+// 之前：同步等待，可能挂起
+async function initSequence() {
+  initProgress.value = 30
+  await fetchHostInfo()  // 无超时，可能卡住
+  initProgress.value = 100
+}
+
+// 现在：立即完成，后台获取
+async function initSequence() {
+  isInitialized.value = true
+  initProgress.value = 100
+  fetchHostInfoWithTimeout().catch(() => {})  // 后台异步
+  launchApp()  // 立即启动
+}
+```
+
+### 13.4 错误代码系统
+- `ERR 12201`：初始化失败（`ERROR_CODE_INIT_FAILED`）
+- `ERR 12202`：网络超时（`ERROR_CODE_NETWORK_TIMEOUT`）
+
+---
+
+## 14. 路由缺失修复 (Missing Route Fixes)
+
+### 14.1 问题
+- 多个导航链接指向不存在的页面，导致 Vue Router 警告
+- `AppErrorLogWindow` 组件被引用但不存在
+
+### 14.2 创建的占位页面
+| 路由 | 页面 | 状态 |
+|------|------|------|
+| `/announcement` | 公告 | 临时占位 |
+| `/orgs` | 社团 | 临时占位 |
+| `/followed` | 已关注 | 临时占位 |
+| `/local` | 本实例 | 临时占位 |
+| `/more` | 更多 | 临时占位 |
+| `/post/[id]` | 帖子详情 | 临时占位 |
+| `/bookmarks` | 收藏 | 临时占位 |
+| `/miniapp` | Mini App | 临时占位 |
+| `/qrcode` | 多维码 | 临时占位 |
+| `/games` | 小游戏 | 临时占位 |
+| `/albums` | 图集 | 临时占位 |
+| `/achievements` | 成就 | 临时占位 |
+| `/developer` | 开发者 | 临时占位 |
+| `/chat/contacts` | 通讯录 | 已存在 |
+| `/chat/meet` | Asagity Meet | 已存在 |
+
+### 14.3 AppSplashScreen 简化
+- 移除 `AppErrorLogWindow` 引用（组件不存在）
+- 移除重试按钮的"查看详细日志"功能
+- 简化错误处理流程
+
+### 14.4 useEventListener SSR 修复
+```typescript
+// 之前：VueUse useEventListener 在 SSR 时访问 subTree 报错
+useEventListener('mousemove', handler)
+useEventListener('mouseup', handler)
+
+// 现在：原生 addEventListener + 生命周期管理
+onMounted(() => {
+  window.addEventListener('mousemove', handleMouseMove)
+  window.addEventListener('mouseup', handleMouseUp)
+})
+onUnmounted(() => {
+  window.removeEventListener('mousemove', handleMouseMove)
+  window.removeEventListener('mouseup', handleMouseUp)
+})
+```
+
+### 14.5 图标名称修复
+- `photo-library-outline` → `photo-library`（可用的 Material Symbols 图标）
+
+---
+
+## 15. 当前页面状态 (Current Page State)
+
+### 15.1 可用页面
+- `/` - 时间线首页
+- `/topic` - 话题列表
+- `/topic/create` - 创建话题
+- `/drive` - Skyline 云盘
+- `/chat` - 聊天
+- `/settings` - 设置
+- `/settings/profile` - 个人资料
+- `/settings/personalization` - 个性化设置
+- `/panel` - 控制台
+- `/panel/about` - 关于页面
+
+### 15.2 占位页面（待开发）
+- `/announcement` - 公告
+- `/orgs` - 社团
+- `/followed` - 已关注
+- `/local` - 本实例
+- `/more` - 更多
+- `/post/[id]` - 帖子详情
+- `/bookmarks` - 收藏
+- `/miniapp` - Mini App
+- `/qrcode` - 多维码
+- `/games` - 小游戏
+- `/albums` - 图集
+- `/achievements` - 成就
+- `/developer` - 开发者
+
+---
+
+## 16. 已知问题与限制 (Known Issues)
+
+### 16.1 网络相关
+- GitHub 头像 URL 在开发环境可能 `ERR_NAME_NOT_RESOLVED`（DNS 解析失败）
+- srcset 属性被截断警告（非代码问题）
+
+### 16.2 未来优化方向
+- 完善各占位页面的实际功能
+- 实现帖子详情页 (`/post/[id]`)
+- 实现收藏功能 (`/bookmarks`)
+- 实现公告系统 (`/announcement`)
+
+---
+
+*Updated by Antigravity Divine Engineer - 2026-04-12*

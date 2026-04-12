@@ -48,6 +48,12 @@ It records what already exists, what is partially in place, and what should be b
   - `POST /api/auth/refresh`
   - `POST /api/auth/logout`
   - `POST /api/auth/logout-all`
+- **Search infrastructure installed** (go.mod updated):
+  - `github.com/blevesearch/bleve/v2` (v2.5.7) - Full-text search engine
+  - `github.com/go-ego/gse` (v1.0.2) - Chinese tokenizer
+  - `github.com/ikawaha/kagome/v2` (v2.11.0) - Japanese tokenizer
+  - `github.com/bitxeno/go-cjk-tokenizer` (v1.0.1) - Korean/CJK tokenizer
+- **Note module design documented** in Phase 5
   - `GET /api/system/environment`
 
 ### Present but still placeholder-level
@@ -82,7 +88,7 @@ browser -> Nuxt dev server (:2000) -> dev proxy -> Go API (:2048)
 - Drop resumable upload sessions
 - queue runtime (Asynq integration)
 - **Note module (notes, timeline, reactions, reposts)**
-- **Bleve search with multi-language segmentation (zh/ja/ko)**
+- **Bleve search integration with multi-language tokenizers (libraries installed, integration pending)**
 - preview card generation
 - federation logic
 
@@ -151,6 +157,7 @@ Partially complete.
 - auth middleware skeleton
 - health check endpoint
 - module registration through `internal/app`
+- **Search libraries installed** (Bleve, gse, kagome, go-cjk-tokenizer)
 
 ### Still needed
 
@@ -159,7 +166,7 @@ Partially complete.
 - readiness endpoint `GET /readyz`
 - stronger config validation
 - cleaner error mapping and typed domain errors
-- Bleve index initialization and health check
+- **Bleve index initialization and health check** (libraries ready)
 
 ### Exit Criteria
 
@@ -288,21 +295,21 @@ Not started.
 
 ### Status
 
-Not started.
+**Design documented. Libraries installed. Implementation pending.**
 
 ### Infrastructure Dependencies
 
 - **Search Engine**: Bleve (Pure Go, no external service required)
 - **Segmentation Libraries**: Multi-language support
 
-#### Search Stack
+#### Search Stack (Installed ✅)
 
-| Language | Library | Package |
-|----------|---------|---------|
-| Chinese | gse | `github.com/go-ego/gse` |
-| Japanese | sudachi | `github.com/shogo82148/sudachi` |
-| Korean | Open Korean Text | `github.com/open-korean-text/opentokenizer` |
-| English (default) | Bleve built-in | `github.com/blevesearch/bleve` |
+| Language | Library | Package | Version |
+|----------|---------|---------|---------|
+| Chinese | gse | `github.com/go-ego/gse` | v1.0.2 |
+| Japanese | kagome | `github.com/ikawaha/kagome/v2` | v2.11.0 |
+| Korean | go-cjk-tokenizer | `github.com/bitxeno/go-cjk-tokenizer` | v1.0.1 |
+| English (default) | Bleve built-in | `github.com/blevesearch/bleve/v2` | v2.5.7 |
 
 #### Search Index Storage
 
