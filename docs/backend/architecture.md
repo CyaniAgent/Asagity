@@ -25,6 +25,7 @@ Implemented structure now includes:
 - `core/internal/module/auth`
 - `core/internal/module/user`
 - `core/internal/module/asset`
+- `core/internal/module/drive`
 - `core/internal/app/connections/activitypub/inbox`
 - `core/internal/app/connections/activitypub/deliver`
 - `core/internal/app/connections/neolinkage`
@@ -34,8 +35,19 @@ Currently registered modules in the API process are:
 - `instance`
 - `auth`
 - `user`
+- `drive`
 
 `asset` exists in the tree as an early utility module, but is not yet a major domain anchor in the roadmap.
+
+### Container Configuration
+
+The project supports both Docker and Podman with separate configurations:
+
+- `container/docker/docker-compose.yaml` - Docker Compose configuration
+- `container/podman/podman-compose.yaml` - Podman Compose configuration
+- `container/podman/start.sh` / `stop.sh` - Podman management scripts
+
+This separation ensures Docker and Podman configurations are decoupled and independently maintainable.
 
 The backend currently exposes a minimal health path through the `instance` module:
 

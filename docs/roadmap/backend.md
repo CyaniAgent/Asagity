@@ -21,17 +21,23 @@ It records what already exists, what is partially in place, and what should be b
   - `auth_devices`
   - `auth_refresh_tokens`
   - `auth_email_challenges`
+  - `drive_files` (files, folders, usage tracking)
 - shared HTTP helpers and middleware exist under `internal/platform/httpx`
+- host system info endpoint (`/api/system/environment`) in Go backend
+- Container configurations for both Docker and Podman:
+  - `container/docker/docker-compose.yaml`
+  - `container/podman/podman-compose.yaml` with startup scripts
 - these modules already have backend skeletons:
   - `instance`
   - `auth`
   - `user`
   - `asset`
+  - `drive` (full CRUD implemented)
 - protocol placeholder packages already exist:
   - `internal/app/connections/activitypub/inbox`
   - `internal/app/connections/activitypub/deliver`
   - `internal/app/connections/neolinkage`
-- basic endpoints already exist:
+- full endpoints implemented:
   - `GET /`
   - `GET /healthz`
   - `GET /api/meta/version`
@@ -39,14 +45,15 @@ It records what already exists, what is partially in place, and what should be b
   - `POST /api/auth/register`
   - `POST /api/auth/login`
   - `GET /api/auth/me`
+  - `POST /api/auth/refresh`
+  - `POST /api/auth/logout`
+  - `POST /api/auth/logout-all`
+  - `GET /api/system/environment`
 
 ### Present but still placeholder-level
 
 - `POST /api/auth/register/verify-email`
 - `POST /api/auth/login/verify-email`
-- `POST /api/auth/refresh`
-- `POST /api/auth/logout`
-- `POST /api/auth/logout-all`
 - `GET /api/users/me`
 
 These routes compile and register, but some still return `501 Not Implemented` or simplified bootstrap responses.
@@ -68,15 +75,13 @@ browser -> Nuxt dev server (:2000) -> dev proxy -> Go API (:2048)
 
 ## What Is Still Missing
 
-- true refresh-token cookie flow
-- Redis-backed registration context
-- email challenge generation and verification
+- email verification flow (register/login)
 - pubid login path
 - device trust management
 - SSR refresh flow
-- Drive and Drop modules
-- queue runtime
-- local social APIs
+- Drop resumable upload sessions
+- queue runtime (Asynq integration)
+- local social APIs (notes, timeline)
 - federation logic
 
 ## Delivery Priorities
@@ -128,7 +133,7 @@ Partially complete.
 
 ### Status
 
-In progress.
+Mostly complete.
 
 ### Already done
 
@@ -136,15 +141,17 @@ In progress.
 - auth device, refresh token, and email challenge models
 - instance version and instance metadata endpoints
 - register, login, and me handlers
+- refresh-token rotation with 30min access / 30day refresh
+- logout and logout-all handlers
+- Redis-backed refresh token storage
+- initial user seeding (username: `instance`, password: `Asagity1234`)
+- host system info endpoint via `/api/system/environment`
 
 ### Still needed
 
 - register with optional email instead of mandatory email in prototype DTO
 - pubid login support
-- Redis registration context
 - email verification flow for register and login
-- refresh-token rotation
-- logout and logout-all
 - trusted device logic
 - owner/setup-wizard bootstrap relationship
 - real instance settings update endpoints
@@ -174,18 +181,26 @@ In progress.
 
 ### Status
 
-Not started.
+Complete.
 
-### Deliverables
+### Already done
 
-- drive folder model
-- drive file model
-- hierarchy and path handling
-- file listing and metadata
-- usage statistics
-- storage abstraction
+- drive folder model with hierarchy support
+- drive file model with metadata
+- file listing and metadata endpoints
+- usage statistics (`GET /api/drive/usage`)
+- storage abstraction with local storage
+- full CRUD operations:
+  - `GET /api/drive/files`
+  - `GET /api/drive/files/:id`
+  - `POST /api/drive/folders`
+  - `PATCH /api/drive/files/:id`
+  - `DELETE /api/drive/files/:id`
+  - `POST /api/drive/files/:id` (upload)
+- local storage priority with configurable path
+- Drop page UI with solar system layout
 
-### Suggested APIs
+### Suggested APIs (implemented)
 
 - `GET /api/drive/files`
 - `GET /api/drive/files/:id`
@@ -276,33 +291,34 @@ Directory structure prepared, implementation not started.
 
 The next backend work should be:
 
-1. finish auth DTO and service alignment with the confirmed product rules
-2. implement Redis registration context and email challenges
-3. implement refresh-token cookie flow
-4. convert `instance` from bootstrap metadata to real settings-backed responses
-5. begin `drive` module scaffolding after auth is usable
+1. implement email verification flow (register/login)
+2. implement pubid login support
+3. build Drop module for resumable upload sessions
+4. integrate Asynq queue for background jobs (thumbnail generation, media scanning)
+5. build local social core (notes, timeline, reactions)
+6. build notifications system
 
 ## Practical Milestones
 
-### Milestone A: Auth Bootstrap
+### Milestone A: Auth Bootstrap ✅
 
-- complete Phase 0
-- complete auth and user parts of Phase 1
+- complete Phase 0 ✅
+- complete auth and user parts of Phase 1 (mostly ✅)
 
-### Milestone B: Drive MVP
+### Milestone B: Drive MVP ✅
 
-- complete Phase 2
-- start Phase 3
+- complete Phase 2 ✅
+- start Phase 3 (pending)
 
 ### Milestone C: Upload Reliability
 
-- complete Phase 3
-- complete Phase 4
+- complete Phase 3 (Drop resumable upload)
+- complete Phase 4 (Queue integration)
 
 ### Milestone D: Local Social MVP
 
-- complete Phase 5
-- complete Phase 6
+- complete Phase 5 (notes, timeline)
+- complete Phase 6 (notifications)
 
 ### Milestone E: Federation Alpha
 
