@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useFreeWindowStore } from '@/stores/freeWindow'
+import { useSystemStore } from '~/stores/system'
+import { useAppToast } from '~/composables/useAppToast'
 
 definePageMeta({
   layout: 'default'
@@ -8,6 +10,8 @@ definePageMeta({
 
 const freeWindowStore = useFreeWindowStore()
 const config = useRuntimeConfig()
+const systemStore = useSystemStore()
+const toast = useAppToast()
 
 interface InstanceSetting {
   ID: number
@@ -26,6 +30,16 @@ interface DatabaseStat {
 const instanceError = ref(false)
 const dbError = ref(false)
 const envError = ref(false)
+
+// Dev mode check - show warning and skip API calls
+if (systemStore.isDevMode) {
+  toast.add({
+    title: '开发模式无法操作此功能',
+    description: '该功能需要依赖真实服务端使用，无法进行测试',
+    color: 'warning',
+    icon: 'i-material-symbols-terminal'
+  })
+}
 
 // 1. 获取实例详细设置 (Go API)
 const { data: instanceSettings, pending: pendingInstance, refresh: refreshInstance } = useAsyncData<InstanceSetting[]>('admin-instance-settings',

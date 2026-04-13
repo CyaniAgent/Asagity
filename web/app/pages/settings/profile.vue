@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useInstanceStore } from '~/stores/instance'
 import { useUserStore } from '~/stores/user'
+import { useSystemStore } from '~/stores/system'
 import { useAppToast } from '~/composables/useAppToast'
 
 useHead({
@@ -9,10 +10,21 @@ useHead({
 
 const instanceStore = useInstanceStore()
 const userStore = useUserStore()
+const systemStore = useSystemStore()
 const toast = useAppToast()
 const isLoggingOut = ref(false)
 
 async function handleLogout() {
+  if (systemStore.isDevMode) {
+    toast.add({
+      title: '开发模式无法操作此功能',
+      description: '该功能需要依赖真实服务端使用，无法进行测试',
+      color: 'warning',
+      icon: 'i-material-symbols-terminal'
+    })
+    return
+  }
+
   if (isLoggingOut.value) return
   
   isLoggingOut.value = true
