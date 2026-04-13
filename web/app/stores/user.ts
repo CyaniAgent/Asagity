@@ -54,6 +54,22 @@ export const useUserStore = defineStore('user', () => {
     isLoggedIn.value = false
   }
 
+  async function logoutAll() {
+    const api = useApi()
+    try {
+      await api.post('/api/auth/logout-all')
+    } catch {
+    }
+
+    accessToken.value = null
+    refreshToken.value = null
+    accessTokenCookie.value = null
+    refreshTokenCookie.value = null
+    user.value = null
+    userProfileCookie.value = null
+    isLoggedIn.value = false
+  }
+
   async function refreshAccessToken() {
     const api = useApi()
     try {
@@ -115,6 +131,7 @@ export const useUserStore = defineStore('user', () => {
     setAuth,
     developerEnter,
     logout,
+    logoutAll,
     refreshAccessToken,
     fetchMe
   }
