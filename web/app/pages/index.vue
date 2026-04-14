@@ -1,55 +1,32 @@
 <script setup lang="ts">
-import { subHours, subMinutes } from 'date-fns'
+import { ref } from 'vue'
 import { useSplitViewStore } from '~/stores/splitView'
+import { useSystemStore } from '~/stores/system'
 
 const splitViewStore = useSplitViewStore()
+const systemStore = useSystemStore()
 
-const mockPosts = [
-  {
-    id: '1',
-    author: {
-      avatar: 'https://avatars.githubusercontent.c  om/u/739984?v=4',
-      displayName: '绝对领域SK',
-      username: 'syskuku'
-    },
-    createdAt: subHours(new Date(), 1),
-    content: '这就去写一个新的长篇小说！大家有什么$[tada 想看的题材]吗？ $[rainbow #Asagity]',
-    metrics: { replies: 5, reposts: 12, reactions: 42 }
-  },
-  {
-    id: '2',
-    author: {
-      avatar: 'https://avatars.githubusercontent.com/u/739984?v=4',
-      displayName: 'Little',
-      username: 'Little',
-      instance: 'misskey.io'
-    },
-    createdAt: subMinutes(new Date(), 45),
-    content: '@syskuku 我用服务器部署的，请了也没事 $[spin.speed=2s 🌀]',
-    replyTo: {
-      author: {
-        avatar: 'https://avatars.githubusercontent.com/u/739984?v=4',
-        displayName: '绝对领域SK',
-        username: 'syskuku'
-      }
-    },
-    metrics: { replies: 2, reposts: 0, reactions: 15 }
-  },
-  {
-    id: '3',
-    author: {
-      avatar: 'https://avatars.githubusercontent.com/u/739984?v=4',
-      displayName: 'Yuna',
-      username: 'yuna_ayase'
-    },
-    createdAt: subMinutes(new Date(), 10),
-    content: '今天天气真不错喵~ 想出去散步。 #日常 $[shake 🐾]',
-    metrics: { replies: 1, reposts: 1, reactions: 8 }
+// Fetch timeline data from API
+const { data: timelineData, pending: timelineLoading, error: timelineError, refresh: refreshTimeline } = useAsyncData('timeline', async () => {
+  if (systemStore.isDevMode) {
+    return []
   }
-]
+  
+  try {
+    const api = useApi()
+    const response = await api.get('/api/timeline/public', {
+      query: { limit: 20 }
+    })
+    return response as any[]
+  } catch (err) {
+    console.error('Failed to fetch timeline:', err)
+    return []
+  }
+}, {
+  default: () => []
+})
 
-// Mock data for Mini Widgets
-const onlineUsersCount = 1288
+const onlineUsersCount = ref(1288)
 const onlineAvatars = [
   { src: 'https://avatars.githubusercontent.com/u/739984?v=4' },
   { src: 'https://avatars.githubusercontent.com/u/1?v=4' },
@@ -106,12 +83,29 @@ const federatedInstances = [
 
         <!-- Post Stream -->
         <div class="flex flex-col divide-y divide-white/40 dark:divide-gray-800/50">
-          <AppPostItem
-            v-for="post in mockPosts"
-            :key="post.id"
-            :post="post"
-            class="hover:bg-white/20 dark:hover:bg-gray-800/20 transition-colors"
-          />
+          <template v-if="timelineLoading">
+            <div class="flex items-center justify-center py-16">
+              <UIcon
+                name="i-material-symbols-progress-activity"
+                class="animate-spin text-cyan-500 w-8 h-8"
+              />
+            </div>
+          </template>
+          <template v-else-if="!timelineData?.length">
+            <AppEmptyState
+              title="动态板块空空如也"
+              description="暂无动态，快去关注一些有趣的用户吧！"
+              icon="i-material-symbols-dynamic-feed"
+            />
+          </template>
+          <template v-else>
+            <AppPostItem
+              v-for="post in timelineData"
+              :key="post.id"
+              :post="post"
+              class="hover:bg-white/20 dark:hover:bg-gray-800/20 transition-colors"
+            />
+          </template>
         </div>
       </div>
     </div>
