@@ -7,7 +7,8 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@vueuse/nuxt',
     '@nuxtjs/i18n',
-    '@vueuse/motion/nuxt'
+    '@vueuse/motion/nuxt',
+    'nuxt-icon'
   ],
 
   devtools: {
@@ -41,26 +42,18 @@ export default defineNuxtConfig({
     port: 2000
   },
 
-  experimental: {
+experimental: {
     payloadExtraction: false
   },
 
   compatibilityDate: '2025-01-15',
 
-  nitro: {
-    devProxy: {
-      '/api': {
-        target: 'http://localhost:2048',
-        changeOrigin: true
-      },
-      '/healthz': {
-        target: 'http://localhost:2048/healthz',
-        changeOrigin: true
-      }
-    }
-  },
-
   vite: {
+    server: {
+      headers: {
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' http://localhost:* ws://localhost:*; frame-src 'self' blob:; block-all-mixed-content; upgrade-insecure-requests"
+      }
+    },
     optimizeDeps: {
       include: [
         'date-fns',
