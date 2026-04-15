@@ -6,14 +6,27 @@ import (
 	dto "github.com/CyaniAgent/Asagity/core/internal/module/note/dto"
 	notemodel "github.com/CyaniAgent/Asagity/core/internal/module/note/model"
 	noterepo "github.com/CyaniAgent/Asagity/core/internal/module/note/repository"
+	usermodel "github.com/CyaniAgent/Asagity/core/internal/module/user/model"
+	"github.com/CyaniAgent/Asagity/core/internal/platform/queue"
+	"github.com/CyaniAgent/Asagity/core/internal/platform/search"
 )
 
 type NoteService struct {
-	repo *noterepo.NoteRepository
+	repo         *noterepo.NoteRepository
+	queueClient  *queue.Client
+	searchEngine *search.BleveEngine
 }
 
 func NewNoteService(repo *noterepo.NoteRepository) *NoteService {
 	return &NoteService{repo: repo}
+}
+
+func NewNoteServiceWithDeps(repo *noterepo.NoteRepository, queueClient *queue.Client, searchEngine *search.BleveEngine) *NoteService {
+	return &NoteService{
+		repo:         repo,
+		queueClient:  queueClient,
+		searchEngine: searchEngine,
+	}
 }
 
 // CreateNote creates a new note
@@ -51,7 +64,56 @@ func (s *NoteService) CreateNote(req *dto.CreateNoteRequest, userID string) (*no
 		}
 	}
 
+	// Async: Index to search engine & Federate to Asagity NET
+	go s.triggerPostCreateTasks(note)
+
 	return note, nil
+}
+
+func (s *NoteService) triggerPostCreateTasks(note *notemodel.Note) {
+	tags := search.ExtractTags(note.Content)
+	tagsStr := ""
+	if len(tags) > 0 {
+		tagsStr = tags[0]
+		for i := 1; i < len(tags) && i < 5; i++ {
+			tagsStr += "," + tags[i]
+		}
+	}
+
+	// Index to Bleve (async via queue)
+	if s.queueClient != nil {
+		s.queueClient.EnqueueIndexNote(queue.IndexNotePayload{
+			NoteID:  note.ID,
+			PubID:   note.PubID,
+			UserID:  note.UserID,
+			Content: note.Content,
+			Cw:      "",
+			Tags:    tagsStr,
+			Lang:    "",
+			Source:  "",
+		})
+
+		// Federate to Asagity NET
+		s.queueClient.EnqueueFederateNote(queue.FederateNotePayload{
+			NoteID:  note.ID,
+			PubID:   note.PubID,
+			UserID:  note.UserID,
+			Content: note.Content,
+			Cw:      "",
+			URL:     "",
+		})
+	} else if s.searchEngine != nil {
+		// Fallback: direct indexing if queue not available
+		doc := map[string]interface{}{
+			"id":         note.ID,
+			"pubid":      note.PubID,
+			"user_id":    note.UserID,
+			"content":    note.Content,
+			"visibility": string(note.Visibility),
+			"created_at": note.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		}
+		s.searchEngine.Index(note.ID, doc)
+	}
 }
 
 // GetNoteByID gets a note by ID
@@ -108,7 +170,19 @@ func (s *NoteService) DeleteNote(id string, userID string) error {
 		return errors.New(dto.ErrNoteForbidden)
 	}
 
-	return s.repo.SoftDelete(id)
+	err := s.repo.SoftDelete(id)
+	if err == nil {
+		go s.triggerPostDeleteTasks(id)
+	}
+	return err
+}
+
+func (s *NoteService) triggerPostDeleteTasks(noteID string) {
+	if s.queueClient != nil {
+		s.queueClient.EnqueueDeleteNoteIndex(noteID)
+	} else if s.searchEngine != nil {
+		s.searchEngine.Delete(noteID)
+	}
 }
 
 // ListTimeline returns notes for timeline
@@ -121,14 +195,84 @@ func (s *NoteService) ListTimeline(timelineType string, userID string, req *dto.
 	switch timelineType {
 	case "home":
 		// For home timeline, we need followed users - placeholder for now
-		return s.repo.ListPublic(limit, req.Cursor)
+		notes, _, err := s.repo.ListPublicWithUsers(limit, req.Cursor)
+		return notes, err
 	case "local":
-		return s.repo.ListLocal(limit, req.Cursor)
+		notes, _, err := s.repo.ListLocalWithUsers(limit, req.Cursor)
+		return notes, err
 	case "public":
-		return s.repo.ListPublic(limit, req.Cursor)
+		notes, _, err := s.repo.ListPublicWithUsers(limit, req.Cursor)
+		return notes, err
 	default:
-		return s.repo.ListPublic(limit, req.Cursor)
+		notes, _, err := s.repo.ListPublicWithUsers(limit, req.Cursor)
+		return notes, err
 	}
+}
+
+// ListTimelineWithUsers returns timeline notes with user info
+func (s *NoteService) ListTimelineWithUsers(timelineType string, req *dto.TimelineRequest) ([]dto.TimelineNoteResponse, error) {
+	limit := req.Limit
+	if limit <= 0 || limit > 100 {
+		limit = 20
+	}
+
+	var notes []notemodel.Note
+	var users []usermodel.User
+	var err error
+
+	switch timelineType {
+	case "home", "public":
+		notes, users, err = s.repo.ListPublicWithUsers(limit, req.Cursor)
+	case "local":
+		notes, users, err = s.repo.ListLocalWithUsers(limit, req.Cursor)
+	default:
+		notes, users, err = s.repo.ListPublicWithUsers(limit, req.Cursor)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	userMap := make(map[string]usermodel.User)
+	for _, u := range users {
+		userMap[u.ID] = u
+	}
+
+	replies, _ := s.repo.CountReplies("")
+	reposts, _ := s.repo.CountReposts("")
+	likes, _ := s.repo.CountReactions("")
+
+	result := make([]dto.TimelineNoteResponse, 0, len(notes))
+	for _, note := range notes {
+		user := userMap[note.UserID]
+		result = append(result, dto.TimelineNoteResponse{
+			ID:         note.ID,
+			PubID:      note.PubID,
+			Content:    note.Content,
+			Cw:         note.Cw,
+			Visibility: string(note.Visibility),
+			Type:       string(note.Type),
+			RootID:     note.RootID,
+			ParentID:   note.ParentID,
+			Source:     note.Source,
+			CreatedAt:  note.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+			UpdatedAt:  note.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
+			User: &dto.UserBasic{
+				ID:          user.ID,
+				PubID:       user.PubID,
+				Username:    user.Username,
+				DisplayName: user.Name,
+				Avatar:      user.AvatarURL,
+			},
+			Metrics: dto.NoteMetrics{
+				Replies: int(replies),
+				Reposts: int(reposts),
+				Likes:   int(likes),
+			},
+		})
+	}
+
+	return result, nil
 }
 
 // AddReaction adds a reaction to a note

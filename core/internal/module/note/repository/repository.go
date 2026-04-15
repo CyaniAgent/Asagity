@@ -4,6 +4,7 @@ import (
 	"time"
 
 	notemodel "github.com/CyaniAgent/Asagity/core/internal/module/note/model"
+	usermodel "github.com/CyaniAgent/Asagity/core/internal/module/user/model"
 	"gorm.io/gorm"
 )
 
@@ -75,6 +76,34 @@ func (r *NoteRepository) ListPublic(limit int, cursor string) ([]notemodel.Note,
 	return notes, err
 }
 
+func (r *NoteRepository) ListPublicWithUsers(limit int, cursor string) ([]notemodel.Note, []usermodel.User, error) {
+	var notes []notemodel.Note
+	query := r.db.Where("visibility IN ? AND is_deleted = false",
+		[]string{"public", "unlisted"}).
+		Order("created_at DESC")
+
+	if cursor != "" {
+		query = query.Where("id < ?", cursor)
+	}
+
+	err := query.Limit(limit + 1).Find(&notes).Error
+	if err != nil || len(notes) == 0 {
+		return notes, nil, err
+	}
+
+	userIDs := make([]string, 0, len(notes))
+	for _, note := range notes {
+		userIDs = append(userIDs, note.UserID)
+	}
+
+	var users []usermodel.User
+	if len(userIDs) > 0 {
+		r.db.Where("id IN ?", userIDs).Find(&users)
+	}
+
+	return notes, users, nil
+}
+
 func (r *NoteRepository) ListLocal(limit int, cursor string) ([]notemodel.Note, error) {
 	var notes []notemodel.Note
 	query := r.db.Where("visibility IN ? AND is_deleted = false AND source IS NULL",
@@ -87,6 +116,34 @@ func (r *NoteRepository) ListLocal(limit int, cursor string) ([]notemodel.Note, 
 
 	err := query.Limit(limit + 1).Find(&notes).Error
 	return notes, err
+}
+
+func (r *NoteRepository) ListLocalWithUsers(limit int, cursor string) ([]notemodel.Note, []usermodel.User, error) {
+	var notes []notemodel.Note
+	query := r.db.Where("visibility IN ? AND is_deleted = false AND source IS NULL",
+		[]string{"public", "unlisted"}).
+		Order("created_at DESC")
+
+	if cursor != "" {
+		query = query.Where("id < ?", cursor)
+	}
+
+	err := query.Limit(limit + 1).Find(&notes).Error
+	if err != nil || len(notes) == 0 {
+		return notes, nil, err
+	}
+
+	userIDs := make([]string, 0, len(notes))
+	for _, note := range notes {
+		userIDs = append(userIDs, note.UserID)
+	}
+
+	var users []usermodel.User
+	if len(userIDs) > 0 {
+		r.db.Where("id IN ?", userIDs).Find(&users)
+	}
+
+	return notes, users, nil
 }
 
 func (r *NoteRepository) ListFollowing(userID string, limit int, cursor string) ([]notemodel.Note, error) {

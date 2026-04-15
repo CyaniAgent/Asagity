@@ -219,7 +219,7 @@ func (s *Service) Me(userID string) (*dto.UserResponse, error) {
 }
 
 func (s *Service) generateAuthResponse(user *usermodel.User) (*dto.AuthResponse, error) {
-	accessToken, err := s.generateAccessToken(user.ID)
+	accessToken, err := s.generateAccessToken(user.ID, user.PubID)
 	if err != nil {
 		return nil, err
 	}
@@ -242,11 +242,12 @@ func (s *Service) generateAuthResponse(user *usermodel.User) (*dto.AuthResponse,
 	}, nil
 }
 
-func (s *Service) generateAccessToken(userID string) (string, error) {
+func (s *Service) generateAccessToken(userID, userPubID string) (string, error) {
 	claims := jwt.MapClaims{
-		"sub": userID,
-		"exp": time.Now().Add(AccessTokenDuration).Unix(),
-		"iat": time.Now().Unix(),
+		"sub":   userID,
+		"pubid": userPubID,
+		"exp":   time.Now().Add(AccessTokenDuration).Unix(),
+		"iat":   time.Now().Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

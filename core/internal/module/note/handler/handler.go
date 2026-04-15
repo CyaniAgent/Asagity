@@ -19,8 +19,7 @@ func NewNoteHandler(svc *service.NoteService) *NoteHandler {
 
 // CreateNote - POST /api/notes
 func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
-	// TODO: Get userID from auth middleware
-	userID := r.Context().Value("user_id").(string)
+	userID := httpx.GetUserID(r.Context())
 	if userID == "" {
 		httpx.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "User not authenticated")
 		return
@@ -60,7 +59,7 @@ func (h *NoteHandler) GetNote(w http.ResponseWriter, r *http.Request) {
 
 // UpdateNote - PATCH /api/notes/:id
 func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(string)
+	userID := httpx.GetUserID(r.Context())
 	if userID == "" {
 		httpx.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "User not authenticated")
 		return
@@ -89,7 +88,7 @@ func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
 
 // DeleteNote - DELETE /api/notes/:id
 func (h *NoteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(string)
+	userID := httpx.GetUserID(r.Context())
 	if userID == "" {
 		httpx.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "User not authenticated")
 		return
@@ -117,18 +116,13 @@ func (h *NoteHandler) ListTimeline(w http.ResponseWriter, r *http.Request) {
 		timelineType = "public"
 	}
 
-	userID := ""
-	if u := r.Context().Value("user_id"); u != nil {
-		userID = u.(string)
-	}
-
 	var req notedto.TimelineRequest
 	req.Limit = 20
 	if cursor := r.URL.Query().Get("cursor"); cursor != "" {
 		req.Cursor = cursor
 	}
 
-	notes, err := h.svc.ListTimeline(timelineType, userID, &req)
+	notes, err := h.svc.ListTimelineWithUsers(timelineType, &req)
 	if err != nil {
 		httpx.WriteError(w, http.StatusInternalServerError, "LIST_FAILED", err.Error())
 		return
@@ -141,7 +135,7 @@ func (h *NoteHandler) ListTimeline(w http.ResponseWriter, r *http.Request) {
 
 // AddReaction - POST /api/notes/:id/react
 func (h *NoteHandler) AddReaction(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(string)
+	userID := httpx.GetUserID(r.Context())
 	if userID == "" {
 		httpx.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "User not authenticated")
 		return
@@ -170,7 +164,7 @@ func (h *NoteHandler) AddReaction(w http.ResponseWriter, r *http.Request) {
 
 // RemoveReaction - DELETE /api/notes/:id/react
 func (h *NoteHandler) RemoveReaction(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(string)
+	userID := httpx.GetUserID(r.Context())
 	if userID == "" {
 		httpx.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "User not authenticated")
 		return

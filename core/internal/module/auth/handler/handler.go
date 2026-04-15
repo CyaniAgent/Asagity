@@ -106,7 +106,7 @@ func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
-	userID := httpx.FromContext(r.Context())
+	userID := httpx.GetUserID(r.Context())
 	if userID == "" {
 		httpx.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "User not authenticated")
 		return
@@ -139,7 +139,7 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) LogoutAll(w http.ResponseWriter, r *http.Request) {
-	userID := httpx.FromContext(r.Context())
+	userID := httpx.GetUserID(r.Context())
 	if userID == "" {
 		httpx.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "User not authenticated")
 		return
@@ -164,7 +164,7 @@ func (h *Handler) LogoutAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
-	userID := httpx.FromContext(r.Context())
+	userID := httpx.GetUserID(r.Context())
 	if userID == "" {
 		httpx.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "User not authenticated")
 		return

@@ -113,6 +113,23 @@ type NoteListResponse struct {
 	PrevCursor *string        `json:"prev_cursor"`
 }
 
+// TimelineNoteResponse - 时间线帖子响应（含用户信息）
+type TimelineNoteResponse struct {
+	ID         string      `json:"id"`
+	PubID      string      `json:"pubid"`
+	Content    string      `json:"content"`
+	Cw         *string     `json:"cw"`
+	Visibility string      `json:"visibility"`
+	Type       string      `json:"type"`
+	RootID     *string     `json:"root_id"`
+	ParentID   *string     `json:"parent_id"`
+	Source     *string     `json:"source"`
+	CreatedAt  string      `json:"created_at"`
+	UpdatedAt  string      `json:"updated_at"`
+	User       *UserBasic  `json:"author"`
+	Metrics    NoteMetrics `json:"metrics"`
+}
+
 // NoteSearchRequest - 搜索请求
 type NoteSearchRequest struct {
 	Query    string `query:"q" validate:"required"`

@@ -3,6 +3,7 @@ package model
 import (
 	"time"
 
+	"github.com/CyaniAgent/Asagity/core/internal/platform/id"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -48,14 +49,9 @@ func (n *Note) BeforeCreate(tx *gorm.DB) error {
 		n.ID = uuid.New().String()
 	}
 	if n.PubID == "" {
-		n.PubID = "nt_" + generatePubID(8)
+		n.PubID = id.GenerateNotePubID()
 	}
 	return nil
-}
-
-func generatePubID(length int) string {
-	id := uuid.New().String()[:length]
-	return id
 }
 
 type NoteEdit struct {

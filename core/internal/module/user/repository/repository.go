@@ -49,3 +49,11 @@ func (r *Repository) GetByPubID(pubID string) (*model.User, error) {
 	}
 	return &user, nil
 }
+
+func (r *Repository) GetByIDs(ids []string) ([]model.User, error) {
+	var users []model.User
+	if err := r.db.Where("id IN ?", ids).Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return users, nil
+}
