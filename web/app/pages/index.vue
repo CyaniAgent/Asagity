@@ -9,8 +9,9 @@ const splitViewStore = useSplitViewStore()
 const systemStore = useSystemStore()
 
 const timelineType = computed(() => {
-  if (route.path === '/followed') return 'home'
-  if (route.path === '/local') return 'local'
+  const tab = route.query.tab as string
+  if (tab === 'followed') return 'home'
+  if (tab === 'local') return 'local'
   return 'public'
 })
 

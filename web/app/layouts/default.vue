@@ -44,13 +44,28 @@ const isItemActive = (item: any) => {
 }
 
 // Timeline Top Tabs
-const timelineTabs = [
+const timelineTabs = computed(() => [
   [
-    { label: '动态', icon: 'i-material-symbols-public', to: '/', exact: true },
-    { label: '已关注', icon: 'i-material-symbols-person', to: '/followed' },
-    { label: '仅本实例', icon: 'i-material-symbols-dns', to: '/local' }
+    {
+      label: '动态',
+      icon: 'i-material-symbols-public',
+      to: '/',
+      active: route.path === '/' && !route.query.tab
+    },
+    {
+      label: '已关注',
+      icon: 'i-material-symbols-person',
+      to: '/?tab=followed',
+      active: route.path === '/' && route.query.tab === 'followed'
+    },
+    {
+      label: '仅本实例',
+      icon: 'i-material-symbols-dns',
+      to: '/?tab=local',
+      active: route.path === '/' && route.query.tab === 'local'
+    }
   ]
-]
+])
 
 // Chat Top Tabs
 const chatTabs = [
@@ -121,7 +136,7 @@ const currentHeaderTabs = computed(() => {
   if (route.path.startsWith('/topic')) {
     return topicTabs
   }
-  return timelineTabs
+  return timelineTabs.value
 })
 
 const profileTabs = [
