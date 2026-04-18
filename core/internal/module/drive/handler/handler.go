@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/CyaniAgent/Asagity/core/internal/module/drive/dto"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/httpx"
@@ -72,7 +71,7 @@ func (h *Handler) GetFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fileIDStr := strings.TrimPrefix(r.URL.Path, "/api/drive/files/")
+	fileIDStr := httpx.GetPathParam(r, "id")
 	fileID, err := uuid.Parse(fileIDStr)
 	if err != nil {
 		httpx.WriteError(w, http.StatusBadRequest, "INVALID_FILE_ID", "invalid file ID")
@@ -117,7 +116,7 @@ func (h *Handler) UpdateFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fileIDStr := strings.TrimPrefix(r.URL.Path, "/api/drive/files/")
+	fileIDStr := httpx.GetPathParam(r, "id")
 	fileID, err := uuid.Parse(fileIDStr)
 	if err != nil {
 		httpx.WriteError(w, http.StatusBadRequest, "INVALID_FILE_ID", "invalid file ID")
@@ -146,7 +145,7 @@ func (h *Handler) DeleteFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fileIDStr := strings.TrimPrefix(r.URL.Path, "/api/drive/files/")
+	fileIDStr := httpx.GetPathParam(r, "id")
 	fileID, err := uuid.Parse(fileIDStr)
 	if err != nil {
 		httpx.WriteError(w, http.StatusBadRequest, "INVALID_FILE_ID", "invalid file ID")
@@ -168,7 +167,7 @@ func (h *Handler) MoveFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fileIDStr := strings.TrimPrefix(r.URL.Path, "/api/drive/files/")
+	fileIDStr := httpx.GetPathParam(r, "id")
 	fileID, err := uuid.Parse(fileIDStr)
 	if err != nil {
 		httpx.WriteError(w, http.StatusBadRequest, "INVALID_FILE_ID", "invalid file ID")

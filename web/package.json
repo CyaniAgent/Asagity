@@ -12,7 +12,9 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
+    "@iconify-json/ic": "^1.2.4",
     "@iconify-json/lucide": "^1.2.96",
+    "@iconify-json/material-symbols": "^1.2.17",
     "@iconify-json/simple-icons": "^1.2.72",
     "@nuxt/image": "2.0.0",
     "@nuxt/ui": "^4.5.1",
@@ -25,9 +27,11 @@
     "date-fns": "^4.1.0",
     "echarts": "^6.0.0",
     "lrc-kit": "^1.2.1",
+    "material-icons": "^1.13.14",
     "mfm-js": "^0.25.0",
     "music-metadata": "^11.12.3",
     "nuxt": "^4.3.1",
+    "nuxt-icon": "1.0.0-beta.7",
     "pinia": "^3.0.4",
     "systeminformation": "^5.31.5",
     "tailwindcss": "^4.2.1",
@@ -35,7 +39,6 @@
   },
   "devDependencies": {
     "@iconify-json/ic": "^1.2.4",
-    "@iconify-json/material-symbols": "^1.2.63",
     "@nuxt/eslint": "^1.15.2",
     "@types/node": "^25.5.0",
     "@types/systeminformation": "^3.54.1",

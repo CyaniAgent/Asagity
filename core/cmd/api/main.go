@@ -7,6 +7,7 @@ import (
 	"github.com/CyaniAgent/Asagity/core/internal/app"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/database"
+	"github.com/go-chi/chi/v5"
 )
 
 func Run() error {
@@ -21,8 +22,12 @@ func Run() error {
 	}
 
 	application := app.New(cfg, clients)
+
+	r := chi.NewRouter()
+	r.Mount("/", application.Router())
+
 	addr := ":" + cfg.ServerPort
 
 	log.Printf("Asagity API listening on %s", addr)
-	return http.ListenAndServe(addr, application.Router())
+	return http.ListenAndServe(addr, r)
 }

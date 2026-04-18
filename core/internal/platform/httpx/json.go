@@ -40,3 +40,7 @@ func WriteError(w http.ResponseWriter, status int, code string, message string) 
 		},
 	})
 }
+
+func GetPathParam(r *http.Request, key string) string {
+	return r.PathValue(key)
+}

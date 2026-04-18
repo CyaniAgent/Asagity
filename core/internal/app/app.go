@@ -1,12 +1,14 @@
 package app
 
 import (
-	"net/http"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 
 	assetmodule "github.com/CyaniAgent/Asagity/core/internal/module/asset"
 	authmodule "github.com/CyaniAgent/Asagity/core/internal/module/auth"
 	drivemodule "github.com/CyaniAgent/Asagity/core/internal/module/drive"
 	instancemodule "github.com/CyaniAgent/Asagity/core/internal/module/instance"
+	notemodule "github.com/CyaniAgent/Asagity/core/internal/module/note"
 	usermodule "github.com/CyaniAgent/Asagity/core/internal/module/user"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/database"
@@ -14,24 +16,28 @@ import (
 )
 
 type App struct {
-	mux *http.ServeMux
+	mux *chi.Mux
 	cfg config.Config
 }
 
 func New(cfg config.Config, clients *database.Clients) *App {
-	mux := http.NewServeMux()
+	mux := chi.NewRouter()
+
+	mux.Use(middleware.Recoverer)
+	mux.Use(middleware.RequestID)
+	mux.Use(httpx.Cors)
+	mux.Use(httpx.Auth(cfg.JwtSecret))
 
 	instancemodule.Register(mux, cfg, clients)
 	authmodule.Register(mux, cfg, clients)
 	usermodule.Register(mux, cfg, clients)
 	assetmodule.Register(mux, cfg, clients)
 	drivemodule.Register(mux, cfg, clients)
+	notemodule.Register(mux, cfg, clients)
 
 	return &App{mux: mux, cfg: cfg}
 }
 
-func (a *App) Router() http.Handler {
-	handler := httpx.Auth(a.cfg.JwtSecret)(a.mux)
-	handler = httpx.Cors(handler)
-	return handler
+func (a *App) Router() *chi.Mux {
+	return a.mux
 }

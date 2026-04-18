@@ -1,7 +1,7 @@
 package instance
 
 import (
-	"net/http"
+	"github.com/go-chi/chi/v5"
 
 	"github.com/CyaniAgent/Asagity/core/internal/module/instance/handler"
 	"github.com/CyaniAgent/Asagity/core/internal/module/instance/repository"
@@ -10,17 +10,17 @@ import (
 	"github.com/CyaniAgent/Asagity/core/internal/platform/database"
 )
 
-func Register(mux *http.ServeMux, cfg config.Config, clients *database.Clients) {
+func Register(r *chi.Mux, cfg config.Config, clients *database.Clients) {
 	repo := repository.New(clients)
 	svc := service.New(repo, cfg)
 	h := handler.New(svc)
 
-	mux.HandleFunc("/", h.Root)
-	mux.HandleFunc("/healthz", h.Health)
-	mux.HandleFunc("/api/meta/version", h.Version)
-	mux.HandleFunc("/api/meta/instance", h.Meta)
+	r.Get("/", h.Root)
+	r.Get("/healthz", h.Health)
+	r.Get("/api/meta/version", h.Version)
+	r.Get("/api/meta/instance", h.Meta)
 
-	mux.HandleFunc("GET /api/admin/system/instance", h.AdminInstanceSettings)
-	mux.HandleFunc("GET /api/admin/system/database", h.AdminDatabaseStats)
-	mux.HandleFunc("GET /api/system/environment", h.SystemEnvironment)
+	r.Get("/api/admin/system/instance", h.AdminInstanceSettings)
+	r.Get("/api/admin/system/database", h.AdminDatabaseStats)
+	r.Get("/api/system/environment", h.SystemEnvironment)
 }

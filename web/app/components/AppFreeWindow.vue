@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import { useDraggable, useWindowSize } from '@vueuse/core'
 
 const props = defineProps<{
@@ -11,6 +11,9 @@ const props = defineProps<{
   initialHeight?: number
   id?: string
   disableTransfer?: boolean
+  resizable?: boolean
+  disableMaximize?: boolean
+  disableMinimize?: boolean
 }>()
 
 const emit = defineEmits(['update:modelValue', 'close'])
@@ -28,6 +31,18 @@ const handle = ref<HTMLElement | null>(null)
 
 const { width: windowWidth, height: windowHeight } = useWindowSize()
 
+// Resize state
+const windowSize = ref({
+  width: props.initialWidth || 450,
+  height: props.initialHeight || 600
+})
+
+const isResizing = ref(false)
+const resizeDirection = ref('')
+const resizeStartPos = ref({ x: 0, y: 0 })
+const resizeStartSize = ref({ width: 0, height: 0 })
+const resizeStartPosition = ref({ x: 0, y: 0 })
+
 // Initial centered position logic
 const initialX = typeof window !== 'undefined' ? (window.innerWidth / 2) - ((props.initialWidth || 450) / 2) : 100
 const initialY = typeof window !== 'undefined' ? (window.innerHeight / 2) - ((props.initialHeight || 600) / 2) : 100
@@ -35,11 +50,11 @@ const initialY = typeof window !== 'undefined' ? (window.innerHeight / 2) - ((pr
 const position = ref({ x: initialX, y: initialY })
 
 // Make Draggable
-const { x, y, style } = useDraggable(el, {
+useDraggable(el, {
   initialValue: position.value,
   handle: handle,
   onMove(pos) {
-    if (!isMaximized.value) {
+    if (!isMaximized.value && !isResizing.value) {
       position.value = pos
     }
   }
@@ -60,6 +75,72 @@ function toggleMinimize() {
   if (isMinimized.value) isMaximized.value = false
 }
 
+// Resize handlers
+function startResize(direction: string, event: MouseEvent) {
+  if (!props.resizable && props.resizable !== undefined) return
+  if (isMaximized.value) return
+
+  isResizing.value = true
+  resizeDirection.value = direction
+  resizeStartPos.value = { x: event.clientX, y: event.clientY }
+  resizeStartSize.value = { ...windowSize.value }
+  resizeStartPosition.value = { ...position.value }
+
+  document.addEventListener('mousemove', handleResize)
+  document.addEventListener('mouseup', stopResize)
+  document.body.style.cursor = `${direction}-resize`
+  document.body.style.userSelect = 'none'
+}
+
+function handleResize(event: MouseEvent) {
+  if (!isResizing.value) return
+
+  const deltaX = event.clientX - resizeStartPos.value.x
+  const deltaY = event.clientY - resizeStartPos.value.y
+
+  let newWidth = resizeStartSize.value.width
+  let newHeight = resizeStartSize.value.height
+  let newX = resizeStartPosition.value.x
+  let newY = resizeStartPosition.value.y
+
+  if (resizeDirection.value.includes('e')) {
+    newWidth = Math.max(300, resizeStartSize.value.width + deltaX)
+  }
+  if (resizeDirection.value.includes('s')) {
+    newHeight = Math.max(200, resizeStartSize.value.height + deltaY)
+  }
+  if (resizeDirection.value.includes('w')) {
+    const widthDelta = -deltaX
+    newWidth = Math.max(300, resizeStartSize.value.width + widthDelta)
+    if (newWidth > 300) {
+      newX = resizeStartPosition.value.x + deltaX
+    }
+  }
+  if (resizeDirection.value.includes('n')) {
+    const heightDelta = -deltaY
+    newHeight = Math.max(200, resizeStartSize.value.height + heightDelta)
+    if (newHeight > 200) {
+      newY = resizeStartPosition.value.y + deltaY
+    }
+  }
+
+  windowSize.value = { width: newWidth, height: newHeight }
+  position.value = { x: newX, y: newY }
+}
+
+function stopResize() {
+  isResizing.value = false
+  document.removeEventListener('mousemove', handleResize)
+  document.removeEventListener('mouseup', stopResize)
+  document.body.style.cursor = ''
+  document.body.style.userSelect = ''
+}
+
+onUnmounted(() => {
+  document.removeEventListener('mousemove', handleResize)
+  document.removeEventListener('mouseup', stopResize)
+})
+
 const windowStyle = computed(() => {
   if (isMinimized.value) {
     return { display: 'none' }
@@ -76,8 +157,8 @@ const windowStyle = computed(() => {
   }
 
   // Clamped position to prevent losing the window
-  const w = props.initialWidth || 450
-  const h = props.initialHeight || 650
+  const w = windowSize.value.width
+  const h = windowSize.value.height
   const clampedX = Math.min(Math.max(0, position.value.x), windowWidth.value - 100)
   const clampedY = Math.min(Math.max(0, position.value.y), windowHeight.value - 50)
 
@@ -119,6 +200,8 @@ const windowStyle = computed(() => {
             :is-maximized="isMaximized"
             :is-minimized="isMinimized"
             :disable-transfer="disableTransfer"
+            :disable-maximize="disableMaximize"
+            :disable-minimize="disableMinimize"
             @close="close"
             @toggle-maximize="toggleMaximize"
             @toggle-minimize="toggleMinimize"
@@ -129,6 +212,52 @@ const windowStyle = computed(() => {
         <div class="flex-1 overflow-auto custom-scrollbar relative flex flex-col">
           <slot />
         </div>
+
+        <!-- Resize Handles -->
+        <template v-if="resizable !== false">
+          <!-- Corners -->
+          <div
+            v-if="!isMaximized"
+            class="absolute top-0 left-0 w-4 h-4 cursor-nw-resize hover:bg-cyan-500/20 transition-colors z-10"
+            @mousedown.stop="startResize('nw', $event)"
+          />
+          <div
+            v-if="!isMaximized"
+            class="absolute top-0 right-0 w-4 h-4 cursor-ne-resize hover:bg-cyan-500/20 transition-colors z-10"
+            @mousedown.stop="startResize('ne', $event)"
+          />
+          <div
+            v-if="!isMaximized"
+            class="absolute bottom-0 left-0 w-4 h-4 cursor-sw-resize hover:bg-cyan-500/20 transition-colors z-10"
+            @mousedown.stop="startResize('sw', $event)"
+          />
+          <div
+            v-if="!isMaximized"
+            class="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize hover:bg-cyan-500/20 transition-colors z-10"
+            @mousedown.stop="startResize('se', $event)"
+          />
+          <!-- Edges -->
+          <div
+            v-if="!isMaximized"
+            class="absolute top-0 left-4 right-4 h-1 cursor-n-resize hover:bg-cyan-500/20 transition-colors z-10"
+            @mousedown.stop="startResize('n', $event)"
+          />
+          <div
+            v-if="!isMaximized"
+            class="absolute bottom-0 left-4 right-4 h-1 cursor-s-resize hover:bg-cyan-500/20 transition-colors z-10"
+            @mousedown.stop="startResize('s', $event)"
+          />
+          <div
+            v-if="!isMaximized"
+            class="absolute left-0 top-4 bottom-4 w-1 cursor-w-resize hover:bg-cyan-500/20 transition-colors z-10"
+            @mousedown.stop="startResize('w', $event)"
+          />
+          <div
+            v-if="!isMaximized"
+            class="absolute right-0 top-4 bottom-4 w-1 cursor-e-resize hover:bg-cyan-500/20 transition-colors z-10"
+            @mousedown.stop="startResize('e', $event)"
+          />
+        </template>
       </div>
     </Transition>
   </Teleport>

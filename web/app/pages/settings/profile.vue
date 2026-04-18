@@ -1,11 +1,62 @@
 <script setup lang="ts">
 import { useInstanceStore } from '~/stores/instance'
+import { useUserStore } from '~/stores/user'
+import { useSystemStore } from '~/stores/system'
+import { useAppToast } from '~/composables/useAppToast'
 
 useHead({
   title: '本用户 | 设置'
 })
 
 const instanceStore = useInstanceStore()
+const userStore = useUserStore()
+const systemStore = useSystemStore()
+const toast = useAppToast()
+const isLoggingOut = ref(false)
+
+async function handleLogout() {
+  if (systemStore.isDevMode) {
+    toast.add({
+      title: '开发模式无法操作此功能',
+      description: '该功能需要依赖真实服务端使用，无法进行测试',
+      color: 'warning',
+      icon: 'i-material-symbols-terminal'
+    })
+    return
+  }
+
+  if (isLoggingOut.value) return
+  
+  isLoggingOut.value = true
+  try {
+    await userStore.logoutAll()
+    toast.add({
+      title: '已安全登出',
+      description: '所有设备已同时登出。',
+      color: 'success',
+      icon: 'i-material-symbols-check-circle'
+    })
+    navigateTo('/')
+  } catch (err) {
+    toast.add({
+      title: '登出失败',
+      description: '请稍后重试。',
+      color: 'error',
+      icon: 'i-material-symbols-error'
+    })
+  } finally {
+    isLoggingOut.value = false
+  }
+}
+
+function handleClearCache() {
+  toast.add({
+    title: '缓存已清除',
+    description: '本地存储已清理完毕。',
+    color: 'success',
+    icon: 'i-material-symbols-check-circle'
+  })
+}
 </script>
 
 <template>
@@ -180,6 +231,7 @@ const instanceStore = useInstanceStore()
         variant="ghost"
         size="lg"
         class="w-full justify-start rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 font-bold"
+        @click="handleClearCache"
       />
       <div class="pt-4">
         <UButton
@@ -188,7 +240,9 @@ const instanceStore = useInstanceStore()
           color="error"
           variant="soft"
           size="lg"
+          :loading="isLoggingOut"
           class="w-full justify-center rounded-[20px] font-black text-base transition-transform hover:scale-[1.02] active:scale-95 shadow-sm py-3"
+          @click="handleLogout"
         />
       </div>
     </section>

@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useInstanceStore } from '~/stores/instance'
 import { useUserStore } from '~/stores/user'
 import { useSystemStore } from '~/stores/system'
 import { useThemeStore } from '~/stores/theme'
 import { useIconCache } from '~/composables/useIconCache'
-import { onClickOutside, useElementBounding, useEventListener } from '@vueuse/core'
+import { onClickOutside, useElementBounding } from '@vueuse/core'
 
 const route = useRoute()
 const systemStore = useSystemStore()
@@ -144,19 +144,28 @@ function startResizing() {
   splitViewStore.isResizing = true
 }
 
-useEventListener('mousemove', (e: MouseEvent) => {
+function handleMouseMove(e: MouseEvent) {
   if (!splitViewStore.isResizing || !containerRef.value) return
 
   const containerRect = containerRef.value.getBoundingClientRect()
   const relativeX = e.clientX - containerRect.left
   const percentage = (relativeX / containerRect.width) * 100
 
-  // Right panel width is the remaining percentage (minus a bit for the divider/gap if needed)
   splitViewStore.setRightPanelWidth(100 - percentage)
+}
+
+function handleMouseUp() {
+  splitViewStore.isResizing = false
+}
+
+onMounted(() => {
+  window.addEventListener('mousemove', handleMouseMove)
+  window.addEventListener('mouseup', handleMouseUp)
 })
 
-useEventListener('mouseup', () => {
-  splitViewStore.isResizing = false
+onUnmounted(() => {
+  window.removeEventListener('mousemove', handleMouseMove)
+  window.removeEventListener('mouseup', handleMouseUp)
 })
 
 const splitViewTitle = computed(() => {
@@ -222,7 +231,7 @@ const moreMenuGroups = [
     { label: '小游戏', icon: 'i-material-symbols-sports-esports-outline', to: '/games' }
   ],
   [
-    { label: '图集', icon: 'i-material-symbols-photo-library-outline', to: '/albums' },
+    { label: '图集', icon: 'i-material-symbols-photo-library', to: '/albums' },
     { label: '成就', icon: 'i-material-symbols-military-tech-outline', to: '/achievements' }
   ],
   [

@@ -295,6 +295,7 @@ Suggested subpackages:
 - `storage`
 - `clock`
 - `id`
+- `search` (Bleve + multi-language tokenizers)
 
 Responsibilities:
 
@@ -470,6 +471,16 @@ Key responsibilities:
 - reply and repost relationships
 - reaction counting
 - attachment linking to drive files
+- full-text search via Bleve (multi-language: zh, ja, ko)
+- preview card generation
+- draft and scheduled posts
+- edit history
+
+Search integration:
+
+- Uses Bleve with custom tokenizers for CJK languages
+- Indexes: title, content, username, hashtags
+- Supports media and language filters
 
 ## `timeline`
 
@@ -719,13 +730,16 @@ The next concrete backend implementation should start from:
 - `instance` settings completion
 - `drive` module scaffolding
 - `drop` module scaffolding
+- **`note` module implementation** (with Bleve search integration)
 - `app/connections/activitypub/inbox`
 - `app/connections/activitypub/deliver`
 - `platform/storage`
 - `platform/queue`
+- `platform/search` (Bleve + tokenizers)
 
 That order reflects the current repository more accurately:
 
 - `instance` already exposes bootstrap endpoints
 - `auth` and `user` already have models and routes, but still need real business completion
 - `drive` and `drop` are the next major untouched domains
+- **`note` module is designed, search libraries installed, implementation pending**

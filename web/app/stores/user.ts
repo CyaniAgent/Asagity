@@ -41,9 +41,23 @@ export const useUserStore = defineStore('user', () => {
   async function logout() {
     const api = useApi()
     try {
-      if (refreshToken.value) {
-        await api.post('/api/auth/logout', { refresh_token: refreshToken.value })
-      }
+      await api.post('/api/auth/logout')
+    } catch {
+    }
+
+    accessToken.value = null
+    refreshToken.value = null
+    accessTokenCookie.value = null
+    refreshTokenCookie.value = null
+    user.value = null
+    userProfileCookie.value = null
+    isLoggedIn.value = false
+  }
+
+  async function logoutAll() {
+    const api = useApi()
+    try {
+      await api.post('/api/auth/logout-all')
     } catch {
     }
 
@@ -57,13 +71,9 @@ export const useUserStore = defineStore('user', () => {
   }
 
   async function refreshAccessToken() {
-    if (!refreshToken.value) return false
-
     const api = useApi()
     try {
-      const data = await api.post<{ access_token: string, refresh_token: string, user: any }>('/api/auth/refresh', {
-        refresh_token: refreshToken.value
-      })
+      const data = await api.post<{ access_token: string, refresh_token: string, user: any }>('/api/auth/refresh')
       accessToken.value = data.access_token
       refreshToken.value = data.refresh_token
       accessTokenCookie.value = data.access_token
@@ -121,6 +131,7 @@ export const useUserStore = defineStore('user', () => {
     setAuth,
     developerEnter,
     logout,
+    logoutAll,
     refreshAccessToken,
     fetchMe
   }

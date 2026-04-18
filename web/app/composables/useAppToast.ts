@@ -1,8 +1,10 @@
 import { useNotificationStore } from '~/stores/notifications'
+import { useSoundManager } from '~/stores/soundManager'
 
 export const useAppToast = () => {
   const toast = useToast()
   const notificationStore = useNotificationStore()
+  const soundManager = useSoundManager()
 
   const add = (options: any) => {
     // Default persistence to true unless explicitly disabled
@@ -19,13 +21,15 @@ export const useAppToast = () => {
       })
     }
 
-    // Play the notification sound if not silent
+    // Play notification sound based on toast color
     if (import.meta.client && !options.silent) {
-      const audio = new Audio('/sounds/YunaAyase/ca.wav')
-      audio.play().catch((e) => {
-        // Handle browser autoplay restriction gracefully
-        console.warn('Audio playback prevented by browser:', e)
-      })
+      if (options.color === 'error') {
+        soundManager.playIfAvailable('sys_error')
+      } else if (options.color === 'success' && options.icon === 'i-material-symbols-cloud-done-rounded') {
+        soundManager.playIfAvailable('sys_net_restored')
+      } else {
+        soundManager.playIfAvailable('ca')
+      }
     }
   }
 

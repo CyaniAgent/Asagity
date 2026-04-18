@@ -11,6 +11,7 @@ import (
 type contextKey string
 
 const UserIDKey contextKey = "user_id"
+const UserPubIDKey contextKey = "user_pubid"
 
 func Cors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -44,11 +45,18 @@ func Auth(secret string) func(http.Handler) http.Handler {
 
 			if err == nil && token.Valid {
 				if claims, ok := token.Claims.(jwt.MapClaims); ok {
+					ctx := r.Context()
+
 					if userID, ok := claims["sub"].(string); ok {
-						ctx := context.WithValue(r.Context(), UserIDKey, userID)
-						next.ServeHTTP(w, r.WithContext(ctx))
-						return
+						ctx = context.WithValue(ctx, UserIDKey, userID)
 					}
+
+					if pubID, ok := claims["pubid"].(string); ok {
+						ctx = context.WithValue(ctx, UserPubIDKey, pubID)
+					}
+
+					next.ServeHTTP(w, r.WithContext(ctx))
+					return
 				}
 			}
 
@@ -57,9 +65,16 @@ func Auth(secret string) func(http.Handler) http.Handler {
 	}
 }
 
-func FromContext(ctx context.Context) string {
+func GetUserID(ctx context.Context) string {
 	if userID, ok := ctx.Value(UserIDKey).(string); ok {
 		return userID
+	}
+	return ""
+}
+
+func GetUserPubID(ctx context.Context) string {
+	if pubID, ok := ctx.Value(UserPubIDKey).(string); ok {
+		return pubID
 	}
 	return ""
 }

@@ -9,33 +9,52 @@ const userStore = useUserStore()
 const router = useRouter()
 const toast = useAppToast()
 
+const step = ref<'form' | 'verification'>('form')
 const email = ref('')
 const username = ref('')
 const password = ref('')
 const confirmPassword = ref('')
+const code = ref('')
 const loading = ref(false)
+const challengeId = ref('')
+const expiresAt = ref('')
 
 const handleRegister = async () => {
   if (password.value !== confirmPassword.value) return
 
   loading.value = true
   try {
-    const data = await post('/api/auth/register', {
+    const payload: any = {
       username: username.value,
-      email: email.value,
       password: password.value
-    })
+    }
 
-    userStore.setAuth(data)
-    toast.add({
-      title: '初始化成功 (INITIALIZED)',
-      description: '欢迎来到 Asagity 枢纽, 你的节点已激活!',
-      color: 'success',
-      icon: 'i-material-symbols-check-circle'
-    })
-
-    // Redirect to main panel
-    router.push('/')
+    if (email.value) {
+      const data = await post('/api/auth/register/with-email', {
+        username: username.value,
+        email: email.value,
+        password: password.value
+      })
+      challengeId.value = data.challenge_id
+      expiresAt.value = data.expires_at
+      step.value = 'verification'
+      toast.add({
+        title: '验证码已发送',
+        description: '请查看您的邮箱获取验证码',
+        color: 'success',
+        icon: 'i-material-symbols-check-circle'
+      })
+    } else {
+      const data = await post('/api/auth/register', payload)
+      userStore.setAuth(data)
+      toast.add({
+        title: '初始化成功 (INITIALIZED)',
+        description: '欢迎来到 Asagity 枢纽, 你的节点已激活!',
+        color: 'success',
+        icon: 'i-material-symbols-check-circle'
+      })
+      router.push('/')
+    }
   } catch (err: any) {
     toast.add({
       title: '初始化失败 (FAILED)',
@@ -46,6 +65,40 @@ const handleRegister = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const handleVerifyCode = async () => {
+  if (!code.value || code.value.length !== 6) return
+
+  loading.value = true
+  try {
+    const data = await post('/api/auth/register/verify-email', {
+      challenge_id: challengeId.value,
+      code: code.value
+    })
+    userStore.setAuth(data)
+    toast.add({
+      title: '验证成功',
+      description: '欢迎来到 Asagity 枢纽, 你的节点已激活!',
+      color: 'success',
+      icon: 'i-material-symbols-check-circle'
+    })
+    router.push('/')
+  } catch (err: any) {
+    toast.add({
+      title: '验证失败',
+      description: err.message || '验证码错误，请重试。',
+      color: 'error',
+      icon: 'i-material-symbols-error'
+    })
+  } finally {
+    loading.value = false
+  }
+}
+
+const goBack = () => {
+  step.value = 'form'
+  code.value = ''
 }
 </script>
 
@@ -86,7 +139,9 @@ const handleRegister = async () => {
         <span class="text-[10px] font-bold text-fuchsia-400 tracking-[0.3em] uppercase mt-2">Initialize Instance Node • Reg-Process</span>
       </div>
 
+      <!-- Step 1: Form -->
       <form
+        v-if="step === 'form'"
         class="flex flex-col gap-6"
         @submit.prevent="handleRegister"
       >
@@ -111,9 +166,11 @@ const handleRegister = async () => {
           </div>
         </div>
 
-        <!-- Input Group: Email -->
+        <!-- Input Group: Email (Optional) -->
         <div class="flex flex-col gap-2">
-          <label class="text-xs font-bold text-gray-400 uppercase tracking-widest ml-2">通信节点 (Email)</label>
+          <label class="text-xs font-bold text-gray-400 uppercase tracking-widest ml-2">
+            通信节点 (Email) - 可选
+          </label>
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <UIcon
@@ -124,11 +181,11 @@ const handleRegister = async () => {
             <input
               v-model="email"
               type="email"
-              required
               class="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent transition-all shadow-inner"
-              placeholder="syskuku@asagity.net"
+              placeholder="syskuku@asagity.net (可选)"
             >
           </div>
+          <span class="text-[10px] text-gray-500 ml-2">提供邮箱可增强账户安全性，将发送验证码至邮箱</span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -199,6 +256,70 @@ const handleRegister = async () => {
             class="w-5 h-5 animate-spin"
           />
           {{ loading ? 'INITIALIZING...' : '宣誓并加入 (REGISTER)' }}
+        </button>
+      </form>
+
+      <!-- Step 2: Verification Code -->
+      <form
+        v-else-if="step === 'verification'"
+        class="flex flex-col gap-6"
+        @submit.prevent="handleVerifyCode"
+      >
+        <div class="text-center mb-4">
+          <h2 class="text-xl font-bold text-white mb-2">邮箱验证</h2>
+          <p class="text-sm text-gray-400">
+            验证码已发送至 <span class="text-fuchsia-400">{{ email }}</span>
+          </p>
+        </div>
+
+        <!-- Input Group: Verification Code -->
+        <div class="flex flex-col gap-2">
+          <label class="text-xs font-bold text-gray-400 uppercase tracking-widest ml-2">验证码</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <UIcon
+                name="i-material-symbols-sms"
+                class="w-5 h-5 text-gray-500"
+              />
+            </div>
+            <input
+              v-model="code"
+              type="text"
+              maxlength="6"
+              required
+              pattern="[0-9A-Fa-f]{6}"
+              class="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white text-center text-2xl font-mono tracking-widest placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent transition-all shadow-inner"
+              placeholder="000000"
+            >
+          </div>
+          <span class="text-[10px] text-gray-500 ml-2 text-center">请输入6位验证码，有效期15分钟</span>
+        </div>
+
+        <!-- Submit -->
+        <button
+          type="submit"
+          class="w-full mt-2 bg-gradient-to-r from-fuchsia-600 to-fuchsia-400 hover:from-fuchsia-500 hover:to-fuchsia-300 text-gray-900 font-black tracking-widest py-4 rounded-2xl shadow-[0_0_20px_rgba(217,70,239,0.3)] hover:shadow-[0_0_30px_rgba(217,70,239,0.5)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
+          :disabled="loading || code.length !== 6"
+        >
+          <UIcon
+            v-if="loading"
+            name="i-material-symbols-progress-activity"
+            class="w-5 h-5 animate-spin"
+          />
+          {{ loading ? 'VERIFYING...' : '验证并完成注册' }}
+        </button>
+
+        <!-- Back Button -->
+        <button
+          type="button"
+          class="w-full mt-2 text-gray-400 hover:text-white font-medium py-2 transition-colors flex items-center justify-center gap-2"
+          @click="goBack"
+        >
+          <UIcon
+            name="i-material-symbols-arrow-back"
+            class="w-4 h-4"
+          />
+          返回重新填写
         </button>
       </form>
 

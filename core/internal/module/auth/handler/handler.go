@@ -30,6 +30,16 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    res.RefreshToken,
+		Path:     "/",
+		MaxAge:   int(30 * 24 * 60 * 60),
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	})
+
 	httpx.WriteJSON(w, http.StatusCreated, res)
 }
 
@@ -46,48 +56,90 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    res.RefreshToken,
+		Path:     "/",
+		MaxAge:   int(30 * 24 * 60 * 60),
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	})
+
 	httpx.WriteJSON(w, http.StatusOK, res)
 }
 
 func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
-	var req dto.RefreshRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
-		return
+	refreshToken := ""
+
+	cookie, err := r.Cookie("refresh_token")
+	if err == nil {
+		refreshToken = cookie.Value
 	}
 
-	res, err := h.service.Refresh(req.RefreshToken)
+	if refreshToken == "" {
+		var req dto.RefreshRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			httpx.WriteError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
+			return
+		}
+		refreshToken = req.RefreshToken
+	}
+
+	res, err := h.service.Refresh(refreshToken)
 	if err != nil {
 		httpx.WriteError(w, http.StatusUnauthorized, "REFRESH_FAILED", err.Error())
 		return
 	}
 
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    res.RefreshToken,
+		Path:     "/",
+		MaxAge:   int(30 * 24 * 60 * 60),
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	})
+
 	httpx.WriteJSON(w, http.StatusOK, res)
 }
 
 func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
-	userID := httpx.FromContext(r.Context())
+	userID := httpx.GetUserID(r.Context())
 	if userID == "" {
 		httpx.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "User not authenticated")
 		return
 	}
 
-	var req dto.LogoutRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httpx.WriteError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
-		return
+	refreshToken := ""
+	cookie, err := r.Cookie("refresh_token")
+	if err == nil {
+		refreshToken = cookie.Value
 	}
 
-	if err := h.service.Logout(req.RefreshToken); err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "LOGOUT_FAILED", err.Error())
-		return
+	if refreshToken != "" {
+		if err := h.service.Logout(refreshToken); err != nil {
+			httpx.WriteError(w, http.StatusInternalServerError, "LOGOUT_FAILED", err.Error())
+			return
+		}
 	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	})
 
 	httpx.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
 func (h *Handler) LogoutAll(w http.ResponseWriter, r *http.Request) {
-	userID := httpx.FromContext(r.Context())
+	userID := httpx.GetUserID(r.Context())
 	if userID == "" {
 		httpx.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "User not authenticated")
 		return
@@ -98,11 +150,21 @@ func (h *Handler) LogoutAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	})
+
 	httpx.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
 func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
-	userID := httpx.FromContext(r.Context())
+	userID := httpx.GetUserID(r.Context())
 	if userID == "" {
 		httpx.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "User not authenticated")
 		return
@@ -118,9 +180,72 @@ func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) VerifyRegisterEmail(w http.ResponseWriter, r *http.Request) {
-	httpx.WriteError(w, http.StatusNotImplemented, "NOT_IMPLEMENTED", "register email verification is not implemented yet")
+	var req dto.VerifyEmailRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
+		return
+	}
+
+	res, err := h.service.VerifyRegisterEmail(req)
+	if err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "VERIFICATION_FAILED", err.Error())
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    res.RefreshToken,
+		Path:     "/",
+		MaxAge:   int(30 * 24 * 60 * 60),
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	})
+
+	httpx.WriteJSON(w, http.StatusOK, res)
+}
+
+func (h *Handler) RegisterWithEmail(w http.ResponseWriter, r *http.Request) {
+	var req dto.RegisterWithEmailRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
+		return
+	}
+
+	res, err := h.service.RegisterWithEmail(req)
+	if err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "REGISTRATION_FAILED", err.Error())
+		return
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, res)
 }
 
 func (h *Handler) VerifyLoginEmail(w http.ResponseWriter, r *http.Request) {
-	httpx.WriteError(w, http.StatusNotImplemented, "NOT_IMPLEMENTED", "login email verification is not implemented yet")
+	var req dto.VerifyEmailRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
+		return
+	}
+
+	deviceFingerprint := r.Header.Get("X-Device-Fingerprint")
+	deviceName := r.Header.Get("X-Device-Name")
+
+	res, err := h.service.VerifyLoginEmail(req, deviceFingerprint, deviceName)
+	if err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "VERIFICATION_FAILED", err.Error())
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    res.RefreshToken,
+		Path:     "/",
+		MaxAge:   int(30 * 24 * 60 * 60),
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	})
+
+	httpx.WriteJSON(w, http.StatusOK, res)
 }

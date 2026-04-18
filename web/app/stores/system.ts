@@ -1,6 +1,20 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
+export interface HostInfo {
+  hostname: string
+  platform: string
+  arch: string
+  cpu: string
+  node_version: string
+  startup_time: number
+  uptime_seconds: number
+  docker: boolean
+}
+
+export const ERROR_CODE_INIT_FAILED = 'ERR 12201'
+export const ERROR_CODE_NETWORK_TIMEOUT = 'ERR 12202'
+
 export const useSystemStore = defineStore('system', () => {
   const isBackendOnline = ref(true)
   const isFrontendOnlyMode = ref(false)
@@ -9,66 +23,52 @@ export const useSystemStore = defineStore('system', () => {
   const isInitialized = ref(false)
   const hasLaunched = ref(false)
   const initError = ref<string | null>(null)
+  const initErrorCode = ref<string | null>(null)
   const initProgress = ref(0)
-  const heartbeatInterval = ref<any>(null)
+  const heartbeatInterval = ref<ReturnType<typeof setInterval> | null>(null)
+
+  const hostInfo = ref<HostInfo | null>(null)
 
   // Initialization Sequence
   async function initSequence() {
-    if (isInitialized.value && !initError.value) return
+    if (isInitialized.value) return
 
-    // Reset state for potential retry
-    initError.value = null
-    initProgress.value = 0
-    isInitialized.value = false
+    isInitialized.value = true
+    initProgress.value = 100
+
+    // Non-blocking: fetch host info in background
+    fetchHostInfoWithTimeout().catch(() => {})
+
+    // Always launch immediately - backend status shown via heartbeat/modal
+    launchApp()
+  }
+
+  async function fetchHostInfoWithTimeout(): Promise<void> {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
 
     try {
-      // Step 1: Internal Client Preparation (Non-network)
-      initProgress.value = 20
-
-      // Step 2: Pre-load Essential Assets (Sounds, etc) - STRICT MODE
-      initProgress.value = 50
-      if (import.meta.client) {
-        const assetsToLoad = [
-          '/sounds/YunaAyase/ca.wav',
-          '/sounds/YunaAyase/sys_error.wav',
-          '/sounds/YunaAyase/sys_net_restored.wav'
-        ]
-
-        await Promise.all(assetsToLoad.map((url) => {
-          return new Promise((resolve, reject) => {
-            const audio = new Audio()
-            audio.addEventListener('canplaythrough', () => {
-              console.log(`Asset loaded: ${url}`)
-              resolve(true)
-            }, { once: true })
-            audio.addEventListener('error', () => {
-              reject(new Error(`Failed to load essential sound: ${url}`))
-            }, { once: true })
-            audio.src = url
-            audio.load()
-
-            // Timeout safety for the promise
-            setTimeout(() => reject(new Error(`Loading timed out for: ${url}`)), 10000)
-          })
-        }))
-      }
-
-      // Step 3: Local Database / Metadata Readiness
-      initProgress.value = 80
-
-      // Finalizing
-      setTimeout(() => {
-        initProgress.value = 100
-        isInitialized.value = true
-
-        // AUTO-ENTRY: Automatically call launchApp after initialization
-        // This will start the heartbeat ONLY after client is fully ready
-        launchApp()
-      }, 500)
+      const data = await $fetch<HostInfo>('/api/system/environment', {
+        signal: controller.signal
+      })
+      hostInfo.value = data
     } catch (err: any) {
-      console.error('Asagity Initialization Failed:', err)
-      initError.value = err.message || 'Unknown initialization error'
-      initProgress.value = 0
+      if (err.name === 'AbortError' || err.message?.includes('abort')) {
+        console.warn('Host info fetch timeout, continuing without it')
+      } else {
+        console.warn('Failed to fetch host info:', err)
+      }
+    } finally {
+      clearTimeout(timeoutId)
+    }
+  }
+
+  async function fetchHostInfo() {
+    try {
+      const data = await $fetch<HostInfo>('/api/system/environment')
+      hostInfo.value = data
+    } catch (err) {
+      console.warn('Failed to fetch host info:', err)
     }
   }
 
@@ -78,9 +78,10 @@ export const useSystemStore = defineStore('system', () => {
 
     // Unlock Audio Context for modern browsers
     if (import.meta.client) {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext
-      if (AudioContext) {
-        const audioCtx = new AudioContext()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const AudioCtx = (window.AudioContext || (window as any).webkitAudioContext) as typeof AudioContext | undefined
+      if (AudioCtx) {
+        const audioCtx = new AudioCtx()
         if (audioCtx.state === 'suspended') {
           audioCtx.resume()
         }
@@ -166,7 +167,7 @@ export const useSystemStore = defineStore('system', () => {
       // If we were in Dev Mode and the check succeeds, restoreOnlineMode
       // will set isDevMode to false and play the restoration sound.
       restoreOnlineMode()
-    } catch (err) {
+    } catch {
       // If we are in Dev Mode, don't trigger offline fallback
       if (!isDevMode.value) {
         triggerOfflineFallback()
@@ -201,6 +202,7 @@ export const useSystemStore = defineStore('system', () => {
     isInitialized,
     hasLaunched,
     initError,
+    initErrorCode,
     initProgress,
     initSequence,
     launchApp,
@@ -209,6 +211,11 @@ export const useSystemStore = defineStore('system', () => {
     enableFrontendOnlyMode,
     restoreOnlineMode,
     startHeartbeat,
-    stopHeartbeat
+    stopHeartbeat,
+    hostInfo,
+    fetchHostInfo,
+    fetchHostInfoWithTimeout,
+    ERROR_CODE_INIT_FAILED,
+    ERROR_CODE_NETWORK_TIMEOUT
   }
 })

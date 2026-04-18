@@ -43,11 +43,24 @@ It records what already exists, what is partially in place, and what should be b
   - `GET /api/meta/version`
   - `GET /api/meta/instance`
   - `POST /api/auth/register`
+  - `POST /api/auth/register/with-email` (new)
+  - `POST /api/auth/register/verify-email` (new)
   - `POST /api/auth/login`
-  - `GET /api/auth/me`
+  - `POST /api/auth/login/verify-email` (placeholder)
   - `POST /api/auth/refresh`
   - `POST /api/auth/logout`
   - `POST /api/auth/logout-all`
+- **Mail service implemented** (`core/internal/platform/mail/mail.go`):
+  - SMTP configuration support
+  - 6-digit verification code generation
+  - Email templates for registration and login verification
+  - Enable/disable detection
+- **Search infrastructure installed** (go.mod updated):
+  - `github.com/blevesearch/bleve/v2` (v2.5.7) - Full-text search engine
+  - `github.com/go-ego/gse` (v1.0.2) - Chinese tokenizer
+  - `github.com/ikawaha/kagome/v2` (v2.11.0) - Japanese tokenizer
+  - `github.com/bitxeno/go-cjk-tokenizer` (v1.0.1) - Korean/CJK tokenizer
+- **Note module design documented** in Phase 5
   - `GET /api/system/environment`
 
 ### Present but still placeholder-level
@@ -81,7 +94,9 @@ browser -> Nuxt dev server (:2000) -> dev proxy -> Go API (:2048)
 - SSR refresh flow
 - Drop resumable upload sessions
 - queue runtime (Asynq integration)
-- local social APIs (notes, timeline)
+- **Note module (notes, timeline, reactions, reposts)**
+- **Bleve search integration with multi-language tokenizers (libraries installed, integration pending)**
+- preview card generation
 - federation logic
 
 ## Delivery Priorities
@@ -93,11 +108,46 @@ The current recommended order is:
 3. build Drive domain
 4. build Drop resumable transfer
 5. add queue and background jobs
-6. build local social core
+6. **build Note module (local social core + Bleve search)**
 7. build notifications
 8. build federation
 
 This differs slightly from the earliest draft because auth and user are now partially implemented and are already blocking frontend progress.
+
+**Note Module Development Flow:**
+
+```
+Phase 5.1: Core Note Structure
+  ├── model/models.go (Note, NoteEdit, Reaction)
+  ├── dto/dto.go (CreateNote, NoteResponse, etc.)
+  ├── repository/repository.go (CRUD + queries)
+  ├── service/service.go (business logic)
+  ├── handler/handler.go (HTTP endpoints)
+  └── module.go (route registration)
+
+Phase 5.2: Interactions
+  ├── Repost (pure)
+  ├── Quote repost
+  ├── Reactions (unlimited emoji)
+  └── Reply chain (root_id, parent_id)
+
+Phase 5.3: Media & Polls
+  ├── Media attachments (link to Drive)
+  ├── Polls (max 20 options)
+  └── Preview cards (OG tags)
+
+Phase 5.4: Timelines
+  ├── Home timeline (TopRank)
+  ├── Local timeline
+  ├── Public timeline
+  └── Hashtag timeline
+
+Phase 5.5: Search & Federation
+  ├── Bleve indexing with multi-language tokenizer
+  ├── Search API (title, content, user, hashtag)
+  ├── ActivityPub delivery
+  └── Neo Linkage delivery
+```
 
 ## Phase 0: Service Foundation
 
@@ -114,6 +164,7 @@ Partially complete.
 - auth middleware skeleton
 - health check endpoint
 - module registration through `internal/app`
+- **Search libraries installed** (Bleve, gse, kagome, go-cjk-tokenizer)
 
 ### Still needed
 
@@ -122,6 +173,7 @@ Partially complete.
 - readiness endpoint `GET /readyz`
 - stronger config validation
 - cleaner error mapping and typed domain errors
+- **Bleve index initialization and health check** (libraries ready)
 
 ### Exit Criteria
 
@@ -133,7 +185,7 @@ Partially complete.
 
 ### Status
 
-Mostly complete.
+**Complete** ✅
 
 ### Already done
 
@@ -146,12 +198,17 @@ Mostly complete.
 - Redis-backed refresh token storage
 - initial user seeding (username: `instance`, password: `Asagity1234`)
 - host system info endpoint via `/api/system/environment`
+- **register with optional email (two-step verification)**
+- **pubid login support**
+- **email verification flow for registration**
+- **mail service with SMTP support**
+- **refresh token stored in HttpOnly cookie**
+- **6-digit verification code with 15-minute expiry**
+- **5 attempts limit with 15-minute cooldown**
 
 ### Still needed
 
-- register with optional email instead of mandatory email in prototype DTO
-- pubid login support
-- email verification flow for register and login
+- login email verification for new devices
 - trusted device logic
 - owner/setup-wizard bootstrap relationship
 - real instance settings update endpoints
@@ -246,19 +303,147 @@ Not started.
 - object verification
 - media inspection hooks
 
-## Phase 5: Local Social Core
+## Phase 5: Local Social Core (Note Module)
 
 ### Status
 
-Not started.
+**Design documented. Libraries installed. Implementation pending.**
+
+### Infrastructure Dependencies
+
+- **Search Engine**: Bleve (Pure Go, no external service required)
+- **Segmentation Libraries**: Multi-language support
+
+#### Search Stack (Installed ✅)
+
+| Language | Library | Package | Version |
+|----------|---------|---------|---------|
+| Chinese | gse | `github.com/go-ego/gse` | v1.0.2 |
+| Japanese | kagome | `github.com/ikawaha/kagome/v2` | v2.11.0 |
+| Korean | go-cjk-tokenizer | `github.com/bitxeno/go-cjk-tokenizer` | v1.0.1 |
+| English (default) | Bleve built-in | `github.com/blevesearch/bleve/v2` | v2.5.7 |
+
+#### Search Index Storage
+
+```go
+// Local file-based index storage
+indexPath := "./storage/search/notes"
+index, _ := bleve.New(indexPath, bleve.NewIndexMapping())
+```
+
+#### Config Fields
+
+```go
+type Config struct {
+    SearchIndexPath string  // default: ./storage/search
+    SearchEnabled   bool    // default: true
+    SearchWorkers   int     // default: runtime.NumCPU()
+}
+```
+
+### Note Module Data Model
+
+#### Core Fields
+- `id`: Internal primary key
+- `pubid`: Public-facing ID (`nt_` + 8 random chars)
+- `user_id`: Author reference
+- `root_id`: Root post ID (for reply chains)
+- `parent_id`: Direct parent post ID (for replies)
+- `title`: Optional title (max 200 chars)
+- `content`: Post body (max 10000 chars)
+- `cw`: Content Warning text (optional)
+
+#### Visibility
+- `visibility`: `public` | `unlisted` | `private` | `direct`
+- `visible_users`: Array of user IDs for circle-style visibility
+
+#### Post Types
+- `type`: `note` | `repost` | `quote` | `reply`
+
+#### State
+- `is_draft`: Boolean for draft posts
+- `scheduled_at`: Scheduled publish time (nullable)
+- `deleted_at`: Soft delete timestamp (nullable)
+
+#### Media & Attachments
+- `media_ids`: Array of drive file IDs
+- Each media has: type (image/video/audio/poll), sensitive flag, alt text
+
+#### Reactions
+- Type: OpenMoji / FluentUI Emoji support
+- User can add unlimited reactions
+- Real-time count updates
+
+#### Polls
+- Max 20 options
+- Duration: permanent to configurable
+- Vote tracking per user
+
+### Note Module API Design
+
+```
+POST   /api/notes              # Create note (supports draft/scheduled)
+GET    /api/notes/:id          # Get single note
+PATCH  /api/notes/:id          # Update note (creates edit history)
+DELETE /api/notes/:id          # Soft delete
+
+POST   /api/notes/:id/repost  # Pure repost
+POST   /api/notes/:id/quote   # Quote repost with comment
+POST   /api/notes/:id/react   # Add reaction
+DELETE /api/notes/:id/react   # Remove reaction
+
+GET    /api/notes/:id/replies # Get reply chain
+GET    /api/notes/:id/reactions # Get reaction list
+
+GET    /api/timeline/home     # Home timeline (following)
+GET    /api/timeline/local    # Local timeline (instance only)
+GET    /api/timeline/public   # Public timeline
+GET    /api/timeline/tag/:tag  # Hashtag timeline
+
+GET    /api/search/notes      # Search notes (Bleve)
+```
+
+### Note Module Features
+
+#### Draft & Scheduled Posts
+- Draft expiration based on user settings
+- Scheduled posts processed by background job
+
+#### Preview Cards (Open Graph)
+- Synchronous fetch on note creation
+- 30-day cache in Redis
+- No card shown on fetch failure
+- Queue job for background refresh
+
+#### Timeline Algorithm (TopRank)
+```
+score = (likes + reposts + replies + reactions) * 6 - time_diff
+time_diff = minutes_since_post * 0.1  (minimum 0.1 per 6 seconds)
+```
+- Sort by score descending
+- Secondary sort by recency for tied scores
+
+#### Soft Delete & Edit History
+- Deleted notes return 410 Gone
+- Edit history preserved in separate table
+- Original content accessible via API
+
+#### Media Processing
+- Thumbnail generation (images, video frames)
+- Video transcoding (configurable resolutions)
+- Background job queue via Asynq
 
 ### Deliverables
 
-- user-facing profile endpoints
-- note model
-- local timeline
-- replies, reposts, reactions
+- note model with full field support
+- local timeline with TopRank algorithm
+- replies, reposts (pure + quote), reactions
 - media attachment references into Drive
+- Bleve full-text search with multi-language segmentation
+- preview card generation and caching
+- draft and scheduled post handling
+- edit history preservation
+- soft delete with 410 Gone response
 
 ## Phase 6: Notifications
 
@@ -295,8 +480,39 @@ The next backend work should be:
 2. implement pubid login support
 3. build Drop module for resumable upload sessions
 4. integrate Asynq queue for background jobs (thumbnail generation, media scanning)
-5. build local social core (notes, timeline, reactions)
-6. build notifications system
+ 5. **build Note module (local social core) with Bleve search**
+   6. build notifications system
+
+### Phase 5 Implementation Order
+
+1. **Phase 5.1: Core Note Structure**
+   - Create `internal/module/note/` directory
+   - Implement note model with all fields
+   - Basic CRUD handlers (create, read, update, soft delete)
+   - Repository layer with GORM
+
+2. **Phase 5.2: Interactions**
+   - Repost and quote repost
+   - Reactions (add/remove)
+   - Reply chain with root_id/parent_id
+
+3. **Phase 5.3: Media & Polls**
+   - Media attachment handling (link to drive files)
+   - Poll creation and voting
+   - Preview card generation
+
+4. **Phase 5.4: Timelines**
+   - Home timeline (following)
+   - Local timeline (instance only)
+   - Public timeline
+   - Hashtag timeline
+   - TopRank algorithm implementation
+
+ 5. **Phase 5.5: Search & Federation**
+   - Bleve search integration with multi-language tokenizer
+   - Note indexing (public/unlisted only)
+   - Search API (title, content, user, hashtag)
+   - ActivityPub note delivery
 
 ## Practical Milestones
 
@@ -317,9 +533,21 @@ The next backend work should be:
 
 ### Milestone D: Local Social MVP
 
-- complete Phase 5 (notes, timeline)
+- complete Phase 5.1 (core note structure)
+- complete Phase 5.2 (reposts, reactions, replies)
+- complete Phase 5.3 (media, polls, preview cards)
+- complete Phase 5.4 (timelines with TopRank)
 - complete Phase 6 (notifications)
 
-### Milestone E: Federation Alpha
+### Milestone E: Search & Intelligence
+
+- complete Bleve search integration
+- complete multi-language tokenizer (zh, ja, ko)
+- complete Phase 5.5 (search API)
+- implement smart search with filters
+
+### Milestone F: Federation Alpha
 
 - begin Phase 7 after local domains are stable
+- ActivityPub note delivery
+- Neo Linkage placeholder
