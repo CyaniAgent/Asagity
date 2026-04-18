@@ -103,12 +103,18 @@ install_podman() {
         -v asagity_postgres_data:/var/lib/postgresql/data \
         postgres:18.3-alpine3.23
       
+      if [[ -n "${redis_password}" ]]; then
+        redis_args="redis-server --requirepass '${redis_password}' --appendonly yes"
+      else
+        redis_args="redis-server --appendonly yes"
+      fi
+      
       podman run -d \
         --name asagity_redis \
         -e REDIS_PASSWORD="${redis_password}" \
         -p "${redis_port}:6379" \
         -v asagity_redis_data:/data \
-        redis:8.6.2-alpine redis-server --requirepass "${redis_password}" --appendonly yes
+        redis:8.6.2-alpine sh -c "${redis_args}"
     fi
     echo
     echo "Podman containers started!"

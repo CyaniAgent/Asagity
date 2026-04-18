@@ -114,12 +114,15 @@ function Install-Podman {
                 -v asagity_postgres_data:/var/lib/postgresql/data `
                 postgres:18.3-alpine3.23
 
-            $redisCmd = "redis-server --requirepass $redisPassword --appendonly yes"
+            $redisArgs = "redis-server --appendonly yes"
+            if (-not [string]::IsNullOrWhiteSpace($redisPassword)) {
+                $redisArgs = "redis-server --requirepass $redisPassword --appendonly yes"
+            }
             podman run -d --name asagity_redis `
                 -e REDIS_PASSWORD="$redisPassword" `
                 -p "${redisPort}:6379" `
                 -v asagity_redis_data:/data `
-                redis:8.6.2-alpine $redisCmd
+                redis:8.6.2-alpine sh -c $redisArgs
         }
         Write-Host ""
         Write-Host "Podman containers started!" -ForegroundColor Green
