@@ -6,7 +6,7 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$projectRoot = Split-Path -Parent $scriptDir
+$projectRoot = Split-Path -Parent (Split-Path -Parent $scriptDir)
 $envFile = Join-Path $projectRoot '.env'
 $composeDir = Join-Path $projectRoot 'container\docker'
 $podmanDir = Join-Path $projectRoot 'container\podman'
@@ -43,7 +43,7 @@ if (-not (Test-Path $envFile)) {
     Write-Host "Running initDatabase first..." -ForegroundColor Yellow
     Write-Host ""
 
-    $initScript = Join-Path $scriptDir "container\initDatabase.ps1"
+    $initScript = Join-Path $scriptDir "initDatabase.ps1"
     if (Test-Path $initScript) {
         & $initScript
     } else {

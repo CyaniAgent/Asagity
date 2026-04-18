@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 ENV_FILE="${PROJECT_ROOT}/.env"
 COMPOSE_DIR="${PROJECT_ROOT}/container/docker"
 
@@ -32,8 +32,8 @@ if [[ ! -f "${ENV_FILE}" ]]; then
   echo "Running initDatabase first..."
   echo
   
-  if [[ -f "${SCRIPT_DIR}/container/initDatabase.sh" ]]; then
-    bash "${SCRIPT_DIR}/container/initDatabase.sh"
+  if [[ -f "${SCRIPT_DIR}/initDatabase.sh" ]]; then
+    bash "${SCRIPT_DIR}/initDatabase.sh"
   else
     echo "Error: initDatabase.sh not found!"
     exit 1

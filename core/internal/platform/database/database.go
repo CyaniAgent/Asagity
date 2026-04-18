@@ -125,9 +125,9 @@ func ensureServices(cfg config.Config) error {
 	pgPortBusy := pgErr != nil && isTCPPortBusy(pgHost, pgPort)
 	redisPortBusy := redisErr != nil && isTCPPortBusy(redisHost, redisPort)
 	if pgPortBusy || redisPortBusy {
-		scriptHint := "scripts/initDatabase.sh"
+		scriptHint := "scripts/container/initDatabase.sh"
 		if isWindows() {
-			scriptHint = "scripts/initDatabase.ps1"
+			scriptHint = "scripts/container/initDatabase.ps1"
 		}
 
 		return fmt.Errorf(
@@ -145,9 +145,9 @@ func ensureServices(cfg config.Config) error {
 
 	composeCommand, err := detectComposeCommand()
 	if err != nil {
-		scriptHint := filepath.Join(projectRoot, "scripts", "initDatabase.sh")
+		scriptHint := filepath.Join(projectRoot, "scripts", "container", "initDatabase.sh")
 		if isWindows() {
-			scriptHint = filepath.Join(projectRoot, "scripts", "initDatabase.ps1")
+			scriptHint = filepath.Join(projectRoot, "scripts", "container", "initDatabase.ps1")
 		}
 
 		return fmt.Errorf(
