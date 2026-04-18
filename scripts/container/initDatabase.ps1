@@ -52,26 +52,100 @@ Write-Host "  Asagity Database Configuration" -ForegroundColor Cyan
 Write-Host "===============================================" -ForegroundColor Cyan
 Write-Host ""
 
-if (Test-Path $envFile) {
-    $dbHost = Get-EnvValue 'DB_HOST' '127.0.0.1'
-    $dbPort = Get-EnvValue 'DB_PORT' '5432'
-    $dbUser = Get-EnvValue 'DB_USER' 'asagity'
-    $dbPassword = Get-EnvValue 'DB_PASSWORD' 'example_password'
-    $dbName = Get-EnvValue 'DB_NAME' 'asagity_db'
-    $redisHost = Get-EnvValue 'REDIS_HOST' '127.0.0.1'
-    $redisPort = Get-EnvValue 'REDIS_PORT' '6379'
-    $redisPassword = Get-EnvValue 'REDIS_PASSWORD' ''
+$dbHost = Get-EnvValue 'DB_HOST' '127.0.0.1'
+$dbPort = Get-EnvValue 'DB_PORT' '5432'
+$dbUser = Get-EnvValue 'DB_USER' 'asagity'
+$dbPassword = Get-EnvValue 'DB_PASSWORD' 'example_password'
+$dbName = Get-EnvValue 'DB_NAME' 'asagity_db'
+$redisHost = Get-EnvValue 'REDIS_HOST' '127.0.0.1'
+$redisPort = Get-EnvValue 'REDIS_PORT' '6379'
+$redisPassword = Get-EnvValue 'REDIS_PASSWORD' ''
+$serverPort = Get-EnvValue 'SERVER_PORT' '2048'
+$webPort = Get-EnvValue 'WEB_PORT' '2000'
+$tz = Get-EnvValue 'TZ' 'Asia/Shanghai'
+$jwtSecret = Get-EnvValue 'JWT_SECRET' 'asagity_secret_miku_39'
+$driveStoragePath = Get-EnvValue 'DRIVE_STORAGE_PATH' '/app/storage/drive'
+
+Write-Host "Current .env configuration:" -ForegroundColor Yellow
+Write-Host "  PostgreSQL: $dbHost`:$dbPort ($dbName)" -ForegroundColor White
+Write-Host "  Redis:      $redisHost`:$redisPort" -ForegroundColor White
+Write-Host "  API Server: $serverPort" -ForegroundColor White
+Write-Host "  Web Front:  $webPort" -ForegroundColor White
+Write-Host ""
+
+$updateChoice = Read-Host "Update configuration? (Y/n)"
+if ($updateChoice -eq 'n' -or $updateChoice -eq 'N') {
+    Write-Host "Keeping existing configuration." -ForegroundColor Gray
 } else {
-    $dbHost = '127.0.0.1'
-    $dbPort = '5432'
-    $dbUser = 'asagity'
-    $dbPassword = 'example_password'
-    $dbName = 'asagity_db'
-    $redisHost = '127.0.0.1'
-    $redisPort = '6379'
-    $redisPassword = ''
+    Write-Host ""
+    Write-Host "Enter new configuration values:" -ForegroundColor Cyan
+    Write-Host ""
+
+    $dbHost = Prompt-Value "PostgreSQL host" $dbHost
+    $dbPort = Prompt-Value "PostgreSQL host port" $dbPort
+    $dbUser = Prompt-Value "PostgreSQL user" $dbUser
+    $dbPassword = Prompt-Value "PostgreSQL password" $dbPassword
+    $dbName = Prompt-Value "PostgreSQL database name" $dbName
+    $redisHost = Prompt-Value "Redis host" '127.0.0.1'
+    $redisPort = Prompt-Value "Redis host port" $redisPort
+    $redisPassword = Prompt-Value "Redis password (empty allowed)" $redisPassword
+    $redisDb = Prompt-Value "Redis database index" '0'
+    $serverPort = Prompt-Value "Asagity API server port" $serverPort
+    $webPort = Prompt-Value "Asagity Web frontend port" $webPort
+    $tz = Prompt-Value "Timezone" $tz
+
+    Write-Host ""
+    Write-Host "Advanced options (press Enter to use default):" -ForegroundColor Gray
+    Write-Host "-------------------------------------------" -ForegroundColor Gray
+    $driveStoragePath = Prompt-Value "Drive storage path" $driveStoragePath
+    Write-Host "-------------------------------------------" -ForegroundColor Gray
+    Write-Host ""
+
+    if (Test-Path $envFile) {
+        Copy-Item $envFile "$envFile.$backupSuffix.bak" -Force
+        Write-Host "Backed up existing .env to .env.$backupSuffix.bak" -ForegroundColor Yellow
+    }
+
+    $content = @(
+        "# Asagity Configuration",
+        "TZ=$tz",
+        "",
+        "# Server Ports",
+        "SERVER_PORT=$serverPort",
+        "WEB_PORT=$webPort",
+        "",
+        "# PostgreSQL",
+        "DB_HOST=$dbHost",
+        "DB_PORT=$dbPort",
+        "DB_USER=$dbUser",
+        "DB_PASSWORD=$dbPassword",
+        "DB_NAME=$dbName",
+        "",
+        "POSTGRES_PORT=$dbPort",
+        "POSTGRES_USER=$dbUser",
+        "POSTGRES_PASSWORD=$dbPassword",
+        "POSTGRES_DB=$dbName",
+        "",
+        "# Redis",
+        "REDIS_HOST=$redisHost",
+        "REDIS_ADDR=$redisHost`:$redisPort",
+        "REDIS_PASSWORD=$redisPassword",
+        "REDIS_DB=$redisDb",
+        "REDIS_PORT=$redisPort",
+        "",
+        "# Security",
+        "JWT_SECRET=$jwtSecret",
+        "",
+        "# Storage",
+        "DRIVE_STORAGE_PATH=$driveStoragePath"
+    )
+
+    Set-Content -Path $envFile -Value $content -Encoding UTF8
+
+    Write-Host "Configuration written to $envFile" -ForegroundColor Green
 }
 
+Write-Host ""
 Write-Host "Checking database services status..." -ForegroundColor Yellow
 Write-Host "-------------------------------------------" -ForegroundColor Gray
 
@@ -138,72 +212,6 @@ if (-not $postgresOnline -or -not $redisOnline) {
 }
 
 Write-Host ""
-Write-Host "Databases are online. Proceeding with configuration..." -ForegroundColor Cyan
-Write-Host ""
-
-$dbHost = Prompt-Value "PostgreSQL host" (Get-EnvValue 'DB_HOST' '127.0.0.1')
-$dbPort = Prompt-Value "PostgreSQL host port" (Get-EnvValue 'DB_PORT' '5432')
-$dbUser = Prompt-Value "PostgreSQL user" (Get-EnvValue 'DB_USER' 'asagity')
-$dbPassword = Prompt-Value "PostgreSQL password" (Get-EnvValue 'DB_PASSWORD' 'example_password')
-$dbName = Prompt-Value "PostgreSQL database name" (Get-EnvValue 'DB_NAME' 'asagity_db')
-$redisHost = Prompt-Value "Redis host" (Get-EnvValue 'REDIS_HOST' '127.0.0.1')
-$redisPort = Prompt-Value "Redis host port" (Get-EnvValue 'REDIS_PORT' '6379')
-$redisPassword = Prompt-Value "Redis password (empty allowed)" (Get-EnvValue 'REDIS_PASSWORD' '')
-$redisDb = Prompt-Value "Redis database index" (Get-EnvValue 'REDIS_DB' '0')
-$serverPort = Prompt-Value "Asagity API server port" (Get-EnvValue 'SERVER_PORT' '2048')
-$webPort = Prompt-Value "Asagity Web frontend port" (Get-EnvValue 'WEB_PORT' '2000')
-$tz = Prompt-Value "Timezone" (Get-EnvValue 'TZ' 'Asia/Shanghai')
-$jwtSecret = Get-EnvValue 'JWT_SECRET' 'asagity_secret_miku_39'
-
-Write-Host ""
-Write-Host "Advanced options (press Enter to use default):" -ForegroundColor Gray
-Write-Host "-------------------------------------------" -ForegroundColor Gray
-$driveStoragePath = Prompt-Value "Drive storage path" (Get-EnvValue 'DRIVE_STORAGE_PATH' '/app/storage/drive')
-Write-Host "-------------------------------------------" -ForegroundColor Gray
-Write-Host ""
-
-if (Test-Path $envFile) {
-    Copy-Item $envFile "$envFile.$backupSuffix.bak" -Force
-    Write-Host "Backed up existing .env to .env.$backupSuffix.bak" -ForegroundColor Yellow
-}
-
-$content = @(
-    "# Asagity Configuration",
-    "TZ=$tz",
-    "",
-    "# Server Ports",
-    "SERVER_PORT=$serverPort",
-    "WEB_PORT=$webPort",
-    "",
-    "# PostgreSQL",
-    "DB_HOST=$dbHost",
-    "DB_PORT=$dbPort",
-    "DB_USER=$dbUser",
-    "DB_PASSWORD=$dbPassword",
-    "DB_NAME=$dbName",
-    "",
-    "POSTGRES_PORT=$dbPort",
-    "POSTGRES_USER=$dbUser",
-    "POSTGRES_PASSWORD=$dbPassword",
-    "POSTGRES_DB=$dbName",
-    "",
-    "# Redis",
-    "REDIS_HOST=$redisHost",
-    "REDIS_ADDR=$redisHost`:$redisPort",
-    "REDIS_PASSWORD=$redisPassword",
-    "REDIS_DB=$redisDb",
-    "REDIS_PORT=$redisPort",
-    "",
-    "# Security",
-    "JWT_SECRET=$jwtSecret",
-    "",
-    "# Storage",
-    "DRIVE_STORAGE_PATH=$driveStoragePath"
-)
-
-Set-Content -Path $envFile -Value $content -Encoding UTF8
-
-Write-Host ""
 Write-Host "Verifying database connection..." -ForegroundColor Yellow
 Write-Host "-------------------------------------------" -ForegroundColor Gray
 
@@ -263,8 +271,6 @@ Write-Host "PostgreSQL: $dbHost`:$dbPort ($dbName)" -ForegroundColor Cyan
 Write-Host "Redis:      $redisHost`:$redisPort" -ForegroundColor Cyan
 Write-Host "API Server: $serverPort" -ForegroundColor Cyan
 Write-Host "Web Front:  $webPort" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "Configuration written to $envFile" -ForegroundColor Green
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Yellow
 Write-Host "-----------" -ForegroundColor Yellow
