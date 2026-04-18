@@ -1,5 +1,5 @@
 param(
-    [switch]$SkipPrompts
+    [switch]$SkipInstall
 )
 
 $ErrorActionPreference = 'Stop'
@@ -8,6 +8,7 @@ $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectRoot = Split-Path -Parent (Split-Path -Parent $scriptDir)
 $composeDir = Join-Path $projectRoot 'container\docker'
 $envFile = Join-Path $projectRoot '.env'
+$installScript = Join-Path $projectRoot 'scripts\InstallDB.ps1'
 $backupSuffix = Get-Date -Format 'yyyyMMddHHmmss'
 
 function Get-EnvValue {
@@ -24,6 +25,12 @@ function Get-EnvValue {
     }
 
     return $Fallback
+}
+
+function Test-Command {
+    param([string]$Command)
+    $null = Get-Command $Command -ErrorAction SilentlyContinue
+    return $?
 }
 
 function Prompt-Value {
@@ -43,6 +50,95 @@ function Prompt-Value {
 Write-Host "===============================================" -ForegroundColor Cyan
 Write-Host "  Asagity Database Configuration" -ForegroundColor Cyan
 Write-Host "===============================================" -ForegroundColor Cyan
+Write-Host ""
+
+if (Test-Path $envFile) {
+    $dbHost = Get-EnvValue 'DB_HOST' '127.0.0.1'
+    $dbPort = Get-EnvValue 'DB_PORT' '5432'
+    $dbUser = Get-EnvValue 'DB_USER' 'asagity'
+    $dbPassword = Get-EnvValue 'DB_PASSWORD' 'example_password'
+    $dbName = Get-EnvValue 'DB_NAME' 'asagity_db'
+    $redisHost = Get-EnvValue 'REDIS_HOST' '127.0.0.1'
+    $redisPort = Get-EnvValue 'REDIS_PORT' '6379'
+    $redisPassword = Get-EnvValue 'REDIS_PASSWORD' ''
+} else {
+    $dbHost = '127.0.0.1'
+    $dbPort = '5432'
+    $dbUser = 'asagity'
+    $dbPassword = 'example_password'
+    $dbName = 'asagity_db'
+    $redisHost = '127.0.0.1'
+    $redisPort = '6379'
+    $redisPassword = ''
+}
+
+Write-Host "Checking database services status..." -ForegroundColor Yellow
+Write-Host "-------------------------------------------" -ForegroundColor Gray
+
+$postgresOnline = $false
+$redisOnline = $false
+
+if (Test-Command 'pg_isready') {
+    $pgResult = pg_isready -h $dbHost -p $dbPort -U $dbUser -d $dbName 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "[OK] PostgreSQL is online" -ForegroundColor Green
+        $postgresOnline = $true
+    } else {
+        Write-Host "[OFFLINE] PostgreSQL is not accessible" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "[SKIP] pg_isready not found, cannot check PostgreSQL" -ForegroundColor Gray
+}
+
+if (Test-Command 'redis-cli') {
+    if ([string]::IsNullOrWhiteSpace($redisPassword)) {
+        $redisResult = redis-cli -h $redisHost -p $redisPort ping 2>$null
+    } else {
+        $redisResult = redis-cli -h $redisHost -p $redisPort -a $redisPassword ping 2>$null
+    }
+    if ($redisResult -match "PONG") {
+        Write-Host "[OK] Redis is online" -ForegroundColor Green
+        $redisOnline = $true
+    } else {
+        Write-Host "[OFFLINE] Redis is not accessible" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "[SKIP] redis-cli not found, cannot check Redis" -ForegroundColor Gray
+}
+
+Write-Host "-------------------------------------------" -ForegroundColor Gray
+
+if (-not $postgresOnline -or -not $redisOnline) {
+    Write-Host ""
+    Write-Host "[WARN] One or more database services are offline!" -ForegroundColor Red
+
+    if (-not $SkipInstall) {
+        Write-Host ""
+        $installChoice = Read-Host "Do you want to install database now? (Y/n)"
+        if ([string]::IsNullOrWhiteSpace($installChoice) -or $installChoice -match '^[Yy]$') {
+            if (Test-Path $installScript) {
+                Write-Host ""
+                Write-Host "Starting database installation..." -ForegroundColor Cyan
+                & $installScript
+            } else {
+                Write-Host "Error: InstallDB.ps1 not found at $installScript" -ForegroundColor Red
+                Write-Host "Please install PostgreSQL and Redis manually, then run this script again." -ForegroundColor Yellow
+                exit 1
+            }
+        } else {
+            Write-Host ""
+            Write-Host "Please ensure PostgreSQL and Redis are running before continuing." -ForegroundColor Yellow
+            Write-Host "You can run InstallDB.ps1 later to set up the database." -ForegroundColor Yellow
+            exit 0
+        }
+    } else {
+        Write-Host ""
+        Write-Host "Skipping installation check (--SkipInstall specified)" -ForegroundColor Gray
+    }
+}
+
+Write-Host ""
+Write-Host "Databases are online. Proceeding with configuration..." -ForegroundColor Cyan
 Write-Host ""
 
 $dbHost = Prompt-Value "PostgreSQL host" (Get-EnvValue 'DB_HOST' '127.0.0.1')
@@ -92,6 +188,7 @@ $content = @(
     "POSTGRES_DB=$dbName",
     "",
     "# Redis",
+    "REDIS_HOST=$redisHost",
     "REDIS_ADDR=$redisHost`:$redisPort",
     "REDIS_PASSWORD=$redisPassword",
     "REDIS_DB=$redisDb",
@@ -107,6 +204,57 @@ $content = @(
 Set-Content -Path $envFile -Value $content -Encoding UTF8
 
 Write-Host ""
+Write-Host "Verifying database connection..." -ForegroundColor Yellow
+Write-Host "-------------------------------------------" -ForegroundColor Gray
+
+$verifyFailed = $false
+
+if ($postgresOnline) {
+    $pgResult = pg_isready -h $dbHost -p $dbPort -U $dbUser -d $dbName 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "[OK] PostgreSQL connection verified" -ForegroundColor Green
+    } else {
+        Write-Host "[FAIL] PostgreSQL connection failed" -ForegroundColor Red
+        $verifyFailed = $true
+    }
+}
+
+if ($redisOnline) {
+    if ([string]::IsNullOrWhiteSpace($redisPassword)) {
+        $redisResult = redis-cli -h $redisHost -p $redisPort ping 2>$null
+    } else {
+        $redisResult = redis-cli -h $redisHost -p $redisPort -a $redisPassword ping 2>$null
+    }
+    if ($redisResult -match "PONG") {
+        Write-Host "[OK] Redis connection verified" -ForegroundColor Green
+    } else {
+        Write-Host "[FAIL] Redis connection failed" -ForegroundColor Red
+        $verifyFailed = $true
+    }
+}
+
+Write-Host "-------------------------------------------" -ForegroundColor Gray
+
+if ($verifyFailed) {
+    Write-Host ""
+    Write-Host "[WARN] Database connection verification failed!" -ForegroundColor Red
+    Write-Host "Please check your configuration and ensure:" -ForegroundColor Yellow
+    Write-Host "  1. Username and password are correct"
+    Write-Host "  2. Database exists"
+    Write-Host ""
+
+    $retry = Read-Host "Do you want to reconfigure? (y/N)"
+    if ($retry -match '^[Yy]$') {
+        Write-Host ""
+        Write-Host "Restarting configuration..." -ForegroundColor Cyan
+        & "$scriptDir\initDatabase.ps1"
+        exit 0
+    }
+} else {
+    Write-Host "[OK] All database connections verified successfully!" -ForegroundColor Green
+}
+
+Write-Host ""
 Write-Host "===============================================" -ForegroundColor Green
 Write-Host "  Configuration Complete!" -ForegroundColor Green
 Write-Host "===============================================" -ForegroundColor Green
@@ -114,7 +262,7 @@ Write-Host ""
 Write-Host "PostgreSQL: $dbHost`:$dbPort ($dbName)" -ForegroundColor Cyan
 Write-Host "Redis:      $redisHost`:$redisPort" -ForegroundColor Cyan
 Write-Host "API Server: $serverPort" -ForegroundColor Cyan
-Write-Host "Web Front: $webPort" -ForegroundColor Cyan
+Write-Host "Web Front:  $webPort" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Configuration written to $envFile" -ForegroundColor Green
 Write-Host ""
