@@ -12,13 +12,23 @@ const { width, height } = useWindowSize()
 const depthX = computed(() => (x.value / width.value - 0.5) * 2)
 const depthY = computed(() => (y.value / height.value - 0.5) * 2)
 
-const showOnboarding = ref(false)
+const showLogin = ref(false)
+const showRegister = ref(false)
 const userStore = useUserStore()
 
 async function handleDeveloperEnter() {
   userStore.developerEnter()
-  showOnboarding.value = false
+  showLogin.value = false
+  showRegister.value = false
   await navigateTo('/')
+}
+
+function openLogin() {
+  showLogin.value = true
+}
+
+function openRegister() {
+  showRegister.value = true
 }
 </script>
 
@@ -111,123 +121,97 @@ async function handleDeveloperEnter() {
         interaction, pristine audio, and absolute freedom.
       </div>
 
-      <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-3">
         <button
-          class="relative w-full overflow-hidden rounded-full p-[2px] focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-gray-900 group/btn transition-transform active:scale-95"
-          @click.stop="showOnboarding = true"
+          class="relative w-full overflow-hidden rounded-full p-[2px] focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-gray-900 group/btn transition-all active:scale-[0.98]"
+          @click.stop="openLogin"
         >
-          <span
-            class="absolute inset-0 bg-gradient-to-r from-cyan-500 to-fuchsia-500 rounded-full animate-[spin_3s_linear_infinite]"
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-cyan-500 via-cyan-400 to-cyan-500"
           />
           <div
             class="relative w-full h-full bg-black/80 backdrop-blur-sm rounded-full px-8 py-3.5 flex items-center justify-between group-hover/btn:bg-black/60 transition-colors"
           >
-            <span class="font-black tracking-widest text-white">Start</span>
+            <span class="font-black tracking-widest text-white">Sign In</span>
             <UIcon
               name="i-material-symbols-arrow-forward-ios-rounded"
               class="w-4 h-4 text-cyan-400 group-hover/btn:translate-x-1 transition-transform"
             />
           </div>
         </button>
+
+        <button
+          class="relative w-full overflow-hidden rounded-full p-[2px] focus:outline-none focus:ring-2 focus:ring-fuchsia-400 focus:ring-offset-2 focus:ring-offset-gray-900 group/btn transition-all active:scale-[0.98]"
+          @click.stop="openRegister"
+        >
+          <div
+            class="absolute inset-0 bg-gradient-to-r from-fuchsia-500 via-fuchsia-400 to-fuchsia-500"
+          />
+          <div
+            class="relative w-full h-full bg-black/80 backdrop-blur-sm rounded-full px-8 py-3.5 flex items-center justify-between group-hover/btn:bg-black/60 transition-colors"
+          >
+            <span class="font-black tracking-widest text-white">Create Account</span>
+            <UIcon
+              name="i-material-symbols-person-add"
+              class="w-4 h-4 text-fuchsia-400 group-hover/btn:translate-x-1 transition-transform"
+            />
+          </div>
+        </button>
+
+        <div class="flex items-center gap-3 my-1 opacity-50">
+          <div class="h-px bg-white/20 flex-1" />
+          <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">or</span>
+          <div class="h-px bg-white/20 flex-1" />
+        </div>
+
+        <button
+          type="button"
+          class="w-full bg-transparent hover:bg-white/5 text-gray-400 hover:text-gray-300 font-bold tracking-wider py-2.5 rounded-xl border border-dashed border-gray-600 hover:border-gray-500 transition-all text-xs flex items-center justify-center gap-2 group"
+          @click.stop="handleDeveloperEnter"
+        >
+          <UIcon
+            name="i-material-symbols-code-blocks-outline"
+            class="w-4 h-4 group-hover:opacity-100 opacity-60"
+          />
+          Direct Enter (Dev Mode)
+        </button>
       </div>
     </div>
 
     <AppFreeWindow
-      id="onboarding"
-      v-model="showOnboarding"
-      title="Instance Covenant #10241207"
-      icon="i-material-symbols-gpp-good"
-      :initial-width="850"
-      :initial-height="550"
+      v-model="showLogin"
+      title="Sign In"
+      icon="i-material-symbols-login"
+      :initial-width="420"
+      :initial-height="520"
       :z-index="10000"
+      :disable-transfer="true"
+      :disable-maximize="true"
+      :disable-minimize="true"
+      :resizable="false"
     >
-      <div class="h-full flex flex-col md:flex-row overflow-hidden bg-black/40">
-        <div class="md:w-3/5 p-8 flex flex-col border-b md:border-b-0 md:border-r border-white/10 relative overflow-hidden">
-          <div class="absolute top-0 right-0 w-[200px] h-[200px] bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none" />
+      <AppAuthWindow
+        mode="login"
+        @switch-mode="(mode) => { showLogin = false; if (mode === 'register') showRegister = true }"
+      />
+    </AppFreeWindow>
 
-          <div class="flex items-center gap-3 mb-8">
-            <UIcon
-              name="i-material-symbols-gpp-good"
-              class="w-6 h-6 text-cyan-400"
-            />
-            <h2 class="text-xl font-black text-white tracking-wider">
-              Instance Covenant
-            </h2>
-          </div>
-
-          <div class="flex-1 overflow-y-auto pr-4 custom-scrollbar">
-            <div class="space-y-6 text-sm text-gray-300 font-medium">
-              <section>
-                <h3 class="text-cyan-400 font-bold mb-2 uppercase tracking-wide text-xs">
-                  I. Respect the Skyline
-                </h3>
-                <p>Welcome to Instance #10241207. Treat all interconnected users with absolute respect. No harassment, spam, or malicious dimensional rifts will be tolerated.</p>
-              </section>
-              <section>
-                <h3 class="text-cyan-400 font-bold mb-2 uppercase tracking-wide text-xs">
-                  II. Content Directives
-                </h3>
-                <p>Ensure your drops and media strictly adhere to the SSS-Rank creative directives. Tag your raw feeds appropriately. NSFW content must be shielded behind CW (Content Warnings).</p>
-              </section>
-              <section>
-                <h3 class="text-cyan-400 font-bold mb-2 uppercase tracking-wide text-xs">
-                  III. Privacy &amp; The Matrix
-                </h3>
-                <p>We respect your encrypted data. Use our E2EE drop system responsibly. System administrators will never decrypt private datastreams without a core warrant.</p>
-              </section>
-              <section>
-                <h3 class="text-cyan-400 font-bold mb-2 uppercase tracking-wide text-xs">
-                  IV. Federal Obligations
-                </h3>
-                <p>As a node strictly connected to ActivityPub, you represent Asagity when federating with other servers. Keep the signal pure.</p>
-              </section>
-            </div>
-          </div>
-        </div>
-
-        <div class="md:w-2/5 transition-colors md:bg-white/5 p-10 flex flex-col justify-center gap-5">
-          <div class="text-center mb-6">
-            <span class="text-2xl font-black block text-white drop-shadow-md tracking-wider">Join Context</span>
-            <span class="text-xs font-bold text-gray-400">Initialize your Identity</span>
-          </div>
-
-          <NuxtLink
-            to="/register"
-            @click.stop
-          >
-            <button class="w-full bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-black tracking-widest py-4 rounded-2xl shadow-[0_0_20px_rgba(57,197,187,0.4)] hover:shadow-[0_0_30px_rgba(57,197,187,0.6)] transition-all transform hover:-translate-y-1 active:translate-y-0 text-sm">
-              Create Account
-            </button>
-          </NuxtLink>
-
-          <NuxtLink
-            to="/login"
-            @click.stop
-          >
-            <button class="w-full bg-white/10 hover:bg-white/20 text-white font-bold tracking-widest py-3.5 rounded-2xl border border-white/10 transition-all text-sm">
-              Login
-            </button>
-          </NuxtLink>
-
-          <div class="flex items-center gap-3 my-2 opacity-50">
-            <div class="h-px bg-white/20 flex-1" />
-            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">or</span>
-            <div class="h-px bg-white/20 flex-1" />
-          </div>
-
-          <button
-            type="button"
-            class="w-full bg-transparent hover:bg-fuchsia-500/10 text-gray-400 hover:text-fuchsia-400 font-bold tracking-wider py-3 rounded-2xl border border-dashed border-gray-600 hover:border-fuchsia-500/50 transition-all text-xs flex items-center justify-center gap-2 group"
-            @click.stop="handleDeveloperEnter"
-          >
-            <UIcon
-              name="i-material-symbols-code-blocks-outline"
-              class="w-4 h-4 group-hover:animate-pulse"
-            />
-            Direct Enter (Dev)
-          </button>
-        </div>
-      </div>
+    <AppFreeWindow
+      v-model="showRegister"
+      title="Create Account"
+      icon="i-material-symbols-person-add"
+      :initial-width="420"
+      :initial-height="520"
+      :z-index="10000"
+      :disable-transfer="true"
+      :disable-maximize="true"
+      :disable-minimize="true"
+      :resizable="false"
+    >
+      <AppAuthWindow
+        mode="register"
+        @switch-mode="(mode) => { showRegister = false; if (mode === 'login') showLogin = true }"
+      />
     </AppFreeWindow>
   </div>
 </template>
@@ -267,18 +251,5 @@ async function handleDeveloperEnter() {
   background-image: radial-gradient(rgba(57, 197, 187, 0.4) 1px, transparent 1px);
   background-size: 8px 12px;
   background-position: 0 0;
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(57, 197, 187, 0.5);
-  border-radius: 4px;
 }
 </style>

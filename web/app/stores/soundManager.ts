@@ -14,7 +14,9 @@ export const useSoundManager = defineStore('soundManager', () => {
   const soundRegistry = {
     ca: '/sounds/YunaAyase/ca.wav',
     sys_error: '/sounds/YunaAyase/sys_error.wav',
-    sys_net_restored: '/sounds/YunaAyase/sys_net_restored.wav'
+    sys_net_restored: '/sounds/YunaAyase/sys_net_restored.wav',
+    message_sent: '/sounds/Defaults/MessageSent.ogg',
+    message_received: '/sounds/Defaults/MessageReceived.ogg'
   }
 
   async function getAudioContext(): Promise<AudioContext> {

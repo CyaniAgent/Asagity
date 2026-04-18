@@ -248,6 +248,72 @@ func (r *NoteRepository) DeleteMedia(noteID string) error {
 	return r.db.Where("note_id = ?", noteID).Delete(&notemodel.NoteMedia{}).Error
 }
 
+// Poll
+func (r *NoteRepository) CreatePoll(poll *notemodel.Poll) error {
+	return r.db.Create(poll).Error
+}
+
+func (r *NoteRepository) CreatePollOption(option *notemodel.PollOption) error {
+	return r.db.Create(option).Error
+}
+
+func (r *NoteRepository) GetPollByNoteID(noteID string) (*notemodel.Poll, error) {
+	var poll notemodel.Poll
+	err := r.db.Where("note_id = ?", noteID).First(&poll).Error
+	if err != nil {
+		return nil, err
+	}
+	return &poll, nil
+}
+
+func (r *NoteRepository) GetPollOptionsByPollID(pollID string) ([]notemodel.PollOption, error) {
+	var options []notemodel.PollOption
+	err := r.db.Where("poll_id = ?", pollID).Order("created_at ASC").Find(&options).Error
+	return options, err
+}
+
+func (r *NoteRepository) CreatePollVote(vote *notemodel.PollVote) error {
+	return r.db.Create(vote).Error
+}
+
+func (r *NoteRepository) DeletePollVotesByUser(pollID, userID string) error {
+	return r.db.Where("poll_id = ? AND user_id = ?", pollID, userID).Delete(&notemodel.PollVote{}).Error
+}
+
+func (r *NoteRepository) GetUserPollVotes(pollID, userID string) ([]notemodel.PollVote, error) {
+	var votes []notemodel.PollVote
+	err := r.db.Where("poll_id = ? AND user_id = ?", pollID, userID).Find(&votes).Error
+	return votes, err
+}
+
+func (r *NoteRepository) CountPollVotesByOption(pollID string) (map[string]int64, error) {
+	type Result struct {
+		OptionID string
+		Count    int64
+	}
+	var results []Result
+	err := r.db.Model(&notemodel.PollVote{}).
+		Select("option_id, count(*) as count").
+		Where("poll_id = ?", pollID).
+		Group("option_id").
+		Find(&results).Error
+	if err != nil {
+		return nil, err
+	}
+
+	countMap := make(map[string]int64)
+	for _, r := range results {
+		countMap[r.OptionID] = r.Count
+	}
+	return countMap, nil
+}
+
+func (r *NoteRepository) CountPollTotalVotes(pollID string) (int64, error) {
+	var count int64
+	err := r.db.Model(&notemodel.PollVote{}).Where("poll_id = ?", pollID).Count(&count).Error
+	return count, err
+}
+
 // Edit History
 func (r *NoteRepository) CreateEdit(edit *notemodel.NoteEdit) error {
 	return r.db.Create(edit).Error

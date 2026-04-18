@@ -1,7 +1,8 @@
 package app
 
 import (
-	"net/http"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 
 	assetmodule "github.com/CyaniAgent/Asagity/core/internal/module/asset"
 	authmodule "github.com/CyaniAgent/Asagity/core/internal/module/auth"
@@ -15,12 +16,17 @@ import (
 )
 
 type App struct {
-	mux *http.ServeMux
+	mux *chi.Mux
 	cfg config.Config
 }
 
 func New(cfg config.Config, clients *database.Clients) *App {
-	mux := http.NewServeMux()
+	mux := chi.NewRouter()
+
+	mux.Use(middleware.Recoverer)
+	mux.Use(middleware.RequestID)
+	mux.Use(httpx.Cors)
+	mux.Use(httpx.Auth(cfg.JwtSecret))
 
 	instancemodule.Register(mux, cfg, clients)
 	authmodule.Register(mux, cfg, clients)
@@ -32,8 +38,6 @@ func New(cfg config.Config, clients *database.Clients) *App {
 	return &App{mux: mux, cfg: cfg}
 }
 
-func (a *App) Router() http.Handler {
-	handler := httpx.Auth(a.cfg.JwtSecret)(a.mux)
-	handler = httpx.Cors(handler)
-	return handler
+func (a *App) Router() *chi.Mux {
+	return a.mux
 }

@@ -98,6 +98,11 @@ type ReactionRequest struct {
 	Emoji string `json:"emoji" validate:"required"`
 }
 
+// VoteRequest - 投票请求
+type VoteRequest struct {
+	OptionIDs []string `json:"option_ids" validate:"required,min=1,max=20"`
+}
+
 // TimelineRequest - 时间线请求参数
 type TimelineRequest struct {
 	Limit  int    `query:"limit,default=20"`

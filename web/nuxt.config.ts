@@ -42,11 +42,28 @@ export default defineNuxtConfig({
     port: 2000
   },
 
-  experimental: {
-    payloadExtraction: false
+  icon: {
+    serverBundle: {
+      collections: ['ic', 'lucide', 'material-symbols', 'simple-icons']
+    }
   },
 
+  fonts: false,
+
   compatibilityDate: '2025-01-15',
+
+  nitro: {
+    devProxy: {
+      '/api': {
+        target: 'http://localhost:2048',
+        changeOrigin: true
+      },
+      '/healthz': {
+        target: 'http://localhost:2048/healthz',
+        changeOrigin: true
+      }
+    }
+  },
 
   vite: {
     server: {

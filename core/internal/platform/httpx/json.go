@@ -3,7 +3,6 @@ package httpx
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 )
 
 type SuccessEnvelope struct {
@@ -43,16 +42,5 @@ func WriteError(w http.ResponseWriter, status int, code string, message string) 
 }
 
 func GetPathParam(r *http.Request, key string) string {
-	path := r.URL.Path
-	parts := strings.Split(path, "/")
-	for i, part := range parts {
-		if key == part && i+1 < len(parts) {
-			return parts[i+1]
-		}
-	}
-	// Fallback: try to find by last segment
-	if len(parts) > 0 {
-		return parts[len(parts)-1]
-	}
-	return ""
+	return r.PathValue(key)
 }
