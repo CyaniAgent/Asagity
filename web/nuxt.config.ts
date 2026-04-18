@@ -40,19 +40,9 @@ export default defineNuxtConfig({
   },
 
   devServer: {
-    host: '0.0.0.0',
+    host: '::',
     port: 2000
   },
-
-  icon: {
-    serverBundle: {
-      collections: ['ic', 'lucide', 'material-symbols', 'simple-icons']
-    }
-  },
-
-  fonts: false,
-
-  compatibilityDate: '2025-01-15',
 
   nitro: {
     devProxy: {
@@ -66,6 +56,16 @@ export default defineNuxtConfig({
       }
     }
   },
+
+  icon: {
+    serverBundle: {
+      collections: ['ic', 'lucide', 'material-symbols', 'simple-icons']
+    }
+  },
+
+  fonts: false,
+
+  compatibilityDate: '2025-01-15',
 
   vite: {
     server: {
