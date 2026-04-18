@@ -33,6 +33,8 @@ export default defineNuxtConfig({
 
   routeRules: {
     '/': { prerender: true },
+    '/followed': { ssr: true },
+    '/local': { ssr: true },
     '/panel': { ssr: false },
     '/panel/**': { ssr: false }
   },

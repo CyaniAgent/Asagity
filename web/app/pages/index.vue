@@ -1,30 +1,66 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useSplitViewStore } from '~/stores/splitView'
 import { useSystemStore } from '~/stores/system'
 
+const route = useRoute()
 const splitViewStore = useSplitViewStore()
 const systemStore = useSystemStore()
 
-// Fetch timeline data from API
-const { data: timelineData, pending: timelineLoading, error: timelineError, refresh: refreshTimeline } = useAsyncData('timeline', async () => {
-  if (systemStore.isDevMode) {
-    return []
-  }
-  
-  try {
-    const api = useApi()
-    const response = await api.get('/api/timeline/public', {
-      query: { limit: 20 }
-    })
-    return response as any[]
-  } catch (err) {
-    console.error('Failed to fetch timeline:', err)
-    return []
-  }
-}, {
-  default: () => []
+const timelineType = computed(() => {
+  if (route.path === '/followed') return 'home'
+  if (route.path === '/local') return 'local'
+  return 'public'
 })
+
+const timelineTitle = computed(() => {
+  switch (timelineType.value) {
+    case 'home': return '已关注'
+    case 'local': return '仅本实例'
+    default: return '动态'
+  }
+})
+
+const timelineIcon = computed(() => {
+  switch (timelineType.value) {
+    case 'home': return 'i-material-symbols-person'
+    case 'local': return 'i-material-symbols-dns'
+    default: return 'i-material-symbols-public'
+  }
+})
+
+const timelineEndpoint = computed(() => {
+  switch (timelineType.value) {
+    case 'home': return '/api/timeline/home'
+    case 'local': return '/api/timeline/local'
+    default: return '/api/timeline/public'
+  }
+})
+
+const { data: timelineData, pending: timelineLoading, error: timelineError, refresh: refreshTimeline } = useAsyncData(
+  `timeline-${timelineType.value}`,
+  async () => {
+    if (systemStore.isDevMode) {
+      return []
+    }
+    
+    try {
+      const api = useApi()
+      const response = await api.get(timelineEndpoint.value, {
+        query: { limit: 20 }
+      })
+      return response as any[]
+    } catch (err) {
+      console.error('Failed to fetch timeline:', err)
+      return []
+    }
+  },
+  {
+    default: () => [],
+    watch: [timelineType]
+  }
+)
 
 const onlineUsersCount = ref(1288)
 const onlineAvatars = [
@@ -69,9 +105,9 @@ const federatedInstances = [
         >
           <h2 class="text-[18px] font-black text-gray-900 dark:text-white flex items-center gap-2 tracking-wide">
             <UIcon
-              name="i-material-symbols-public"
+              :name="timelineIcon"
               class="w-5 h-5 text-cyan-500"
-            /> 动态
+            /> {{ timelineTitle }}
           </h2>
           <UButton
             icon="i-material-symbols-tune"
