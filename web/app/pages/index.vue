@@ -11,7 +11,7 @@ const { data: timelineData, pending: timelineLoading, error: timelineError, refr
   if (systemStore.isDevMode) {
     return []
   }
-  
+
   try {
     const api = useApi()
     const response = await api.get('/api/timeline/public', {

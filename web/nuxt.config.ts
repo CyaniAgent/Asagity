@@ -42,7 +42,7 @@ export default defineNuxtConfig({
     port: 2000
   },
 
-experimental: {
+  experimental: {
     payloadExtraction: false
   },
 
@@ -51,7 +51,7 @@ experimental: {
   vite: {
     server: {
       headers: {
-        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' http://localhost:* ws://localhost:*; frame-src 'self' blob:; block-all-mixed-content; upgrade-insecure-requests"
+        'Content-Security-Policy': 'default-src \'self\'; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\'; style-src \'self\' \'unsafe-inline\'; font-src \'self\' data:; img-src \'self\' data: blob: https:; connect-src \'self\' http://localhost:* ws://localhost:*; frame-src \'self\' blob:; block-all-mixed-content; upgrade-insecure-requests'
       }
     },
     optimizeDeps: {

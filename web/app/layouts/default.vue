@@ -6,7 +6,7 @@ import { useUserStore } from '~/stores/user'
 import { useSystemStore } from '~/stores/system'
 import { useThemeStore } from '~/stores/theme'
 import { useIconCache } from '~/composables/useIconCache'
-import { onClickOutside, useElementBounding } from '@vueuse/core'
+import { useElementBounding } from '@vueuse/core'
 
 const route = useRoute()
 const systemStore = useSystemStore()
@@ -211,7 +211,7 @@ const moreMenuPosition = computed(() => {
   const menuWidth = 208
   const padding = 12
   const topMargin = 8
-  const bottomMargin = 20
+  const bottomMargin = 25
 
   const viewportWidth = window.innerWidth
   const viewportHeight = window.innerHeight
@@ -272,15 +272,11 @@ const toggleMoreMenu = () => {
   moreMenuOpen.value = !moreMenuOpen.value
 }
 
-onClickOutside(moreMenuPanelRef, (e) => {
-  if (!moreMenuOpen.value) return
-
-  const anchor = moreMenuAnchor.value
-  // If we click the toggle button, its own handler will handle it.
-  // We check if the click target is the button OR contained within the button.
-  if (anchor && (anchor === e.target || anchor.contains(e.target as Node))) return
-
-  moreMenuOpen.value = false
+onUnmounted(() => {
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
+  }
 })
 
 // "More" Menu feature groups (Misskey-inspired)
@@ -390,7 +386,7 @@ const moreMenuGroups = [
                     leave-to-class="opacity-0 scale-95 translate-x-2"
                   >
                     <div
-                      v-show="moreMenuOpen"
+                      v-if="moreMenuOpen"
                       ref="moreMenuPanelRef"
                       class="fixed z-[100] w-52 origin-top-left"
                       :style="{ top: `${moreMenuPosition.top}px`, left: `${moreMenuPosition.left}px` }"

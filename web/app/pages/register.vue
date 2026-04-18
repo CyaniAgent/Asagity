@@ -266,7 +266,9 @@ const goBack = () => {
         @submit.prevent="handleVerifyCode"
       >
         <div class="text-center mb-4">
-          <h2 class="text-xl font-bold text-white mb-2">邮箱验证</h2>
+          <h2 class="text-xl font-bold text-white mb-2">
+            邮箱验证
+          </h2>
           <p class="text-sm text-gray-400">
             验证码已发送至 <span class="text-fuchsia-400">{{ email }}</span>
           </p>

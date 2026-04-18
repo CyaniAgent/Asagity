@@ -26,7 +26,7 @@ async function handleLogout() {
   }
 
   if (isLoggingOut.value) return
-  
+
   isLoggingOut.value = true
   try {
     await userStore.logoutAll()
