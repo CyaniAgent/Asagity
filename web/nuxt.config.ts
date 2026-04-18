@@ -11,13 +11,59 @@ export default defineNuxtConfig({
     'nuxt-icon'
   ],
 
-  ui: {
-    icons: ['ic', 'lucide', 'material-symbols', 'simple-icons']
+  devtools: {
+    enabled: true
+  },
+
+  css: ['~/assets/css/main.css'],
+
+  colorMode: {
+    preference: 'system',
+    fallback: 'dark',
+    classSuffix: '',
+    dataValue: 'theme',
+    storageKey: 'asagity-color-mode'
+  },
+
+  runtimeConfig: {
+    public: {
+      apiBase: ''
+    }
+  },
+
+  routeRules: {
+    '/': { prerender: true },
+    '/panel': { ssr: false },
+    '/panel/**': { ssr: false }
+  },
+
+  devServer: {
+    host: '::',
+    port: 2000
+  },
+
+  icon: {
+    serverBundle: {
+      collections: ['ic', 'lucide', 'material-symbols', 'simple-icons']
+    }
   },
 
   fonts: false,
 
   compatibilityDate: '2025-01-15',
+
+  nitro: {
+    devProxy: {
+      '/api': {
+        target: 'http://localhost:2048',
+        changeOrigin: true
+      },
+      '/healthz': {
+        target: 'http://localhost:2048/healthz',
+        changeOrigin: true
+      }
+    }
+  },
 
   vite: {
     server: {
