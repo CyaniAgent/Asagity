@@ -42,42 +42,8 @@ services:
       app: asagity
       service: redis
 
-  asagity:
-    build:
-      context: ../../
-      dockerfile: container/docker/Dockerfile
-    container_name: asagity_app
-    environment:
-      SERVER_PORT: ${SERVER_PORT:-2048}
-      DB_HOST: postgres
-      DB_PORT: "5432"
-      DB_USER: ${POSTGRES_USER:-asagity}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-example_password}
-      DB_NAME: ${POSTGRES_DB:-asagity_db}
-      REDIS_ADDR: redis:6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      JWT_SECRET: ${JWT_SECRET:-asagity_secret_miku_39}
-      DRIVE_STORAGE_PATH: /app/storage/drive
-      TZ: ${TZ:-Asia/Shanghai}
-    ports:
-      - "${WEB_PORT:-2000}:2000"
-      - "${SERVER_PORT:-2048}:2048"
-    volumes:
-      - asagity_storage:/app/storage
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-    labels:
-      app: asagity
-      service: webapp
-
 volumes:
   postgres_data:
     name: asagity_postgres_data
   redis_data:
     name: asagity_redis_data
-  asagity_storage:
-    name: asagity_storage_data

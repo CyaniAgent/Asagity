@@ -93,64 +93,57 @@ const federatedInstances = [
 </script>
 
 <template>
-  <div class="max-w-[1150px] mx-auto w-full flex items-start gap-6 animate-[fade-in_0.4s_ease-out]">
-    <!-- Left: Timeline Container -->
-    <div class="flex-1 w-full flex flex-col gap-4">
-      <!-- Main Feed Glass Container -->
+  <div
+    class="w-full h-full animate-[fade-in_0.4s_ease-out] -m-6 lg:-m-10"
+    :class="splitViewStore.isOpen ? 'flex flex-col' : 'grid grid-cols-4'"
+  >
+    <!-- Left: Timeline column (3/4 width if grid) -->
+    <div
+      :class="[
+        'flex flex-col min-w-0 bg-white dark:bg-gray-900 relative',
+        splitViewStore.isOpen ? 'w-full' : 'col-span-3'
+      ]"
+    >
+      <!-- Premium Vertical Separator Line -->
       <div
-        class="bg-white/40 dark:bg-gray-900/40 backdrop-blur-md rounded-[30px] border border-white/20 dark:border-gray-800/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col overflow-hidden"
-      >
-        <!-- Timeline Header -->
-        <div
-          class="px-6 py-4 border-b border-white/20 dark:border-gray-800/50 flex justify-between items-center bg-white/30 dark:bg-gray-800/30"
-        >
-          <h2 class="text-[18px] font-black text-gray-900 dark:text-white flex items-center gap-2 tracking-wide">
-            <UIcon
-              :name="timelineIcon"
-              class="w-5 h-5 text-cyan-500"
-            /> {{ timelineTitle }}
-          </h2>
-          <UButton
-            icon="i-material-symbols-tune"
-            color="neutral"
-            variant="ghost"
-            class="rounded-full w-8 h-8 flex items-center justify-center text-gray-400 hover:text-cyan-500 hover:bg-white/50 dark:hover:bg-gray-700/50"
-          />
-        </div>
+        v-if="!splitViewStore.isOpen"
+        class="absolute right-0 top-8 bottom-8 w-[1px] bg-gradient-to-b from-transparent via-gray-100 dark:via-gray-800 to-transparent z-10"
+      />
 
-        <!-- Post Stream -->
-        <div class="flex flex-col divide-y divide-white/40 dark:divide-gray-800/50">
-          <template v-if="timelineLoading">
-            <div class="flex items-center justify-center py-16">
-              <UIcon
-                name="i-material-symbols-progress-activity"
-                class="animate-spin text-cyan-500 w-8 h-8"
-              />
-            </div>
-          </template>
-          <template v-else-if="!timelineData?.length">
+      <!-- Post Stream -->
+      <div class="flex flex-col min-h-screen">
+        <template v-if="timelineLoading">
+          <div class="flex items-center justify-center py-24">
+            <UIcon
+              name="i-material-symbols-progress-activity"
+              class="animate-spin text-cyan-500 w-10 h-10"
+            />
+          </div>
+        </template>
+        <template v-else-if="!timelineData?.length">
+          <div class="py-20">
             <AppEmptyState
               title="动态板块空空如也"
               description="暂无动态，快去关注一些有趣的用户吧！"
               icon="i-material-symbols-dynamic-feed"
             />
-          </template>
-          <template v-else>
-            <AppPostItem
-              v-for="post in timelineData"
-              :key="post.id"
-              :post="post"
-              class="hover:bg-white/20 dark:hover:bg-gray-800/20 transition-colors"
-            />
-          </template>
-        </div>
+          </div>
+        </template>
+        <template v-else>
+          <AppPostItem
+            v-for="post in timelineData"
+            :key="post.id"
+            :post="post"
+            class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors"
+          />
+        </template>
       </div>
     </div>
 
-    <!-- Right: Mini Widgets Sidebar (Preempted by Split View) -->
+    <!-- Right: Mini Widgets Sidebar (1/4 width) -->
     <aside
       v-if="!splitViewStore.isOpen"
-      class="hidden lg:flex flex-col w-[320px] shrink-0 gap-4 animate-[fade-in_0.3s_ease-out]"
+      class="hidden lg:flex flex-col col-span-1 gap-4 p-6 overflow-y-auto custom-scrollbar bg-gray-50/30 dark:bg-gray-950/20"
     >
       <!-- Widget 1: Online Status -->
       <div
