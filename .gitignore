@@ -1,3 +1,6 @@
 # AI related file
 ./.trae/
 ./.claude/
+
+# Enviroment variables
+.env
