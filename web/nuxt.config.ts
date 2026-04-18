@@ -15,40 +15,7 @@ export default defineNuxtConfig({
     icons: ['ic', 'lucide', 'material-symbols', 'simple-icons']
   },
 
-  devtools: {
-    enabled: true
-  },
-
-  css: ['~/assets/css/main.css'],
-
-  colorMode: {
-    preference: 'system',
-    fallback: 'dark',
-    classSuffix: '',
-    dataValue: 'theme',
-    storageKey: 'asagity-color-mode'
-  },
-
-  runtimeConfig: {
-    public: {
-      apiBase: ''
-    }
-  },
-
-  routeRules: {
-    '/': { prerender: true },
-    '/panel': { ssr: false },
-    '/panel/**': { ssr: false }
-  },
-
-  devServer: {
-    host: '::',
-    port: 2000
-  },
-
-experimental: {
-    payloadExtraction: false
-  },
+  fonts: false,
 
   compatibilityDate: '2025-01-15',
 
