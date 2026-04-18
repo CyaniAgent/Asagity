@@ -231,6 +231,22 @@ func probeRedis(cfg config.Config) error {
 	return rdb.Ping(ctx).Err()
 }
 
+func ProbePostgres(cfg config.Config) error {
+	pgHost, pgPort := normalizeHostPort(cfg.DBHost, cfg.DBPort)
+	if !isTCPPortBusy(pgHost, pgPort) {
+		return fmt.Errorf("postgresql port %s:%s is not reachable", pgHost, pgPort)
+	}
+	return probePostgres(cfg)
+}
+
+func ProbeRedis(cfg config.Config) error {
+	redisHost, redisPort := splitRedisAddr(cfg.RedisAddr)
+	if !isTCPPortBusy(redisHost, redisPort) {
+		return fmt.Errorf("redis port %s:%s is not reachable", redisHost, redisPort)
+	}
+	return probeRedis(cfg)
+}
+
 func isTCPPortBusy(host string, port string) bool {
 	address := net.JoinHostPort(host, port)
 	conn, err := net.DialTimeout("tcp", address, 2*time.Second)
