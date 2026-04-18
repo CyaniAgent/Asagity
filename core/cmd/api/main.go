@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"net/http"
@@ -32,9 +33,10 @@ func Run() error {
 
 		if pgErr != nil || redisErr != nil {
 			log.Printf("[api] Database services not ready, attempting auto-installation...")
-			if installErr := runInstallDB(); installErr != nil {
-				log.Printf("[api] Auto-installation failed: %v", installErr)
-				return fmt.Errorf("failed to initialize database: %w; please run scripts/initDatabase.sh manually", err)
+			installOk := runInitDatabase("1")
+			if !installOk {
+				log.Printf("[api] Auto-installation failed")
+				return fmt.Errorf("failed to initialize database: %w; please run scripts/container/initDatabase.sh manually", err)
 			}
 
 			log.Printf("[api] Database installed, retrying connection...")
@@ -43,23 +45,24 @@ func Run() error {
 				return fmt.Errorf("failed to connect after installation: %w", err)
 			}
 		} else {
-			log.Printf("[api] Database is online but credentials mismatched")
-			log.Printf("[api] Running configuration utility...")
+			log.Printf("[api] Database is online but credentials may be incorrect")
 
-			if reconfigErr := runInitDatabase(); reconfigErr != nil {
-				log.Printf("[api] Configuration failed: %v", reconfigErr)
-				return fmt.Errorf("database credentials mismatch: %w; please run scripts/initDatabase.sh to verify configuration", err)
-			}
+			log.Printf("[api] Running database verification...")
+			verifyOk := runInitDatabase("2")
 
-			log.Printf("[api] Configuration updated, reloading config and retrying...")
-			cfg, err = config.Load()
-			if err != nil {
-				return fmt.Errorf("failed to reload config: %w", err)
-			}
+			if verifyOk {
+				log.Printf("[api] Database verified, reloading config and retrying...")
+				cfg, err = config.Load()
+				if err != nil {
+					return fmt.Errorf("failed to reload config: %w", err)
+				}
 
-			clients, err = database.Open(cfg)
-			if err != nil {
-				return fmt.Errorf("failed to connect after reconfiguration: %w", err)
+				clients, err = database.Open(cfg)
+				if err != nil {
+					return fmt.Errorf("failed to connect after verification: %w", err)
+				}
+			} else {
+				return fmt.Errorf("database verification failed: %w; please run scripts/container/initDatabase.sh to configure", err)
 			}
 		}
 	}
@@ -75,57 +78,70 @@ func Run() error {
 	return http.ListenAndServe(addr, r)
 }
 
-func runInstallDB() error {
+func runInitDatabase(mode string) bool {
 	projectRoot, err := findProjectRoot()
 	if err != nil {
-		return fmt.Errorf("cannot find project root: %w", err)
-	}
-
-	installScript := filepath.Join(projectRoot, "scripts", "InstallDB.sh")
-	if _, err := os.Stat(installScript); os.IsNotExist(err) {
-		installScript = filepath.Join(projectRoot, "scripts", "container", "initDatabase.sh")
-		if _, err := os.Stat(installScript); os.IsNotExist(err) {
-			return fmt.Errorf("InstallDB.sh or initDatabase.sh not found")
-		}
-	}
-
-	cmd := exec.Command("bash", installScript)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Dir = projectRoot
-	cmd.Stdin = os.Stdin
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("install script execution failed: %w", err)
-	}
-
-	log.Printf("[api] Database installation completed")
-	return nil
-}
-
-func runInitDatabase() error {
-	projectRoot, err := findProjectRoot()
-	if err != nil {
-		return fmt.Errorf("cannot find project root: %w", err)
+		log.Printf("[api] Cannot find project root: %v", err)
+		return false
 	}
 
 	initScript := filepath.Join(projectRoot, "scripts", "container", "initDatabase.sh")
 	if _, err := os.Stat(initScript); os.IsNotExist(err) {
-		return fmt.Errorf("initDatabase.sh not found at %s", initScript)
+		log.Printf("[api] initDatabase.sh not found at %s", initScript)
+		return false
 	}
 
 	cmd := exec.Command("bash", initScript)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
 	cmd.Dir = projectRoot
 	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	env := os.Environ()
+	env = append(env, "INITDB_MODE="+mode)
+	cmd.Env = env
 
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("initDatabase script failed: %w", err)
+		log.Printf("[api] initDatabase.sh execution failed: %v", err)
+		return false
 	}
 
-	log.Printf("[api] Configuration updated")
-	return nil
+	resultFile := filepath.Join(projectRoot, ".initdb_result")
+	if _, err := os.Stat(resultFile); err == nil {
+		file, err := os.Open(resultFile)
+		if err == nil {
+			defer file.Close()
+			scanner := bufio.NewScanner(file)
+			dbReady := false
+			dbHost := ""
+			dbPort := ""
+
+			for scanner.Scan() {
+				line := scanner.Text()
+				if strings.HasPrefix(line, "ASAGITY_DB_READY=") {
+					dbReady = strings.Contains(line, "true")
+				}
+				if strings.HasPrefix(line, "ASAGITY_DB_HOST=") {
+					dbHost = strings.TrimPrefix(line, "ASAGITY_DB_HOST=")
+				}
+				if strings.HasPrefix(line, "ASAGITY_DB_PORT=") {
+					dbPort = strings.TrimPrefix(line, "ASAGITY_DB_PORT=")
+				}
+			}
+
+			if dbReady {
+				log.Printf("[api] Database verification successful (host=%s port=%s)", dbHost, dbPort)
+				os.Remove(resultFile)
+				return true
+			}
+
+			file.Close()
+			os.Remove(resultFile)
+		}
+	}
+
+	log.Printf("[api] Database initialization completed")
+	return true
 }
 
 func findProjectRoot() (string, error) {
@@ -146,8 +162,4 @@ func findProjectRoot() (string, error) {
 	}
 
 	return "", fmt.Errorf("project root not found")
-}
-
-func isWindows() bool {
-	return strings.Contains(strings.ToLower(os.Getenv("OS")), "windows")
 }
