@@ -13,7 +13,7 @@ read_env_value() {
 
   if [[ -f "${ENV_FILE}" ]]; then
     local line
-    line="$(grep -E "^${key}=" "${ENV_FILE}" | tail -n 1 || true)
+    line=$(grep -E "^${key}=" "${ENV_FILE}" 2>/dev/null | tail -n 1 || echo "")
     if [[ -n "${line}" ]]; then
       echo "${line#*=}"
       return
@@ -40,14 +40,14 @@ echo "==============================================="
 echo
 
 if [[ -f "${ENV_FILE}" ]]; then
-  db_host="$(read_env_value DB_HOST 127.0.0.1)"
-  db_port="$(read_env_value DB_PORT 5432)"
-  db_user="$(read_env_value DB_USER asagity)"
-  db_password="$(read_env_value DB_PASSWORD example_password)"
-  db_name="$(read_env_value DB_NAME asagity_db)"
-  redis_host="$(read_env_value REDIS_HOST 127.0.0.1)"
-  redis_port="$(read_env_value REDIS_PORT 6379)"
-  redis_password="$(read_env_value REDIS_PASSWORD '')"
+  db_host=$(read_env_value DB_HOST "127.0.0.1")
+  db_port=$(read_env_value DB_PORT "5432")
+  db_user=$(read_env_value DB_USER "asagity")
+  db_password=$(read_env_value DB_PASSWORD "example_password")
+  db_name=$(read_env_value DB_NAME "asagity_db")
+  redis_host=$(read_env_value REDIS_HOST "127.0.0.1")
+  redis_port=$(read_env_value REDIS_PORT "6379")
+  redis_password=$(read_env_value REDIS_PASSWORD "")
 else
   db_host="127.0.0.1"
   db_port="5432"
@@ -66,7 +66,7 @@ postgres_online=false
 redis_online=false
 
 if command -v pg_isready &> /dev/null; then
-  if pg_isready -h "${db_host}" -p "${db_port}" -U "${db_user}" -d "${db_name}" 2>/dev/null; then
+  if pg_isready -h "${db_host}" -p "${db_port}" -U "${db_user}" -d "${db_name}" &> /dev/null; then
     echo "[OK] PostgreSQL is online"
     postgres_online=true
   else
@@ -102,9 +102,8 @@ if [[ "${postgres_online}" == "false" ]] || [[ "${redis_online}" == "false" ]]; 
   echo
   echo "[WARN] One or more database services are offline!"
   echo
-  
-  read -p "Do you want to install database now? (Y/n): " install_choice
-  if [[ -z "${install_choice}" ]] || [[ "${install_choice}" =~ ^[Yy]$ ]]; then
+  read -r -p "Do you want to install database now? (Y/n): " install_choice
+  if [[ -z "${install_choice}" ]] || [[ "${install_choice}" == "Y" ]] || [[ "${install_choice}" == "y" ]]; then
     if [[ -f "${INSTALL_SCRIPT}" ]]; then
       echo
       echo "Starting database installation..."
@@ -126,34 +125,34 @@ echo
 echo "Databases are online. Proceeding with configuration..."
 echo
 
-db_host="$(prompt_value "PostgreSQL host" "$(read_env_value DB_HOST 127.0.0.1)")"
-db_port="$(prompt_value "PostgreSQL host port" "$(read_env_value DB_PORT 5432)")"
-db_user="$(prompt_value "PostgreSQL user" "$(read_env_value DB_USER asagity)")"
-db_password="$(prompt_value "PostgreSQL password" "$(read_env_value DB_PASSWORD example_password)")"
-db_name="$(prompt_value "PostgreSQL database name" "$(read_env_value DB_NAME asagity_db)")"
-redis_host="$(prompt_value "Redis host" "127.0.0.1")"
-redis_port="$(prompt_value "Redis host port" "$(read_env_value REDIS_PORT 6379)")"
-redis_password="$(prompt_value "Redis password (empty allowed)" "$(read_env_value REDIS_PASSWORD '')")"
-redis_db="$(prompt_value "Redis database index" "$(read_env_value REDIS_DB 0)")"
-server_port="$(prompt_value "Asagity API server port" "$(read_env_value SERVER_PORT 2048)")"
-web_port="$(prompt_value "Asagity Web frontend port" "$(read_env_value WEB_PORT 2000)")"
-tz="$(prompt_value "Timezone" "$(read_env_value TZ Asia/Shanghai)")"
-jwt_secret="$(read_env_value JWT_SECRET asagity_secret_miku_39)"
+db_host=$(prompt_value "PostgreSQL host" "$(read_env_value DB_HOST '127.0.0.1')")
+db_port=$(prompt_value "PostgreSQL host port" "$(read_env_value DB_PORT '5432')")
+db_user=$(prompt_value "PostgreSQL user" "$(read_env_value DB_USER 'asagity')")
+db_password=$(prompt_value "PostgreSQL password" "$(read_env_value DB_PASSWORD 'example_password')")
+db_name=$(prompt_value "PostgreSQL database name" "$(read_env_value DB_NAME 'asagity_db')")
+redis_host=$(prompt_value "Redis host" "127.0.0.1")
+redis_port=$(prompt_value "Redis host port" "$(read_env_value REDIS_PORT '6379')")
+redis_password=$(prompt_value "Redis password (empty allowed)" "$(read_env_value REDIS_PASSWORD '')")
+redis_db=$(prompt_value "Redis database index" "$(read_env_value REDIS_DB '0')")
+server_port=$(prompt_value "Asagity API server port" "$(read_env_value SERVER_PORT '2048')")
+web_port=$(prompt_value "Asagity Web frontend port" "$(read_env_value WEB_PORT '2000')")
+tz=$(prompt_value "Timezone" "$(read_env_value TZ 'Asia/Shanghai')")
+jwt_secret=$(read_env_value JWT_SECRET "asagity_secret_miku_39")
 
 echo
 echo "Advanced options (press Enter to use default):"
 echo "-------------------------------------------"
-drive_storage_path="$(prompt_value "Drive storage path" "$(read_env_value DRIVE_STORAGE_PATH /app/storage/drive)")"
+drive_storage_path=$(prompt_value "Drive storage path" "$(read_env_value DRIVE_STORAGE_PATH '/app/storage/drive')")
 echo "-------------------------------------------"
 echo
 
-BACKUP_SUFFIX="$(date +%Y%m%d%H%M%S)"
+BACKUP_SUFFIX=$(date +%Y%m%d%H%M%S)
 if [[ -f "${ENV_FILE}" ]]; then
   cp "${ENV_FILE}" "${ENV_FILE}.${BACKUP_SUFFIX}.bak"
   echo "Backed up existing .env to .env.${BACKUP_SUFFIX}.bak"
 fi
 
-cat > "${ENV_FILE}" <<EOF
+cat > "${ENV_FILE}" <<ENVEOF
 # Asagity Configuration
 TZ=${tz}
 
@@ -185,7 +184,7 @@ JWT_SECRET=${jwt_secret}
 
 # Storage
 DRIVE_STORAGE_PATH=${drive_storage_path}
-EOF
+ENVEOF
 
 echo
 echo "Verifying database connection..."
@@ -194,7 +193,7 @@ echo "-------------------------------------------"
 verify_failed=0
 
 if [[ "${postgres_online}" == "true" ]]; then
-  if pg_isready -h "${db_host}" -p "${db_port}" -U "${db_user}" -d "${db_name}" 2>/dev/null; then
+  if pg_isready -h "${db_host}" -p "${db_port}" -U "${db_user}" -d "${db_name}" &> /dev/null; then
     echo "[OK] PostgreSQL connection verified"
   else
     echo "[FAIL] PostgreSQL connection failed"
@@ -229,8 +228,8 @@ if [[ ${verify_failed} -eq 1 ]]; then
   echo "  1. Username and password are correct"
   echo "  2. Database exists"
   echo
-  read -p "Do you want to reconfigure? (y/N): " retry_choice
-  if [[ "${retry_choice}" =~ ^[Yy]$ ]]; then
+  read -r -p "Do you want to reconfigure? (y/N): " retry_choice
+  if [[ "${retry_choice}" == "y" ]] || [[ "${retry_choice}" == "Y" ]]; then
     echo
     echo "Restarting configuration..."
     bash "${SCRIPT_DIR}/initDatabase.sh"
