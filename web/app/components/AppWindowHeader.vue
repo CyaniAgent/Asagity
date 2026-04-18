@@ -10,6 +10,8 @@ const props = defineProps<{
   isMaximized?: boolean
   isMinimized?: boolean
   disableTransfer?: boolean // Disable the split-to-free transfer button (e.g. for lyrics window)
+  disableMaximize?: boolean // Disable maximize button
+  disableMinimize?: boolean // Disable minimize button
 }>()
 
 const emit = defineEmits(['close', 'toggle-maximize', 'toggle-minimize', 'refresh'])
@@ -161,7 +163,7 @@ function switchMode() {
       </UTooltip>
 
       <UTooltip
-        v-if="mode === 'free'"
+        v-if="mode === 'free' && !disableMinimize"
         text="最小化"
         :popper="{ placement: 'bottom' }"
       >
@@ -176,6 +178,7 @@ function switchMode() {
       </UTooltip>
 
       <UTooltip
+        v-if="mode === 'free' && !disableMaximize"
         :text="isMaximized ? '还原' : (mode === 'split' ? '展开' : '最大化')"
         :popper="{ placement: 'bottom' }"
       >

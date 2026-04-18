@@ -11,6 +11,10 @@ export default defineNuxtConfig({
     'nuxt-icon'
   ],
 
+  ui: {
+    icons: ['ic', 'lucide', 'material-symbols', 'simple-icons']
+  },
+
   devtools: {
     enabled: true
   },

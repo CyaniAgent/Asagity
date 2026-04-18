@@ -1,21 +1,21 @@
 <script setup lang="ts">
 import { useSplitViewStore } from '~/stores/splitView'
+import { useSoundManager } from '~/stores/soundManager'
 
 const splitViewStore = useSplitViewStore()
+const soundManager = useSoundManager()
 
-// Dummy message data for the UI
-const messages = [
+const messages = ref([
   { id: 1, text: 'Hey there! How is the new UI coming along?', isMe: false, time: '10:30', read: true },
-  { id: 2, text: 'Producer-san! It\'s looking amazing! 39!', isMe: true, time: '10:32', read: true },
+  { id: 2, text: "Producer-san! It's looking amazing! 39!", isMe: true, time: '10:32', read: true },
   { id: 3, text: 'We are working on the Chat module right now. The left-aligned design is super clean.', isMe: true, time: '10:33', read: false },
-  { id: 4, text: 'That sounds perfect. Can\'t wait to see it running on Riverpod... well, Pinia here!', isMe: false, time: '10:35', read: false }
-]
+  { id: 4, text: "That sounds perfect. Can't wait to see it running on Riverpod... well, Pinia here!", isMe: false, time: '10:35', read: false }
+])
 
 const newMessage = ref('')
 
 const sendMessage = () => {
   if (!newMessage.value.trim()) return
-  // Add to mock messages
   messages.push({
     id: Date.now(),
     text: newMessage.value,
@@ -24,7 +24,18 @@ const sendMessage = () => {
     read: false
   })
   newMessage.value = ''
-  // scroll to bottom logic could go here
+  soundManager.playIfAvailable('message_sent')
+}
+
+function receiveMessage(text: string) {
+  messages.push({
+    id: Date.now(),
+    text,
+    isMe: false,
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    read: false
+  })
+  soundManager.playIfAvailable('message_received')
 }
 </script>
 

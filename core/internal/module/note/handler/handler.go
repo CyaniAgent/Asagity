@@ -206,3 +206,51 @@ func (h *NoteHandler) SearchNotes(w http.ResponseWriter, r *http.Request) {
 		"notes": notes,
 	})
 }
+
+// VoteOnPoll - POST /api/notes/:id/vote
+func (h *NoteHandler) VoteOnPoll(w http.ResponseWriter, r *http.Request) {
+	userID := httpx.GetUserID(r.Context())
+	if userID == "" {
+		httpx.WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", "User not authenticated")
+		return
+	}
+
+	noteID := httpx.GetPathParam(r, "id")
+	if noteID == "" {
+		httpx.WriteError(w, http.StatusBadRequest, "INVALID_ID", "Note ID required")
+		return
+	}
+
+	var req notedto.VoteRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "INVALID_REQUEST", "Invalid request body")
+		return
+	}
+
+	err := h.svc.VoteOnPoll(noteID, userID, req.OptionIDs)
+	if err != nil {
+		httpx.WriteError(w, http.StatusBadRequest, "VOTE_FAILED", err.Error())
+		return
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, map[string]string{"status": "voted"})
+}
+
+// GetPollResults - GET /api/notes/:id/poll
+func (h *NoteHandler) GetPollResults(w http.ResponseWriter, r *http.Request) {
+	userID := httpx.GetUserID(r.Context())
+
+	noteID := httpx.GetPathParam(r, "id")
+	if noteID == "" {
+		httpx.WriteError(w, http.StatusBadRequest, "INVALID_ID", "Note ID required")
+		return
+	}
+
+	results, err := h.svc.GetPollResults(noteID, userID)
+	if err != nil {
+		httpx.WriteError(w, http.StatusNotFound, "POLL_NOT_FOUND", err.Error())
+		return
+	}
+
+	httpx.WriteJSON(w, http.StatusOK, results)
+}

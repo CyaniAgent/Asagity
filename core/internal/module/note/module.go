@@ -1,7 +1,7 @@
 package note
 
 import (
-	"net/http"
+	"github.com/go-chi/chi/v5"
 
 	"github.com/CyaniAgent/Asagity/core/internal/module/note/handler"
 	"github.com/CyaniAgent/Asagity/core/internal/module/note/repository"
@@ -10,7 +10,7 @@ import (
 	"github.com/CyaniAgent/Asagity/core/internal/platform/database"
 )
 
-func Register(mux *http.ServeMux, cfg config.Config, clients *database.Clients) {
+func Register(r *chi.Mux, cfg config.Config, clients *database.Clients) {
 	repo := repository.NewNoteRepository(clients.DB)
 
 	if err := repo.AutoMigrate(); err != nil {
@@ -20,17 +20,18 @@ func Register(mux *http.ServeMux, cfg config.Config, clients *database.Clients) 
 	svc := service.NewNoteService(repo)
 	h := handler.NewNoteHandler(svc)
 
-	mux.HandleFunc("POST /api/notes", h.CreateNote)
-	mux.HandleFunc("GET /api/notes/", h.GetNote)
-	mux.HandleFunc("PATCH /api/notes/", h.UpdateNote)
-	mux.HandleFunc("DELETE /api/notes/", h.DeleteNote)
+	r.Post("/api/notes", h.CreateNote)
+	r.Get("/api/notes/{id}", h.GetNote)
+	r.Patch("/api/notes/{id}", h.UpdateNote)
+	r.Delete("/api/notes/{id}", h.DeleteNote)
 
-	mux.HandleFunc("GET /api/timeline/home", h.ListTimeline)
-	mux.HandleFunc("GET /api/timeline/local", h.ListTimeline)
-	mux.HandleFunc("GET /api/timeline/public", h.ListTimeline)
+	r.Get("/api/timeline/{type}", h.ListTimeline)
 
-	mux.HandleFunc("POST /api/notes/", h.AddReaction)
-	mux.HandleFunc("DELETE /api/notes/", h.RemoveReaction)
+	r.Post("/api/notes/{id}/react", h.AddReaction)
+	r.Delete("/api/notes/{id}/react", h.RemoveReaction)
 
-	mux.HandleFunc("GET /api/search/notes", h.SearchNotes)
+	r.Post("/api/notes/{id}/vote", h.VoteOnPoll)
+	r.Get("/api/notes/{id}/poll", h.GetPollResults)
+
+	r.Get("/api/search/notes", h.SearchNotes)
 }

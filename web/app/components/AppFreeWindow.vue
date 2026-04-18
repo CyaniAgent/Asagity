@@ -12,6 +12,8 @@ const props = defineProps<{
   id?: string
   disableTransfer?: boolean
   resizable?: boolean
+  disableMaximize?: boolean
+  disableMinimize?: boolean
 }>()
 
 const emit = defineEmits(['update:modelValue', 'close'])
@@ -198,6 +200,8 @@ const windowStyle = computed(() => {
             :is-maximized="isMaximized"
             :is-minimized="isMinimized"
             :disable-transfer="disableTransfer"
+            :disable-maximize="disableMaximize"
+            :disable-minimize="disableMinimize"
             @close="close"
             @toggle-maximize="toggleMaximize"
             @toggle-minimize="toggleMinimize"

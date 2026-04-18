@@ -1,7 +1,7 @@
 package drive
 
 import (
-	"net/http"
+	"github.com/go-chi/chi/v5"
 
 	"github.com/CyaniAgent/Asagity/core/internal/module/drive/handler"
 	"github.com/CyaniAgent/Asagity/core/internal/module/drive/repository"
@@ -10,16 +10,16 @@ import (
 	"github.com/CyaniAgent/Asagity/core/internal/platform/database"
 )
 
-func Register(mux *http.ServeMux, cfg config.Config, clients *database.Clients) {
+func Register(r *chi.Mux, cfg config.Config, clients *database.Clients) {
 	repo := repository.New(clients)
 	svc := service.New(repo, cfg)
 	h := handler.New(svc)
 
-	mux.HandleFunc("GET /api/drive/files", h.ListFiles)
-	mux.HandleFunc("GET /api/drive/files/", h.GetFile)
-	mux.HandleFunc("POST /api/drive/folders", h.CreateFolder)
-	mux.HandleFunc("PATCH /api/drive/files/", h.UpdateFile)
-	mux.HandleFunc("DELETE /api/drive/files/", h.DeleteFile)
-	mux.HandleFunc("POST /api/drive/files/", h.MoveFile)
-	mux.HandleFunc("GET /api/drive/usage", h.GetUsage)
+	r.Get("/api/drive/files", h.ListFiles)
+	r.Get("/api/drive/files/{id}", h.GetFile)
+	r.Post("/api/drive/folders", h.CreateFolder)
+	r.Patch("/api/drive/files/{id}", h.UpdateFile)
+	r.Delete("/api/drive/files/{id}", h.DeleteFile)
+	r.Post("/api/drive/files/{id}/move", h.MoveFile)
+	r.Get("/api/drive/usage", h.GetUsage)
 }
