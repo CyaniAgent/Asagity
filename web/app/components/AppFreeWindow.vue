@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useDraggable, useWindowSize } from '@vueuse/core'
 
 const props = defineProps<{
@@ -31,7 +31,6 @@ const handle = ref<HTMLElement | null>(null)
 
 const { width: windowWidth, height: windowHeight } = useWindowSize()
 
-// Resize state
 const windowSize = ref({
   width: props.initialWidth || 450,
   height: props.initialHeight || 600
@@ -43,15 +42,19 @@ const resizeStartPos = ref({ x: 0, y: 0 })
 const resizeStartSize = ref({ width: 0, height: 0 })
 const resizeStartPosition = ref({ x: 0, y: 0 })
 
-// Initial centered position logic
-const initialX = typeof window !== 'undefined' ? (window.innerWidth / 2) - ((props.initialWidth || 450) / 2) : 100
-const initialY = typeof window !== 'undefined' ? (window.innerHeight / 2) - ((props.initialHeight || 600) / 2) : 100
+const position = ref({ x: 100, y: 100 })
 
-const position = ref({ x: initialX, y: initialY })
+onMounted(() => {
+  const w = props.initialWidth || 450
+  const h = props.initialHeight || 600
+  position.value = {
+    x: (window.innerWidth / 2) - (w / 2),
+    y: (window.innerHeight / 2) - (h / 2)
+  }
+})
 
-// Make Draggable
 useDraggable(el, {
-  initialValue: position.value,
+  initialValue: position,
   handle: handle,
   onMove(pos) {
     if (!isMaximized.value && !isResizing.value) {
@@ -75,7 +78,6 @@ function toggleMinimize() {
   if (isMinimized.value) isMaximized.value = false
 }
 
-// Resize handlers
 function startResize(direction: string, event: MouseEvent) {
   if (!props.resizable && props.resizable !== undefined) return
   if (isMaximized.value) return
@@ -156,7 +158,6 @@ const windowStyle = computed(() => {
     }
   }
 
-  // Clamped position to prevent losing the window
   const w = windowSize.value.width
   const h = windowSize.value.height
   const clampedX = Math.min(Math.max(0, position.value.x), windowWidth.value - 100)
@@ -181,7 +182,6 @@ const windowStyle = computed(() => {
         :class="[
           isMaximized ? 'duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]' : 'duration-0',
           isMinimized ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100',
-          /* 响应式主题色绑定：为歌词等窗口提供无缝玻璃拟态质感 */
           'bg-white/90 dark:bg-gray-900/90 backdrop-blur-3xl border-gray-200/50 dark:border-gray-800/80'
         ]"
         :style="windowStyle"

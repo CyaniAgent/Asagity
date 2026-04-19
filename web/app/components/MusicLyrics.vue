@@ -4,7 +4,6 @@ import { useMusicStore } from '~/stores/music'
 
 const musicStore = useMusicStore()
 
-// Refs for auto-scrolling preview
 const previewContainer = ref<HTMLElement | null>(null)
 const previewLines = ref<HTMLElement[]>([])
 
@@ -12,12 +11,10 @@ onBeforeUpdate(() => {
   previewLines.value = []
 })
 
-// Centralized auto-scroll logic for preview
 watch(() => musicStore.currentLyricIndex, async (newIndex) => {
   if (newIndex === -1) return
   await nextTick()
 
-  // Scroll preview (if visible)
   const pLine = previewLines.value[newIndex]
   if (previewContainer.value && pLine) {
     scrollToActive(previewContainer.value, pLine)
@@ -71,7 +68,7 @@ function setPreviewRef(el: Element | null, index: number) {
           <div
             v-for="(line, index) in musicStore.lyrics"
             :key="index"
-            :ref="(el: any) => setPreviewRef(el, index)"
+            :ref="(el: Element | null) => setPreviewRef(el, index)"
             class="transition-all duration-700 flex flex-col items-center transform-gpu will-change-all"
             :class="[
               index === musicStore.currentLyricIndex
@@ -124,7 +121,6 @@ function setPreviewRef(el: Element | null, index: number) {
   will-change: transform, opacity, filter;
 }
 
-/* Hide scrollbar but keep scroll functionality */
 .previewContainer {
   -ms-overflow-style: none;
   scrollbar-width: none;

@@ -4,18 +4,13 @@ import { useMusicStore } from '~/stores/music'
 
 const musicStore = useMusicStore()
 
-const _handleRef = ref<HTMLElement | null>(null)
 const lyricsContainer = ref<HTMLElement | null>(null)
 const lyricLines = ref<HTMLElement[]>([])
-
-const _initialX = typeof window !== 'undefined' ? (window.innerWidth / 2) - 200 : 100
-const _initialY = typeof window !== 'undefined' ? (window.innerHeight / 2) - 300 : 100
 
 onBeforeUpdate(() => {
   lyricLines.value = []
 })
 
-// Auto-scroll inside the free window
 watch(() => musicStore.currentLyricIndex, async (newIndex) => {
   if (newIndex === -1 || !lyricsContainer.value || !musicStore.isLyricsWindowOpen) return
 
@@ -28,7 +23,6 @@ watch(() => musicStore.currentLyricIndex, async (newIndex) => {
   }
 })
 
-// Scroll to correct position when opened
 watch(() => musicStore.isLyricsWindowOpen, async (open) => {
   if (open && musicStore.currentLyricIndex !== -1) {
     await nextTick()
@@ -89,7 +83,7 @@ function handleLyricClick(timestamp: number) {
         <div
           v-for="(line, index) in musicStore.lyrics"
           :key="index"
-          :ref="(el: any) => setLyricRef(el, index)"
+          :ref="(el: Element | null) => setLyricRef(el, index)"
           class="transition-all duration-500 cursor-pointer py-1 group relative origin-left"
           :class="[
             musicStore.currentLyricIndex === index

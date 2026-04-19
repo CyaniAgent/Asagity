@@ -53,14 +53,16 @@ function handleProgressChange(e: Event) {
           <span class="text-[11px] font-black uppercase tracking-[0.3em] opacity-40">Now Playing</span>
         </div>
       </div>
-      <UButton
-        icon="i-material-symbols-close"
-        color="neutral"
-        variant="ghost"
-        class="w-10 h-10 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-all active:scale-90"
+      <button
+        class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 transition-all active:scale-90"
         :style="{ color: textColor }"
         @click="splitViewStore.close()"
-      />
+      >
+        <UIcon
+          name="i-material-symbols-close"
+          class="w-5 h-5"
+        />
+      </button>
     </header>
 
     <!-- Main Scrollable Content -->
@@ -144,19 +146,23 @@ function handleProgressChange(e: Event) {
       </section>
 
       <!-- Playback Controls -->
-      <section class="w-full max-w-[360px] flex items-center justify-around mb-12">
-        <UButton
-          :icon="musicStore.shuffle ? 'i-material-symbols-shuffle' : 'i-material-symbols-shuffle'"
-          variant="ghost"
-          :color="musicStore.shuffle ? 'primary' : 'neutral'"
-          :class="[
-            'transition-all duration-300',
-            musicStore.shuffle ? 'text-cyan-500 drop-shadow-[0_0_8px_rgba(57,197,187,0.3)]' : 'text-gray-900/20 dark:text-white/30 hover:text-gray-900 dark:hover:text-white'
-          ]"
-          @click="musicStore.toggleShuffle"
-        />
+      <section class="w-full max-w-[360px] flex items-center justify-between mb-12">
+        <!-- Left: Shuffle -->
+        <div class="w-12 h-12 flex items-center justify-center">
+          <UButton
+            :icon="musicStore.shuffle ? 'i-material-symbols-shuffle' : 'i-material-symbols-shuffle'"
+            variant="ghost"
+            :color="musicStore.shuffle ? 'primary' : 'neutral'"
+            :class="[
+              'transition-all duration-300',
+              musicStore.shuffle ? 'text-cyan-500 drop-shadow-[0_0_8px_rgba(57,197,187,0.3)]' : 'text-gray-900/20 dark:text-white/30 hover:text-gray-900 dark:hover:text-white'
+            ]"
+            @click="musicStore.toggleShuffle"
+          />
+        </div>
 
-        <div class="flex items-center gap-6">
+        <!-- Center: Prev, Play, Next -->
+        <div class="flex items-center gap-4">
           <UButton
             icon="i-material-symbols-skip-previous"
             variant="ghost"
@@ -173,7 +179,7 @@ function handleProgressChange(e: Event) {
             <UIcon
               :name="musicStore.isPlaying ? 'i-material-symbols-pause' : 'i-material-symbols-play-arrow'"
               class="w-8 h-8"
-              :class="!musicStore.isPlaying && 'ml-1'"
+              :class="!musicStore.isPlaying && 'translate-x-0.5'"
             />
           </button>
           <UButton
@@ -186,8 +192,8 @@ function handleProgressChange(e: Event) {
           />
         </div>
 
-        <!-- Right Side Controls (Loop & Playlist) -->
-        <div class="flex items-center gap-2">
+        <!-- Right: Loop & Playlist -->
+        <div class="w-12 h-12 flex items-center justify-center gap-2">
           <UButton
             :icon="musicStore.loopMode === 'one' ? 'i-material-symbols-repeat-one' : 'i-material-symbols-repeat'"
             variant="ghost"
