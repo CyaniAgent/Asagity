@@ -692,7 +692,7 @@ const moreMenuGroups = [
                 : 'border-gray-200/50 dark:border-gray-800/50'
             ]"
             :style="{
-              width: splitViewStore.isMaximized ? '0%' : (splitViewStore.isOpen ? `${100 - splitViewStore.rightPanelWidth}%` : '100%'),
+              width: splitViewStore.isMaximized ? '0%' : (splitViewStore.isOpen ? `calc(${100 - splitViewStore.rightPanelWidth}% - ${isWidgetsOpen ? 326 : 0}px)` : `calc(100% - ${isWidgetsOpen ? 326 : 0}px)`),
               transform: splitViewStore.isMaximized ? 'translateX(-100%)' : (splitViewStore.isOpen ? 'translateX(-8px)' : 'translateX(0)'),
               opacity: splitViewStore.isMaximized ? '0' : '1',
               pointerEvents: splitViewStore.isMaximized ? 'none' : 'auto'
