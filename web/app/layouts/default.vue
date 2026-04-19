@@ -692,8 +692,7 @@ const moreMenuGroups = [
                 : 'border-gray-200/50 dark:border-gray-800/50'
             ]"
             :style="{
-              width: splitViewStore.isMaximized ? '0%' : (splitViewStore.isOpen ? `calc(${100 - splitViewStore.rightPanelWidth}% - ${isWidgetsOpen ? 326 : 0}px)` : `calc(100% - ${isWidgetsOpen ? 326 : 0}px)`),
-              transform: splitViewStore.isMaximized ? 'translateX(-100%)' : (splitViewStore.isOpen ? 'translateX(-8px)' : 'translateX(0)'),
+              width: splitViewStore.isMaximized ? '0%' : (splitViewStore.isOpen ? `calc(${100 - splitViewStore.rightPanelWidth}% - ${isWidgetsOpen ? 326 : 0}px - 6px)` : `calc(100% - ${isWidgetsOpen ? 326 : 0}px)`),
               opacity: splitViewStore.isMaximized ? '0' : '1',
               pointerEvents: splitViewStore.isMaximized ? 'none' : 'auto'
             }"
@@ -718,7 +717,7 @@ const moreMenuGroups = [
               splitViewStore.isResizing ? 'transition-none' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
               splitViewStore.isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
             ]"
-            :style="{ width: splitViewStore.isMaximized ? '100%' : (splitViewStore.isOpen ? `calc(${splitViewStore.rightPanelWidth}% - 6px)` : '0px') }"
+            :style="{ width: splitViewStore.isMaximized ? '100%' : (splitViewStore.isOpen ? `calc(${splitViewStore.rightPanelWidth}% - ${isWidgetsOpen ? 326 : 0}px - 6px)` : '0px') }"
             @pointerdown="splitViewStore.focusRight()"
           >
             <div

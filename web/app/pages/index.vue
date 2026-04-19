@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useSplitViewStore } from '~/stores/splitView'
 import { useSystemStore } from '~/stores/system'
 
 const route = useRoute()
-const splitViewStore = useSplitViewStore()
 const systemStore = useSystemStore()
 
 interface User {
@@ -84,15 +82,12 @@ const { data: timelineData, pending: timelineLoading } = useAsyncData(
     watch: [timelineType]
   }
 )
-
 </script>
 
 <template>
   <div class="w-full h-full animate-[fade-in_0.4s_ease-out] -m-6 lg:-m-10 flex flex-col">
     <!-- Timeline full width container -->
     <div class="flex flex-col min-w-0 bg-white dark:bg-gray-900 w-full h-full">
-
-
       <!-- Post Stream -->
       <div class="flex flex-col min-h-screen">
         <template v-if="timelineLoading">
@@ -122,7 +117,6 @@ const { data: timelineData, pending: timelineLoading } = useAsyncData(
         </template>
       </div>
     </div>
-
   </div>
 </template>
 
