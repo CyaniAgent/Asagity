@@ -7,8 +7,7 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@vueuse/nuxt',
     '@nuxtjs/i18n',
-    '@vueuse/motion/nuxt',
-    'nuxt-icon'
+    '@vueuse/motion/nuxt'
   ],
 
   devtools: {
@@ -91,6 +90,15 @@ export default defineNuxtConfig({
   },
 
   fonts: false,
+
+  i18n: {
+    defaultLocale: 'zh',
+    locales: [
+      { code: 'zh', name: '中文', language: 'zh-CN' },
+      { code: 'en', name: 'English', language: 'en-US' },
+      { code: 'ja', name: '日本語', language: 'ja-JP' }
+    ]
+  },
 
   icon: {
     serverBundle: {
