@@ -8,6 +8,28 @@ const route = useRoute()
 const splitViewStore = useSplitViewStore()
 const systemStore = useSystemStore()
 
+interface User {
+  avatar: string
+  displayName: string
+  username: string
+  instance?: string
+}
+
+interface TimelinePost {
+  id: string
+  author: User
+  createdAt: Date | string
+  content: string
+  replyTo?: {
+    author: User
+  }
+  metrics: {
+    replies: number
+    reposts: number
+    reactions: number
+  }
+}
+
 const timelineType = computed(() => {
   const tab = route.query.tab as string
   if (tab === 'followed') return 'home'
@@ -15,7 +37,7 @@ const timelineType = computed(() => {
   return 'public'
 })
 
-const timelineTitle = computed(() => {
+const _timelineTitle = computed(() => {
   switch (timelineType.value) {
     case 'home': return '已关注'
     case 'local': return '仅本实例'
@@ -23,7 +45,7 @@ const timelineTitle = computed(() => {
   }
 })
 
-const timelineIcon = computed(() => {
+const _timelineIcon = computed(() => {
   switch (timelineType.value) {
     case 'home': return 'i-material-symbols-person'
     case 'local': return 'i-material-symbols-dns'
@@ -39,26 +61,26 @@ const timelineEndpoint = computed(() => {
   }
 })
 
-const { data: timelineData, pending: timelineLoading, error: timelineError, refresh: refreshTimeline } = useAsyncData(
+const { data: timelineData, pending: timelineLoading } = useAsyncData(
   `timeline-${timelineType.value}`,
   async () => {
     if (systemStore.isDevMode) {
-      return []
+      return [] as TimelinePost[]
     }
-    
+
     try {
       const api = useApi()
       const response = await api.get(timelineEndpoint.value, {
         query: { limit: 20 }
       })
-      return response as any[]
+      return response as TimelinePost[]
     } catch (err) {
       console.error('Failed to fetch timeline:', err)
-      return []
+      return [] as TimelinePost[]
     }
   },
   {
-    default: () => [],
+    default: () => [] as TimelinePost[],
     watch: [timelineType]
   }
 )
@@ -66,11 +88,11 @@ const { data: timelineData, pending: timelineLoading, error: timelineError, refr
 const onlineUsersCount = ref(1)
 const onlineAvatars: { src: string }[] = []
 
-const trendingTopics: { name: string; posts: string; trend: string }[] = []
+const trendingTopics: { name: string, posts: string, trend: string }[] = []
 
-const recommendedUsers: { displayName: string; username: string; avatar: string }[] = []
+const recommendedUsers: { displayName: string, username: string, avatar: string }[] = []
 
-const federatedInstances: { domain: string; protocol: string; active: number }[] = []
+const federatedInstances: { domain: string, protocol: string, active: number }[] = []
 </script>
 
 <template>
@@ -146,7 +168,10 @@ const federatedInstances: { domain: string; protocol: string; active: number }[]
             <span class="text-[11px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Active Now</span>
           </div>
           <!-- Right: Avatars -->
-          <div v-if="onlineAvatars.length > 0" class="shrink-0">
+          <div
+            v-if="onlineAvatars.length > 0"
+            class="shrink-0"
+          >
             <UAvatarGroup
               size="sm"
               :max="4"
@@ -198,7 +223,10 @@ const federatedInstances: { domain: string; protocol: string; active: number }[]
         </template>
         <template v-else>
           <div class="flex flex-col items-center justify-center py-6 text-gray-400">
-            <UIcon name="i-material-symbols-tag" class="w-8 h-8 mb-2 opacity-50" />
+            <UIcon
+              name="i-material-symbols-tag"
+              class="w-8 h-8 mb-2 opacity-50"
+            />
             <span class="text-[12px] font-medium">暂无话题</span>
           </div>
         </template>
@@ -247,7 +275,10 @@ const federatedInstances: { domain: string; protocol: string; active: number }[]
         </template>
         <template v-else>
           <div class="flex flex-col items-center justify-center py-6 text-gray-400">
-            <UIcon name="i-material-symbols-person-add" class="w-8 h-8 mb-2 opacity-50" />
+            <UIcon
+              name="i-material-symbols-person-add"
+              class="w-8 h-8 mb-2 opacity-50"
+            />
             <span class="text-[12px] font-medium">暂无推荐</span>
           </div>
         </template>
@@ -301,7 +332,10 @@ const federatedInstances: { domain: string; protocol: string; active: number }[]
         </template>
         <template v-else>
           <div class="flex flex-col items-center justify-center py-6 text-gray-400">
-            <UIcon name="i-material-symbols-hub" class="w-8 h-8 mb-2 opacity-50" />
+            <UIcon
+              name="i-material-symbols-hub"
+              class="w-8 h-8 mb-2 opacity-50"
+            />
             <span class="text-[12px] font-medium">暂无联邦实例</span>
           </div>
         </template>

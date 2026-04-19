@@ -44,6 +44,8 @@ export default defineNuxtConfig({
     port: 2000
   },
 
+  compatibilityDate: '2025-01-15',
+
   nitro: {
     devProxy: {
       '/api': {
@@ -56,16 +58,6 @@ export default defineNuxtConfig({
       }
     }
   },
-
-  icon: {
-    serverBundle: {
-      collections: ['ic', 'lucide', 'material-symbols', 'simple-icons']
-    }
-  },
-
-  fonts: false,
-
-  compatibilityDate: '2025-01-15',
 
   vite: {
     server: {
@@ -95,6 +87,14 @@ export default defineNuxtConfig({
         commaDangle: 'never',
         braceStyle: '1tbs'
       }
+    }
+  },
+
+  fonts: false,
+
+  icon: {
+    serverBundle: {
+      collections: ['ic', 'lucide', 'material-symbols', 'simple-icons']
     }
   }
 })

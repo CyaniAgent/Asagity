@@ -145,10 +145,15 @@ const toggleTaskPause = (taskId: string) => {
   }
 }
 
-// Drag Handlers
-const onDragOver = () => { isDropping.value = true }
-const onDragLeave = () => { isDropping.value = false }
-const onDrop = () => { isDropping.value = false }
+const onDragOver = () => {
+  isDropping.value = true
+}
+const onDragLeave = () => {
+  isDropping.value = false
+}
+const onDrop = () => {
+  isDropping.value = false
+}
 </script>
 
 <template>

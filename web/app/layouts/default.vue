@@ -2,7 +2,6 @@
 import { ref, computed, watch, nextTick, onUnmounted, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useInstanceStore } from '~/stores/instance'
-import { useUserStore } from '~/stores/user'
 import { useSystemStore } from '~/stores/system'
 import { useThemeStore } from '~/stores/theme'
 import { useIconCache } from '~/composables/useIconCache'
@@ -29,18 +28,14 @@ const navigation = [
   ]
 ]
 
-// Navigation Highlight Logic
-const isItemActive = (item: any) => {
+const isItemActive = (item: { label: string, activePaths?: string[], to?: string }) => {
   if (item.label === '更多') {
     return moreMenuGroups.flat().some(feat => route.path.startsWith(feat.to))
   }
-
-  if (item.activePaths) {
-    return item.activePaths.some((p: string) => p === '/' ? route.path === '/' : route.path.startsWith(p))
+  if (item.to) {
+    return route.path.startsWith(item.to)
   }
-
-  if (item.to === '/') return route.path === '/'
-  return route.path.startsWith(item.to)
+  return false
 }
 
 // Timeline Top Tabs
@@ -207,9 +202,8 @@ const splitViewIcon = computed(() => {
   }
 })
 
-// "More" popover state
 const moreMenuOpen = ref(false)
-const moreMenuRef = ref<any>(null) // Inside v-for, this becomes an array
+const moreMenuRef = ref<HTMLElement | null>(null)
 const moreMenuPanelRef = ref<HTMLElement | null>(null)
 
 // Extract the single element from the ref array

@@ -15,6 +15,11 @@ export interface HostInfo {
 export const ERROR_CODE_INIT_FAILED = 'ERR 12201'
 export const ERROR_CODE_NETWORK_TIMEOUT = 'ERR 12202'
 
+interface FetchError {
+  name?: string
+  message?: string
+}
+
 export const useSystemStore = defineStore('system', () => {
   const isBackendOnline = ref(true)
   const isFrontendOnlyMode = ref(false)
@@ -29,17 +34,14 @@ export const useSystemStore = defineStore('system', () => {
 
   const hostInfo = ref<HostInfo | null>(null)
 
-  // Initialization Sequence
   async function initSequence() {
     if (isInitialized.value) return
 
     isInitialized.value = true
     initProgress.value = 100
 
-    // Non-blocking: fetch host info in background
     fetchHostInfoWithTimeout().catch(() => {})
 
-    // Always launch immediately - backend status shown via heartbeat/modal
     launchApp()
   }
 
@@ -52,8 +54,9 @@ export const useSystemStore = defineStore('system', () => {
         signal: controller.signal
       })
       hostInfo.value = data
-    } catch (err: any) {
-      if (err.name === 'AbortError' || err.message?.includes('abort')) {
+    } catch (err: unknown) {
+      const fetchError = err as FetchError
+      if (fetchError.name === 'AbortError' || fetchError.message?.includes('abort')) {
         console.warn('Host info fetch timeout, continuing without it')
       } else {
         console.warn('Failed to fetch host info:', err)
@@ -72,14 +75,11 @@ export const useSystemStore = defineStore('system', () => {
     }
   }
 
-  // Launch the application (Triggered by user gesture)
   function launchApp() {
     if (!isInitialized.value) return
 
-    // Unlock Audio Context for modern browsers
     if (import.meta.client) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const AudioCtx = (window.AudioContext || (window as any).webkitAudioContext) as typeof AudioContext | undefined
+      const AudioCtx = (window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)
       if (AudioCtx) {
         const audioCtx = new AudioCtx()
         if (audioCtx.state === 'suspended') {
@@ -87,7 +87,6 @@ export const useSystemStore = defineStore('system', () => {
         }
       }
 
-      // Play a tiny silent sound to further ensure the context is "warm"
       const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA')
       silentAudio.play().catch(() => {})
     }
@@ -96,7 +95,6 @@ export const useSystemStore = defineStore('system', () => {
     startHeartbeat()
   }
 
-  // Triggered when an API call fails due to severe network issues
   function triggerOfflineFallback() {
     if (isBackendOnline.value && !isDevMode.value) {
       isBackendOnline.value = false
@@ -104,7 +102,6 @@ export const useSystemStore = defineStore('system', () => {
     }
   }
 
-  // Developer Mode (Mock Backend Mode)
   function enableDevMode() {
     isDevMode.value = true
     isBackendOnline.value = true
@@ -121,21 +118,17 @@ export const useSystemStore = defineStore('system', () => {
     }
   }
 
-  // Triggered when the user dismisses the error modal
   function enableFrontendOnlyMode() {
     showConnectionErrorModal.value = false
     isFrontendOnlyMode.value = true
   }
 
-  // Restore normal operations
   function restoreOnlineMode() {
     if (!isBackendOnline.value || isDevMode.value) {
       isBackendOnline.value = true
       isFrontendOnlyMode.value = false
       showConnectionErrorModal.value = false
 
-      // If we were in dev mode, we stay in dev mode until refresh
-      // but if the backend actually comes back, we can just be normal
       isDevMode.value = false
 
       if (import.meta.client) {
@@ -145,18 +138,14 @@ export const useSystemStore = defineStore('system', () => {
           description: '感知到服务端在线，系统功能已全面回复。',
           color: 'success',
           icon: 'i-material-symbols-cloud-done-rounded',
-          silent: !hasLaunched.value, // Don't play sound if not launched
+          silent: !hasLaunched.value,
           persist: false
         })
       }
     }
   }
 
-  // The Heartbeat Engine
   async function checkBackendHealth() {
-    // We now allow health checks even in Dev Mode to support "Auto-Exit"
-    // when the real backend comes back online.
-
     try {
       await $fetch('/healthz', {
         method: 'GET',
@@ -164,11 +153,8 @@ export const useSystemStore = defineStore('system', () => {
         headers: { 'Cache-Control': 'no-cache' }
       })
 
-      // If we were in Dev Mode and the check succeeds, restoreOnlineMode
-      // will set isDevMode to false and play the restoration sound.
       restoreOnlineMode()
     } catch {
-      // If we are in Dev Mode, don't trigger offline fallback
       if (!isDevMode.value) {
         triggerOfflineFallback()
       }
@@ -178,10 +164,8 @@ export const useSystemStore = defineStore('system', () => {
   function startHeartbeat() {
     if (heartbeatInterval.value) return
 
-    // Initial check
     checkBackendHealth()
 
-    // Regular polling every 5 seconds
     heartbeatInterval.value = setInterval(() => {
       checkBackendHealth()
     }, 5000)

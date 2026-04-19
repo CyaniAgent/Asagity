@@ -41,30 +41,53 @@ if (systemStore.isDevMode) {
   })
 }
 
-// 1. 获取实例详细设置 (Go API)
-const { data: instanceSettings, pending: pendingInstance, refresh: refreshInstance } = useAsyncData<InstanceSetting[]>('admin-instance-settings',
-  () => $fetch('/api/admin/system/instance', {
-    baseURL: config.public.apiBase
-  }), {
-    lazy: true,
-    onRequestError: () => { instanceError.value = true },
-    onResponseError: () => { instanceError.value = true }
+const fetchInstanceSettings = async () => {
+  try {
+    instanceError.value = false
+    const result = await $fetch<InstanceSetting[]>('/api/admin/system/instance', {
+      baseURL: config.public.apiBase
+    })
+    instanceSettings.value = result
+  } catch {
+    instanceError.value = true
   }
-)
+}
 
-// 2. 获取数据库占用 (Go API)
-const { data: dbStats, pending: pendingDB, refresh: refreshDB } = useAsyncData<DatabaseStat[]>('admin-db-stats',
-  () => $fetch('/api/admin/system/database', {
-    baseURL: config.public.apiBase
-  }), {
-    lazy: true,
-    onRequestError: () => { dbError.value = true },
-    onResponseError: () => { dbError.value = true }
+const fetchDbStats = async () => {
+  try {
+    dbError.value = false
+    const result = await $fetch<DatabaseStat[]>('/api/admin/system/database', {
+      baseURL: config.public.apiBase
+    })
+    dbStatsValue.value = result
+  } catch {
+    dbError.value = true
   }
-)
+}
 
-// 3. 获取运行环境 (Go API)
-const { data: envInfo, pending: pendingEnv, refresh: refreshEnv } = useAsyncData<{
+const fetchEnvInfo = async () => {
+  try {
+    envError.value = false
+    const result = await $fetch<{
+      hostname: string
+      platform: string
+      os_version: string
+      arch: string
+      cpu: string
+      memory: string
+      is_container: boolean
+    }>('/api/system/environment', {
+      baseURL: config.public.apiBase
+    })
+    envInfoValue.value = result
+  } catch {
+    envError.value = true
+  }
+}
+
+const instanceSettings = ref<InstanceSetting[] | null>(null)
+const dbStatsValue = ref<DatabaseStat[] | null>(null)
+const envInfoValue = ref<{
   hostname: string
   platform: string
   os_version: string
@@ -72,24 +95,28 @@ const { data: envInfo, pending: pendingEnv, refresh: refreshEnv } = useAsyncData
   cpu: string
   memory: string
   is_container: boolean
-}>('system-env',
-  () => $fetch('/api/system/environment', {
-    baseURL: config.public.apiBase
-  }), {
-    lazy: true,
-    onRequestError: () => { envError.value = true },
-    onResponseError: () => { envError.value = true }
-  }
-)
+} | null>(null)
+
+const pendingInstance = ref(false)
+const pendingDB = ref(false)
+const pendingEnv = ref(false)
+
+const refreshInstance = () => fetchInstanceSettings()
+const refreshDB = () => fetchDbStats()
+const refreshEnv = () => fetchEnvInfo()
+
+fetchInstanceSettings()
+fetchDbStats()
+fetchEnvInfo()
 
 const topTables = computed(() => {
-  if (!dbStats.value) return []
-  return dbStats.value.slice(0, 5)
+  if (!dbStatsValue.value) return []
+  return dbStatsValue.value.slice(0, 5)
 })
 
 const maxTableSize = computed(() => {
-  if (!dbStats.value || dbStats.value.length === 0) return 1
-  return dbStats.value[0].size_bytes
+  if (!dbStatsValue.value || dbStatsValue.value.length === 0) return 1
+  return dbStatsValue.value[0]?.size_bytes ?? 1
 })
 
 function openDatabaseDetails() {
@@ -127,7 +154,7 @@ function retryAll() {
       </div>
       <UButton
         v-if="instanceError || dbError || envError"
-        color="red"
+        color="error"
         variant="soft"
         size="sm"
         icon="i-material-symbols-refresh"
@@ -139,10 +166,7 @@ function retryAll() {
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- 实例详细信息 -->
-      <UCard
-        class="overflow-hidden"
-        :ui="{ body: { padding: 'p-0' } }"
-      >
+      <UCard class="overflow-hidden">
         <template #header>
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
@@ -154,7 +178,7 @@ function retryAll() {
             </div>
             <UButton
               v-if="instanceError"
-              color="red"
+              color="error"
               variant="ghost"
               size="xs"
               icon="i-material-symbols-refresh"
@@ -225,14 +249,14 @@ function retryAll() {
               <div class="flex items-center gap-2">
                 <UButton
                   v-if="dbError"
-                  color="red"
+                  color="error"
                   variant="ghost"
                   size="xs"
                   icon="i-material-symbols-refresh"
                   @click="refreshDB(); dbError = false"
                 />
                 <UButton
-                  color="cyan"
+                  color="primary"
                   variant="ghost"
                   size="xs"
                   icon="i-material-symbols-open-in-new"
@@ -280,7 +304,7 @@ function retryAll() {
               </div>
               <UProgress
                 :value="(table.size_bytes / maxTableSize) * 100"
-                color="cyan"
+                color="primary"
                 size="sm"
               />
             </div>
@@ -306,7 +330,7 @@ function retryAll() {
               </div>
               <UButton
                 v-if="envError"
-                color="red"
+                color="error"
                 variant="ghost"
                 size="xs"
                 icon="i-material-symbols-refresh"
@@ -337,7 +361,7 @@ function retryAll() {
             </p>
           </div>
           <div
-            v-else-if="envInfo"
+            v-else-if="envInfoValue"
             class="grid grid-cols-2 gap-4"
           >
             <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-gray-800">
@@ -345,7 +369,7 @@ function retryAll() {
                 宿主机名
               </p>
               <p class="text-sm font-bold text-gray-900 dark:text-white truncate">
-                {{ envInfo.hostname }}
+                {{ envInfoValue.hostname }}
               </p>
             </div>
             <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-gray-800">
@@ -353,7 +377,7 @@ function retryAll() {
                 操作系统
               </p>
               <p class="text-sm font-bold text-gray-900 dark:text-white truncate">
-                {{ envInfo.platform }}
+                {{ envInfoValue.platform }}
               </p>
             </div>
             <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-gray-800">
@@ -361,7 +385,7 @@ function retryAll() {
                 系统架构
               </p>
               <p class="text-sm font-bold text-gray-900 dark:text-white">
-                {{ envInfo.arch }}
+                {{ envInfoValue.arch }}
               </p>
             </div>
             <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-gray-800">
@@ -369,7 +393,7 @@ function retryAll() {
                 CPU
               </p>
               <p class="text-sm font-bold text-gray-900 dark:text-white truncate">
-                {{ envInfo.cpu || 'Unknown' }}
+                {{ envInfoValue.cpu || 'Unknown' }}
               </p>
             </div>
             <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-gray-800">
@@ -377,7 +401,7 @@ function retryAll() {
                 内存
               </p>
               <p class="text-sm font-bold text-gray-900 dark:text-white">
-                {{ envInfo.memory || 'Unknown' }}
+                {{ envInfoValue.memory || 'Unknown' }}
               </p>
             </div>
             <div class="p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-gray-800">
@@ -385,7 +409,7 @@ function retryAll() {
                 容器环境
               </p>
               <p class="text-sm font-bold text-cyan-600 dark:text-cyan-400">
-                {{ envInfo.is_container ? '是' : '否' }}
+                {{ envInfoValue.is_container ? '是' : '否' }}
               </p>
             </div>
           </div>

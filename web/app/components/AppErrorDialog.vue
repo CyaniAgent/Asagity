@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useSystemStore } from '~/stores/system'
-import { watch, ref, onMounted } from 'vue'
+import { watch, ref } from 'vue'
 
 const systemStore = useSystemStore()
 const audioRef = ref<HTMLAudioElement | null>(null)
@@ -23,7 +23,7 @@ watch(() => systemStore.isBackendOnline, (isOnline, oldVal) => {
 })
 
 const devModeTriggered = ref(false)
-const pressTimer = ref<any>(null)
+const pressTimer = ref<NodeJS.Timeout | null>(null)
 
 const handleRefreshStart = () => {
   devModeTriggered.value = false

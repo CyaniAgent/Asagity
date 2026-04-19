@@ -4,7 +4,7 @@ import si from 'systeminformation'
 
 const startupTime = new Date().getTime()
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (_event) => {
   // Try to use process.env mapping for Docker, else fallback to OS defaults or systeminformation
 
   // systeminformation OS info can take a bit so we'll fetch basic stuff

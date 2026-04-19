@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useDraggable, useWindowSize } from '@vueuse/core'
 import { useMusicStore } from '~/stores/music'
 
 const musicStore = useMusicStore()
@@ -14,15 +12,6 @@ function formatKbps(bps?: number) {
 function formatSampleRate(hz?: number) {
   if (!hz) return 'N/A'
   return `${(hz / 1000).toFixed(1)} kHz`
-}
-
-const activeColor = '#39C5BB'
-
-const qualityColors: Record<string, string> = {
-  'Lossless': '#FFD700', // Gold for Lossless
-  'MP3 HQ': '#39C5BB', // Miku Green for HQ
-  'MP3 Normal': '#A0A0A0', // Gray for Normal
-  'Unknown': '#666666'
 }
 </script>
 
