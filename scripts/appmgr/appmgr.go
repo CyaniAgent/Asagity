@@ -10,6 +10,8 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -38,8 +40,10 @@ type Service struct {
 }
 
 var (
-	projectRoot string
-	config      Config
+	projectRoot   string
+	config        Config
+	pidDir        string
+	servicePIDs   = map[string]int{}
 )
 
 func init() {
@@ -48,6 +52,15 @@ func init() {
 	if err != nil {
 		fmt.Printf("Error: Cannot find project root: %v\n", err)
 		os.Exit(1)
+	}
+
+	pidDir = filepath.Join(projectRoot, ".appmgr")
+	if err := os.MkdirAll(pidDir, 0755); err != nil {
+		fmt.Printf("Warning: Cannot create pid directory: %v\n", err)
+	}
+
+	if err := loadPIDs(); err != nil {
+		fmt.Printf("Warning: Failed to load PIDs: %v\n", err)
 	}
 
 	if err := loadConfig(); err != nil {
@@ -108,6 +121,74 @@ func getEnv(key, defaultValue string) string {
 	return defaultValue
 }
 
+func loadPIDs() error {
+	pidFile := filepath.Join(pidDir, "service.pid")
+	data, err := os.ReadFile(pidFile)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+
+	scanner := bufio.NewScanner(strings.NewReader(string(data)))
+	for scanner.Scan() {
+		line := scanner.Text()
+		parts := strings.Split(line, "=")
+		if len(parts) == 2 {
+			name := strings.TrimSpace(parts[0])
+			pid, err := strconv.Atoi(strings.TrimSpace(parts[1]))
+			if err == nil {
+				if isProcessRunning(pid) {
+					servicePIDs[name] = pid
+				} else {
+					delete(servicePIDs, name)
+				}
+			}
+		}
+	}
+	return scanner.Err()
+}
+
+func savePIDs() error {
+	pidFile := filepath.Join(pidDir, "service.pid")
+	var lines []string
+	for name, pid := range servicePIDs {
+		if pid > 0 && isProcessRunning(pid) {
+			lines = append(lines, fmt.Sprintf("%s=%d", name, pid))
+		}
+	}
+
+	content := strings.Join(lines, "\n")
+	if content != "" {
+		content += "\n"
+	}
+	return os.WriteFile(pidFile, []byte(content), 0644)
+}
+
+func isProcessRunning(pid int) bool {
+	if pid <= 0 {
+		return false
+	}
+	process, err := os.FindProcess(pid)
+	if err != nil {
+		return false
+	}
+	err = process.Signal(syscall.Signal(0))
+	return err == nil
+}
+
+func killProcess(pid int) error {
+	if pid <= 0 {
+		return nil
+	}
+	process, err := os.FindProcess(pid)
+	if err != nil {
+		return err
+	}
+	return process.Kill()
+}
+
 func printWarning() {
 	fmt.Println("\033[1;33m╔════════════════════════════════════════════════════════════╗\033[0m")
 	fmt.Println("\033[1;33m║  This script is ONLY recommended for use in development      ║\033[0m")
@@ -124,6 +205,12 @@ func startAPI() error {
 		return fmt.Errorf("core directory not found: %v", err)
 	}
 
+	if oldPID, ok := servicePIDs["api"]; ok && oldPID > 0 {
+		if isProcessRunning(oldPID) {
+			killProcess(oldPID)
+		}
+	}
+
 	cmd := exec.Command("go", "run", ".")
 	cmd.Dir = coreDir
 	cmd.Env = append(os.Environ(), "TZ="+getEnv("TZ", "Asia/Shanghai"))
@@ -131,15 +218,22 @@ func startAPI() error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start API: %v", err)
 	}
 
-	fmt.Printf("\033[32m[OK]\033[0m API server started (PID: %d)\n", cmd.Process.Pid)
+	pid := cmd.Process.Pid
+	servicePIDs["api"] = pid
+	savePIDs()
+
+	fmt.Printf("\033[32m[OK]\033[0m API server started (PID: %d)\n", pid)
 
 	go func() {
 		cmd.Wait()
+		delete(servicePIDs, "api")
+		savePIDs()
 		fmt.Printf("\033[33m[WARN]\033[0m API server stopped\n")
 	}()
 
@@ -152,22 +246,34 @@ func startWeb() error {
 		return fmt.Errorf("web directory not found: %v", err)
 	}
 
+	if oldPID, ok := servicePIDs["web"]; ok && oldPID > 0 {
+		if isProcessRunning(oldPID) {
+			killProcess(oldPID)
+		}
+	}
+
 	cmd := exec.Command("npm", "run", "dev")
 	cmd.Dir = webDir
 	cmd.Env = append(os.Environ(), "NITRO_PORT="+config.WebPort)
-
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start Web: %v", err)
 	}
 
-	fmt.Printf("\033[32m[OK]\033[0m Web server started (PID: %d)\n", cmd.Process.Pid)
+	pid := cmd.Process.Pid
+	servicePIDs["web"] = pid
+	savePIDs()
+
+	fmt.Printf("\033[32m[OK]\033[0m Web server started (PID: %d)\n", pid)
 
 	go func() {
 		cmd.Wait()
+		delete(servicePIDs, "web")
+		savePIDs()
 		fmt.Printf("\033[33m[WARN]\033[0m Web server stopped\n")
 	}()
 
@@ -221,6 +327,15 @@ func startRedis() error {
 }
 
 func stopService(name string) error {
+	if pid, ok := servicePIDs[name]; ok && pid > 0 {
+		if isProcessRunning(pid) {
+			killProcess(pid)
+			delete(servicePIDs, name)
+			savePIDs()
+			fmt.Printf("\033[33m[STOP]\033[0m %s stopped (PID: %d)\n", name, pid)
+		}
+	}
+
 	switch name {
 	case "db":
 		cmd := exec.Command("docker", "stop", "postgres")
@@ -267,19 +382,15 @@ func getServiceStatus(name string) Service {
 	switch name {
 	case "api":
 		s.DisplayName = "Go API Server"
-		if checkPort("127.0.0.1", config.ServerPort) {
+		if pid, ok := servicePIDs["api"]; ok && isProcessRunning(pid) {
 			s.Status = "\033[32mRUNNING\033[0m"
-			if pid := getProcessPID(config.ServerPort); pid > 0 {
-				s.PID = pid
-			}
+			s.PID = pid
 		}
 	case "web":
 		s.DisplayName = "Nuxt Web"
-		if checkPort("127.0.0.1", config.WebPort) {
+		if pid, ok := servicePIDs["web"]; ok && isProcessRunning(pid) {
 			s.Status = "\033[32mRUNNING\033[0m"
-			if pid := getWebPID(); pid > 0 {
-				s.PID = pid
-			}
+			s.PID = pid
 		}
 	case "db":
 		s.DisplayName = "PostgreSQL"
