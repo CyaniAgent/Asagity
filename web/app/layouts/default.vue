@@ -664,8 +664,8 @@ const moreMenuGroups = [
             :class="[
               splitViewStore.isResizing ? '' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
               splitViewStore.isOpen && splitViewStore.activeView === 'left'
-                ? 'border-cyan-400/60 shadow-[0_0_0_2px_rgba(34,211,238,0.15),0_4px_20px_rgba(0,0,0,0.03)]'
-                : 'border-gray-200/50 dark:border-gray-800/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)]'
+                ? 'border-cyan-400/60 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.2)]'
+                : 'border-gray-200/50 dark:border-gray-800/50'
             ]"
             :style="{
               width: splitViewStore.isMaximized ? '0%' : (splitViewStore.isOpen ? `calc(${100 - splitViewStore.rightPanelWidth}% - 6px)` : '100%'),
@@ -700,8 +700,8 @@ const moreMenuGroups = [
               class="h-full bg-white dark:bg-gray-900 rounded-[30px] border overflow-hidden flex flex-col"
               :class="[
                 splitViewStore.activeView === 'right'
-                  ? 'border-cyan-400/60 shadow-[0_0_0_2px_rgba(34,211,238,0.15),0_4px_20px_rgba(0,0,0,0.03)]'
-                  : 'border-gray-200/50 dark:border-gray-800/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)]'
+                  ? 'border-cyan-400/60 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.2)]'
+                  : 'border-gray-200/50 dark:border-gray-800/50'
               ]"
             >
               <!-- Unified Split View Header Controls -->
