@@ -8,6 +8,28 @@ const route = useRoute()
 const splitViewStore = useSplitViewStore()
 const systemStore = useSystemStore()
 
+interface User {
+  avatar: string
+  displayName: string
+  username: string
+  instance?: string
+}
+
+interface TimelinePost {
+  id: string
+  author: User
+  createdAt: Date | string
+  content: string
+  replyTo?: {
+    author: User
+  }
+  metrics: {
+    replies: number
+    reposts: number
+    reactions: number
+  }
+}
+
 const timelineType = computed(() => {
   const tab = route.query.tab as string
   if (tab === 'followed') return 'home'
@@ -15,7 +37,7 @@ const timelineType = computed(() => {
   return 'public'
 })
 
-const timelineTitle = computed(() => {
+const _timelineTitle = computed(() => {
   switch (timelineType.value) {
     case 'home': return '已关注'
     case 'local': return '仅本实例'
@@ -23,7 +45,7 @@ const timelineTitle = computed(() => {
   }
 })
 
-const timelineIcon = computed(() => {
+const _timelineIcon = computed(() => {
   switch (timelineType.value) {
     case 'home': return 'i-material-symbols-person'
     case 'local': return 'i-material-symbols-dns'
@@ -39,26 +61,26 @@ const timelineEndpoint = computed(() => {
   }
 })
 
-const { data: timelineData, pending: timelineLoading, error: timelineError, refresh: refreshTimeline } = useAsyncData(
+const { data: timelineData, pending: timelineLoading } = useAsyncData(
   `timeline-${timelineType.value}`,
   async () => {
     if (systemStore.isDevMode) {
-      return []
+      return [] as TimelinePost[]
     }
-    
+
     try {
       const api = useApi()
       const response = await api.get(timelineEndpoint.value, {
         query: { limit: 20 }
       })
-      return response as any[]
+      return response as TimelinePost[]
     } catch (err) {
       console.error('Failed to fetch timeline:', err)
-      return []
+      return [] as TimelinePost[]
     }
   },
   {
-    default: () => [],
+    default: () => [] as TimelinePost[],
     watch: [timelineType]
   }
 )

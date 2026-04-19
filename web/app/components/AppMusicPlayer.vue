@@ -2,14 +2,11 @@
 import { computed } from 'vue'
 import { useMusicStore } from '~/stores/music'
 import { useSplitViewStore } from '~/stores/splitView'
-import { useSystemStore } from '~/stores/system'
 import MusicLyrics from '~/components/MusicLyrics.vue'
 
 const musicStore = useMusicStore()
 const splitViewStore = useSplitViewStore()
-const systemStore = useSystemStore()
 
-// Dynamic theme color from album art
 const activeColor = computed(() => musicStore.themeColor)
 const textColor = computed(() => musicStore.textColor)
 
@@ -22,11 +19,6 @@ function formatTime(seconds: number) {
 function handleProgressChange(e: Event) {
   const target = e.target as HTMLInputElement
   musicStore.setProgress(parseFloat(target.value))
-}
-
-function handleVolumeChange(e: Event) {
-  const target = e.target as HTMLInputElement
-  musicStore.setVolume(parseInt(target.value))
 }
 </script>
 

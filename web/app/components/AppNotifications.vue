@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useNotificationStore, type NotificationType } from '~/stores/notifications'
-import { useSplitViewStore } from '~/stores/splitView'
 
 const notificationStore = useNotificationStore()
-const splitViewStore = useSplitViewStore()
 
 const activeTab = ref<'all' | NotificationType>('all')
 

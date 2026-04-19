@@ -1,19 +1,27 @@
 import { useNotificationStore } from '~/stores/notifications'
 import { useSoundManager } from '~/stores/soundManager'
 
+type ToastColor = 'error' | 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'neutral'
+
+interface ToastOptions {
+  title?: string
+  description?: string
+  color?: ToastColor
+  icon?: string
+  persist?: boolean
+  silent?: boolean
+}
+
 export const useAppToast = () => {
   const toast = useToast()
   const notificationStore = useNotificationStore()
   const soundManager = useSoundManager()
 
-  const add = (options: any) => {
-    // Default persistence to true unless explicitly disabled
+  const add = (options: ToastOptions) => {
     const persist = options.persist !== false
 
-    // Call the original toast addition
     toast.add(options)
 
-    // Push to notification store if persistent
     if (persist) {
       notificationStore.addNotification({
         type: 'system',
@@ -21,7 +29,6 @@ export const useAppToast = () => {
       })
     }
 
-    // Play notification sound based on toast color
     if (import.meta.client && !options.silent) {
       if (options.color === 'error') {
         soundManager.playIfAvailable('sys_error')
@@ -33,7 +40,6 @@ export const useAppToast = () => {
     }
   }
 
-  // Map other methods if necessary
   return {
     add,
     remove: toast.remove,

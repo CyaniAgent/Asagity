@@ -7,8 +7,7 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@vueuse/nuxt',
     '@nuxtjs/i18n',
-    '@vueuse/motion/nuxt',
-    'nuxt-icon'
+    '@vueuse/motion/nuxt'
   ],
 
   devtools: {
@@ -44,6 +43,8 @@ export default defineNuxtConfig({
     port: 2000
   },
 
+  compatibilityDate: '2025-01-15',
+
   nitro: {
     devProxy: {
       '/api': {
@@ -56,16 +57,6 @@ export default defineNuxtConfig({
       }
     }
   },
-
-  icon: {
-    serverBundle: {
-      collections: ['ic', 'lucide', 'material-symbols', 'simple-icons']
-    }
-  },
-
-  fonts: false,
-
-  compatibilityDate: '2025-01-15',
 
   vite: {
     server: {
@@ -95,6 +86,23 @@ export default defineNuxtConfig({
         commaDangle: 'never',
         braceStyle: '1tbs'
       }
+    }
+  },
+
+  fonts: false,
+
+  i18n: {
+    defaultLocale: 'zh',
+    locales: [
+      { code: 'zh', name: '中文', language: 'zh-CN' },
+      { code: 'en', name: 'English', language: 'en-US' },
+      { code: 'ja', name: '日本語', language: 'ja-JP' }
+    ]
+  },
+
+  icon: {
+    serverBundle: {
+      collections: ['ic', 'lucide', 'material-symbols', 'simple-icons']
     }
   }
 })

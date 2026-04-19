@@ -76,17 +76,21 @@ function switchMode() {
   if (props.disableTransfer) return
 
   if (props.mode === 'split') {
-    freeWindowStore.openFromContext(splitViewStore.currentRightViewType, {
-      post: splitViewStore.currentPost,
-      user: splitViewStore.currentUser,
-      chat: splitViewStore.currentChat
-    }, {
-      activeTab: splitViewStore.activeTab,
-      profileTab: splitViewStore.profileTab
-    })
+    if (splitViewStore.currentRightViewType) {
+      freeWindowStore.openFromContext(splitViewStore.currentRightViewType as 'post' | 'user' | 'music' | 'notifications' | 'chat' | 'admin_database', {
+        post: splitViewStore.currentPost,
+        user: splitViewStore.currentUser,
+        chat: splitViewStore.currentChat
+      }, {
+        activeTab: splitViewStore.activeTab,
+        profileTab: splitViewStore.profileTab
+      })
+    }
     splitViewStore.close()
   } else {
-    splitViewStore.currentRightViewType = freeWindowStore.currentViewType as any
+    if (freeWindowStore.currentViewType) {
+      splitViewStore.currentRightViewType = freeWindowStore.currentViewType as 'post' | 'user' | 'music' | 'notifications' | 'chat'
+    }
     splitViewStore.currentPost = freeWindowStore.currentPost
     splitViewStore.currentUser = freeWindowStore.currentUser
     splitViewStore.currentChat = freeWindowStore.currentChat
@@ -179,7 +183,7 @@ function switchMode() {
 
       <UTooltip
         v-if="mode === 'free' && !disableMaximize"
-        :text="isMaximized ? '还原' : (mode === 'split' ? '展开' : '最大化')"
+        :text="isMaximized ? '还原' : '最大化'"
         :popper="{ placement: 'bottom' }"
       >
         <UButton

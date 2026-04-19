@@ -1,27 +1,82 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
+interface Post {
+  id: string
+  author: {
+    avatar: string
+    displayName: string
+    username: string
+    instance?: string
+  }
+  createdAt: Date | string
+  content: string
+  metrics: {
+    replies: number
+    reposts: number
+    reactions: number
+  }
+}
+
+interface User {
+  avatar: string
+  displayName: string
+  username: string
+  instance?: string
+  banner?: string
+  isVerified?: boolean
+  bio?: string
+  location?: string
+  birthday?: string
+  joinedAt?: string
+  stats?: {
+    posts: number
+    following: number
+    followers: number
+  }
+}
+
+interface Chat {
+  id: string | number
+  name: string
+  avatar: string
+  lastMessage?: string
+  unreadCount?: number
+  online?: boolean
+  isGroup?: boolean
+  members?: number
+}
+
+interface OpenContextData {
+  post?: Post | null
+  user?: User | null
+  chat?: Chat | null
+}
+
+interface OpenContextTabs {
+  activeTab?: string
+  profileTab?: string
+}
+
+type ViewType = 'post' | 'user' | 'music' | 'notifications' | 'chat' | 'admin_database'
+
 export const useFreeWindowStore = defineStore('freeWindow', () => {
   const isOpen = ref(false)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const currentPost = ref<any>(null)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const currentUser = ref<any>(null)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const currentChat = ref<any>(null)
+  const currentPost = ref<Post | null>(null)
+  const currentUser = ref<User | null>(null)
+  const currentChat = ref<Chat | null>(null)
 
   const activeTab = ref('comments')
   const profileTab = ref('home')
 
-  const currentViewType = ref<'post' | 'user' | 'music' | 'notifications' | 'chat' | 'admin_database' | null>(null)
+  const currentViewType = ref<ViewType | null>(null)
   const isMaximized = ref(false)
   const isMinimized = ref(false)
   const refreshKey = ref(0)
 
-  // Position constraints for Draggable
   const position = ref({ x: window?.innerWidth ? window.innerWidth / 2 - 200 : 100, y: 100 })
 
-  function openFromContext(type: any, data: any, tabs: any) {
+  function openFromContext(type: ViewType, data: OpenContextData, tabs: OpenContextTabs) {
     currentViewType.value = type
     currentPost.value = data.post || null
     currentUser.value = data.user || null

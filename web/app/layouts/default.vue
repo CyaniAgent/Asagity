@@ -2,7 +2,6 @@
 import { ref, computed, watch, nextTick, onUnmounted, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useInstanceStore } from '~/stores/instance'
-import { useUserStore } from '~/stores/user'
 import { useSystemStore } from '~/stores/system'
 import { useThemeStore } from '~/stores/theme'
 import { useIconCache } from '~/composables/useIconCache'
@@ -40,18 +39,14 @@ const navigation = [
   ]
 ]
 
-// Navigation Highlight Logic
-const isItemActive = (item: any) => {
+const isItemActive = (item: { label: string, activePaths?: string[], to?: string }) => {
   if (item.label === '更多') {
     return moreMenuGroups.flat().some(feat => route.path.startsWith(feat.to))
   }
-
-  if (item.activePaths) {
-    return item.activePaths.some((p: string) => p === '/' ? route.path === '/' : route.path.startsWith(p))
+  if (item.to) {
+    return route.path.startsWith(item.to)
   }
-
-  if (item.to === '/') return route.path === '/'
-  return route.path.startsWith(item.to)
+  return false
 }
 
 // Timeline Top Tabs
@@ -218,9 +213,8 @@ const splitViewIcon = computed(() => {
   }
 })
 
-// "More" popover state
 const moreMenuOpen = ref(false)
-const moreMenuRef = ref<any>(null) // Inside v-for, this becomes an array
+const moreMenuRef = ref<HTMLElement | null>(null)
 const moreMenuPanelRef = ref<HTMLElement | null>(null)
 
 // Extract the single element from the ref array
@@ -686,7 +680,7 @@ const moreMenuGroups = [
       <div class="flex-1 overflow-hidden p-4 pt-0">
         <div
           ref="containerRef"
-          class="relative h-full w-full flex gap-1.5 overflow-hidden"
+          class="relative h-full w-full flex overflow-hidden"
         >
           <!-- 左侧：主视图容器 -->
           <div
@@ -694,11 +688,11 @@ const moreMenuGroups = [
             :class="[
               splitViewStore.isResizing ? 'transition-none' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
               splitViewStore.isOpen && splitViewStore.activeView === 'left'
-                ? 'border-cyan-400/60 shadow-[0_0_0_2px_rgba(34,211,238,0.15),0_4px_20px_rgba(0,0,0,0.03)]'
-                : 'border-gray-200/50 dark:border-gray-800/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)]'
+                ? 'border-cyan-400/60 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.2)]'
+                : 'border-gray-200/50 dark:border-gray-800/50'
             ]"
             :style="{
-              width: splitViewStore.isMaximized ? '0%' : (splitViewStore.isOpen ? `calc(${100 - splitViewStore.rightPanelWidth}% - ${isWidgetsOpen ? 326 : 0}px)` : `calc(100% - ${isWidgetsOpen ? 326 : 0}px)`),
+              width: splitViewStore.isMaximized ? '0%' : (splitViewStore.isOpen ? `${100 - splitViewStore.rightPanelWidth}%` : '100%'),
               transform: splitViewStore.isMaximized ? 'translateX(-100%)' : (splitViewStore.isOpen ? 'translateX(-8px)' : 'translateX(0)'),
               opacity: splitViewStore.isMaximized ? '0' : '1',
               pointerEvents: splitViewStore.isMaximized ? 'none' : 'auto'
@@ -713,7 +707,7 @@ const moreMenuGroups = [
           <!-- 可调节缝隙 (Divider) -->
           <div
             v-if="splitViewStore.isOpen && !splitViewStore.isMaximized"
-            class="w-1.5 h-full cursor-col-resize hover:bg-cyan-500/20 active:bg-cyan-500/40 transition-colors z-30 shrink-0 rounded-full"
+            class="w-1.5 h-full cursor-col-resize hover:bg-cyan-500/20 active:bg-cyan-500/40 transition-colors z-30 shrink-0 rounded-full mx-1.5"
             @mousedown="startResizing"
           />
 
@@ -724,15 +718,15 @@ const moreMenuGroups = [
               splitViewStore.isResizing ? 'transition-none' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
               splitViewStore.isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
             ]"
-            :style="{ width: splitViewStore.isMaximized ? '100%' : (splitViewStore.isOpen ? `${splitViewStore.rightPanelWidth}%` : '0px') }"
+            :style="{ width: splitViewStore.isMaximized ? '100%' : (splitViewStore.isOpen ? `calc(${splitViewStore.rightPanelWidth}% - 6px)` : '0px') }"
             @pointerdown="splitViewStore.focusRight()"
           >
             <div
               class="h-full bg-white dark:bg-gray-900 rounded-[30px] border overflow-hidden flex flex-col"
               :class="[
                 splitViewStore.activeView === 'right'
-                  ? 'border-cyan-400/60 shadow-[0_0_0_2px_rgba(34,211,238,0.15),0_4px_20px_rgba(0,0,0,0.03)]'
-                  : 'border-gray-200/50 dark:border-gray-800/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)]'
+                  ? 'border-cyan-400/60 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.2)]'
+                  : 'border-gray-200/50 dark:border-gray-800/50'
               ]"
             >
               <!-- Unified Split View Header Controls -->
