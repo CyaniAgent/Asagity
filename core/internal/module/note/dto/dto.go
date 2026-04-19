@@ -103,6 +103,14 @@ type VoteRequest struct {
 	OptionIDs []string `json:"option_ids" validate:"required,min=1,max=20"`
 }
 
+// NoteEditResponse - 编辑历史响应
+type NoteEditResponse struct {
+	ID        string `json:"id"`
+	Content   string `json:"content"`
+	Cw        string `json:"cw"`
+	CreatedAt string `json:"created_at"`
+}
+
 // TimelineRequest - 时间线请求参数
 type TimelineRequest struct {
 	Limit  int    `query:"limit,default=20"`
