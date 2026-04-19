@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"os/signal"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -40,10 +39,10 @@ type Service struct {
 }
 
 var (
-	projectRoot   string
-	config        Config
-	pidDir        string
-	servicePIDs   = map[string]int{}
+	projectRoot string
+	config      Config
+	pidDir      string
+	servicePIDs = map[string]int{}
 )
 
 func init() {
@@ -70,13 +69,36 @@ func init() {
 }
 
 func findProjectRoot() (string, error) {
-	candidates := []string{}
+	cwd, _ := os.Getwd()
+	exePath, _ := os.Executable()
 
-	exePath, err := os.Executable()
-	if err == nil {
+	searchDirs := []string{}
+
+	if cwd != "" {
+		d := cwd
+		for i := 0; i < 8; i++ {
+			searchDirs = append(searchDirs, d)
+			parent := filepath.Dir(d)
+			if parent == d {
+				break
+			}
+			d = parent
+		}
+	}
+
+	if exePath != "" {
 		exeDir := filepath.Dir(exePath)
-		for i := 0; i < 5; i++ {
-			candidates = append(candidates, exeDir)
+		for i := 0; i < 8; i++ {
+			exists := false
+			for _, s := range searchDirs {
+				if s == exeDir {
+					exists = true
+					break
+				}
+			}
+			if !exists {
+				searchDirs = append(searchDirs, exeDir)
+			}
 			parent := filepath.Dir(exeDir)
 			if parent == exeDir {
 				break
@@ -85,32 +107,14 @@ func findProjectRoot() (string, error) {
 		}
 	}
 
-	cwd, err := os.Getwd()
-	if err == nil {
-		for i := 0; i < 5; i++ {
-			candidates = append(candidates, cwd)
-			parent := filepath.Dir(cwd)
-			if parent == cwd {
-				break
-			}
-			cwd = parent
-		}
-	}
+	for _, dir := range searchDirs {
+		corePath := filepath.Join(dir, "core")
+		webPath := filepath.Join(dir, "web")
 
-	seen := make(map[string]bool)
-	for _, dir := range candidates {
-		if dir == "" || seen[dir] {
-			continue
-		}
-		seen[dir] = true
-		if _, err := os.Stat(filepath.Join(dir, ".env")); err == nil {
-			return dir, nil
-		}
-		if _, err := os.Stat(filepath.Join(dir, "core")); err == nil {
-			return dir, nil
-		}
-		if _, err := os.Stat(filepath.Join(dir, "web")); err == nil {
-			return dir, nil
+		if _, err := os.Stat(corePath); err == nil {
+			if _, err := os.Stat(webPath); err == nil {
+				return dir, nil
+			}
 		}
 	}
 
@@ -620,28 +624,6 @@ func getServiceStatus(name string) Service {
 	return s
 }
 
-func getProcessPID(port string) int {
-	cmd := exec.Command("lsof", "-t", "-i", ":"+port)
-	output, err := cmd.Output()
-	if err != nil {
-		return 0
-	}
-	var pid int
-	fmt.Sscanf(string(output), "%d", &pid)
-	return pid
-}
-
-func getWebPID() int {
-	cmd := exec.Command("pgrep", "-f", "nuxt|vite")
-	output, err := cmd.Output()
-	if err != nil {
-		return 0
-	}
-	var pid int
-	fmt.Sscanf(string(output), "%d", &pid)
-	return pid
-}
-
 func checkContainerRunning(name string) bool {
 	cmd := exec.Command("docker", "ps", "--filter", "name="+name, "--format", "{{.Names}}")
 	output, err := cmd.Output()
@@ -912,30 +894,4 @@ func main() {
 		fmt.Println("Services: api, web, db, redis")
 		return
 	}
-
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-
-	go func() {
-		<-sigChan
-		fmt.Println("\n\033[33m[WARN]\033[0m Shutting down...")
-		os.Exit(0)
-	}()
-
-	select {}
-}
-
-func readLines(path string) ([]string, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	var lines []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-	return lines, scanner.Err()
 }
