@@ -9,6 +9,17 @@ import { useElementBounding } from '@vueuse/core'
 
 const route = useRoute()
 const systemStore = useSystemStore()
+const isWidgetsOpen = ref(false)
+const isWidgetsToggling = ref(false)
+
+const toggleWidgets = () => {
+  isWidgetsToggling.value = true
+  isWidgetsOpen.value = !isWidgetsOpen.value
+  // 等待动画结束后重置状态
+  setTimeout(() => {
+    isWidgetsToggling.value = false
+  }, 600)
+}
 
 const navigation = [
   [
@@ -625,6 +636,19 @@ const moreMenuGroups = [
             />
           </div>
 
+          <!-- 小组件按钮 -->
+          <div
+            class="relative flex items-center justify-center cursor-pointer mr-2"
+            @click="toggleWidgets"
+          >
+            <UButton
+              icon="i-material-symbols-widgets"
+              :color="isWidgetsOpen ? 'primary' : 'neutral'"
+              variant="ghost"
+              class="cursor-pointer"
+            />
+          </div>
+
           <!-- 通知按钮 -->
           <div
             class="relative flex items-center justify-center cursor-pointer"
@@ -662,13 +686,14 @@ const moreMenuGroups = [
           <div
             class="h-full bg-white dark:bg-gray-900 rounded-[30px] border overflow-hidden cursor-default"
             :class="[
-              splitViewStore.isResizing ? '' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
+              splitViewStore.isResizing ? 'transition-none' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
               splitViewStore.isOpen && splitViewStore.activeView === 'left'
                 ? 'border-cyan-400/60 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.2)]'
                 : 'border-gray-200/50 dark:border-gray-800/50'
             ]"
             :style="{
-              width: splitViewStore.isMaximized ? '0%' : (splitViewStore.isOpen ? `calc(${100 - splitViewStore.rightPanelWidth}% - 6px)` : '100%'),
+              width: splitViewStore.isMaximized ? '0%' : (splitViewStore.isOpen ? `calc(${100 - splitViewStore.rightPanelWidth}% - ${isWidgetsOpen ? 326 : 0}px)` : `calc(100% - ${isWidgetsOpen ? 326 : 0}px)`),
+              transform: splitViewStore.isMaximized ? 'translateX(-100%)' : (splitViewStore.isOpen ? 'translateX(-8px)' : 'translateX(0)'),
               opacity: splitViewStore.isMaximized ? '0' : '1',
               pointerEvents: splitViewStore.isMaximized ? 'none' : 'auto'
             }"
@@ -690,7 +715,7 @@ const moreMenuGroups = [
           <div
             class="h-full overflow-hidden"
             :class="[
-              splitViewStore.isResizing ? '' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
+              splitViewStore.isResizing ? 'transition-none' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
               splitViewStore.isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
             ]"
             :style="{ width: splitViewStore.isMaximized ? '100%' : (splitViewStore.isOpen ? `calc(${splitViewStore.rightPanelWidth}% - 6px)` : '0px') }"
@@ -736,6 +761,16 @@ const moreMenuGroups = [
               </div>
             </div>
           </div>
+
+          <!-- 独立的小组件视图 (Independent Widget Split View) -->
+          <Transition name="widget-slide">
+            <div
+              v-if="isWidgetsOpen"
+              class="h-full w-[320px] bg-white dark:bg-gray-900 rounded-[30px] border border-gray-200/50 dark:border-gray-800/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)] overflow-hidden shrink-0"
+            >
+              <AppWidgetsSidebar />
+            </div>
+          </Transition>
         </div>
       </div>
     </main>
@@ -743,6 +778,18 @@ const moreMenuGroups = [
 </template>
 
 <style>
+/* 小组件从下往上渐显动画 */
+.widget-slide-enter-active,
+.widget-slide-leave-active {
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.widget-slide-enter-from,
+.widget-slide-leave-to {
+  opacity: 0;
+  transform: translateY(100px);
+}
+
 @keyframes marquee {
   0% {
     transform: translateX(100%);
