@@ -70,27 +70,51 @@ func init() {
 }
 
 func findProjectRoot() (string, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", err
+	candidates := []string{}
+
+	exePath, err := os.Executable()
+	if err == nil {
+		exeDir := filepath.Dir(exePath)
+		for i := 0; i < 4; i++ {
+			candidates = append(candidates, exeDir)
+			parent := filepath.Dir(exeDir)
+			if parent == exeDir {
+				break
+			}
+			exeDir = parent
+		}
 	}
 
-	for i := 0; i < 4; i++ {
+	cwd, err := os.Getwd()
+	if err == nil {
+		for i := 0; i < 4; i++ {
+			candidates = append(candidates, cwd)
+			parent := filepath.Dir(cwd)
+			if parent == cwd {
+				break
+			}
+			cwd = parent
+		}
+	}
+
+	seen := make(map[string]bool)
+	for _, dir := range candidates {
+		if dir == "" || seen[dir] {
+			continue
+		}
+		seen[dir] = true
 		if _, err := os.Stat(filepath.Join(dir, ".env")); err == nil {
 			return dir, nil
 		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			break
+		if _, err := os.Stat(filepath.Join(dir, "core")); err == nil {
+			return dir, nil
 		}
-		dir = parent
+		if _, err := os.Stat(filepath.Join(dir, "web")); err == nil {
+			return dir, nil
+		}
 	}
 
-	exePath, err := os.Executable()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Dir(exePath), nil
+	return "", fmt.Errorf("project root not found")
 }
 
 func loadConfig() error {
