@@ -75,7 +75,7 @@ func findProjectRoot() (string, error) {
 	exePath, err := os.Executable()
 	if err == nil {
 		exeDir := filepath.Dir(exePath)
-		for i := 0; i < 4; i++ {
+		for i := 0; i < 5; i++ {
 			candidates = append(candidates, exeDir)
 			parent := filepath.Dir(exeDir)
 			if parent == exeDir {
@@ -87,7 +87,7 @@ func findProjectRoot() (string, error) {
 
 	cwd, err := os.Getwd()
 	if err == nil {
-		for i := 0; i < 4; i++ {
+		for i := 0; i < 5; i++ {
 			candidates = append(candidates, cwd)
 			parent := filepath.Dir(cwd)
 			if parent == cwd {
@@ -817,6 +817,7 @@ func main() {
 		} else {
 			startSingleService(service)
 		}
+		return
 
 	case "stop":
 		if len(os.Args) < 3 {
@@ -829,6 +830,7 @@ func main() {
 		} else {
 			stopService(service)
 		}
+		return
 
 	case "restart":
 		if len(os.Args) < 3 {
@@ -841,6 +843,7 @@ func main() {
 		} else {
 			restartService(service)
 		}
+		return
 
 	case "status":
 		printStatus()
@@ -853,6 +856,7 @@ func main() {
 		}
 		service := os.Args[2]
 		showLogs(service)
+		return
 
 	case "health":
 		if checkHealth() {
@@ -874,6 +878,7 @@ func main() {
 			fmt.Printf("Error: %v\n", err)
 			os.Exit(1)
 		}
+		return
 
 	case "help", "h", "-h", "--help":
 		fmt.Println("Usage: appmgr <command> [service]")
