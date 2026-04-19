@@ -119,10 +119,11 @@ func (p *Poll) BeforeCreate(tx *gorm.DB) error {
 }
 
 type PollOption struct {
-	ID     string `gorm:"type:char(26);primaryKey" json:"id"`
-	PollID string `gorm:"type:char(26);index;not null" json:"poll_id"`
-	Text   string `gorm:"type:varchar(200);not null" json:"text"`
-	Votes  int    `gorm:"default:0" json:"votes"`
+	ID        string    `gorm:"type:char(26);primaryKey" json:"id"`
+	PollID    string    `gorm:"type:char(26);index;not null" json:"poll_id"`
+	Text      string    `gorm:"type:varchar(200);not null" json:"text"`
+	Votes     int       `gorm:"default:0" json:"votes"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 func (po *PollOption) BeforeCreate(tx *gorm.DB) error {

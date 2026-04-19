@@ -19,6 +19,11 @@ interface TopicPost {
   }
   createdAt: Date | string
   content: string
+  metrics: {
+    replies: number
+    reposts: number
+    reactions: number
+  }
 }
 
 interface TopicProps {
@@ -116,13 +121,16 @@ const chartOption = computed(() => {
         color: isDark ? '#f3f4f6' : '#1f2937',
         fontSize: 11
       },
-      formatter: (params: { value: number }[]) => {
-        return `${params[0].value} posts`
+      formatter: (params: { value: number }[] | undefined) => {
+        if (params && params[0]) {
+          return `${params[0].value} posts`
+        }
+        return ''
       }
     },
     animation: true,
     animationDuration: 800,
-    animationEasing: 'cubicOut'
+    animationEasing: 'cubicOut' as const
   }
 })
 

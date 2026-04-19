@@ -19,18 +19,33 @@ const loading = ref(false)
 const challengeId = ref('')
 const expiresAt = ref('')
 
+interface AuthResponse {
+  access_token: string
+  refresh_token: string
+  user: {
+    username: string
+    name?: string
+    avatar_url?: string
+  }
+}
+
+interface RegisterWithEmailResponse {
+  challenge_id: string
+  expires_at: string
+}
+
 const handleRegister = async () => {
   if (password.value !== confirmPassword.value) return
 
   loading.value = true
   try {
-    const payload: any = {
+    const payload: { username: string, password: string } = {
       username: username.value,
       password: password.value
     }
 
     if (email.value) {
-      const data = await post('/api/auth/register/with-email', {
+      const data = await post<RegisterWithEmailResponse>('/api/auth/register/with-email', {
         username: username.value,
         email: email.value,
         password: password.value
@@ -45,7 +60,7 @@ const handleRegister = async () => {
         icon: 'i-material-symbols-check-circle'
       })
     } else {
-      const data = await post('/api/auth/register', payload)
+      const data = await post<AuthResponse>('/api/auth/register', payload)
       userStore.setAuth(data)
       toast.add({
         title: '初始化成功 (INITIALIZED)',
@@ -55,10 +70,11 @@ const handleRegister = async () => {
       })
       router.push('/')
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const error = err as Error
     toast.add({
       title: '初始化失败 (FAILED)',
-      description: err.message || '注册请求被拒绝，请检查输入。',
+      description: error.message || '注册请求被拒绝，请检查输入。',
       color: 'error',
       icon: 'i-material-symbols-error'
     })
@@ -72,7 +88,7 @@ const handleVerifyCode = async () => {
 
   loading.value = true
   try {
-    const data = await post('/api/auth/register/verify-email', {
+    const data = await post<AuthResponse>('/api/auth/register/verify-email', {
       challenge_id: challengeId.value,
       code: code.value
     })
@@ -84,10 +100,11 @@ const handleVerifyCode = async () => {
       icon: 'i-material-symbols-check-circle'
     })
     router.push('/')
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const error = err as Error
     toast.add({
       title: '验证失败',
-      description: err.message || '验证码错误，请重试。',
+      description: error.message || '验证码错误，请重试。',
       color: 'error',
       icon: 'i-material-symbols-error'
     })
@@ -266,7 +283,9 @@ const goBack = () => {
         @submit.prevent="handleVerifyCode"
       >
         <div class="text-center mb-4">
-          <h2 class="text-xl font-bold text-white mb-2">邮箱验证</h2>
+          <h2 class="text-xl font-bold text-white mb-2">
+            邮箱验证
+          </h2>
           <p class="text-sm text-gray-400">
             验证码已发送至 <span class="text-fuchsia-400">{{ email }}</span>
           </p>

@@ -34,7 +34,7 @@ const errorMessage = computed(() => {
           src="/images/system/404.png"
           alt="404 Not Found"
           class="w-64 h-64 object-contain"
-          @error="(e) => { (e.target as HTMLImageElement).style.display = 'none' }"
+          @error="(e: Event) => { (e.target as HTMLImageElement).style.display = 'none' }"
         >
       </div>
 

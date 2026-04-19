@@ -1,12 +1,35 @@
+interface ApiOptions {
+  headers?: Record<string, string>
+  query?: Record<string, unknown>
+  body?: Record<string, unknown> | BodyInit | null
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'CONNECT' | 'OPTIONS' | 'TRACE'
+}
+
+interface ApiResponse<T> {
+  ok: boolean
+  data?: T
+  error?: {
+    message?: string
+  }
+}
+
+interface FetchError {
+  data?: {
+    error?: {
+      message?: string
+    }
+  }
+  message?: string
+}
+
 export const useApi = () => {
   const userStore = useUserStore()
   const runtimeConfig = useRuntimeConfig()
   const baseURL = runtimeConfig.public.apiBase || ''
 
-  const request = async <T = any>(url: string, options: any = {}) => {
-    // Inject Authorization header if token exists
-    const headers = {
-      ...options.headers
+  const request = async <T>(url: string, options: ApiOptions = {}): Promise<T> => {
+    const headers: Record<string, string> = {
+      ...options.headers as Record<string, string>
     }
 
     if (userStore.accessToken) {
@@ -14,28 +37,30 @@ export const useApi = () => {
     }
 
     try {
-      const response = await $fetch<any>(url, {
+      const response = await $fetch<ApiResponse<T>>(url, {
         baseURL,
-        ...options,
+        method: options.method,
+        query: options.query,
+        body: options.body,
         headers
       })
 
-      // Go backend uses { ok: boolean, data: any, error?: any } envelope
       if (response && response.ok) {
         return response.data as T
       } else {
         throw new Error(response?.error?.message || 'API request failed')
       }
-    } catch (err: any) {
-      const message = err.data?.error?.message || err.message || 'Unknown network error'
+    } catch (err: unknown) {
+      const fetchError = err as FetchError
+      const message = fetchError.data?.error?.message || fetchError.message || 'Unknown network error'
       throw new Error(message)
     }
   }
 
   return {
-    get: <T = any>(url: string, options?: any) => request<T>(url, { ...options, method: 'GET' }),
-    post: <T = any>(url: string, body?: any, options?: any) => request<T>(url, { ...options, method: 'POST', body }),
-    put: <T = any>(url: string, body?: any, options?: any) => request<T>(url, { ...options, method: 'PUT', body }),
-    delete: <T = any>(url: string, options?: any) => request<T>(url, { ...options, method: 'DELETE' })
+    get: <T>(url: string, options?: Omit<ApiOptions, 'method' | 'body'>) => request<T>(url, { ...options, method: 'GET' }),
+    post: <T>(url: string, body?: Record<string, unknown> | BodyInit | null, options?: Omit<ApiOptions, 'method'>) => request<T>(url, { ...options, method: 'POST', body }),
+    put: <T>(url: string, body?: Record<string, unknown> | BodyInit | null, options?: Omit<ApiOptions, 'method'>) => request<T>(url, { ...options, method: 'PUT', body }),
+    delete: <T>(url: string, options?: Omit<ApiOptions, 'method' | 'body'>) => request<T>(url, { ...options, method: 'DELETE' })
   }
 }

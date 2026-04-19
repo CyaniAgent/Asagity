@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useInstanceStore } from '~/stores/instance'
 import { useUserStore } from '~/stores/user'
 import { useSystemStore } from '~/stores/system'
 import { useAppToast } from '~/composables/useAppToast'
@@ -8,7 +7,6 @@ useHead({
   title: '本用户 | 设置'
 })
 
-const instanceStore = useInstanceStore()
 const userStore = useUserStore()
 const systemStore = useSystemStore()
 const toast = useAppToast()
@@ -26,7 +24,7 @@ async function handleLogout() {
   }
 
   if (isLoggingOut.value) return
-  
+
   isLoggingOut.value = true
   try {
     await userStore.logoutAll()
@@ -37,7 +35,7 @@ async function handleLogout() {
       icon: 'i-material-symbols-check-circle'
     })
     navigateTo('/')
-  } catch (err) {
+  } catch {
     toast.add({
       title: '登出失败',
       description: '请稍后重试。',

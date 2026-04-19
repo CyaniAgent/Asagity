@@ -125,9 +125,9 @@ func ensureServices(cfg config.Config) error {
 	pgPortBusy := pgErr != nil && isTCPPortBusy(pgHost, pgPort)
 	redisPortBusy := redisErr != nil && isTCPPortBusy(redisHost, redisPort)
 	if pgPortBusy || redisPortBusy {
-		scriptHint := "scripts/initDatabase.sh"
+		scriptHint := "scripts/container/initDatabase.sh"
 		if isWindows() {
-			scriptHint = "scripts/initDatabase.ps1"
+			scriptHint = "scripts/container/initDatabase.ps1"
 		}
 
 		return fmt.Errorf(
@@ -145,9 +145,9 @@ func ensureServices(cfg config.Config) error {
 
 	composeCommand, err := detectComposeCommand()
 	if err != nil {
-		scriptHint := filepath.Join(projectRoot, "scripts", "initDatabase.sh")
+		scriptHint := filepath.Join(projectRoot, "scripts", "container", "initDatabase.sh")
 		if isWindows() {
-			scriptHint = filepath.Join(projectRoot, "scripts", "initDatabase.ps1")
+			scriptHint = filepath.Join(projectRoot, "scripts", "container", "initDatabase.ps1")
 		}
 
 		return fmt.Errorf(
@@ -229,6 +229,22 @@ func probeRedis(cfg config.Config) error {
 	defer cancel()
 
 	return rdb.Ping(ctx).Err()
+}
+
+func ProbePostgres(cfg config.Config) error {
+	pgHost, pgPort := normalizeHostPort(cfg.DBHost, cfg.DBPort)
+	if !isTCPPortBusy(pgHost, pgPort) {
+		return fmt.Errorf("postgresql port %s:%s is not reachable", pgHost, pgPort)
+	}
+	return probePostgres(cfg)
+}
+
+func ProbeRedis(cfg config.Config) error {
+	redisHost, redisPort := splitRedisAddr(cfg.RedisAddr)
+	if !isTCPPortBusy(redisHost, redisPort) {
+		return fmt.Errorf("redis port %s:%s is not reachable", redisHost, redisPort)
+	}
+	return probeRedis(cfg)
 }
 
 func isTCPPortBusy(host string, port string) bool {

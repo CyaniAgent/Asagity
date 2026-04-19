@@ -7,8 +7,8 @@ import (
 // CreateNoteRequest - 创建帖子请求
 type CreateNoteRequest struct {
 	Content    string             `json:"content" validate:"required,max=10000"`
-	Type       string             `json:"type,default=note"` // note, reply, repost, quote
-	Visibility string             `json:"visibility,default=public"`
+	Type       string             `json:"type" validate:"required,oneof=note reply repost quote"`
+	Visibility string             `json:"visibility" validate:"required,oneof=public private home"`
 	Cw         *string            `json:"cw"`
 	MediaIDs   []string           `json:"media_ids"`
 	Poll       *CreatePollRequest `json:"poll"`
@@ -101,6 +101,14 @@ type ReactionRequest struct {
 // VoteRequest - 投票请求
 type VoteRequest struct {
 	OptionIDs []string `json:"option_ids" validate:"required,min=1,max=20"`
+}
+
+// NoteEditResponse - 编辑历史响应
+type NoteEditResponse struct {
+	ID        string `json:"id"`
+	Content   string `json:"content"`
+	Cw        string `json:"cw"`
+	CreatedAt string `json:"created_at"`
 }
 
 // TimelineRequest - 时间线请求参数

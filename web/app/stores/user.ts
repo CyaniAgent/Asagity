@@ -3,20 +3,43 @@ import { ref, computed } from 'vue'
 import { useCookie } from '#app'
 import { useSystemStore } from '~/stores/system'
 
+interface UserProfile {
+  username: string
+  name?: string
+  avatar_url?: string
+  pubid?: string
+}
+
+interface AuthData {
+  access_token: string
+  refresh_token: string
+  user: UserProfile
+}
+
+interface RefreshResponse {
+  access_token: string
+  refresh_token: string
+  user: UserProfile
+}
+
+interface FetchError {
+  message?: string
+}
+
 export const useUserStore = defineStore('user', () => {
   const accessTokenCookie = useCookie<string | null>('asagity_access_token', { maxAge: 60 * 30 })
   const refreshTokenCookie = useCookie<string | null>('asagity_refresh_token', { maxAge: 60 * 60 * 24 * 30 })
-  const userProfileCookie = useCookie<any | null>('asagity_user_profile')
+  const userProfileCookie = useCookie<UserProfile | null>('asagity_user_profile')
 
   const isLoggedIn = ref(!!accessTokenCookie.value)
   const accessToken = ref(accessTokenCookie.value)
   const refreshToken = ref(refreshTokenCookie.value)
-  const user = ref<any | null>(userProfileCookie.value)
+  const user = ref<UserProfile | null>(userProfileCookie.value)
 
   const username = computed(() => user.value?.username || '')
   const avatar = computed(() => user.value?.avatar_url || '')
 
-  function setAuth(data: { access_token: string, refresh_token: string, user: any }) {
+  function setAuth(data: AuthData) {
     accessToken.value = data.access_token
     refreshToken.value = data.refresh_token
     accessTokenCookie.value = data.access_token
@@ -43,6 +66,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       await api.post('/api/auth/logout')
     } catch {
+      // Ignore logout errors
     }
 
     accessToken.value = null
@@ -59,6 +83,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       await api.post('/api/auth/logout-all')
     } catch {
+      // Ignore logout errors
     }
 
     accessToken.value = null
@@ -73,7 +98,7 @@ export const useUserStore = defineStore('user', () => {
   async function refreshAccessToken() {
     const api = useApi()
     try {
-      const data = await api.post<{ access_token: string, refresh_token: string, user: any }>('/api/auth/refresh')
+      const data = await api.post<RefreshResponse>('/api/auth/refresh')
       accessToken.value = data.access_token
       refreshToken.value = data.refresh_token
       accessTokenCookie.value = data.access_token
@@ -96,14 +121,15 @@ export const useUserStore = defineStore('user', () => {
     const systemStore = useSystemStore()
 
     try {
-      const userData = await api.get('/api/auth/me')
+      const userData = await api.get<UserProfile>('/api/auth/me')
       user.value = userData
       userProfileCookie.value = userData
       isLoggedIn.value = true
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch user profile:', err)
 
-      const errMsg = err.message || ''
+      const fetchError = err as FetchError
+      const errMsg = fetchError.message || ''
       if (errMsg.toLowerCase().includes('fetch failed') || errMsg.toLowerCase().includes('network error') || errMsg.toLowerCase().includes('failed to fetch')) {
         systemStore.triggerOfflineFallback()
       } else {

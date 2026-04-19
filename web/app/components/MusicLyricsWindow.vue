@@ -1,24 +1,15 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, onBeforeUpdate } from 'vue'
-import { useDraggable, useWindowSize } from '@vueuse/core'
 import { useMusicStore } from '~/stores/music'
 
 const musicStore = useMusicStore()
 
-const handleRef = ref<HTMLElement | null>(null)
+const _handleRef = ref<HTMLElement | null>(null)
 const lyricsContainer = ref<HTMLElement | null>(null)
 const lyricLines = ref<HTMLElement[]>([])
 
-const { width, height } = useWindowSize()
-
-// Center the window initially
-const initialX = typeof window !== 'undefined' ? (window.innerWidth / 2) - 200 : 100
-const initialY = typeof window !== 'undefined' ? (window.innerHeight / 2) - 300 : 100
-
-const { x, y, style } = useDraggable(handleRef, {
-  initialValue: { x: initialX, y: initialY },
-  preventDefault: true
-})
+const _initialX = typeof window !== 'undefined' ? (window.innerWidth / 2) - 200 : 100
+const _initialY = typeof window !== 'undefined' ? (window.innerHeight / 2) - 300 : 100
 
 onBeforeUpdate(() => {
   lyricLines.value = []

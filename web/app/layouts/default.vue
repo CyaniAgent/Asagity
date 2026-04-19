@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onUnmounted, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useInstanceStore } from '~/stores/instance'
-import { useUserStore } from '~/stores/user'
 import { useSystemStore } from '~/stores/system'
 import { useThemeStore } from '~/stores/theme'
 import { useIconCache } from '~/composables/useIconCache'
-import { onClickOutside, useElementBounding } from '@vueuse/core'
+import { useElementBounding } from '@vueuse/core'
 
 const route = useRoute()
 const systemStore = useSystemStore()
@@ -29,28 +28,39 @@ const navigation = [
   ]
 ]
 
-// Navigation Highlight Logic
-const isItemActive = (item: any) => {
+const isItemActive = (item: { label: string, activePaths?: string[], to?: string }) => {
   if (item.label === '更多') {
     return moreMenuGroups.flat().some(feat => route.path.startsWith(feat.to))
   }
-
-  if (item.activePaths) {
-    return item.activePaths.some((p: string) => p === '/' ? route.path === '/' : route.path.startsWith(p))
+  if (item.to) {
+    return route.path.startsWith(item.to)
   }
-
-  if (item.to === '/') return route.path === '/'
-  return route.path.startsWith(item.to)
+  return false
 }
 
 // Timeline Top Tabs
-const timelineTabs = [
+const timelineTabs = computed(() => [
   [
-    { label: '动态', icon: 'i-material-symbols-public', to: '/', exact: true },
-    { label: '已关注', icon: 'i-material-symbols-person', to: '/followed' },
-    { label: '仅本实例', icon: 'i-material-symbols-dns', to: '/local' }
+    {
+      label: '动态',
+      icon: 'i-material-symbols-public',
+      to: '/',
+      active: route.path === '/' && !route.query.tab
+    },
+    {
+      label: '已关注',
+      icon: 'i-material-symbols-person',
+      to: '/?tab=followed',
+      active: route.path === '/' && route.query.tab === 'followed'
+    },
+    {
+      label: '仅本实例',
+      icon: 'i-material-symbols-dns',
+      to: '/?tab=local',
+      active: route.path === '/' && route.query.tab === 'local'
+    }
   ]
-]
+])
 
 // Chat Top Tabs
 const chatTabs = [
@@ -121,7 +131,7 @@ const currentHeaderTabs = computed(() => {
   if (route.path.startsWith('/topic')) {
     return topicTabs
   }
-  return timelineTabs
+  return timelineTabs.value
 })
 
 const profileTabs = [
@@ -192,9 +202,8 @@ const splitViewIcon = computed(() => {
   }
 })
 
-// "More" popover state
 const moreMenuOpen = ref(false)
-const moreMenuRef = ref<any>(null) // Inside v-for, this becomes an array
+const moreMenuRef = ref<HTMLElement | null>(null)
 const moreMenuPanelRef = ref<HTMLElement | null>(null)
 
 // Extract the single element from the ref array
@@ -205,21 +214,78 @@ const moreMenuAnchor = computed(() => {
 
 const { top, right } = useElementBounding(moreMenuAnchor)
 
-const toggleMoreMenu = (e: MouseEvent) => {
-  // Toggle the menu. We don't stop propagation here so onClickOutside can see it,
-  // but we'll handle the logic to prevent a double-toggle if needed.
+const menuActualHeight = ref(0)
+
+const moreMenuPosition = computed(() => {
+  const menuWidth = 208
+  const padding = 12
+  const topMargin = 8
+  const bottomMargin = 25
+
+  const viewportWidth = window.innerWidth
+  const viewportHeight = window.innerHeight
+
+  const actualHeight = menuActualHeight.value || 300
+
+  const wouldOverflowRight = right.value + padding + menuWidth > viewportWidth
+  const wouldOverflowBottom = top.value + actualHeight + bottomMargin > viewportHeight
+
+  let finalTop = top.value
+  if (wouldOverflowBottom) {
+    finalTop = Math.max(topMargin, viewportHeight - actualHeight - bottomMargin)
+  }
+
+  return {
+    top: finalTop,
+    left: wouldOverflowRight ? Math.max(topMargin, right.value - menuWidth - padding) : right.value + padding
+  }
+})
+
+let resizeObserver: ResizeObserver | null = null
+
+const updateMenuHeight = () => {
+  if (moreMenuPanelRef.value) {
+    const rect = moreMenuPanelRef.value.getBoundingClientRect()
+    menuActualHeight.value = rect.height
+  }
+}
+
+watch(moreMenuOpen, (isOpen) => {
+  if (isOpen) {
+    nextTick(() => {
+      updateMenuHeight()
+
+      if (moreMenuPanelRef.value && !resizeObserver) {
+        resizeObserver = new ResizeObserver(() => {
+          updateMenuHeight()
+        })
+        resizeObserver.observe(moreMenuPanelRef.value)
+      }
+    })
+  } else {
+    if (resizeObserver) {
+      resizeObserver.disconnect()
+      resizeObserver = null
+    }
+  }
+})
+
+onUnmounted(() => {
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
+  }
+})
+
+const toggleMoreMenu = () => {
   moreMenuOpen.value = !moreMenuOpen.value
 }
 
-onClickOutside(moreMenuPanelRef, (e) => {
-  if (!moreMenuOpen.value) return
-
-  const anchor = moreMenuAnchor.value
-  // If we click the toggle button, its own handler will handle it.
-  // We check if the click target is the button OR contained within the button.
-  if (anchor && (anchor === e.target || anchor.contains(e.target as Node))) return
-
-  moreMenuOpen.value = false
+onUnmounted(() => {
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
+  }
 })
 
 // "More" Menu feature groups (Misskey-inspired)
@@ -329,10 +395,10 @@ const moreMenuGroups = [
                     leave-to-class="opacity-0 scale-95 translate-x-2"
                   >
                     <div
-                      v-show="moreMenuOpen"
+                      v-if="moreMenuOpen"
                       ref="moreMenuPanelRef"
                       class="fixed z-[100] w-52 origin-top-left"
-                      :style="{ top: `${top}px`, left: `${right + 12}px` }"
+                      :style="{ top: `${moreMenuPosition.top}px`, left: `${moreMenuPosition.left}px` }"
                     >
                       <div
                         class="rounded-2xl border border-white/20 dark:border-gray-700/50 bg-white/80 dark:bg-gray-900/90 backdrop-blur-xl shadow-2xl shadow-black/20 overflow-hidden py-1.5"

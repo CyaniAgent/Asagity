@@ -14,6 +14,7 @@ import (
 	usermodel "github.com/CyaniAgent/Asagity/core/internal/module/user/model"
 	userrepo "github.com/CyaniAgent/Asagity/core/internal/module/user/repository"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/config"
+	"github.com/CyaniAgent/Asagity/core/internal/platform/id"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/mail"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/redis/go-redis/v9"
@@ -271,15 +272,13 @@ func (s *Service) generateRefreshToken(userID string) (string, error) {
 }
 
 func generateID() string {
-	bytes := make([]byte, 16)
-	rand.Read(bytes)
-	return hex.EncodeToString(bytes)
+	b := make([]byte, 16)
+	_, _ = rand.Read(b)
+	return hex.EncodeToString(b)
 }
 
 func generatePubID() string {
-	bytes := make([]byte, 4)
-	rand.Read(bytes)
-	return "usr_" + hex.EncodeToString(bytes)
+	return id.GenerateUserPubID()
 }
 
 func (s *Service) VerifyRegisterEmail(req dto.VerifyEmailRequest) (*dto.AuthResponse, error) {

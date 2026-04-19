@@ -13,12 +13,22 @@ const identifier = ref('')
 const password = ref('')
 const loading = ref(false)
 
+interface AuthResponse {
+  access_token: string
+  refresh_token: string
+  user: {
+    username: string
+    name?: string
+    avatar_url?: string
+  }
+}
+
 const handleLogin = async () => {
   if (!identifier.value || !password.value) return
 
   loading.value = true
   try {
-    const data = await post('/api/auth/login', {
+    const data = await post<AuthResponse>('/api/auth/login', {
       identifier: identifier.value,
       password: password.value
     })
@@ -33,10 +43,11 @@ const handleLogin = async () => {
 
     // Redirect to main panel
     router.push('/')
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const error = err as Error
     toast.add({
       title: '认证失败 (FAILED)',
-      description: err.message || '凭证验证失败，请检查输入。',
+      description: error.message || '凭证验证失败，请检查输入。',
       color: 'error',
       icon: 'i-material-symbols-error'
     })

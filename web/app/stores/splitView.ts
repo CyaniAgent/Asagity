@@ -1,25 +1,70 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
+interface Post {
+  id: string
+  author: {
+    avatar: string
+    displayName: string
+    username: string
+    instance?: string
+  }
+  createdAt: Date | string
+  content: string
+  metrics: {
+    replies: number
+    reposts: number
+    reactions: number
+  }
+}
+
+interface User {
+  avatar: string
+  displayName: string
+  username: string
+  instance?: string
+  banner?: string
+  isVerified?: boolean
+  bio?: string
+  location?: string
+  birthday?: string
+  joinedAt?: string
+  stats?: {
+    posts: number
+    following: number
+    followers: number
+  }
+}
+
+interface Chat {
+  id: string | number
+  name: string
+  avatar: string
+  lastMessage?: string
+  unreadCount?: number
+  online?: boolean
+  isGroup?: boolean
+  members?: number
+}
+
+type RightViewType = 'post' | 'user' | 'music' | 'notifications' | 'chat'
+
 export const useSplitViewStore = defineStore('splitView', () => {
   const isOpen = ref(false)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const currentPost = ref<any>(null)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const currentUser = ref<any>(null)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const currentChat = ref<any>(null)
+  const currentPost = ref<Post | null>(null)
+  const currentUser = ref<User | null>(null)
+  const currentChat = ref<Chat | null>(null)
   const activeTab = ref('comments')
   const profileTab = ref('home')
-  const rightPanelWidth = ref(50) // Percentage
+  const rightPanelWidth = ref(50)
   const isResizing = ref(false)
   const activeView = ref<'left' | 'right'>('left')
-  const currentRightViewType = ref<'post' | 'user' | 'music' | 'notifications' | 'chat' | null>(null)
+  const currentRightViewType = ref<RightViewType | null>(null)
 
   const isMaximized = ref(false)
   const refreshKey = ref(0)
 
-  function openPost(post: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+  function openPost(post: Post) {
     currentPost.value = post
     currentUser.value = null
     currentChat.value = null
@@ -28,10 +73,10 @@ export const useSplitViewStore = defineStore('splitView', () => {
     activeTab.value = 'comments'
     activeView.value = 'right'
     isMaximized.value = false
-    rightPanelWidth.value = 50 // 重置为默认宽度
+    rightPanelWidth.value = 50
   }
 
-  function openUser(user: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+  function openUser(user: User) {
     currentUser.value = user
     currentPost.value = null
     currentChat.value = null
@@ -40,10 +85,10 @@ export const useSplitViewStore = defineStore('splitView', () => {
     profileTab.value = 'home'
     activeView.value = 'right'
     isMaximized.value = false
-    rightPanelWidth.value = 50 // 重置为默认宽度
+    rightPanelWidth.value = 50
   }
 
-  function openChat(chat: any) {
+  function openChat(chat: Chat) {
     currentChat.value = chat
     currentPost.value = null
     currentUser.value = null
@@ -51,7 +96,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
     isOpen.value = true
     activeView.value = 'right'
     isMaximized.value = false
-    rightPanelWidth.value = 45 // 聊天界面默认 45% (更宽裕一点)
+    rightPanelWidth.value = 45
   }
 
   function openMusic() {
@@ -62,7 +107,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
     isOpen.value = true
     activeView.value = 'right'
     isMaximized.value = false
-    rightPanelWidth.value = 38 // 音乐播放器采用更窄的默认宽度 (38%)
+    rightPanelWidth.value = 38
   }
 
   function openNotifications() {
@@ -73,7 +118,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
     isOpen.value = true
     activeView.value = 'right'
     isMaximized.value = false
-    rightPanelWidth.value = 40 // 通知中心采用更窄的默认宽度 (40%)
+    rightPanelWidth.value = 40
   }
 
   function close() {

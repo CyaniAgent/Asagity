@@ -16,16 +16,26 @@ const toast = useAppToast()
 const isLogin = computed(() => props.mode === 'login')
 const identifier = ref('')
 const password = ref('')
-const email = ref('')
-const username = ref('')
+const _email = ref('')
+const _username = ref('')
 const loading = ref(false)
+
+interface AuthResponse {
+  access_token: string
+  refresh_token: string
+  user: {
+    username: string
+    name?: string
+    avatar_url?: string
+  }
+}
 
 async function handleLogin() {
   if (!identifier.value || !password.value) return
 
   loading.value = true
   try {
-    const data = await post('/api/auth/login', {
+    const data = await post<AuthResponse>('/api/auth/login', {
       identifier: identifier.value,
       password: password.value
     })
@@ -39,10 +49,11 @@ async function handleLogin() {
     })
 
     router.push('/')
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const error = err as Error
     toast.add({
       title: '认证失败 (FAILED)',
-      description: err.message || '凭证验证失败，请检查输入。',
+      description: error.message || '凭证验证失败，请检查输入。',
       color: 'error',
       icon: 'i-material-symbols-error'
     })

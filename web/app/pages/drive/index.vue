@@ -2,10 +2,6 @@
 import { ref, computed } from 'vue'
 import { format } from 'date-fns'
 
-// 用户名模拟 (用于以后扩展)
-const username = ref('YunaAyase')
-
-// 容量计算：总容量 16384 MB (16 GB)，已用 3549 MB
 const totalCapacityMB = 16384
 const usedCapacityMB = 3549
 

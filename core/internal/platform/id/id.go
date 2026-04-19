@@ -12,6 +12,9 @@ const (
 	PrefixNote   = "nt_"
 	PrefixFile   = "file_"
 	PrefixFolder = "folder_"
+
+	MaxPubIDChangesPerMonth = 5
+	MaxCustomPubIDLength    = 30
 )
 
 // GeneratePubID generates a public-facing ID with given prefix
@@ -103,6 +106,24 @@ func ValidatePubID(id string) bool {
 
 	for _, c := range remaining {
 		if !((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// ValidateCustomPubID validates a user-customized PubID format
+// Users can freely choose their PubID when changing it (no prefix required)
+// Maximum length is 30 characters
+func ValidateCustomPubID(id string) bool {
+	if len(id) < 1 || len(id) > MaxCustomPubIDLength {
+		return false
+	}
+
+	// Only allow alphanumeric, underscore, hyphen, and dot
+	for _, c := range id {
+		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == '-' || c == '.') {
 			return false
 		}
 	}

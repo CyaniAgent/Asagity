@@ -7,16 +7,16 @@ const soundManager = useSoundManager()
 
 const messages = ref([
   { id: 1, text: 'Hey there! How is the new UI coming along?', isMe: false, time: '10:30', read: true },
-  { id: 2, text: "Producer-san! It's looking amazing! 39!", isMe: true, time: '10:32', read: true },
+  { id: 2, text: 'Producer-san! It\'s looking amazing! 39!', isMe: true, time: '10:32', read: true },
   { id: 3, text: 'We are working on the Chat module right now. The left-aligned design is super clean.', isMe: true, time: '10:33', read: false },
-  { id: 4, text: "That sounds perfect. Can't wait to see it running on Riverpod... well, Pinia here!", isMe: false, time: '10:35', read: false }
+  { id: 4, text: 'That sounds perfect. Can\'t wait to see it running on Riverpod... well, Pinia here!', isMe: false, time: '10:35', read: false }
 ])
 
 const newMessage = ref('')
 
 const sendMessage = () => {
   if (!newMessage.value.trim()) return
-  messages.push({
+  messages.value.push({
     id: Date.now(),
     text: newMessage.value,
     isMe: true,
@@ -27,8 +27,8 @@ const sendMessage = () => {
   soundManager.playIfAvailable('message_sent')
 }
 
-function receiveMessage(text: string) {
-  messages.push({
+function _receiveMessage(text: string) {
+  messages.value.push({
     id: Date.now(),
     text,
     isMe: false,

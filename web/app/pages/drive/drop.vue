@@ -145,10 +145,15 @@ const toggleTaskPause = (taskId: string) => {
   }
 }
 
-// Drag Handlers
-const onDragOver = () => { isDropping.value = true }
-const onDragLeave = () => { isDropping.value = false }
-const onDrop = () => { isDropping.value = false }
+const onDragOver = () => {
+  isDropping.value = true
+}
+const onDragLeave = () => {
+  isDropping.value = false
+}
+const onDrop = () => {
+  isDropping.value = false
+}
 </script>
 
 <template>
@@ -188,8 +193,14 @@ const onDrop = () => { isDropping.value = false }
           </div>
           <span class="text-xs font-bold text-gray-500 dark:text-gray-400 opacity-80 mt-1">{{ myDevice.deviceName }}</span>
           <div class="mt-2 flex items-center gap-1.5 py-1 px-2.5 bg-black/5 dark:bg-white/5 rounded-full w-fit max-w-[200px]">
-            <UIcon name="i-material-symbols-fingerprint-rounded" class="w-3.5 h-3.5 text-cyan-500 shrink-0" />
-            <span class="text-[9px] font-mono font-bold text-gray-400 dark:text-gray-500 truncate" :title="myDevice.pubId">{{ myDevice.pubId }}</span>
+            <UIcon
+              name="i-material-symbols-fingerprint-rounded"
+              class="w-3.5 h-3.5 text-cyan-500 shrink-0"
+            />
+            <span
+              class="text-[9px] font-mono font-bold text-gray-400 dark:text-gray-500 truncate"
+              :title="myDevice.pubId"
+            >{{ myDevice.pubId }}</span>
           </div>
           <div class="mt-1 flex items-center gap-1.5 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-md w-fit">
             <span class="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-tighter">{{ myDevice.platform }}</span>
@@ -234,8 +245,14 @@ const onDrop = () => { isDropping.value = false }
               <div class="flex items-center gap-1">
                 <span class="text-[9px] font-bold text-gray-500 dark:text-gray-400">{{ peer.system }}</span>
                 <span class="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
-                <span v-if="peer.isRemote" class="text-[9px] font-black text-amber-500 uppercase">Remote</span>
-                <span v-else class="text-[9px] font-black text-cyan-500 uppercase">Local</span>
+                <span
+                  v-if="peer.isRemote"
+                  class="text-[9px] font-black text-amber-500 uppercase"
+                >Remote</span>
+                <span
+                  v-else
+                  class="text-[9px] font-black text-cyan-500 uppercase"
+                >Local</span>
               </div>
             </div>
           </div>
@@ -271,12 +288,18 @@ const onDrop = () => { isDropping.value = false }
           >
             <div class="flex items-center gap-3 mb-3">
               <div class="relative">
-                <UAvatar :src="task.targetAvatar" size="sm" />
+                <UAvatar
+                  :src="task.targetAvatar"
+                  size="sm"
+                />
                 <div
                   class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800"
                   :class="task.direction === 'send' ? 'bg-cyan-500 text-white' : 'bg-primary-500 text-white'"
                 >
-                  <UIcon :name="task.direction === 'send' ? 'i-material-symbols-upload-rounded' : 'i-material-symbols-download-rounded'" class="w-3 h-3" />
+                  <UIcon
+                    :name="task.direction === 'send' ? 'i-material-symbols-upload-rounded' : 'i-material-symbols-download-rounded'"
+                    class="w-3 h-3"
+                  />
                 </div>
               </div>
               <div class="flex-1 min-w-0">
@@ -286,7 +309,10 @@ const onDrop = () => { isDropping.value = false }
                 <div class="flex items-center gap-2 mt-0.5">
                   <span class="text-[10px] font-bold text-gray-400 uppercase">{{ task.fileSize }}</span>
                   <span class="w-0.5 h-0.5 rounded-full bg-gray-300 dark:bg-gray-700" />
-                  <span class="text-[10px] font-bold" :class="task.state === 'active' ? 'text-cyan-500' : 'text-gray-400'">{{ task.speed }}</span>
+                  <span
+                    class="text-[10px] font-bold"
+                    :class="task.state === 'active' ? 'text-cyan-500' : 'text-gray-400'"
+                  >{{ task.speed }}</span>
                 </div>
               </div>
               <UButton
@@ -318,8 +344,14 @@ const onDrop = () => { isDropping.value = false }
           </div>
 
           <!-- Empty State -->
-          <div v-if="activeTasks.length === 0" class="flex flex-col items-center justify-center py-10 opacity-30">
-            <UIcon name="i-material-symbols-history-rounded" class="w-10 h-10 mb-2" />
+          <div
+            v-if="activeTasks.length === 0"
+            class="flex flex-col items-center justify-center py-10 opacity-30"
+          >
+            <UIcon
+              name="i-material-symbols-history-rounded"
+              class="w-10 h-10 mb-2"
+            />
             <span class="text-xs font-bold uppercase tracking-widest">No Recent Activity</span>
           </div>
         </div>
@@ -344,7 +376,10 @@ const onDrop = () => { isDropping.value = false }
     >
       <div class="flex flex-col items-center gap-6 animate-[bounce_1s_infinite]">
         <div class="w-32 h-32 rounded-[40px] border-4 border-dashed border-cyan-500 flex items-center justify-center bg-cyan-500/20">
-          <UIcon name="i-material-symbols-cloud-upload-rounded" class="w-16 h-16 text-cyan-500" />
+          <UIcon
+            name="i-material-symbols-cloud-upload-rounded"
+            class="w-16 h-16 text-cyan-500"
+          />
         </div>
         <h2 class="text-4xl font-black text-cyan-500 drop-shadow-[0_0_20px_rgba(57,197,187,0.8)] tracking-[0.2em]">
           DROP TO AIRDROP

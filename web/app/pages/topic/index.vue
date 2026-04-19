@@ -14,7 +14,7 @@ interface TopicPost {
     username: string
     instance?: string
   }
-  createdAt: Date
+  createdAt: Date | string
   content: string
   metrics: {
     replies: number
@@ -27,7 +27,7 @@ interface Topic {
   id: string
   name: string
   displayName?: string
-  updatedAt: Date
+  updatedAt: Date | string
   postsCount: number
   lastPoster: {
     avatar: string

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -75,13 +76,23 @@ func loadEnv() {
 	candidates := []string{".env"}
 
 	if cwd, err := os.Getwd(); err == nil {
-		candidates = append(candidates, filepath.Join(cwd, ".env"))
-		candidates = append(candidates, filepath.Join(cwd, "..", ".env"))
+		candidates = append(candidates, 
+			filepath.Join(cwd, ".env"),
+			filepath.Join(cwd, "..", ".env"),
+			filepath.Join(cwd, "..", "..", ".env"),
+		)
+		
+		absParent, _ := filepath.Abs(filepath.Join(cwd, ".."))
+		if filepath.Base(absParent) == "core" {
+			candidates = append(candidates, filepath.Join(absParent, ".env"))
+		}
 	}
 
 	for _, path := range candidates {
-		if _, err := os.Stat(path); err == nil {
-			_ = godotenv.Overload(path)
+		absPath, _ := filepath.Abs(path)
+		if _, err := os.Stat(absPath); err == nil {
+			fmt.Printf("[config] Loading .env from: %s\n", absPath)
+			_ = godotenv.Overload(absPath)
 			return
 		}
 	}

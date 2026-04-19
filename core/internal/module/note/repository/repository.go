@@ -1,7 +1,8 @@
 package repository
 
 import (
-	"time"
+	"errors"
+	"strings"
 
 	notemodel "github.com/CyaniAgent/Asagity/core/internal/module/note/model"
 	usermodel "github.com/CyaniAgent/Asagity/core/internal/module/user/model"
@@ -45,18 +46,36 @@ func (r *NoteRepository) Update(note *notemodel.Note) error {
 func (r *NoteRepository) SoftDelete(id string) error {
 	return r.db.Model(&notemodel.Note{}).
 		Where("id = ?", id).
-		Update("is_deleted", true).
-		Update("deleted_at", time.Now()).Error
+		Update("is_deleted", true).Error
+}
+
+// applyCursorPagination applies cursor-based pagination using created_at + id composite
+func (r *NoteRepository) applyCursorPagination(query *gorm.DB, cursor string) *gorm.DB {
+	if cursor == "" {
+		return query
+	}
+
+	// Cursor format: "timestamp_id" (e.g., "2024-01-15T10:30:00Z_abc123")
+	parts := strings.SplitN(cursor, "_", 2)
+	if len(parts) == 2 {
+		createdAt := parts[0]
+		id := parts[1]
+		// Composite cursor: (created_at < cursor_time) OR (created_at = cursor_time AND id < cursor_id)
+		query = query.Where("(created_at < ? OR (created_at = ? AND id < ?))", createdAt, createdAt, id)
+	} else {
+		// Fallback to old format (just id)
+		query = query.Where("id < ?", cursor)
+	}
+
+	return query
 }
 
 func (r *NoteRepository) ListByUser(userID string, limit int, cursor string) ([]notemodel.Note, error) {
 	var notes []notemodel.Note
 	query := r.db.Where("user_id = ? AND is_deleted = false", userID).
-		Order("created_at DESC")
+		Order("created_at DESC, id DESC")
 
-	if cursor != "" {
-		query = query.Where("id < ?", cursor)
-	}
+	query = r.applyCursorPagination(query, cursor)
 
 	err := query.Limit(limit + 1).Find(&notes).Error
 	return notes, err
@@ -66,11 +85,9 @@ func (r *NoteRepository) ListPublic(limit int, cursor string) ([]notemodel.Note,
 	var notes []notemodel.Note
 	query := r.db.Where("visibility IN ? AND is_deleted = false",
 		[]string{"public", "unlisted"}).
-		Order("created_at DESC")
+		Order("created_at DESC, id DESC")
 
-	if cursor != "" {
-		query = query.Where("id < ?", cursor)
-	}
+	query = r.applyCursorPagination(query, cursor)
 
 	err := query.Limit(limit + 1).Find(&notes).Error
 	return notes, err
@@ -80,11 +97,9 @@ func (r *NoteRepository) ListPublicWithUsers(limit int, cursor string) ([]notemo
 	var notes []notemodel.Note
 	query := r.db.Where("visibility IN ? AND is_deleted = false",
 		[]string{"public", "unlisted"}).
-		Order("created_at DESC")
+		Order("created_at DESC, id DESC")
 
-	if cursor != "" {
-		query = query.Where("id < ?", cursor)
-	}
+	query = r.applyCursorPagination(query, cursor)
 
 	err := query.Limit(limit + 1).Find(&notes).Error
 	if err != nil || len(notes) == 0 {
@@ -108,11 +123,9 @@ func (r *NoteRepository) ListLocal(limit int, cursor string) ([]notemodel.Note, 
 	var notes []notemodel.Note
 	query := r.db.Where("visibility IN ? AND is_deleted = false AND source IS NULL",
 		[]string{"public", "unlisted"}).
-		Order("created_at DESC")
+		Order("created_at DESC, id DESC")
 
-	if cursor != "" {
-		query = query.Where("id < ?", cursor)
-	}
+	query = r.applyCursorPagination(query, cursor)
 
 	err := query.Limit(limit + 1).Find(&notes).Error
 	return notes, err
@@ -122,11 +135,9 @@ func (r *NoteRepository) ListLocalWithUsers(limit int, cursor string) ([]notemod
 	var notes []notemodel.Note
 	query := r.db.Where("visibility IN ? AND is_deleted = false AND source IS NULL",
 		[]string{"public", "unlisted"}).
-		Order("created_at DESC")
+		Order("created_at DESC, id DESC")
 
-	if cursor != "" {
-		query = query.Where("id < ?", cursor)
-	}
+	query = r.applyCursorPagination(query, cursor)
 
 	err := query.Limit(limit + 1).Find(&notes).Error
 	if err != nil || len(notes) == 0 {
@@ -146,18 +157,34 @@ func (r *NoteRepository) ListLocalWithUsers(limit int, cursor string) ([]notemod
 	return notes, users, nil
 }
 
-func (r *NoteRepository) ListFollowing(userID string, limit int, cursor string) ([]notemodel.Note, error) {
+func (r *NoteRepository) ListByUserIDs(userIDs []string, limit int, cursor string) ([]notemodel.Note, []usermodel.User, error) {
 	var notes []notemodel.Note
-	// TODO: Implement follow-based timeline with proper join
-	query := r.db.Where("user_id IN (SELECT following_id FROM user_follows WHERE user_id = ?) AND is_deleted = false", userID).
-		Order("created_at DESC")
+	query := r.db.Where("user_id IN ? AND is_deleted = false", userIDs).
+		Order("created_at DESC, id DESC")
 
-	if cursor != "" {
-		query = query.Where("id < ?", cursor)
-	}
+	query = r.applyCursorPagination(query, cursor)
 
 	err := query.Limit(limit + 1).Find(&notes).Error
-	return notes, err
+	if err != nil || len(notes) == 0 {
+		return notes, nil, err
+	}
+
+	userMap := make(map[string]bool)
+	for _, note := range notes {
+		userMap[note.UserID] = true
+	}
+
+	resultUserIDs := make([]string, 0, len(userMap))
+	for id := range userMap {
+		resultUserIDs = append(resultUserIDs, id)
+	}
+
+	var users []usermodel.User
+	if len(resultUserIDs) > 0 {
+		r.db.Where("id IN ?", resultUserIDs).Find(&users)
+	}
+
+	return notes, users, nil
 }
 
 func (r *NoteRepository) CountByUser(userID string) (int64, error) {
@@ -187,14 +214,11 @@ func (r *NoteRepository) CountReposts(noteID string) (int64, error) {
 
 func (r *NoteRepository) Search(query string, limit int, cursor string) ([]notemodel.Note, error) {
 	var notes []notemodel.Note
-	// Basic text search - Bleve integration pending
 	q := r.db.Where("content ILIKE ? AND visibility IN ? AND is_deleted = false",
 		"%"+query+"%", []string{"public", "unlisted"}).
-		Order("created_at DESC")
+		Order("created_at DESC, id DESC")
 
-	if cursor != "" {
-		q = q.Where("id < ?", cursor)
-	}
+	q = r.applyCursorPagination(q, cursor)
 
 	err := q.Limit(limit + 1).Find(&notes).Error
 	return notes, err
@@ -332,6 +356,15 @@ func (r *NoteRepository) IsOwner(noteID, userID string) bool {
 	return count > 0
 }
 
+func (r *NoteRepository) GetUserByID(userID string) (*usermodel.User, error) {
+	var user usermodel.User
+	err := r.db.Where("id = ?", userID).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 // AutoMigrate runs auto migration for all Note models
 func (r *NoteRepository) AutoMigrate() error {
 	return r.db.AutoMigrate(
@@ -343,4 +376,102 @@ func (r *NoteRepository) AutoMigrate() error {
 		&notemodel.PollOption{},
 		&notemodel.PollVote{},
 	)
+}
+
+// CreateNoteWithReply creates a note and sets root ID in a single transaction
+func (r *NoteRepository) CreateNoteWithReply(note *notemodel.Note, poll *notemodel.Poll, pollOptions []*notemodel.PollOption, mediaList []*notemodel.NoteMedia, parentID *string) error {
+	if parentID == nil || *parentID == "" {
+		return r.createNoteWithExtras(note, poll, pollOptions, mediaList)
+	}
+
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		var parentNote notemodel.Note
+		if err := tx.Set("gorm:query_option", "FOR UPDATE").Where("id = ?", *parentID).First(&parentNote).Error; err != nil {
+			return errors.New("parent note not found")
+		}
+
+		if parentNote.IsDeleted {
+			return errors.New("parent note is deleted")
+		}
+
+		rootID := parentNote.RootID
+		if rootID == nil {
+			rootID = parentID
+		}
+		note.RootID = rootID
+		note.ParentID = parentID
+
+		if err := tx.Create(note).Error; err != nil {
+			return err
+		}
+
+		if poll != nil {
+			poll.NoteID = note.ID
+			if err := tx.Create(poll).Error; err != nil {
+				return err
+			}
+
+			for _, opt := range pollOptions {
+				opt.PollID = poll.ID
+				if err := tx.Create(opt).Error; err != nil {
+					return err
+				}
+			}
+		}
+
+		for _, m := range mediaList {
+			m.NoteID = note.ID
+			if err := tx.Create(m).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
+func (r *NoteRepository) createNoteWithExtras(note *notemodel.Note, poll *notemodel.Poll, pollOptions []*notemodel.PollOption, mediaList []*notemodel.NoteMedia) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(note).Error; err != nil {
+			return err
+		}
+
+		if poll != nil {
+			poll.NoteID = note.ID
+			if err := tx.Create(poll).Error; err != nil {
+				return err
+			}
+
+			for _, opt := range pollOptions {
+				opt.PollID = poll.ID
+				if err := tx.Create(opt).Error; err != nil {
+					return err
+				}
+			}
+		}
+
+		for _, m := range mediaList {
+			m.NoteID = note.ID
+			if err := tx.Create(m).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
+// GenerateCursor generates a cursor string from a note
+func GenerateCursor(note *notemodel.Note) string {
+	return note.CreatedAt.Format("2006-01-02T15:04:05Z") + "_" + note.ID
+}
+
+// GenerateNextCursor generates the next cursor from a list of notes
+func GenerateNextCursor(notes []notemodel.Note, limit int) *string {
+	if len(notes) <= limit {
+		return nil
+	}
+	lastNote := notes[limit]
+	cursor := GenerateCursor(&lastNote)
+	return &cursor
 }
