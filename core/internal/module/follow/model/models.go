@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type FollowStatus string
@@ -26,7 +27,7 @@ type Follow struct {
 	// Indexes on status for filtering
 }
 
-func (f *Follow) BeforeCreate() error {
+func (f *Follow) BeforeCreate(tx *gorm.DB) error {
 	if f.ID == "" {
 		f.ID = uuid.NewString()
 	}

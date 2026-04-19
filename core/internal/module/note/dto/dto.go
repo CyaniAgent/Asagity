@@ -7,8 +7,8 @@ import (
 // CreateNoteRequest - 创建帖子请求
 type CreateNoteRequest struct {
 	Content    string             `json:"content" validate:"required,max=10000"`
-	Type       string             `json:"type,default=note"` // note, reply, repost, quote
-	Visibility string             `json:"visibility,default=public"`
+	Type       string             `json:"type" validate:"required,oneof=note reply repost quote"`
+	Visibility string             `json:"visibility" validate:"required,oneof=public private home"`
 	Cw         *string            `json:"cw"`
 	MediaIDs   []string           `json:"media_ids"`
 	Poll       *CreatePollRequest `json:"poll"`
