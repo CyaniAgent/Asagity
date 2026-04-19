@@ -656,7 +656,7 @@ const moreMenuGroups = [
       <div class="flex-1 overflow-hidden p-4 pt-0">
         <div
           ref="containerRef"
-          class="relative h-full w-full flex gap-1.5 overflow-hidden"
+          class="relative h-full w-full flex overflow-hidden"
         >
           <!-- 左侧：主视图容器 -->
           <div
@@ -668,8 +668,7 @@ const moreMenuGroups = [
                 : 'border-gray-200/50 dark:border-gray-800/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)]'
             ]"
             :style="{
-              width: splitViewStore.isMaximized ? '0%' : (splitViewStore.isOpen ? `${100 - splitViewStore.rightPanelWidth}%` : '100%'),
-              transform: splitViewStore.isMaximized ? 'translateX(-100%)' : (splitViewStore.isOpen ? 'translateX(-8px)' : 'translateX(0)'),
+              width: splitViewStore.isMaximized ? '0%' : (splitViewStore.isOpen ? `calc(${100 - splitViewStore.rightPanelWidth}% - 6px)` : '100%'),
               opacity: splitViewStore.isMaximized ? '0' : '1',
               pointerEvents: splitViewStore.isMaximized ? 'none' : 'auto'
             }"
@@ -683,7 +682,7 @@ const moreMenuGroups = [
           <!-- 可调节缝隙 (Divider) -->
           <div
             v-if="splitViewStore.isOpen && !splitViewStore.isMaximized"
-            class="w-1.5 h-full cursor-col-resize hover:bg-cyan-500/20 active:bg-cyan-500/40 transition-colors z-30 shrink-0 rounded-full"
+            class="w-1.5 h-full cursor-col-resize hover:bg-cyan-500/20 active:bg-cyan-500/40 transition-colors z-30 shrink-0 rounded-full mx-1.5"
             @mousedown="startResizing"
           />
 
@@ -694,7 +693,7 @@ const moreMenuGroups = [
               splitViewStore.isResizing ? '' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
               splitViewStore.isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
             ]"
-            :style="{ width: splitViewStore.isMaximized ? '100%' : (splitViewStore.isOpen ? `${splitViewStore.rightPanelWidth}%` : '0px') }"
+            :style="{ width: splitViewStore.isMaximized ? '100%' : (splitViewStore.isOpen ? `calc(${splitViewStore.rightPanelWidth}% - 6px)` : '0px') }"
             @pointerdown="splitViewStore.focusRight()"
           >
             <div
