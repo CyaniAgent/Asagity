@@ -215,8 +215,15 @@ func startAPI() error {
 	cmd.Dir = coreDir
 	cmd.Env = append(os.Environ(), "TZ="+getEnv("TZ", "Asia/Shanghai"))
 
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	stdoutPipe, err := cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("failed to create stdout pipe: %v", err)
+	}
+	stderrPipe, err := cmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("failed to create stderr pipe: %v", err)
+	}
+
 	cmd.Stdin = os.Stdin
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
@@ -228,7 +235,40 @@ func startAPI() error {
 	servicePIDs["api"] = pid
 	savePIDs()
 
-	fmt.Printf("\033[32m[OK]\033[0m API server started (PID: %d)\n", pid)
+	fmt.Printf("\033[32m[OK]\033[0m API server starting (PID: %d)...\n", pid)
+
+	successChan := make(chan bool, 1)
+	go func() {
+		reader := bufio.NewReader(stdoutPipe)
+		for {
+			line, err := reader.ReadString('\n')
+			if err != nil {
+				break
+			}
+			fmt.Print(line)
+			if strings.Contains(line, "Asagity API listening on") {
+				successChan <- true
+			}
+		}
+	}()
+
+	go func() {
+		reader := bufio.NewReader(stderrPipe)
+		for {
+			line, err := reader.ReadString('\n')
+			if err != nil {
+				break
+			}
+			fmt.Print(line)
+		}
+	}()
+
+	select {
+	case <-successChan:
+		fmt.Printf("\033[32m[OK]\033[0m API server started successfully (PID: %d)\n", pid)
+	case <-time.After(60 * time.Second):
+		fmt.Printf("\033[31m[FAIL]\033[0m API server failed to start within 60s\n")
+	}
 
 	go func() {
 		cmd.Wait()
@@ -255,8 +295,16 @@ func startWeb() error {
 	cmd := exec.Command("npm", "run", "dev")
 	cmd.Dir = webDir
 	cmd.Env = append(os.Environ(), "NITRO_PORT="+config.WebPort)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+
+	stdoutPipe, err := cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("failed to create stdout pipe: %v", err)
+	}
+	stderrPipe, err := cmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("failed to create stderr pipe: %v", err)
+	}
+
 	cmd.Stdin = os.Stdin
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
@@ -268,7 +316,43 @@ func startWeb() error {
 	servicePIDs["web"] = pid
 	savePIDs()
 
-	fmt.Printf("\033[32m[OK]\033[0m Web server started (PID: %d)\n", pid)
+	fmt.Printf("\033[32m[OK]\033[0m Web server starting (PID: %d)...\n", pid)
+
+	successChan := make(chan bool, 1)
+	go func() {
+		reader := bufio.NewReader(stdoutPipe)
+		for {
+			line, err := reader.ReadString('\n')
+			if err != nil {
+				break
+			}
+			fmt.Print(line)
+			if strings.Contains(line, "VITE") && strings.Contains(line, "ready in") {
+				successChan <- true
+			}
+		}
+	}()
+
+	go func() {
+		reader := bufio.NewReader(stderrPipe)
+		for {
+			line, err := reader.ReadString('\n')
+			if err != nil {
+				break
+			}
+			fmt.Print(line)
+			if strings.Contains(line, "VITE") && strings.Contains(line, "ready in") {
+				successChan <- true
+			}
+		}
+	}()
+
+	select {
+	case <-successChan:
+		fmt.Printf("\033[32m[OK]\033[0m Web server started successfully (PID: %d)\n", pid)
+	case <-time.After(60 * time.Second):
+		fmt.Printf("\033[31m[FAIL]\033[0m Web server failed to start within 60s\n")
+	}
 
 	go func() {
 		cmd.Wait()
@@ -354,9 +438,9 @@ func stopService(name string) error {
 func restartService(name string) error {
 	fmt.Printf("\033[33m[RESTART]\033[0m Restarting %s...\n", name)
 	if err := stopService(name); err != nil {
-		return err
+		fmt.Printf("\033[90m[WARN]\033[0m Failed to stop %s: %v, proceeding with start\n", name, err)
 	}
-	time.Sleep(1 * time.Second)
+	time.Sleep(500 * time.Millisecond)
 
 	switch name {
 	case "api":
@@ -369,6 +453,111 @@ func restartService(name string) error {
 		return startRedis()
 	}
 	return nil
+}
+
+func startAllServices() {
+	order := []string{"db", "redis", "web", "api"}
+	failed := []string{}
+
+	fmt.Println("\033[36m[START] Starting all services...\033[0m")
+
+	for _, name := range order {
+		s := getServiceStatus(name)
+		if s.PID > 0 {
+			fmt.Printf("\033[90m[WARN]\033[0m %s already running (PID: %d)\n", name, s.PID)
+			continue
+		}
+
+		err := startSingleService(name)
+		if err != nil {
+			fmt.Printf("\033[31m[FAIL]\033[0m %s failed to start: %v\n", name, err)
+			failed = append(failed, name)
+		}
+	}
+
+	fmt.Println()
+	if len(failed) == len(order) {
+		fmt.Println("\033[31m[ERROR] All services failed to start!\033[0m")
+	} else if len(failed) > 0 {
+		fmt.Printf("\033[33m[WARN] Failed services: %s\n\033[0m", strings.Join(failed, ", "))
+		fmt.Println("\033[32m[OK] Some services started successfully\033[0m")
+	} else {
+		fmt.Println("\033[32m[OK] All services started successfully\033[0m")
+	}
+}
+
+func stopAllServices() {
+	order := []string{"api", "web", "redis", "db"}
+	stopped := []string{}
+	failed := []string{}
+
+	fmt.Println("\033[36m[STOP] Stopping all services...\033[0m")
+
+	for _, name := range order {
+		s := getServiceStatus(name)
+		if s.PID == 0 && name != "db" && name != "redis" {
+			continue
+		}
+
+		err := stopService(name)
+		if err != nil {
+			fmt.Printf("\033[31m[FAIL]\033[0m %s failed to stop: %v\n", name, err)
+			failed = append(failed, name)
+		} else {
+			stopped = append(stopped, name)
+		}
+	}
+
+	fmt.Println()
+	if len(stopped) > 0 {
+		fmt.Printf("\033[32m[OK] Stopped: %s\033[0m\n", strings.Join(stopped, ", "))
+	}
+	if len(failed) > 0 {
+		fmt.Printf("\033[33m[WARN] Failed to stop: %s\033[0m\n", strings.Join(failed, ", "))
+	}
+}
+
+func restartAllServices() {
+	order := []string{"api", "web", "redis", "db"}
+	success := []string{}
+	failed := []string{}
+
+	fmt.Println("\033[36m[RESTART] Restarting all services...\033[0m")
+
+	for _, name := range order {
+		err := restartService(name)
+		if err != nil {
+			fmt.Printf("\033[31m[FAIL]\033[0m %s failed to restart: %v\n", name, err)
+			failed = append(failed, name)
+		} else {
+			success = append(success, name)
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	fmt.Println()
+	if len(failed) == len(order) {
+		fmt.Println("\033[31m[ERROR] All services failed to restart!\033[0m")
+	} else if len(failed) > 0 {
+		fmt.Printf("\033[33m[WARN] Failed: %s\033[0m\n", strings.Join(failed, ", "))
+		fmt.Printf("\033[32m[OK] Restarted: %s\033[0m\n", strings.Join(success, ", "))
+	} else {
+		fmt.Println("\033[32m[OK] All services restarted successfully\033[0m")
+	}
+}
+
+func startSingleService(name string) error {
+	switch name {
+	case "api":
+		return startAPI()
+	case "web":
+		return startWeb()
+	case "db":
+		return startDB()
+	case "redis":
+		return startRedis()
+	}
+	return fmt.Errorf("unknown service: %s", name)
 }
 
 func getServiceStatus(name string) Service {
@@ -554,24 +743,11 @@ func interactiveMenu() {
 		fmt.Println()
 		switch result {
 		case "Start All Services":
-			services := []string{"db", "redis", "api", "web"}
-			for _, name := range services {
-				if getServiceStatus(name).PID == 0 {
-					restartService(name)
-				} else {
-					fmt.Printf("\033[90m[WARN]\033[0m %s already running\n", name)
-				}
-			}
+			startAllServices()
 		case "Stop All Services":
-			services := []string{"api", "web", "db", "redis"}
-			for _, name := range services {
-				stopService(name)
-			}
+			stopAllServices()
 		case "Restart All Services":
-			services := []string{"api", "web", "db", "redis"}
-			for _, name := range services {
-				restartService(name)
-			}
+			restartAllServices()
 		case "Show Status":
 			printStatus()
 		case "Show Logs (API)":
@@ -613,12 +789,9 @@ func main() {
 		}
 		service := os.Args[2]
 		if service == "all" {
-			services := []string{"db", "redis", "api", "web"}
-			for _, name := range services {
-				restartService(name)
-			}
+			startAllServices()
 		} else {
-			restartService(service)
+			startSingleService(service)
 		}
 
 	case "stop":
@@ -628,10 +801,7 @@ func main() {
 		}
 		service := os.Args[2]
 		if service == "all" {
-			services := []string{"api", "web", "db", "redis"}
-			for _, name := range services {
-				stopService(name)
-			}
+			stopAllServices()
 		} else {
 			stopService(service)
 		}
@@ -643,10 +813,7 @@ func main() {
 		}
 		service := os.Args[2]
 		if service == "all" {
-			services := []string{"api", "web", "db", "redis"}
-			for _, name := range services {
-				restartService(name)
-			}
+			restartAllServices()
 		} else {
 			restartService(service)
 		}
@@ -684,6 +851,22 @@ func main() {
 			os.Exit(1)
 		}
 
+	case "help", "h", "-h", "--help":
+		fmt.Println("Usage: appmgr <command> [service]")
+		fmt.Println()
+		fmt.Println("Commands:")
+		fmt.Println("  start <service|all>    Start services")
+		fmt.Println("  stop <service|all>     Stop services")
+		fmt.Println("  restart <service|all>  Restart services")
+		fmt.Println("  status                  Show status")
+		fmt.Println("  logs <service>         Show logs")
+		fmt.Println("  health                  Health check")
+		fmt.Println("  init-db                Initialize database")
+		fmt.Println("  help                   Show this help message")
+		fmt.Println()
+		fmt.Println("Services: api, web, db, redis")
+		return
+
 	default:
 		fmt.Println("Usage: appmgr <command> [service]")
 		fmt.Println()
@@ -693,10 +876,12 @@ func main() {
 		fmt.Println("  restart <service|all>  Restart services")
 		fmt.Println("  status                  Show status")
 		fmt.Println("  logs <service>         Show logs")
-		fmt.Println("  health                 Health check")
+		fmt.Println("  health                  Health check")
 		fmt.Println("  init-db                Initialize database")
+		fmt.Println("  help                   Show this help message")
 		fmt.Println()
 		fmt.Println("Services: api, web, db, redis")
+		return
 	}
 
 	sigChan := make(chan os.Signal, 1)
