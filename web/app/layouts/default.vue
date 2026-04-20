@@ -165,18 +165,33 @@ function startResizing() {
   splitViewStore.isResizing = true
 }
 
+function startWidgetsResizing() {
+  splitViewStore.isWidgetsResizing = true
+}
+
 function handleMouseMove(e: MouseEvent) {
-  if (!splitViewStore.isResizing || !containerRef.value) return
+  if (!containerRef.value) return
 
-  const containerRect = containerRef.value.getBoundingClientRect()
-  const relativeX = e.clientX - containerRect.left
-  const percentage = (relativeX / containerRect.width) * 100
+  if (splitViewStore.isResizing) {
+    const containerRect = containerRef.value.getBoundingClientRect()
+    const relativeX = e.clientX - containerRect.left
+    const percentage = (relativeX / containerRect.width) * 100
 
-  splitViewStore.setRightPanelWidth(100 - percentage)
+    splitViewStore.setRightPanelWidth(100 - percentage)
+  }
+
+  if (splitViewStore.isWidgetsResizing) {
+    const containerRect = containerRef.value.getBoundingClientRect()
+    const rightEdge = containerRect.right
+    const widgetsWidth = rightEdge - e.clientX
+
+    splitViewStore.setWidgetsPanelWidth(widgetsWidth)
+  }
 }
 
 function handleMouseUp() {
   splitViewStore.isResizing = false
+  splitViewStore.isWidgetsResizing = false
 }
 
 onMounted(() => {
@@ -686,13 +701,13 @@ const moreMenuGroups = [
           <div
             class="h-full bg-white dark:bg-gray-900 rounded-[30px] border overflow-hidden cursor-default"
             :class="[
-              splitViewStore.isResizing ? 'transition-none' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
+              (splitViewStore.isResizing || splitViewStore.isWidgetsResizing) ? 'transition-none' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
               splitViewStore.isOpen && splitViewStore.activeView === 'left'
                 ? 'border-cyan-400/60 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.2)]'
                 : 'border-gray-200/50 dark:border-gray-800/50'
             ]"
             :style="{
-              width: splitViewStore.isMaximized ? '0%' : (splitViewStore.isOpen ? `calc(${100 - splitViewStore.rightPanelWidth}% - ${isWidgetsOpen ? 326 : 0}px - 6px)` : `calc(100% - ${isWidgetsOpen ? 326 : 0}px)`),
+              width: splitViewStore.isMaximized ? '0%' : (splitViewStore.isOpen ? `calc(${100 - splitViewStore.rightPanelWidth}%)` : '100%'),
               opacity: splitViewStore.isMaximized ? '0' : '1',
               pointerEvents: splitViewStore.isMaximized ? 'none' : 'auto'
             }"
@@ -714,10 +729,10 @@ const moreMenuGroups = [
           <div
             class="h-full overflow-hidden"
             :class="[
-              splitViewStore.isResizing ? 'transition-none' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
+              (splitViewStore.isResizing || splitViewStore.isWidgetsResizing) ? 'transition-none' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
               splitViewStore.isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
             ]"
-            :style="{ width: splitViewStore.isMaximized ? '100%' : (splitViewStore.isOpen ? `calc(${splitViewStore.rightPanelWidth}% - ${isWidgetsOpen ? 326 : 0}px - 6px)` : '0px') }"
+            :style="{ width: splitViewStore.isMaximized ? '100%' : (splitViewStore.isOpen ? `${splitViewStore.rightPanelWidth}%` : '0px') }"
             @pointerdown="splitViewStore.focusRight()"
           >
             <div
@@ -761,17 +776,36 @@ const moreMenuGroups = [
             </div>
           </div>
 
-          <!-- 独立的小组件视图 (Independent Widget Split View) -->
-          <Transition name="widget-slide">
+          <!-- 可调节缝隙 (Widgets Divider) -->
+          <div
+            v-if="isWidgetsOpen"
+            class="w-1.5 h-full cursor-col-resize hover:bg-cyan-500/20 active:bg-cyan-500/40 transition-colors z-30 shrink-0 rounded-full mx-1.5"
+            @mousedown="startWidgetsResizing"
+          />
+
+          <!-- 小组件面板容器 (Widgets Panel) -->
+          <div
+            class="h-full overflow-hidden"
+            :class="[
+              (splitViewStore.isResizing || splitViewStore.isWidgetsResizing) ? 'transition-none' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
+              isWidgetsOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            ]"
+            :style="{ width: isWidgetsOpen ? `${splitViewStore.widgetsPanelWidth}px` : '0px' }"
+            @pointerdown="splitViewStore.focusWidgets()"
+          >
             <div
-              v-if="isWidgetsOpen"
-              class="h-full w-[320px] bg-white dark:bg-gray-900 rounded-[30px] border border-gray-200/50 dark:border-gray-800/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)] overflow-hidden shrink-0"
+              class="h-full bg-white dark:bg-gray-900 rounded-[30px] border overflow-hidden flex flex-col"
+              :class="[
+                splitViewStore.activeView === 'widgets'
+                  ? 'border-cyan-400/60 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.2)]'
+                  : 'border-gray-200/50 dark:border-gray-800/50'
+              ]"
             >
-              <div class="h-full overflow-y-auto p-6 custom-scrollbar">
+              <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
                 <AppWidgetsSidebar />
               </div>
             </div>
-          </Transition>
+          </div>
         </div>
       </div>
     </main>

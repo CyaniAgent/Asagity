@@ -58,11 +58,14 @@ export const useSplitViewStore = defineStore('splitView', () => {
   const profileTab = ref('home')
   const rightPanelWidth = ref(50)
   const isResizing = ref(false)
-  const activeView = ref<'left' | 'right'>('left')
+  const activeView = ref<'left' | 'right' | 'widgets'>('left')
   const currentRightViewType = ref<RightViewType | null>(null)
 
   const isMaximized = ref(false)
   const refreshKey = ref(0)
+
+  const widgetsPanelWidth = ref(320)
+  const isWidgetsResizing = ref(false)
 
   function openPost(post: Post) {
     currentPost.value = post
@@ -161,6 +164,14 @@ export const useSplitViewStore = defineStore('splitView', () => {
     activeView.value = 'right'
   }
 
+  function focusWidgets() {
+    activeView.value = 'widgets'
+  }
+
+  function setWidgetsPanelWidth(width: number) {
+    widgetsPanelWidth.value = Math.max(240, Math.min(480, width))
+  }
+
   return {
     isOpen,
     currentPost,
@@ -174,6 +185,8 @@ export const useSplitViewStore = defineStore('splitView', () => {
     currentRightViewType,
     isMaximized,
     refreshKey,
+    widgetsPanelWidth,
+    isWidgetsResizing,
     openPost,
     openUser,
     openMusic,
@@ -186,6 +199,8 @@ export const useSplitViewStore = defineStore('splitView', () => {
     setProfileTab,
     setRightPanelWidth,
     focusLeft,
-    focusRight
+    focusRight,
+    focusWidgets,
+    setWidgetsPanelWidth
   }
 })
