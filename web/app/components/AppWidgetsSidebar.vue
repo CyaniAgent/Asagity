@@ -12,7 +12,7 @@ const federatedInstances: { domain: string, protocol: string, active: number }[]
 </script>
 
 <template>
-  <div class="flex flex-col gap-6 p-6 h-full overflow-y-auto custom-scrollbar">
+  <div class="flex flex-col gap-6">
     <!-- Widget 1: Online Status -->
     <div
       class="bg-white/50 dark:bg-gray-900/50 backdrop-blur-md rounded-[24px] border border-white/30 dark:border-gray-800/50 p-5 shadow-sm hover:shadow-md transition-shadow"

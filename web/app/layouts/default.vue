@@ -767,7 +767,9 @@ const moreMenuGroups = [
               v-if="isWidgetsOpen"
               class="h-full w-[320px] bg-white dark:bg-gray-900 rounded-[30px] border border-gray-200/50 dark:border-gray-800/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)] overflow-hidden shrink-0"
             >
-              <AppWidgetsSidebar />
+              <div class="h-full overflow-y-auto p-6 custom-scrollbar">
+                <AppWidgetsSidebar />
+              </div>
             </div>
           </Transition>
         </div>
