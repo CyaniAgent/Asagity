@@ -2,6 +2,13 @@
 
 > Asagity 模块生态系统规范
 
+## 注意
+
+关于`.aim`文件的安装/卸载/启用/禁用操作**需要管理员权限用户组内的用户操作**，如果你不在用户组内，但是在你的 Skyline 云盘上传了`.aim`文件，可以**向管理员发送文件**或**分享该文件给管理员**。
+编辑`.aim`模块的代码可由这两类用户进行编辑：
+1. 具有**管理员权限**用户组的用户，但是发布到 Git 远程仓库需要向**模块原作者申请**。
+2. **模块原作者**，既可以编辑，也可以发布到 Git 远程仓库中。
+
 ## 概述
 
 **AIM (Asagity Integrated Module)** 是 Asagity 特有的模块生态系统，基于 `.tar.gz` 构建。它允许开发者以模块化的方式扩展 Asagity 平台的前端和后端功能。
@@ -15,12 +22,12 @@ AIM 模块文件使用 `.aim` 扩展名，本质上是一个 tar.gz 压缩包。
 ```
 module-name-v1.0.0.aim
 ├── manifest.json          # 模块元数据（必需）
-├── backend/              # Go 后端扩展（可选）
+├── backend/              # Go 后端扩展
 │   ├── handler/
 │   ├── service/
 │   ├── repository/
 │   └── model/
-├── frontend/             # Nuxt 前端扩展（可选）
+├── frontend/             # Nuxt 前端扩展
 │   ├── components/
 │   ├── pages/
 │   ├── composables/
@@ -29,9 +36,9 @@ module-name-v1.0.0.aim
 ├── assets/              # 静态资源（可选）
 │   ├── images/
 │   └── icons/
-├── config/              # 配置文件（可选）
+├── config/              # 配置文件
 │   └── default.yaml
-└── README.md            # 模块说明（可选）
+└── README.md            # 模块说明
 ```
 
 ### 必须包含的文件
@@ -39,10 +46,10 @@ module-name-v1.0.0.aim
 | 路径 | 说明 | 必需 |
 |------|------|------|
 | `/manifest.json` | 模块元数据 | ✅ 是 |
-| `/backend/` | Go 后端扩展 | 至少其一 |
-| `/frontend/` | Nuxt 前端扩展 | 至少其一 |
+| `/backend/` | Go 后端扩展 | ✅ 是 |
+| `/frontend/` | Nuxt 前端扩展 | ✅ 是 |
 | `/assets/` | 静态资源 | 可选 |
-| `/config/` | 配置文件 | 可选 |
+| `/config/` | 配置文件 | ✅ 是 |
 
 ---
 
@@ -241,8 +248,9 @@ func Module() *asagity.Module {
 AIM 模块可以通过以下方式分发：
 
 1. **本地安装**：从文件系统安装 `.aim` 文件
-2. **模块市场**：从 Asagity 模块市场下载
-3. **Git 仓库**：从 Git 仓库直接安装
+2. **云盘安装**：从自己的 Skyline 云盘上传并安装`.aim`文件
+4. **模块市场**：从 Asagity 模块市场下载
+5. **Git 仓库**：从 Git 仓库直接安装
 
 ---
 
