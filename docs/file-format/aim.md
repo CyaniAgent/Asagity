@@ -23,12 +23,12 @@ AIM 模块文件使用 `.aim` 扩展名，本质上是一个 tar.gz 压缩包。
 ```
 module-name-v1.0.0.aim
 ├── manifest.json          # 模块元数据（必需）
-├── backend/              # Go 后端扩展（可选）
+├── backend/              # Go 后端扩展
 │   ├── handler/
 │   ├── service/
 │   ├── repository/
 │   └── model/
-├── frontend/             # Nuxt 前端扩展（可选）
+├── frontend/             # Nuxt 前端扩展
 │   ├── components/
 │   ├── pages/
 │   ├── composables/
@@ -37,9 +37,9 @@ module-name-v1.0.0.aim
 ├── assets/              # 静态资源（可选）
 │   ├── images/
 │   └── icons/
-├── config/              # 配置文件（可选）
+├── config/              # 配置文件
 │   └── default.yaml
-└── README.md            # 模块说明（可选）
+└── README.md            # 模块说明
 ```
 
 ### 必须包含的文件
@@ -47,10 +47,10 @@ module-name-v1.0.0.aim
 | 路径 | 说明 | 必需 |
 |------|------|------|
 | `/manifest.json` | 模块元数据 | ✅ 是 |
-| `/backend/` | Go 后端扩展 | 至少其一 |
-| `/frontend/` | Nuxt 前端扩展 | 至少其一 |
+| `/backend/` | Go 后端扩展 | ✅ 是 |
+| `/frontend/` | Nuxt 前端扩展 | ✅ 是 |
 | `/assets/` | 静态资源 | 可选 |
-| `/config/` | 配置文件 | 可选 |
+| `/config/` | 配置文件 | ✅ 是 |
 
 ---
 
@@ -249,8 +249,9 @@ func Module() *asagity.Module {
 AIM 模块可以通过以下方式分发：
 
 1. **本地安装**：从文件系统安装 `.aim` 文件
-2. **模块市场**：从 Asagity 模块市场下载
-3. **Git 仓库**：从 Git 仓库直接安装
+2. **云盘安装**：从自己的 Skyline 云盘上传并安装`.aim`文件
+4. **模块市场**：从 Asagity 模块市场下载
+5. **Git 仓库**：从 Git 仓库直接安装
 
 ---
 
