@@ -6,7 +6,7 @@ export default defineNuxtRouteMiddleware((to) => {
   const systemStore = useSystemStore()
 
   // Define public pages that don't require login
-  const publicPages = ['/welcome', '/login', '/register']
+  const publicPages = ['/', '/welcome', '/login', '/register']
 
   // Offline Mode constraints
   if (systemStore.isFrontendOnlyMode) {
@@ -27,12 +27,13 @@ export default defineNuxtRouteMiddleware((to) => {
 
   // If not logged in and trying to access a protected page
   if (!userStore.isLoggedIn && !publicPages.includes(to.path)) {
-    // Redirect to the Welcome portal
-    return navigateTo('/welcome')
+    // Redirect to the Welcome portal (now integrated into /)
+    return navigateTo('/')
   }
 
-  // If already logged in and trying to access welcome/login/register, we might want to redirect to home
-  if (userStore.isLoggedIn && publicPages.includes(to.path)) {
+  // If already logged in and trying to access welcome/login/register, redirect to home
+  // But don't redirect if we are already at home ('/') to avoid infinite loops
+  if (userStore.isLoggedIn && publicPages.includes(to.path) && to.path !== '/') {
     return navigateTo('/')
   }
 })

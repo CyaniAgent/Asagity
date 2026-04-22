@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useMouse, useWindowSize } from '@vueuse/core'
-import { definePageMeta, navigateTo } from '#imports'
 import { useUserStore } from '~/stores/user'
-
-definePageMeta({ layout: false })
 
 const { x, y } = useMouse()
 const { width, height } = useWindowSize()
@@ -20,7 +17,6 @@ async function handleDeveloperEnter() {
   userStore.developerEnter()
   showLogin.value = false
   showRegister.value = false
-  await navigateTo('/')
 }
 
 function openLogin() {

@@ -132,7 +132,7 @@ const goBack = () => {
 
     <!-- Back Button -->
     <div class="absolute top-8 left-8 z-20 hidden md:block">
-      <NuxtLink to="/welcome">
+      <NuxtLink to="/">
         <button class="flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition-colors bg-white/5 hover:bg-white/10 px-4 py-2 rounded-full backdrop-blur-md border border-white/10 text-sm font-bold">
           <UIcon
             name="i-material-symbols-arrow-back"
