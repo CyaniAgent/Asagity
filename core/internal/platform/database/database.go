@@ -92,12 +92,12 @@ func seedInitialData(db *gorm.DB) error {
 
 		instanceUser := &usermodel.User{
 			ID:          "00000000000000000000000000000001",
-			PubID:       "usr_instance",
-			Username:    "instance",
-			Email:       stringPtr("instance@asagity.local"),
+			PubID:       "usr_asagity0",
+			Username:    "asagity_admin",
+			Email:       stringPtr("admin@asagity.local"),
 			PasswdHash:  string(hashedPassword),
 			UserGroupID: "admin",
-			Name:        "Instance Administrator",
+			Name:        "Asagity Administrator",
 			CreatedAt:   time.Now(),
 		}
 		if err := db.Create(instanceUser).Error; err != nil {

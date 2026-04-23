@@ -8,6 +8,7 @@ interface UserProfile {
   name?: string
   avatar_url?: string
   pubid?: string
+  role?: 'admin' | 'moderator' | 'user'
 }
 
 interface AuthData {
@@ -38,6 +39,8 @@ export const useUserStore = defineStore('user', () => {
 
   const username = computed(() => user.value?.username || '')
   const avatar = computed(() => user.value?.avatar_url || '')
+  const isAdmin = computed(() => user.value?.role === 'admin' || user.value?.username === 'Developer')
+  const isModerator = computed(() => user.value?.role === 'moderator' || isAdmin.value)
 
   function setAuth(data: AuthData) {
     accessToken.value = data.access_token
@@ -149,6 +152,8 @@ export const useUserStore = defineStore('user', () => {
 
   return {
     isLoggedIn,
+    isAdmin,
+    isModerator,
     accessToken,
     refreshToken,
     user,

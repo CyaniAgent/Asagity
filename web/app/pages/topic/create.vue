@@ -33,26 +33,6 @@ async function handleSubmit() {
 
 <template>
   <div class="max-w-[800px] mx-auto w-full animate-[fade-in_0.4s_ease-out]">
-    <!-- Header -->
-    <div class="mb-6">
-      <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-          <UIcon
-            name="i-material-symbols-add-circle"
-            class="w-7 h-7 text-cyan-500"
-          />
-        </div>
-        <div>
-          <h1 class="text-2xl font-black text-gray-900 dark:text-white">
-            创建话题
-          </h1>
-          <p class="text-sm text-gray-500">
-            创建一个新的社区话题
-          </p>
-        </div>
-      </div>
-    </div>
-
     <!-- Form -->
     <div class="bg-white/40 dark:bg-gray-900/40 backdrop-blur-md rounded-[30px] border border-white/30 dark:border-gray-800/50 shadow-sm overflow-hidden">
       <div class="p-6 space-y-6">

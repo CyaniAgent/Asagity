@@ -43,9 +43,16 @@ const isItemActive = (item: { label: string, activePaths?: string[], to?: string
   if (item.label === '更多') {
     return moreMenuGroups.flat().some(feat => route.path.startsWith(feat.to))
   }
+
+  if (item.activePaths) {
+    return item.activePaths.some(p => p === '/' ? route.path === '/' : route.path.startsWith(p))
+  }
+
   if (item.to) {
+    if (item.to === '/') return route.path === '/'
     return route.path.startsWith(item.to)
   }
+
   return false
 }
 
@@ -771,6 +778,10 @@ const moreMenuGroups = [
                 <AppChatDetail
                   v-else-if="splitViewStore.currentRightViewType === 'chat' && splitViewStore.isOpen"
                   :key="`chat-${splitViewStore.refreshKey}`"
+                />
+                <AppBrowser
+                  v-else-if="splitViewStore.currentRightViewType === 'browser' && splitViewStore.isOpen"
+                  :url="splitViewStore.currentBrowserUrl"
                 />
               </div>
             </div>

@@ -58,13 +58,14 @@ interface OpenContextTabs {
   profileTab?: string
 }
 
-type ViewType = 'post' | 'user' | 'music' | 'notifications' | 'chat' | 'admin_database'
+type ViewType = 'post' | 'user' | 'music' | 'notifications' | 'chat' | 'admin_database' | 'browser'
 
 export const useFreeWindowStore = defineStore('freeWindow', () => {
   const isOpen = ref(false)
   const currentPost = ref<Post | null>(null)
   const currentUser = ref<User | null>(null)
   const currentChat = ref<Chat | null>(null)
+  const currentBrowserUrl = ref('')
 
   const activeTab = ref('comments')
   const profileTab = ref('home')
@@ -88,6 +89,13 @@ export const useFreeWindowStore = defineStore('freeWindow', () => {
     isOpen.value = true
   }
 
+  function openBrowser(url: string) {
+    currentBrowserUrl.value = url
+    currentViewType.value = 'browser'
+    isMinimized.value = false
+    isOpen.value = true
+  }
+
   function close() {
     isOpen.value = false
     isMaximized.value = false
@@ -97,6 +105,7 @@ export const useFreeWindowStore = defineStore('freeWindow', () => {
       currentPost.value = null
       currentUser.value = null
       currentChat.value = null
+      currentBrowserUrl.value = ''
     }, 300)
   }
 
@@ -127,6 +136,7 @@ export const useFreeWindowStore = defineStore('freeWindow', () => {
     currentPost,
     currentUser,
     currentChat,
+    currentBrowserUrl,
     activeTab,
     profileTab,
     currentViewType,
@@ -135,6 +145,7 @@ export const useFreeWindowStore = defineStore('freeWindow', () => {
     refreshKey,
     position,
     openFromContext,
+    openBrowser,
     close,
     toggleMaximize,
     toggleMinimize,

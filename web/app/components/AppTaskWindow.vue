@@ -13,6 +13,7 @@ const freeWindowTitle = computed(() => {
     case 'notifications': return '通知中心'
     case 'chat': return freeWindowStore.currentChat?.name || 'Asagity Chat'
     case 'admin_database': return '数据库详细信息'
+    case 'browser': return '内部浏览器 (BROWSER)'
     default: return 'Free Window'
   }
 })
@@ -26,6 +27,7 @@ const freeWindowIcon = computed(() => {
     case 'notifications': return 'i-material-symbols-notifications'
     case 'chat': return 'i-material-symbols-forum'
     case 'admin_database': return 'i-material-symbols-database'
+    case 'browser': return 'i-material-symbols-language'
     default: return 'i-material-symbols-tab-move'
   }
 })
@@ -63,6 +65,10 @@ function handleClose() {
     <AppDatabaseDetails
       v-else-if="freeWindowStore.currentViewType === 'admin_database'"
       :key="`admindb-${freeWindowStore.refreshKey}`"
+    />
+    <AppBrowser
+      v-else-if="freeWindowStore.currentViewType === 'browser'"
+      :url="freeWindowStore.currentBrowserUrl"
     />
   </AppFreeWindow>
 </template>

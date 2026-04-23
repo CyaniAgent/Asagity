@@ -4,12 +4,14 @@ import { useUserStore } from '~/stores/user'
 import { useSystemStore } from '~/stores/system'
 import { useThemeStore } from '~/stores/theme'
 import { useSoundManager } from '~/stores/soundManager'
+import { useContextMenuStore } from '~/stores/contextMenu'
 
 const instanceStore = useInstanceStore()
 const userStore = useUserStore()
 const systemStore = useSystemStore()
 const themeStore = useThemeStore()
 const soundManager = useSoundManager()
+const contextMenuStore = useContextMenuStore()
 
 onMounted(async () => {
   themeStore.init()
@@ -38,6 +40,47 @@ onMounted(async () => {
     window.addEventListener('click', unlockAudio)
     window.addEventListener('touchstart', unlockAudio)
     window.addEventListener('keydown', unlockAudio)
+
+    // 全局右键菜单监听 (Global Context Menu Listener)
+    window.addEventListener('contextmenu', (e) => {
+      // 如果点击的是输入框或文本域，则允许浏览器默认菜单
+      const target = e.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return
+      }
+
+      // 寻找最近的链接标签 (Find nearest <a>)
+      const anchor = target.closest('a')
+
+      if (anchor) {
+        const href = anchor.getAttribute('href') || anchor.href
+        // 只有包含有效的 href 才进行特殊处理
+        if (href && !href.startsWith('javascript:') && !href.startsWith('#')) {
+          // 判断是否为内部链接：相对路径，或包含当前 origin
+          const isInternal = href.startsWith('/') || href.startsWith(window.location.origin) || !href.includes('://')
+
+          if (isInternal) {
+            // 获取路径部分
+            let path = href
+            if (href.startsWith('http')) {
+              try {
+                path = new URL(href).pathname
+              } catch {
+                path = href
+              }
+            }
+            contextMenuStore.open(e, 'link_internal', { path, href: anchor.href })
+          } else {
+            // 外部链接：获取标题和URL
+            const title = anchor.innerText.trim().slice(0, 30) || anchor.getAttribute('title') || '外部链接'
+            contextMenuStore.open(e, 'link_external', { url: anchor.href, title })
+          }
+          return
+        }
+      }
+
+      contextMenuStore.open(e, 'global')
+    })
   }
 })
 
@@ -74,5 +117,8 @@ useSeoMeta({
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
+
+    <!-- 全局右键菜单 (Global Context Menu) -->
+    <AppContextMenu />
   </UApp>
 </template>
