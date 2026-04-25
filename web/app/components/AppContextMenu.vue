@@ -74,9 +74,9 @@ const openInternal = (path: string) => {
 const deletePost = (post: any) => {
   const isSelf = post.author.username === userStore.username
   const canAdmin = userStore.isAdmin || userStore.isModerator
-  
+
   const actionName = canAdmin && !isSelf ? '删帖 (ADMIN DELETE)' : '删除 (DELETE)'
-  
+
   toast.add({
     title: `${actionName} 成功`,
     description: '帖子已从矩阵中移除。',
@@ -85,20 +85,36 @@ const deletePost = (post: any) => {
   })
 }
 
+// 选中文字逻辑 (Selection Logic)
+const selectedText = ref('')
+watch(() => contextMenuStore.isOpen, (open) => {
+  if (open) {
+    selectedText.value = window.getSelection()?.toString().trim() || ''
+  }
+})
+
+const shareSelectedText = () => {
+  if (navigator.share && selectedText.value) {
+    navigator.share({ text: selectedText.value })
+  } else {
+    copyContent(selectedText.value)
+  }
+}
+
 // 计算位置以防超出屏幕
 const menuStyle = computed(() => {
   if (!menuRef.value) return { left: `${contextMenuStore.x}px`, top: `${contextMenuStore.y}px` }
-  
+
   const { innerWidth, innerHeight } = window
   const menuWidth = 220
   const menuHeight = contextMenuStore.type === 'post' ? 450 : 150
-  
+
   let left = contextMenuStore.x
   let top = contextMenuStore.y
-  
+
   if (left + menuWidth > innerWidth) left = innerWidth - menuWidth - 10
   if (top + menuHeight > innerHeight) top = innerHeight - menuHeight - 10
-  
+
   return {
     left: `${left}px`,
     top: `${top}px`
@@ -108,36 +124,46 @@ const menuStyle = computed(() => {
 
 <template>
   <Transition name="menu-fade">
-    <div
-      v-if="contextMenuStore.isOpen"
-      :key="contextMenuStore.menuKey"
-      ref="menuRef"
+    <div v-if="contextMenuStore.isOpen" :key="contextMenuStore.menuKey" ref="menuRef"
       class="fixed z-[9999] w-[220px] bg-white/70 dark:bg-gray-900/80 backdrop-blur-2xl border border-white/20 dark:border-gray-800/50 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden p-1.5"
-      :style="menuStyle"
-      @contextmenu.prevent
-    >
+      :style="menuStyle" @contextmenu.prevent>
+      <!-- 选中文字菜单 (Text Selection) -->
+      <template v-if="selectedText">
+        <div class="flex flex-col gap-0.5">
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all text-cyan-600 dark:text-cyan-400 font-bold hover:bg-cyan-500/10"
+            @click="handleAction(() => copyContent(selectedText))">
+            <UIcon name="i-material-symbols-content-copy-rounded" class="w-4 h-4 opacity-70" />
+            <span>复制</span>
+          </button>
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400"
+            @click="handleAction(shareSelectedText)">
+            <UIcon name="i-material-symbols-share-outline" class="w-4 h-4 opacity-70" />
+            <span>分享选中文字</span>
+          </button>
+        </div>
+        <div class="h-px bg-gray-200/50 dark:bg-gray-800/50 my-1.5 mx-2" />
+      </template>
+
       <!-- 帖子特定菜单 -->
       <template v-if="contextMenuStore.type === 'post'">
         <div class="flex flex-col gap-0.5">
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all text-cyan-600 dark:text-cyan-400 font-bold hover:bg-cyan-500/10" 
-            @click="handleAction(() => splitViewStore.openPost(contextMenuStore.data))"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all text-cyan-600 dark:text-cyan-400 font-bold hover:bg-cyan-500/10"
+            @click="handleAction(() => splitViewStore.openPost(contextMenuStore.data))">
             <UIcon name="i-material-symbols-visibility-outline" class="w-4 h-4 opacity-70" />
-            <span>详情 (Details)</span>
+            <span>详情</span>
           </button>
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400" 
-            @click="handleAction(() => copyContent(contextMenuStore.data.content))"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400"
+            @click="handleAction(() => copyContent(contextMenuStore.data.content))">
             <UIcon name="i-material-symbols-content-copy-outline" class="w-4 h-4 opacity-70" />
-            <span>复制内容 (Copy)</span>
+            <span>复制内容</span>
           </button>
-          <button 
-            v-if="contextMenuStore.data.author.instance" 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400" 
-            @click="handleAction(() => openFederated(contextMenuStore.data))"
-          >
+          <button v-if="contextMenuStore.data.author.instance"
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400"
+            @click="handleAction(() => openFederated(contextMenuStore.data))">
             <UIcon name="i-material-symbols-language" class="w-4 h-4 opacity-70" />
             <span class="text-xs">转到联邦实例打开</span>
           </button>
@@ -146,19 +172,17 @@ const menuStyle = computed(() => {
         <div class="h-px bg-gray-200/50 dark:bg-gray-800/50 my-1.5 mx-2" />
 
         <div class="flex flex-col gap-0.5">
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400" 
-            @click="handleAction(() => {})"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400"
+            @click="handleAction(() => { })">
             <UIcon name="i-material-symbols-share-outline" class="w-4 h-4 opacity-70" />
-            <span>分享 (Share)</span>
+            <span>分享</span>
           </button>
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400" 
-            @click="handleAction(() => {})"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400"
+            @click="handleAction(() => { })">
             <UIcon name="i-material-symbols-favorite-outline" class="w-4 h-4 opacity-70" />
-            <span>收藏 (Favorite)</span>
+            <span>收藏</span>
           </button>
         </div>
 
@@ -169,34 +193,31 @@ const menuStyle = computed(() => {
       <template v-if="contextMenuStore.type === 'link_internal'">
         <div class="px-3 py-2 mb-1 flex flex-col gap-0.5 overflow-hidden">
           <span class="text-[10px] font-black text-cyan-500 uppercase tracking-widest opacity-60">Internal Path</span>
-          <span class="text-xs font-bold text-gray-500 dark:text-gray-400 truncate">{{ contextMenuStore.data.path }}</span>
+          <span class="text-xs font-bold text-gray-500 dark:text-gray-400 truncate">{{ contextMenuStore.data.path
+          }}</span>
         </div>
         <div class="flex flex-col gap-0.5">
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all text-cyan-600 dark:text-cyan-400 font-bold hover:bg-cyan-500/10" 
-            @click="handleAction(() => openInternal(contextMenuStore.data.path))"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all text-cyan-600 dark:text-cyan-400 font-bold hover:bg-cyan-500/10"
+            @click="handleAction(() => openInternal(contextMenuStore.data.path))">
             <UIcon name="i-material-symbols-open-in-new" class="w-4 h-4 opacity-70" />
-            <span>打开 (Open)</span>
+            <span>打开</span>
           </button>
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400" 
-            @click="handleAction(() => copyContent(contextMenuStore.data.href))"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400"
+            @click="handleAction(() => copyContent(contextMenuStore.data.href))">
             <UIcon name="i-material-symbols-link" class="w-4 h-4 opacity-70" />
             <span>复制链接</span>
           </button>
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400" 
-            @click="handleAction(refresh)"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400"
+            @click="handleAction(refresh)">
             <UIcon name="i-material-symbols-refresh" class="w-4 h-4 opacity-70" />
-            <span>刷新 (Refresh)</span>
+            <span>刷新</span>
           </button>
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400" 
-            @click="handleAction(sharePage)"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400"
+            @click="handleAction(sharePage)">
             <UIcon name="i-material-symbols-ios-share" class="w-4 h-4 opacity-70" />
             <span>分享该页面</span>
           </button>
@@ -205,17 +226,15 @@ const menuStyle = computed(() => {
         <div class="h-px bg-gray-200/50 dark:bg-gray-800/50 my-1.5 mx-2" />
 
         <div class="flex flex-col gap-0.5">
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400" 
-            @click="handleAction(() => splitViewStore.openBrowser(contextMenuStore.data.href))"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400"
+            @click="handleAction(() => splitViewStore.openBrowser(contextMenuStore.data.href))">
             <UIcon name="i-material-symbols-vertical-split" class="w-4 h-4 opacity-70" />
             <span>在拆分视图打开</span>
           </button>
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400" 
-            @click="handleAction(() => freeWindowStore.openBrowser(contextMenuStore.data.href))"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400"
+            @click="handleAction(() => freeWindowStore.openBrowser(contextMenuStore.data.href))">
             <UIcon name="i-material-symbols-open-in-new" class="w-4 h-4 opacity-70" />
             <span>在自由窗口打开</span>
           </button>
@@ -225,35 +244,32 @@ const menuStyle = computed(() => {
       <!-- 外部链接菜单 (External Link) -->
       <template v-if="contextMenuStore.type === 'link_external'">
         <div class="px-3 py-2 mb-1 flex flex-col gap-0.5 overflow-hidden">
-          <span class="text-[10px] font-black text-fuchsia-500 uppercase tracking-widest opacity-60">{{ contextMenuStore.data.title }}</span>
+          <span class="text-[10px] font-black text-fuchsia-500 uppercase tracking-widest opacity-60">{{
+            contextMenuStore.data.title }}</span>
           <span class="text-[9px] font-bold text-gray-400 truncate">{{ contextMenuStore.data.url }}</span>
         </div>
         <div class="flex flex-col gap-0.5">
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all text-fuchsia-600 dark:text-fuchsia-400 font-bold hover:bg-fuchsia-500/10" 
-            @click="handleAction(() => openExternal(contextMenuStore.data.url))"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all text-fuchsia-600 dark:text-fuchsia-400 font-bold hover:bg-fuchsia-500/10"
+            @click="handleAction(() => openExternal(contextMenuStore.data.url))">
             <UIcon name="i-material-symbols-open-in-new" class="w-4 h-4 opacity-70" />
             <span>在新标签页打开</span>
           </button>
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400" 
-            @click="handleAction(() => splitViewStore.openBrowser(contextMenuStore.data.url))"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400"
+            @click="handleAction(() => splitViewStore.openBrowser(contextMenuStore.data.url))">
             <UIcon name="i-material-symbols-laptop-mac-outline" class="w-4 h-4 opacity-70" />
             <span>在内部浏览器打开</span>
           </button>
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400" 
-            @click="handleAction(() => splitViewStore.openBrowser(contextMenuStore.data.url))"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400"
+            @click="handleAction(() => splitViewStore.openBrowser(contextMenuStore.data.url))">
             <UIcon name="i-material-symbols-vertical-split" class="w-4 h-4 opacity-70" />
             <span>在拆分视图打开</span>
           </button>
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400" 
-            @click="handleAction(() => freeWindowStore.openBrowser(contextMenuStore.data.url))"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400"
+            @click="handleAction(() => freeWindowStore.openBrowser(contextMenuStore.data.url))">
             <UIcon name="i-material-symbols-open-in-new" class="w-4 h-4 opacity-70" />
             <span>在自由窗口打开</span>
           </button>
@@ -262,17 +278,15 @@ const menuStyle = computed(() => {
         <div class="h-px bg-gray-200/50 dark:bg-gray-800/50 my-1.5 mx-2" />
 
         <div class="flex flex-col gap-0.5">
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400" 
-            @click="handleAction(() => copyContent(contextMenuStore.data.url))"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400"
+            @click="handleAction(() => copyContent(contextMenuStore.data.url))">
             <UIcon name="i-material-symbols-link" class="w-4 h-4 opacity-70" />
             <span>复制链接</span>
           </button>
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400" 
-            @click="handleAction(() => {})"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400"
+            @click="handleAction(() => { })">
             <UIcon name="i-material-symbols-ios-share" class="w-4 h-4 opacity-70" />
             <span>分享链接</span>
           </button>
@@ -281,24 +295,21 @@ const menuStyle = computed(() => {
 
       <!-- 全局常用菜单 -->
       <div v-if="contextMenuStore.type === 'global'" class="flex flex-col gap-0.5">
-        <button 
-          class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400" 
-          @click="handleAction(refresh)"
-        >
+        <button
+          class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400"
+          @click="handleAction(refresh)">
           <UIcon name="i-material-symbols-refresh" class="w-4 h-4 opacity-70" />
-          <span>刷新 (Refresh)</span>
+          <span>刷新</span>
         </button>
-        <button 
-          class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400" 
-          @click="handleAction(() => freeWindowStore.openFromContext('post', { post: contextMenuStore.data }, {}))"
-        >
+        <button
+          class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400"
+          @click="handleAction(() => freeWindowStore.openFromContext('post', { post: contextMenuStore.data }, {}))">
           <UIcon name="i-material-symbols-open-in-new" class="w-4 h-4 opacity-70" />
           <span>在自由窗口打开</span>
         </button>
-        <button 
-          class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400" 
-          @click="handleAction(sharePage)"
-        >
+        <button
+          class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400"
+          @click="handleAction(sharePage)">
           <UIcon name="i-material-symbols-ios-share" class="w-4 h-4 opacity-70" />
           <span>分享页面</span>
         </button>
@@ -308,17 +319,15 @@ const menuStyle = computed(() => {
       <template v-if="contextMenuStore.type === 'post'">
         <div class="h-px bg-gray-200/50 dark:bg-gray-800/50 my-1.5 mx-2" />
         <div class="flex flex-col gap-0.5">
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400" 
-            @click="handleAction(() => {})"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400"
+            @click="handleAction(() => { })">
             <UIcon name="i-material-symbols-tag" class="w-4 h-4 opacity-70" />
             <span>添加到话题...</span>
           </button>
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-orange-600 dark:text-orange-400 hover:bg-orange-500/10" 
-            @click="handleAction(() => {})"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-orange-600 dark:text-orange-400 hover:bg-orange-500/10"
+            @click="handleAction(() => { })">
             <UIcon name="i-material-symbols-block" class="w-4 h-4 opacity-70" />
             <span>屏蔽此主题串</span>
           </button>
@@ -327,24 +336,22 @@ const menuStyle = computed(() => {
         <div class="h-px bg-gray-200/50 dark:bg-gray-800/50 my-1.5 mx-2" />
 
         <div class="flex flex-col gap-0.5">
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-red-600 dark:text-red-400 hover:bg-red-500/10" 
-            @click="handleAction(() => deletePost(contextMenuStore.data))"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-red-600 dark:text-red-400 hover:bg-red-500/10"
+            @click="handleAction(() => deletePost(contextMenuStore.data))">
             <UIcon name="i-material-symbols-delete-outline" class="w-4 h-4 opacity-70" />
-            <span>{{ (userStore.isAdmin || userStore.isModerator) && contextMenuStore.data.author.username !== userStore.username ? '删帖 (ADMIN)' : '删除 (DELETE)' }}</span>
+            <span>{{ (userStore.isAdmin || userStore.isModerator) && contextMenuStore.data.author.username !==
+              userStore.username ? '删帖' : '删除' }}</span>
           </button>
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-red-600 dark:text-red-400 hover:bg-red-500/10" 
-            @click="handleAction(() => {})"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-red-600 dark:text-red-400 hover:bg-red-500/10"
+            @click="handleAction(() => { })">
             <UIcon name="i-material-symbols-report-outline" class="w-4 h-4 opacity-70" />
-            <span>举报 (Report)</span>
+            <span>举报</span>
           </button>
-          <button 
-            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-400 hover:text-gray-600 dark:hover:text-gray-200" 
-            @click="handleAction(() => copyPubID(contextMenuStore.data.author.pubid || 'asgt_unknown'))"
-          >
+          <button
+            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            @click="handleAction(() => copyPubID(contextMenuStore.data.author.pubid || 'asgt_unknown'))">
             <UIcon name="i-material-symbols-fingerprint" class="w-4 h-4 opacity-70" />
             <span class="text-[10px]">复制 PubID</span>
           </button>

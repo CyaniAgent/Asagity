@@ -1,0 +1,85 @@
+{
+  "name": "asagity-livekit",
+  "display_name": "Asagity LiveKit Meeting",
+  "version": "1.0.0",
+  "description": "提供实时音视频会议、语音聊天室、双人通话等功能的模块。",
+  
+  "author": {
+    "name": "Yuna",
+    "email": "author@example.com",
+    "url": "https://asagity.org"
+  },
+
+  "type": "full",
+
+  "compatibility": {
+    "asagity": ">=1.0.0",
+    "api": ">=1.0.0"
+  },
+
+  "dependencies": {
+    "@skyline-drop": ">=1.0.0"
+  },
+
+  "entry": {
+    "frontend": "frontend/index.ts",
+    "backend": "backend/main.go"
+  },
+
+  "permissions": [
+    "realtime",
+    "read_profile",
+    "write_settings"
+  ],
+
+  "capabilities": [
+    "realtime",
+    "ui-overlay",
+    "federation"
+  ],
+
+  "injection": {
+    "navbar": true,
+    "sidebar": true,
+    "settings": true
+  },
+
+  "assets": [
+    "assets/icon.png",
+    "assets/banner.jpg"
+  ],
+
+  "exports": {
+    "api": "backend/api.go",
+    "components": [
+      "frontend/components/MeetingButton.vue"
+    ]
+  },
+
+  "hooks": {
+    "onInstall": "scripts/install.sh",
+    "onUninstall": "scripts/uninstall.sh",
+    "onUpdate": "scripts/update.sh"
+  },
+
+  "runtime": {
+    "frontend": "nuxt3",
+    "backend": "go1.22"
+  },
+
+  "signature": {
+    "type": "ed25519",
+    "public_key": "xxxx",
+    "signature": "xxxx"
+  },
+
+  "registry": "https://aim.asagity.org/modules",
+
+  "config": {
+    "enabled": true,
+    "settings": {
+      "maxParticipants": 100,
+      "defaultRoomType": "meeting"
+    }
+  }
+}

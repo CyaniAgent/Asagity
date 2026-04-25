@@ -345,30 +345,17 @@ const moreMenuGroups = [
     <!-- 左侧：主导航栏 (与上方布局合并) -->
     <aside class="w-64 h-full flex flex-col shrink-0 z-20">
       <!-- 顶部 Logo -->
-      <NuxtLink
-        to="/about"
-        class="h-24 flex items-center px-6 shrink-0 group/logo cursor-pointer relative block"
-      >
+      <NuxtLink to="/about" class="h-24 flex items-center px-6 shrink-0 group/logo cursor-pointer relative block">
         <div class="w-12 h-12 flex items-center justify-center group-hover/logo:scale-110 transition-all duration-300">
-          <img
-            v-if="instanceStore.logoURL"
-            :src="getIconUrl(instanceStore.logoURL)"
-            class="w-full h-full object-cover"
-          >
-          <UIcon
-            v-else
-            name="i-material-symbols-bolt"
-            class="w-7 h-7 text-white"
-          />
+          <img v-if="instanceStore.logoURL" :src="getIconUrl(instanceStore.logoURL)" class="w-full h-full object-cover">
+          <UIcon v-else name="i-material-symbols-bolt" class="w-7 h-7 text-white" />
         </div>
 
         <!-- 悬停显示的实例名称 (Floating Info) -->
         <div
-          class="absolute left-20 opacity-0 group-hover/logo:opacity-100 translate-x-[-10px] group-hover/logo:translate-x-0 transition-all duration-300 pointer-events-none z-50"
-        >
+          class="absolute left-20 opacity-0 group-hover/logo:opacity-100 translate-x-[-10px] group-hover/logo:translate-x-0 transition-all duration-300 pointer-events-none z-50">
           <div
-            class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl px-4 py-2.5 rounded-2xl border border-white/20 dark:border-gray-800 shadow-2xl flex flex-col min-w-[140px]"
-          >
+            class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl px-4 py-2.5 rounded-2xl border border-white/20 dark:border-gray-800 shadow-2xl flex flex-col min-w-[140px]">
             <span class="text-[10px] font-black text-cyan-500 mb-1">
               This Instance
             </span>
@@ -381,84 +368,46 @@ const moreMenuGroups = [
 
       <!-- 中间 导航 -->
       <nav class="flex-1 px-3 py-2 overflow-y-auto custom-scrollbar flex flex-col gap-3">
-        <div
-          v-for="(group, gIdx) in navigation"
-          :key="gIdx"
-          class="flex flex-col gap-0.5"
-        >
-          <template
-            v-for="item in group"
-            :key="item.label"
-          >
+        <div v-for="(group, gIdx) in navigation" :key="gIdx" class="flex flex-col gap-0.5">
+          <template v-for="item in group" :key="item.label">
             <!-- Special Case: "More" — hand-rolled popover -->
-            <div
-              v-if="item.label === '更多'"
-              ref="moreMenuRef"
-              class="w-full"
-            >
-              <button
-                type="button"
+            <div v-if="item.label === '更多'" ref="moreMenuRef" class="w-full">
+              <button type="button"
                 class="flex items-center gap-4 px-4 py-2.5 rounded-2xl w-full text-left transition-colors font-bold group/nav"
                 :class="moreMenuOpen || isItemActive(item)
                   ? 'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400'
-                  : 'hover:bg-black/5 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300'"
-                @click="toggleMoreMenu"
-              >
-                <UIcon
-                  :name="item.icon"
-                  class="w-[22px] h-[22px] opacity-70 shrink-0"
-                />
+                  : 'hover:bg-black/5 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300'" @click="toggleMoreMenu">
+                <UIcon :name="item.icon" class="w-[22px] h-[22px] opacity-70 shrink-0" />
                 <span class="text-[15px] tracking-wide">{{ item.label }}</span>
-                <UIcon
-                  name="i-material-symbols-chevron-right"
+                <UIcon name="i-material-symbols-chevron-right"
                   class="w-4 h-4 ml-auto opacity-40 transition-transform duration-200"
-                  :class="{ 'rotate-90': moreMenuOpen }"
-                />
+                  :class="{ 'rotate-90': moreMenuOpen }" />
               </button>
 
               <!-- Popover Panel -->
               <ClientOnly>
                 <Teleport to="body">
-                  <Transition
-                    enter-active-class="transition duration-150 ease-out"
+                  <Transition enter-active-class="transition duration-150 ease-out"
                     enter-from-class="opacity-0 scale-95 translate-x-2"
                     enter-to-class="opacity-100 scale-100 translate-x-0"
                     leave-active-class="transition duration-100 ease-in"
                     leave-from-class="opacity-100 scale-100 translate-x-0"
-                    leave-to-class="opacity-0 scale-95 translate-x-2"
-                  >
-                    <div
-                      v-if="moreMenuOpen"
-                      ref="moreMenuPanelRef"
-                      class="fixed z-[100] w-52 origin-top-left"
-                      :style="{ top: `${moreMenuPosition.top}px`, left: `${moreMenuPosition.left}px` }"
-                    >
+                    leave-to-class="opacity-0 scale-95 translate-x-2">
+                    <div v-if="moreMenuOpen" ref="moreMenuPanelRef" class="fixed z-[100] w-52 origin-top-left"
+                      :style="{ top: `${moreMenuPosition.top}px`, left: `${moreMenuPosition.left}px` }">
                       <div
-                        class="rounded-2xl border border-white/20 dark:border-gray-700/50 bg-white/80 dark:bg-gray-900/90 backdrop-blur-xl shadow-2xl shadow-black/20 overflow-hidden py-1.5"
-                      >
-                        <template
-                          v-for="(grp, gi) in moreMenuGroups"
-                          :key="gi"
-                        >
+                        class="rounded-2xl border border-white/20 dark:border-gray-700/50 bg-white/80 dark:bg-gray-900/90 backdrop-blur-xl shadow-2xl shadow-black/20 overflow-hidden py-1.5">
+                        <template v-for="(grp, gi) in moreMenuGroups" :key="gi">
                           <div class="px-1">
-                            <NuxtLink
-                              v-for="feat in grp"
-                              :key="feat.label"
-                              :to="feat.to"
+                            <NuxtLink v-for="feat in grp" :key="feat.label" :to="feat.to"
                               class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-cyan-50 dark:hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors"
-                              @click="moreMenuOpen = false"
-                            >
-                              <UIcon
-                                :name="feat.icon"
-                                class="w-[18px] h-[18px] shrink-0 opacity-70"
-                              />
+                              @click="moreMenuOpen = false">
+                              <UIcon :name="feat.icon" class="w-[18px] h-[18px] shrink-0 opacity-70" />
                               {{ feat.label }}
                             </NuxtLink>
                           </div>
-                          <div
-                            v-if="gi < moreMenuGroups.length - 1"
-                            class="h-px bg-gray-100 dark:bg-gray-800 mx-2 my-1"
-                          />
+                          <div v-if="gi < moreMenuGroups.length - 1"
+                            class="h-px bg-gray-100 dark:bg-gray-800 mx-2 my-1" />
                         </template>
                       </div>
                     </div>
@@ -468,79 +417,49 @@ const moreMenuGroups = [
             </div>
 
             <!-- Standard Navigation Link -->
-            <NuxtLink
-              v-else
-              :to="item.to"
+            <NuxtLink v-else :to="item.to"
               class="flex items-center gap-4 px-4 py-2.5 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors font-bold group/nav"
               :class="isItemActive(item)
                 ? 'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400'
-                : 'text-gray-700 dark:text-gray-300'"
-            >
-              <UIcon
-                :name="item.icon"
-                class="w-[22px] h-[22px] transition-opacity"
-                :class="isItemActive(item) ? 'opacity-100' : 'opacity-70 group-hover/nav:opacity-100'"
-              />
+                : 'text-gray-700 dark:text-gray-300'">
+              <UIcon :name="item.icon" class="w-[22px] h-[22px] transition-opacity"
+                :class="isItemActive(item) ? 'opacity-100' : 'opacity-70 group-hover/nav:opacity-100'" />
               <span class="text-[15px] tracking-wide">{{ item.label }}</span>
             </NuxtLink>
           </template>
-          <div
-            v-if="gIdx < navigation.length - 1"
-            class="h-px bg-gray-200 dark:bg-white/10 my-2.5 mx-3"
-          />
+          <div v-if="gIdx < navigation.length - 1" class="h-px bg-gray-200 dark:bg-white/10 my-2.5 mx-3" />
         </div>
       </nav>
 
       <!-- 底部：拆分视图管理 (Split View Task Manager) -->
-      <div
-        v-if="splitViewStore.isOpen"
-        class="px-4 pb-2 shrink-0 animate-[fade-in_0.3s_ease-out]"
-      >
+      <div v-if="splitViewStore.isOpen" class="px-4 pb-2 shrink-0 animate-[fade-in_0.3s_ease-out]">
         <div
-          class="text-[10px] font-black text-gray-400 dark:text-gray-500 mb-2 px-1 tracking-widest flex items-center gap-1"
-        >
+          class="text-[10px] font-black text-gray-400 dark:text-gray-500 mb-2 px-1 tracking-widest flex items-center gap-1">
           <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
           Active display
         </div>
         <div
-          class="bg-gray-100 dark:bg-gray-800/80 rounded-[20px] p-3 border border-gray-200 dark:border-white/5 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between group cursor-pointer backdrop-blur-md"
-        >
+          class="bg-gray-100 dark:bg-gray-800/80 rounded-[20px] p-3 border border-gray-200 dark:border-white/5 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between group cursor-pointer backdrop-blur-md">
           <div class="flex items-center gap-3 overflow-hidden">
             <div
-              class="w-8 h-8 rounded-full bg-white dark:bg-white/10 flex items-center justify-center shrink-0 shadow-sm"
-            >
-              <UIcon
-                :name="splitViewIcon"
-                class="w-4 h-4 text-cyan-600 dark:text-cyan-400"
-              />
+              class="w-8 h-8 rounded-full bg-white dark:bg-white/10 flex items-center justify-center shrink-0 shadow-sm">
+              <UIcon :name="splitViewIcon" class="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
             </div>
             <div class="flex flex-col overflow-hidden">
               <span class="text-sm font-bold text-gray-900 dark:text-white truncate">
                 {{ splitViewTitle }}
               </span>
-              <span class="text-[10px] items-center gap-1 font-semibold text-cyan-600 dark:text-cyan-400/80">
-                Split view
-              </span>
             </div>
           </div>
-          <UButton
-            icon="i-material-symbols-close"
-            color="neutral"
-            variant="ghost"
+          <UButton icon="i-material-symbols-close" color="neutral" variant="ghost"
             class="rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 hover:text-red-500"
-            @click.stop="splitViewStore.close()"
-          />
+            @click.stop="splitViewStore.close()" />
         </div>
       </div>
 
       <div class="p-4 shrink-0">
-        <UButton
-          icon="i-material-symbols-send"
-          label="发布"
-          color="primary"
-          size="xl"
-          class="w-full justify-center rounded-full shadow-[0_0_15px_rgba(57,197,187,0.5)] transition-all hover:scale-105 hover:shadow-[0_0_25px_rgba(57,197,187,0.8)] font-bold text-base bg-gradient-to-r from-cyan-500 to-primary-600"
-        />
+        <UButton icon="i-material-symbols-send" label="发布" color="primary" size="xl"
+          class="w-full justify-center rounded-full shadow-[0_0_15px_rgba(57,197,187,0.5)] transition-all hover:scale-105 hover:shadow-[0_0_25px_rgba(57,197,187,0.8)] font-bold text-base bg-gradient-to-r from-cyan-500 to-primary-600" />
       </div>
     </aside>
 
@@ -551,42 +470,25 @@ const moreMenuGroups = [
         <!-- 左/中：子导航栏 (context-aware) -->
         <div class="flex items-center">
           <!-- Timeline & Settings tabs (left view active or split closed) -->
-          <UNavigationMenu
-            v-if="!splitViewStore.isOpen || splitViewStore.activeView === 'left'"
-            :items="currentHeaderTabs"
-            class="w-full flex-nowrap overflow-x-auto custom-scrollbar no-scrollbar"
-          />
+          <UNavigationMenu v-if="!splitViewStore.isOpen || splitViewStore.activeView === 'left'"
+            :items="currentHeaderTabs" class="w-full flex-nowrap overflow-x-auto custom-scrollbar no-scrollbar" />
           <!-- Profile tabs (right view active, showing user) -->
-          <div
-            v-else-if="splitViewStore.activeView === 'right' && splitViewStore.currentRightViewType === 'user'"
-            class="flex items-center"
-          >
+          <div v-else-if="splitViewStore.activeView === 'right' && splitViewStore.currentRightViewType === 'user'"
+            class="flex items-center">
             <div class="flex">
-              <button
-                v-for="tab in profileTabs[0]"
-                :key="tab.slot"
-                :class="[
-                  splitViewStore.profileTab === tab.slot
-                    ? 'border-cyan-500 text-cyan-600 dark:text-cyan-400 font-semibold border-b-2'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 border-b-2',
-                  'flex items-center gap-1.5 whitespace-nowrap py-1.5 px-3 text-sm transition-all duration-200'
-                ]"
-                @click="splitViewStore.setProfileTab(tab.slot)"
-              >
-                <UIcon
-                  :name="tab.icon"
-                  class="w-4 h-4"
-                />
+              <button v-for="tab in profileTabs[0]" :key="tab.slot" :class="[
+                splitViewStore.profileTab === tab.slot
+                  ? 'border-cyan-500 text-cyan-600 dark:text-cyan-400 font-semibold border-b-2'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 border-b-2',
+                'flex items-center gap-1.5 whitespace-nowrap py-1.5 px-3 text-sm transition-all duration-200'
+              ]" @click="splitViewStore.setProfileTab(tab.slot)">
+                <UIcon :name="tab.icon" class="w-4 h-4" />
                 {{ tab.label }}
               </button>
             </div>
           </div>
           <!-- Post detail tabs (right view active, showing post) -->
-          <UNavigationMenu
-            v-else
-            :items="currentHeaderTabs"
-            class="w-full"
-          />
+          <UNavigationMenu v-else :items="currentHeaderTabs" class="w-full" />
         </div>
 
         <!-- 右侧：小组件 -->
@@ -594,24 +496,16 @@ const moreMenuGroups = [
           <!-- Dimension Signal (Core Status) - Independent -->
           <div
             class="flex items-center gap-2 px-2 h-8 rounded-full bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm transition-all hover:scale-105 cursor-help group"
-            :title="systemStore.isBackendOnline ? '服务端已连接 (Asagity NET Online)' : '服务端已断开 (Asagity NET Offline)'"
-          >
+            :title="systemStore.isBackendOnline ? '服务端已连接 (Asagity NET Online)' : '服务端已断开 (Asagity NET Offline)'">
             <UIcon
               :name="systemStore.isBackendOnline ? 'i-material-symbols-android-wifi-3-bar-rounded' : 'i-material-symbols-android-wifi-3-bar-off-rounded'"
               class="w-4 h-4 transition-colors duration-500"
-              :class="systemStore.isBackendOnline ? 'text-green-400' : 'text-red-400 animate-pulse'"
-            />
+              :class="systemStore.isBackendOnline ? 'text-green-400' : 'text-red-400 animate-pulse'" />
 
             <!-- Development Mode Label -->
-            <div
-              v-if="systemStore.isDevMode"
-              class="flex items-center gap-1.5 pr-1 animate-pulse"
-            >
+            <div v-if="systemStore.isDevMode" class="flex items-center gap-1.5 pr-1 animate-pulse">
               <div class="w-px h-3 bg-gray-300 dark:bg-gray-600 mx-0.5" />
-              <UIcon
-                name="i-material-symbols-terminal-rounded"
-                class="w-3.5 h-3.5 text-cyan-500"
-              />
+              <UIcon name="i-material-symbols-terminal-rounded" class="w-3.5 h-3.5 text-cyan-500" />
               <span class="text-[10px] font-black text-cyan-500 tracking-wider">In Development</span>
             </div>
           </div>
@@ -619,69 +513,39 @@ const moreMenuGroups = [
           <!-- 音乐播放器组件 (联动 musicStore) -->
           <div
             class="flex items-center gap-2 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-full pr-2 pl-1 py-1 border border-white/20 dark:border-gray-700/50 shadow-sm transition-all hover:scale-105 cursor-pointer group"
-            @click="splitViewStore.openMusic()"
-          >
-            <img
-              :src="musicStore.currentTrack.albumArt"
+            @click="splitViewStore.openMusic()">
+            <img :src="musicStore.currentTrack.albumArt"
               class="w-6 h-6 rounded-full object-cover shrink-0 shadow-sm transition-transform duration-700"
-              :class="musicStore.isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''"
-              alt="Art"
-            >
+              :class="musicStore.isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''" alt="Art">
             <div class="w-24 overflow-hidden">
-              <div
-                class="text-xs font-bold whitespace-nowrap inline-block text-gray-800 dark:text-gray-100"
-                :class="musicStore.isPlaying ? 'animate-[marquee_10s_linear_infinite]' : ''"
-              >
+              <div class="text-xs font-bold whitespace-nowrap inline-block text-gray-800 dark:text-gray-100"
+                :class="musicStore.isPlaying ? 'animate-[marquee_10s_linear_infinite]' : ''">
                 {{ musicStore.currentTrack.title }}
               </div>
             </div>
-            <UButton
-              :icon="musicStore.isPlaying ? 'i-material-symbols-pause' : 'i-material-symbols-play-arrow'"
-              color="neutral"
-              variant="ghost"
-              size="xs"
-              class="rounded-full hover:bg-cyan-500/20"
-              @click.stop="musicStore.togglePlay()"
-            />
+            <UButton :icon="musicStore.isPlaying ? 'i-material-symbols-pause' : 'i-material-symbols-play-arrow'"
+              color="neutral" variant="ghost" size="xs" class="rounded-full hover:bg-cyan-500/20"
+              @click.stop="musicStore.togglePlay()" />
           </div>
 
           <!-- 主题切换按钮 -->
           <div
             class="flex items-center h-8 px-2 rounded-full bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm transition-all hover:scale-105 cursor-pointer group"
-            :title="`当前: ${themeStore.modeLabel}`"
-            @click="themeStore.toggle()"
-          >
-            <UIcon
-              :name="themeStore.isDark ? 'i-material-symbols-dark-mode' : 'i-material-symbols-light-mode'"
-              class="w-4 h-4 transition-colors"
-              :class="themeStore.isDark ? 'text-cyan-400' : 'text-yellow-500'"
-            />
+            :title="`当前: ${themeStore.modeLabel}`" @click="themeStore.toggle()">
+            <UIcon :name="themeStore.isDark ? 'i-material-symbols-dark-mode' : 'i-material-symbols-light-mode'"
+              class="w-4 h-4 transition-colors" :class="themeStore.isDark ? 'text-cyan-400' : 'text-yellow-500'" />
           </div>
 
           <!-- 小组件按钮 -->
-          <div
-            class="relative flex items-center justify-center cursor-pointer mr-2"
-            @click="toggleWidgets"
-          >
-            <UButton
-              icon="i-material-symbols-widgets"
-              :color="isWidgetsOpen ? 'primary' : 'neutral'"
-              variant="ghost"
-              class="cursor-pointer"
-            />
+          <div class="relative flex items-center justify-center cursor-pointer mr-2" @click="toggleWidgets">
+            <UButton icon="i-material-symbols-widgets" :color="isWidgetsOpen ? 'primary' : 'neutral'" variant="ghost"
+              class="cursor-pointer" />
           </div>
 
           <!-- 通知按钮 -->
-          <div
-            class="relative flex items-center justify-center cursor-pointer"
-            @click="splitViewStore.openNotifications()"
-          >
-            <UButton
-              icon="i-material-symbols-notifications"
-              color="neutral"
-              variant="ghost"
-              class="cursor-pointer"
-            />
+          <div class="relative flex items-center justify-center cursor-pointer"
+            @click="splitViewStore.openNotifications()">
+            <UButton icon="i-material-symbols-notifications" color="neutral" variant="ghost" class="cursor-pointer" />
             <span class="absolute top-1 right-1 flex w-2 h-2 pointer-events-none">
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
               <span class="relative inline-flex rounded-full w-2 h-2 bg-red-500" />
@@ -689,129 +553,86 @@ const moreMenuGroups = [
           </div>
 
           <!-- 用户头像 -->
-          <UAvatar
-            src="https://avatars.githubusercontent.com/u/739984?v=4"
-            alt="Avatar"
-            size="sm"
-            class="ring-2 ring-cyan-500/50 cursor-pointer hover:ring-cyan-500 transition-all"
-          />
+          <UAvatar src="https://avatars.githubusercontent.com/u/739984?v=4" alt="Avatar" size="sm"
+            class="ring-2 ring-cyan-500/50 cursor-pointer hover:ring-cyan-500 transition-all" />
         </div>
       </header>
 
       <!-- 下半部分：双栏显示区域 (True Split View 架构) -->
       <div class="flex-1 overflow-hidden p-4 pt-0">
-        <div
-          ref="containerRef"
-          class="relative h-full w-full flex overflow-hidden"
-        >
+        <div ref="containerRef" class="relative h-full w-full flex overflow-hidden">
           <!-- 左侧：主视图容器 -->
-          <div
-            class="h-full bg-white dark:bg-gray-900 rounded-[30px] border overflow-hidden cursor-default"
-            :class="[
-              (splitViewStore.isResizing || splitViewStore.isWidgetsResizing) ? 'transition-none' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
-              splitViewStore.isOpen && splitViewStore.activeView === 'left'
-                ? 'border-cyan-400/60 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.2)]'
-                : 'border-gray-200/50 dark:border-gray-800/50'
-            ]"
-            :style="{
-              width: splitViewStore.isMaximized ? '0%' : (splitViewStore.isOpen ? `calc(${100 - splitViewStore.rightPanelWidth}%)` : '100%'),
-              opacity: splitViewStore.isMaximized ? '0' : '1',
-              pointerEvents: splitViewStore.isMaximized ? 'none' : 'auto'
-            }"
-            @pointerdown="splitViewStore.focusLeft()"
-          >
+          <div class="h-full bg-white dark:bg-gray-900 rounded-[30px] border overflow-hidden cursor-default" :class="[
+            (splitViewStore.isResizing || splitViewStore.isWidgetsResizing) ? 'transition-none' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
+            splitViewStore.isOpen && splitViewStore.activeView === 'left'
+              ? 'border-cyan-400/60 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.2)]'
+              : 'border-gray-200/50 dark:border-gray-800/50'
+          ]" :style="{
+            width: splitViewStore.isMaximized ? '0%' : (splitViewStore.isOpen ? `calc(${100 - splitViewStore.rightPanelWidth}%)` : '100%'),
+            opacity: splitViewStore.isMaximized ? '0' : '1',
+            pointerEvents: splitViewStore.isMaximized ? 'none' : 'auto'
+          }" @pointerdown="splitViewStore.focusLeft()">
             <div class="h-full overflow-y-auto p-6 lg:p-10 custom-scrollbar">
               <slot />
             </div>
           </div>
 
           <!-- 可调节缝隙 (Divider) -->
-          <div
-            v-if="splitViewStore.isOpen && !splitViewStore.isMaximized"
+          <div v-if="splitViewStore.isOpen && !splitViewStore.isMaximized"
             class="w-1.5 h-full cursor-col-resize hover:bg-cyan-500/20 active:bg-cyan-500/40 transition-colors z-30 shrink-0 rounded-full mx-1.5"
-            @mousedown="startResizing"
-          />
+            @mousedown="startResizing" />
 
           <!-- 右侧：详情面板容器 -->
-          <div
-            class="h-full overflow-hidden"
-            :class="[
-              (splitViewStore.isResizing || splitViewStore.isWidgetsResizing) ? 'transition-none' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
-              splitViewStore.isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-            ]"
+          <div class="h-full overflow-hidden" :class="[
+            (splitViewStore.isResizing || splitViewStore.isWidgetsResizing) ? 'transition-none' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
+            splitViewStore.isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          ]"
             :style="{ width: splitViewStore.isMaximized ? '100%' : (splitViewStore.isOpen ? `${splitViewStore.rightPanelWidth}%` : '0px') }"
-            @pointerdown="splitViewStore.focusRight()"
-          >
-            <div
-              class="h-full bg-white dark:bg-gray-900 rounded-[30px] border overflow-hidden flex flex-col"
-              :class="[
-                splitViewStore.activeView === 'right'
-                  ? 'border-cyan-400/60 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.2)]'
-                  : 'border-gray-200/50 dark:border-gray-800/50'
-              ]"
-            >
+            @pointerdown="splitViewStore.focusRight()">
+            <div class="h-full bg-white dark:bg-gray-900 rounded-[30px] border overflow-hidden flex flex-col" :class="[
+              splitViewStore.activeView === 'right'
+                ? 'border-cyan-400/60 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.2)]'
+                : 'border-gray-200/50 dark:border-gray-800/50'
+            ]">
               <!-- Unified Split View Header Controls -->
-              <AppWindowHeader
-                v-if="splitViewStore.currentRightViewType !== 'music'"
-                mode="split"
-                :type="splitViewStore.currentRightViewType"
-                :custom-title="splitViewTitle"
-                :custom-icon="splitViewIcon"
-                :is-maximized="splitViewStore.isMaximized"
-              />
+              <AppWindowHeader v-if="splitViewStore.currentRightViewType !== 'music'" mode="split"
+                :type="splitViewStore.currentRightViewType" :custom-title="splitViewTitle" :custom-icon="splitViewIcon"
+                :is-maximized="splitViewStore.isMaximized" />
 
               <!-- Route to correct component based on content type -->
               <div class="flex-1 overflow-hidden">
-                <AppUserProfile
-                  v-if="splitViewStore.currentRightViewType === 'user' && splitViewStore.isOpen"
-                  :key="`user-${splitViewStore.refreshKey}`"
-                />
-                <AppPostDetail
-                  v-else-if="splitViewStore.currentRightViewType === 'post' && splitViewStore.isOpen"
-                  :key="`post-${splitViewStore.refreshKey}`"
-                />
+                <AppUserProfile v-if="splitViewStore.currentRightViewType === 'user' && splitViewStore.isOpen"
+                  :key="`user-${splitViewStore.refreshKey}`" />
+                <AppPostDetail v-else-if="splitViewStore.currentRightViewType === 'post' && splitViewStore.isOpen"
+                  :key="`post-${splitViewStore.refreshKey}`" />
                 <AppMusicPlayer v-else-if="splitViewStore.currentRightViewType === 'music' && splitViewStore.isOpen" />
                 <AppNotifications
                   v-else-if="splitViewStore.currentRightViewType === 'notifications' && splitViewStore.isOpen"
-                  :key="`notif-${splitViewStore.refreshKey}`"
-                />
-                <AppChatDetail
-                  v-else-if="splitViewStore.currentRightViewType === 'chat' && splitViewStore.isOpen"
-                  :key="`chat-${splitViewStore.refreshKey}`"
-                />
-                <AppBrowser
-                  v-else-if="splitViewStore.currentRightViewType === 'browser' && splitViewStore.isOpen"
-                  :url="splitViewStore.currentBrowserUrl"
-                />
+                  :key="`notif-${splitViewStore.refreshKey}`" />
+                <AppChatDetail v-else-if="splitViewStore.currentRightViewType === 'chat' && splitViewStore.isOpen"
+                  :key="`chat-${splitViewStore.refreshKey}`" />
+                <AppBrowser v-else-if="splitViewStore.currentRightViewType === 'browser' && splitViewStore.isOpen"
+                  :url="splitViewStore.currentBrowserUrl" />
               </div>
             </div>
           </div>
 
           <!-- 可调节缝隙 (Widgets Divider) -->
-          <div
-            v-if="isWidgetsOpen"
+          <div v-if="isWidgetsOpen"
             class="w-1.5 h-full cursor-col-resize hover:bg-cyan-500/20 active:bg-cyan-500/40 transition-colors z-30 shrink-0 rounded-full mx-1.5"
-            @mousedown="startWidgetsResizing"
-          />
+            @mousedown="startWidgetsResizing" />
 
           <!-- 小组件面板容器 (Widgets Panel) -->
-          <div
-            class="h-full overflow-hidden"
-            :class="[
-              (splitViewStore.isResizing || splitViewStore.isWidgetsResizing) ? 'transition-none' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
-              isWidgetsOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-            ]"
-            :style="{ width: isWidgetsOpen ? `${splitViewStore.widgetsPanelWidth}px` : '0px' }"
-            @pointerdown="splitViewStore.focusWidgets()"
-          >
-            <div
-              class="h-full bg-white dark:bg-gray-900 rounded-[30px] border overflow-hidden flex flex-col"
-              :class="[
-                splitViewStore.activeView === 'widgets'
-                  ? 'border-cyan-400/60 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.2)]'
-                  : 'border-gray-200/50 dark:border-gray-800/50'
-              ]"
-            >
+          <div class="h-full overflow-hidden" :class="[
+            (splitViewStore.isResizing || splitViewStore.isWidgetsResizing) ? 'transition-none' : 'transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
+            isWidgetsOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          ]" :style="{ width: isWidgetsOpen ? `${splitViewStore.widgetsPanelWidth}px` : '0px' }"
+            @pointerdown="splitViewStore.focusWidgets()">
+            <div class="h-full bg-white dark:bg-gray-900 rounded-[30px] border overflow-hidden flex flex-col" :class="[
+              splitViewStore.activeView === 'widgets'
+                ? 'border-cyan-400/60 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.2)]'
+                : 'border-gray-200/50 dark:border-gray-800/50'
+            ]">
               <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
                 <AppWidgetsSidebar />
               </div>

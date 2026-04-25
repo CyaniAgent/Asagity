@@ -14,6 +14,11 @@ const soundManager = useSoundManager()
 const contextMenuStore = useContextMenuStore()
 
 onMounted(async () => {
+  // BUG FIX: Preload sounds but exclude sys_error for initial check (Plan B)
+  if (import.meta.client) {
+    soundManager.preloadSounds(['sys_error']).catch(() => { })
+  }
+
   themeStore.init()
 
   await systemStore.initSequence()
@@ -24,15 +29,11 @@ onMounted(async () => {
     console.warn('Session restoration skipped or failed')
   }
 
-  // Start sound preloading after app is ready (non-blocking)
-  if (import.meta.client) {
-    soundManager.preloadSounds()
-  }
-
   // GLOBAL AUDIO UNLOCKER: Unlock audio on the very first user interaction
   if (import.meta.client) {
     const unlockAudio = () => {
       systemStore.launchApp()
+
       window.removeEventListener('click', unlockAudio)
       window.removeEventListener('touchstart', unlockAudio)
       window.removeEventListener('keydown', unlockAudio)
@@ -111,10 +112,10 @@ useSeoMeta({
   <UApp>
     <AppSplashScreen />
     <ClientOnly>
-      <AppErrorDialog />
+      <AppMobileWelcome />
       <AppTaskWindow />
     </ClientOnly>
-    <NuxtLayout>
+    <NuxtLayout v-if="systemStore.hasLaunched && (!systemStore.isMobile || systemStore.isWelcomeDismissed)">
       <NuxtPage />
     </NuxtLayout>
 

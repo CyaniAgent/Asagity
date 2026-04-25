@@ -13,7 +13,8 @@ const freeWindowTitle = computed(() => {
     case 'notifications': return '通知中心'
     case 'chat': return freeWindowStore.currentChat?.name || 'Asagity Chat'
     case 'admin_database': return '数据库详细信息'
-    case 'browser': return '内部浏览器 (BROWSER)'
+    case 'browser': return '浏览器'
+    case 'error': return '系统错误'
     default: return 'Free Window'
   }
 })
@@ -28,6 +29,7 @@ const freeWindowIcon = computed(() => {
     case 'chat': return 'i-material-symbols-forum'
     case 'admin_database': return 'i-material-symbols-database'
     case 'browser': return 'i-material-symbols-language'
+    case 'error': return 'i-material-symbols-error-outline'
     default: return 'i-material-symbols-tab-move'
   }
 })
@@ -40,13 +42,18 @@ function handleClose() {
 <template>
   <AppFreeWindow
     v-model="freeWindowStore.isOpen"
-    :type="freeWindowStore.currentViewType || undefined"
+    :disable-maximize="freeWindowStore.currentViewType === 'error'"
+    :disable-minimize="freeWindowStore.currentViewType === 'error'"
+    :disable-transfer="freeWindowStore.currentViewType === 'error'"
+    :initial-width="freeWindowStore.currentViewType === 'error' ? 400 : undefined"
+    :initial-height="freeWindowStore.currentViewType === 'error' ? 480 : undefined"
     :title="freeWindowTitle"
     :icon="freeWindowIcon"
     @close="handleClose"
   >
+    <AppErrorContent v-if="freeWindowStore.currentViewType === 'error'" />
     <AppUserProfile
-      v-if="freeWindowStore.currentViewType === 'user'"
+      v-else-if="freeWindowStore.currentViewType === 'user'"
       :key="`user-${freeWindowStore.refreshKey}`"
     />
     <AppPostDetail
