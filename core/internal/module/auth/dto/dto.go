@@ -1,5 +1,11 @@
 package dto
 
+// 错误常量
+const (
+	ErrInvalidCredentials = "ERR 14101"
+	ErrInvalidRefreshToken = "ERR 14102"
+)
+
 type MessageResponse struct {
 	Message string `json:"message"`
 }
