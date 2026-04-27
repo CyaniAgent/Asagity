@@ -122,22 +122,11 @@ function switchMode() {
       <span class="text-[13px] font-black text-gray-800 dark:text-white truncate tracking-wide">
         {{ getTitle(type) }}
       </span>
-      <span
-        v-if="mode === 'split' && !disableTransfer"
-        class="hidden sm:inline-flex px-1.5 py-0.5 rounded-md bg-cyan-100 dark:bg-cyan-500/20 text-[9px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-widest shrink-0 ml-1"
-      >
-        Split
-      </span>
-      <span
-        v-else
-        class="hidden sm:inline-flex px-1.5 py-0.5 rounded-md bg-purple-100 dark:bg-purple-500/20 text-[9px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest shrink-0 ml-1"
-      >
-        Window
-      </span>
     </div>
 
     <div class="flex items-center gap-1.5 shrink-0">
       <UTooltip
+        v-if="!disableTransfer"
         text="刷新"
         :popper="{ placement: 'bottom' }"
       >

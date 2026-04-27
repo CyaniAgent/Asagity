@@ -47,7 +47,7 @@ interface Chat {
   members?: number
 }
 
-type RightViewType = 'post' | 'user' | 'music' | 'notifications' | 'chat'
+type RightViewType = 'post' | 'user' | 'music' | 'notifications' | 'chat' | 'browser'
 
 export const useSplitViewStore = defineStore('splitView', () => {
   const isOpen = ref(false)
@@ -60,6 +60,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
   const isResizing = ref(false)
   const activeView = ref<'left' | 'right' | 'widgets'>('left')
   const currentRightViewType = ref<RightViewType | null>(null)
+  const currentBrowserUrl = ref('')
 
   const isMaximized = ref(false)
   const refreshKey = ref(0)
@@ -111,6 +112,18 @@ export const useSplitViewStore = defineStore('splitView', () => {
     activeView.value = 'right'
     isMaximized.value = false
     rightPanelWidth.value = 38
+  }
+
+  function openBrowser(url: string) {
+    currentBrowserUrl.value = url
+    currentPost.value = null
+    currentUser.value = null
+    currentChat.value = null
+    currentRightViewType.value = 'browser'
+    isOpen.value = true
+    activeView.value = 'right'
+    isMaximized.value = false
+    rightPanelWidth.value = 60
   }
 
   function openNotifications() {
@@ -177,6 +190,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
     currentPost,
     currentUser,
     currentChat,
+    currentBrowserUrl,
     activeTab,
     profileTab,
     rightPanelWidth,
@@ -192,6 +206,7 @@ export const useSplitViewStore = defineStore('splitView', () => {
     openMusic,
     openNotifications,
     openChat,
+    openBrowser,
     close,
     toggleMaximize,
     triggerRefresh,

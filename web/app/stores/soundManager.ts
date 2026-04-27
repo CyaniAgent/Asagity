@@ -52,19 +52,21 @@ export const useSoundManager = defineStore('soundManager', () => {
     }
   }
 
-  async function preloadSounds(): Promise<void> {
+  async function preloadSounds(exclude: string[] = []): Promise<void> {
     if (isPreloaded.value || isPreloading.value) return
     isPreloading.value = true
 
-    const preloadPromises = Object.entries(soundRegistry).map(async ([name, url]) => {
-      await loadSound(name, url)
-    })
+    const preloadPromises = Object.entries(soundRegistry)
+      .filter(([name]) => !exclude.includes(name))
+      .map(async ([name, url]) => {
+        await loadSound(name, url)
+      })
 
     await Promise.allSettled(preloadPromises)
 
     isPreloaded.value = true
     isPreloading.value = false
-    console.log('SoundManager: All sounds preloaded')
+    console.log(`SoundManager: Sounds preloaded (excluded: ${exclude.join(', ') || 'none'})`)
   }
 
   async function play(name: string): Promise<void> {
@@ -91,6 +93,8 @@ export const useSoundManager = defineStore('soundManager', () => {
     isPreloading,
     preloadSounds,
     play,
-    playIfAvailable
+    playIfAvailable,
+    getAudioContext,
+    loadSound
   }
 })

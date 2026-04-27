@@ -265,39 +265,6 @@ const totalPosts = computed(() => mockTopics.reduce((sum, t) => sum + t.postsCou
 
 <template>
   <div class="max-w-[1200px] mx-auto w-full animate-[fade-in_0.4s_ease-out]">
-    <!-- Header -->
-    <div class="mb-6">
-      <div class="flex items-center gap-3 mb-2">
-        <div class="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-          <UIcon
-            name="i-material-symbols-tag"
-            class="w-7 h-7 text-cyan-500"
-          />
-        </div>
-        <div>
-          <h1 class="text-2xl font-black text-gray-900 dark:text-white">
-            话题
-          </h1>
-          <p class="text-sm text-gray-500">
-            发现社区热门话题，参与讨论
-          </p>
-        </div>
-      </div>
-
-      <!-- Stats -->
-      <div class="flex items-center gap-6 mt-4 px-1">
-        <div class="flex items-center gap-2">
-          <span class="text-[28px] font-black text-gray-900 dark:text-white">{{ totalTopics }}</span>
-          <span class="text-sm text-gray-500">个话题</span>
-        </div>
-        <div class="w-px h-6 bg-gray-200 dark:bg-gray-700" />
-        <div class="flex items-center gap-2">
-          <span class="text-[28px] font-black text-cyan-500">{{ totalPosts.toLocaleString() }}</span>
-          <span class="text-sm text-gray-500">条讨论</span>
-        </div>
-      </div>
-    </div>
-
     <!-- Search & Filter -->
     <div class="flex flex-col sm:flex-row gap-4 mb-6">
       <!-- Search -->

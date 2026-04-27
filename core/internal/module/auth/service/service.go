@@ -151,11 +151,11 @@ func (s *Service) Login(req dto.LoginRequest) (*dto.AuthResponse, error) {
 		user, err = s.userRepo.GetByUsername(req.Identifier)
 	}
 	if err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, errors.New(dto.ErrInvalidCredentials)
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswdHash), []byte(req.Password)); err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, errors.New(dto.ErrInvalidCredentials)
 	}
 
 	return s.generateAuthResponse(user)
@@ -166,7 +166,7 @@ func (s *Service) Refresh(refreshToken string) (*dto.AuthResponse, error) {
 
 	userID, err := s.redis.Get(ctx, "refresh:"+refreshToken).Result()
 	if err == redis.Nil {
-		return nil, errors.New("invalid refresh token")
+		return nil, errors.New(dto.ErrInvalidRefreshToken)
 	}
 	if err != nil {
 		return nil, err

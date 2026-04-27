@@ -134,36 +134,7 @@ function retryAll() {
 </script>
 
 <template>
-  <div class="p-6 max-w-6xl mx-auto space-y-6">
-    <div class="flex items-center justify-between mb-2">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-          <UIcon
-            name="i-material-symbols-info-outline"
-            class="w-6 h-6 text-cyan-600 dark:text-cyan-400"
-          />
-        </div>
-        <div>
-          <h1 class="text-2xl font-black text-gray-900 dark:text-white">
-            关于 Asagity
-          </h1>
-          <p class="text-sm text-gray-500">
-            实例运维状况与系统探针
-          </p>
-        </div>
-      </div>
-      <UButton
-        v-if="instanceError || dbError || envError"
-        color="error"
-        variant="soft"
-        size="sm"
-        icon="i-material-symbols-refresh"
-        @click="retryAll"
-      >
-        重试
-      </UButton>
-    </div>
-
+  <div class="max-w-6xl mx-auto space-y-6 animate-[fade-in_0.4s_ease-out]">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- 实例详细信息 -->
       <UCard class="overflow-hidden">

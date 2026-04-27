@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { UAParser } from 'ua-parser-js'
 
 export interface HostInfo {
   hostname: string
@@ -14,6 +15,8 @@ export interface HostInfo {
 
 export const ERROR_CODE_INIT_FAILED = 'ERR 12201'
 export const ERROR_CODE_NETWORK_TIMEOUT = 'ERR 12202'
+export const ERROR_CODE_CONNECTION_FAILED = 'ERR 11500'
+export const ERROR_CODE_UNKNOWN = 'ERR 9999'
 
 interface FetchError {
   name?: string
@@ -23,10 +26,13 @@ interface FetchError {
 export const useSystemStore = defineStore('system', () => {
   const isBackendOnline = ref(true)
   const isFrontendOnlyMode = ref(false)
-  const showConnectionErrorModal = ref(false)
   const isDevMode = ref(false)
   const isInitialized = ref(false)
   const hasLaunched = ref(false)
+  const isFirstCheck = ref(true)
+  const isLoadFinished = ref(false)
+  const isWelcomeDismissed = ref(false)
+  const isMobile = ref(false)
   const initError = ref<string | null>(null)
   const initErrorCode = ref<string | null>(null)
   const initProgress = ref(0)
@@ -40,9 +46,24 @@ export const useSystemStore = defineStore('system', () => {
     isInitialized.value = true
     initProgress.value = 100
 
-    fetchHostInfoWithTimeout().catch(() => {})
+    // BUG FIX: Preload/Initialize haptics in the init sequence for mobile readiness
+    if (import.meta.client) {
+      const { initHaptics } = await import('~/utils/haptics')
+      initHaptics()
 
-    launchApp()
+      const parser = new UAParser(navigator.userAgent)
+      const device = parser.getDevice()
+      isMobile.value = device.type === 'mobile' || device.type === 'tablet'
+    }
+
+    fetchHostInfoWithTimeout().catch(() => { })
+
+    isLoadFinished.value = true
+
+    // BUG FIX: Delay launch and heartbeat if we need to show mobile welcome
+    if (!isMobile.value || isWelcomeDismissed.value) {
+      launchApp()
+    }
   }
 
   async function fetchHostInfoWithTimeout(): Promise<void> {
@@ -79,16 +100,12 @@ export const useSystemStore = defineStore('system', () => {
     if (!isInitialized.value) return
 
     if (import.meta.client) {
-      const AudioCtx = (window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)
-      if (AudioCtx) {
-        const audioCtx = new AudioCtx()
-        if (audioCtx.state === 'suspended') {
-          audioCtx.resume()
-        }
-      }
+      // BUG FIX: Use soundManager to ensure global AudioContext is resumed/unlocked
+      const soundManager = useSoundManager()
+      soundManager.getAudioContext().catch((e: Error) => console.warn('AudioContext resume failed:', e))
 
       const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA')
-      silentAudio.play().catch(() => {})
+      silentAudio.play().catch(() => { })
     }
 
     hasLaunched.value = true
@@ -98,14 +115,25 @@ export const useSystemStore = defineStore('system', () => {
   function triggerOfflineFallback() {
     if (isBackendOnline.value && !isDevMode.value) {
       isBackendOnline.value = false
-      showConnectionErrorModal.value = true
+
+      const freeWindowStore = useFreeWindowStore()
+      freeWindowStore.openError(
+        '无法连接到服务端',
+        '本实例无法连接到服务端，目前无法享受主要的在线服务。已自动进入"仅前端模式"。请稍后刷新重试或联系实例管理员。',
+        ERROR_CODE_CONNECTION_FAILED,
+        isFirstCheck.value // SILENT ON FIRST CHECK
+      )
+
+      // BUG FIX: Automatically enter frontend-only mode when error pops up
+      enableFrontendOnlyMode()
+
+      isFirstCheck.value = false
     }
   }
 
   function enableDevMode() {
     isDevMode.value = true
     isBackendOnline.value = true
-    showConnectionErrorModal.value = false
 
     if (import.meta.client) {
       const toast = useAppToast()
@@ -119,7 +147,6 @@ export const useSystemStore = defineStore('system', () => {
   }
 
   function enableFrontendOnlyMode() {
-    showConnectionErrorModal.value = false
     isFrontendOnlyMode.value = true
   }
 
@@ -127,9 +154,20 @@ export const useSystemStore = defineStore('system', () => {
     if (!isBackendOnline.value || isDevMode.value) {
       isBackendOnline.value = true
       isFrontendOnlyMode.value = false
-      showConnectionErrorModal.value = false
+
+      const freeWindowStore = useFreeWindowStore()
+      if (freeWindowStore.currentViewType === 'error') {
+        freeWindowStore.close()
+      }
 
       isDevMode.value = false
+      isFirstCheck.value = false
+
+      // Plan B: Preload the error sound now that we are online, for future use
+      if (import.meta.client) {
+        const soundManager = useSoundManager()
+        soundManager.loadSound('sys_error', soundManager.soundRegistry.sys_error).catch(() => { })
+      }
 
       if (import.meta.client) {
         const toast = useAppToast()
@@ -182,9 +220,11 @@ export const useSystemStore = defineStore('system', () => {
     isBackendOnline,
     isFrontendOnlyMode,
     isDevMode,
-    showConnectionErrorModal,
     isInitialized,
+    isLoadFinished,
     hasLaunched,
+    isMobile,
+    isWelcomeDismissed,
     initError,
     initErrorCode,
     initProgress,

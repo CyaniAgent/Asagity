@@ -3,8 +3,10 @@ import { computed } from 'vue'
 import { formatDistanceToNowStrict } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { useSplitViewStore } from '~/stores/splitView'
+import { useContextMenuStore } from '~/stores/contextMenu'
 
 const splitViewStore = useSplitViewStore()
+const contextMenuStore = useContextMenuStore()
 
 interface User {
   avatar: string
@@ -68,6 +70,7 @@ function handleUserClick(e: MouseEvent) {
       isDetailView ? '' : 'cursor-pointer hover:bg-gray-50/50 dark:hover:bg-gray-800/30'
     ]"
     @click="handleClick"
+    @contextmenu.stop="contextMenuStore.open($event, 'post', post)"
   >
     <!-- 左侧 头像 -->
     <div class="shrink-0 pt-1">

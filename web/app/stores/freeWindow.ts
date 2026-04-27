@@ -58,13 +58,15 @@ interface OpenContextTabs {
   profileTab?: string
 }
 
-type ViewType = 'post' | 'user' | 'music' | 'notifications' | 'chat' | 'admin_database'
+type ViewType = 'post' | 'user' | 'music' | 'notifications' | 'chat' | 'admin_database' | 'browser' | 'error'
 
 export const useFreeWindowStore = defineStore('freeWindow', () => {
   const isOpen = ref(false)
   const currentPost = ref<Post | null>(null)
   const currentUser = ref<User | null>(null)
   const currentChat = ref<Chat | null>(null)
+  const currentBrowserUrl = ref('')
+  const errorData = ref({ title: '', message: '', code: '', silent: false })
 
   const activeTab = ref('comments')
   const profileTab = ref('home')
@@ -88,6 +90,20 @@ export const useFreeWindowStore = defineStore('freeWindow', () => {
     isOpen.value = true
   }
 
+  function openBrowser(url: string) {
+    currentBrowserUrl.value = url
+    currentViewType.value = 'browser'
+    isMinimized.value = false
+    isOpen.value = true
+  }
+
+  function openError(title: string, message: string, code: string = '', silent: boolean = false) {
+    errorData.value = { title, message, code, silent }
+    currentViewType.value = 'error'
+    isMinimized.value = false
+    isOpen.value = true
+  }
+
   function close() {
     isOpen.value = false
     isMaximized.value = false
@@ -97,6 +113,8 @@ export const useFreeWindowStore = defineStore('freeWindow', () => {
       currentPost.value = null
       currentUser.value = null
       currentChat.value = null
+      currentBrowserUrl.value = ''
+      errorData.value = { title: '', message: '', code: '', silent: false }
     }, 300)
   }
 
@@ -127,6 +145,8 @@ export const useFreeWindowStore = defineStore('freeWindow', () => {
     currentPost,
     currentUser,
     currentChat,
+    currentBrowserUrl,
+    errorData,
     activeTab,
     profileTab,
     currentViewType,
@@ -135,6 +155,8 @@ export const useFreeWindowStore = defineStore('freeWindow', () => {
     refreshKey,
     position,
     openFromContext,
+    openBrowser,
+    openError,
     close,
     toggleMaximize,
     toggleMinimize,
