@@ -1,6 +1,6 @@
 
 <div align="center">
-  <img src="https://github.com/CyaniAgent/Asagity/Asagity_Logo.png" width="120" height="120" alt="Asagity Logo">
+  <img src="https://github.com/CyaniAgent/Asagity/blob/Dev/Asagity_Logo.png" width="120" height="120" alt="Asagity Logo">
   <h1>Asagity (アサギティ)</h1>
   <p><b>The Cyan-tinted Decentralized Social Universe.</b></p>
    
