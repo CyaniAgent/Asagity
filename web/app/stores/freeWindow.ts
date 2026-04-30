@@ -58,7 +58,7 @@ interface OpenContextTabs {
   profileTab?: string
 }
 
-type ViewType = 'post' | 'user' | 'music' | 'notifications' | 'chat' | 'admin_database' | 'browser' | 'error'
+type ViewType = 'post' | 'user' | 'music' | 'notifications' | 'chat' | 'admin_database' | 'browser' | 'error' | 'termity'
 
 export const useFreeWindowStore = defineStore('freeWindow', () => {
   const isOpen = ref(false)
@@ -100,6 +100,12 @@ export const useFreeWindowStore = defineStore('freeWindow', () => {
   function openError(title: string, message: string, code: string = '', silent: boolean = false) {
     errorData.value = { title, message, code, silent }
     currentViewType.value = 'error'
+    isMinimized.value = false
+    isOpen.value = true
+  }
+
+  function openTermity() {
+    currentViewType.value = 'termity'
     isMinimized.value = false
     isOpen.value = true
   }
@@ -157,6 +163,7 @@ export const useFreeWindowStore = defineStore('freeWindow', () => {
     openFromContext,
     openBrowser,
     openError,
+    openTermity,
     close,
     toggleMaximize,
     toggleMinimize,

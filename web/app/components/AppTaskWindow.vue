@@ -15,6 +15,7 @@ const freeWindowTitle = computed(() => {
     case 'admin_database': return '数据库详细信息'
     case 'browser': return '浏览器'
     case 'error': return '系统错误'
+    case 'termity': return 'Termity (Recovery)'
     default: return 'Free Window'
   }
 })
@@ -30,6 +31,7 @@ const freeWindowIcon = computed(() => {
     case 'admin_database': return 'i-material-symbols-database'
     case 'browser': return 'i-material-symbols-language'
     case 'error': return 'i-material-symbols-error-outline'
+    case 'termity': return 'i-material-symbols-terminal-rounded'
     default: return 'i-material-symbols-tab-move'
   }
 })
@@ -76,6 +78,9 @@ function handleClose() {
     <AppBrowser
       v-else-if="freeWindowStore.currentViewType === 'browser'"
       :url="freeWindowStore.currentBrowserUrl"
+    />
+    <AppTermity
+      v-else-if="freeWindowStore.currentViewType === 'termity'"
     />
   </AppFreeWindow>
 </template>

@@ -119,6 +119,9 @@ useSeoMeta({
       <NuxtPage />
     </NuxtLayout>
 
+    <!-- 持续性的网络状态提示 (Persistent Network Status) -->
+    <AppNetworkStatus />
+
     <!-- 全局右键菜单 (Global Context Menu) -->
     <AppContextMenu />
   </UApp>

@@ -9,7 +9,7 @@ export default defineNuxtRouteMiddleware((to) => {
   const publicPages = ['/', '/welcome', '/login', '/register']
 
   // Offline Mode constraints
-  if (systemStore.isFrontendOnlyMode) {
+  if (systemStore.isFrontendOnlyMode && !systemStore.isDevMode) {
     const offlineAllowedPaths = ['/', '/settings', '/about']
     if (!offlineAllowedPaths.includes(to.path) && !publicPages.includes(to.path)) {
       if (import.meta.client) {
@@ -26,7 +26,7 @@ export default defineNuxtRouteMiddleware((to) => {
   }
 
   // If not logged in and trying to access a protected page
-  if (!userStore.isLoggedIn && !publicPages.includes(to.path)) {
+  if (!userStore.isLoggedIn && !publicPages.includes(to.path) && !systemStore.isDevMode) {
     // Redirect to the Welcome portal (now integrated into /)
     return navigateTo('/')
   }

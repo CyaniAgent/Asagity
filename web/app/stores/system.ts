@@ -54,6 +54,11 @@ export const useSystemStore = defineStore('system', () => {
       const parser = new UAParser(navigator.userAgent)
       const device = parser.getDevice()
       isMobile.value = device.type === 'mobile' || device.type === 'tablet'
+
+      // Check for persistent DevMode
+      if (localStorage.getItem('asgt_dev_mode_forever') === 'true') {
+        enableDevMode(true)
+      }
     }
 
     fetchHostInfoWithTimeout().catch(() => { })
@@ -116,31 +121,55 @@ export const useSystemStore = defineStore('system', () => {
     if (isBackendOnline.value && !isDevMode.value) {
       isBackendOnline.value = false
 
-      const freeWindowStore = useFreeWindowStore()
-      freeWindowStore.openError(
-        '无法连接到服务端',
-        '本实例无法连接到服务端，目前无法享受主要的在线服务。已自动进入"仅前端模式"。请稍后刷新重试或联系实例管理员。',
-        ERROR_CODE_CONNECTION_FAILED,
-        isFirstCheck.value // SILENT ON FIRST CHECK
-      )
+      // 仅在非初次连接（即在线途中突然断开）时弹出自由窗口报错
+      if (!isFirstCheck.value) {
+        const freeWindowStore = useFreeWindowStore()
+        freeWindowStore.openError(
+          '无法连接到服务端',
+          '本实例突然与服务端断开连接，目前无法享受主要的在线服务。已自动进入"仅前端模式"。请稍后刷新重试或联系实例管理员。',
+          ERROR_CODE_CONNECTION_FAILED,
+          false
+        )
+      }
 
-      // BUG FIX: Automatically enter frontend-only mode when error pops up
+      // 自动进入"仅前端模式"
       enableFrontendOnlyMode()
 
       isFirstCheck.value = false
     }
   }
 
-  function enableDevMode() {
+  function enableDevMode(forever: boolean = false) {
     isDevMode.value = true
     isBackendOnline.value = true
+    isFrontendOnlyMode.value = false
 
     if (import.meta.client) {
+      if (forever) {
+        localStorage.setItem('asgt_dev_mode_forever', 'true')
+      }
+      
       const toast = useAppToast()
       toast.add({
         title: '已进入开发模式',
-        description: '该模式仅供开发时使用，刷新即可退出。',
+        description: forever ? '永久开发模式已激活。请使用 "func disable DevMode" 退出。' : '该模式仅供开发时使用，刷新即可退出。',
         color: 'warning',
+        icon: 'i-material-symbols-terminal-rounded'
+      })
+    }
+  }
+
+  function disableDevMode() {
+    isDevMode.value = false
+    
+    if (import.meta.client) {
+      localStorage.removeItem('asgt_dev_mode_forever')
+      
+      const toast = useAppToast()
+      toast.add({
+        title: '已退出开发模式',
+        description: '已恢复正常模式。',
+        color: 'primary',
         icon: 'i-material-symbols-terminal-rounded'
       })
     }
@@ -232,6 +261,7 @@ export const useSystemStore = defineStore('system', () => {
     launchApp,
     triggerOfflineFallback,
     enableDevMode,
+    disableDevMode,
     enableFrontendOnlyMode,
     restoreOnlineMode,
     startHeartbeat,
