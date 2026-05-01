@@ -1,22 +1,29 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"time"
 
 	"github.com/CyaniAgent/Asagity/core/internal/module/user/dto"
 	"github.com/CyaniAgent/Asagity/core/internal/module/user/repository"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/config"
+	"github.com/CyaniAgent/Asagity/core/internal/platform/event"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/id"
 )
 
 type Service struct {
-	repo *repository.Repository
-	cfg  config.Config
+	repo     *repository.Repository
+	cfg      config.Config
+	eventBus *event.Bus
 }
 
 func New(repo *repository.Repository, cfg config.Config) *Service {
 	return &Service{repo: repo, cfg: cfg}
+}
+
+func NewWithEventBus(repo *repository.Repository, cfg config.Config, eventBus *event.Bus) *Service {
+	return &Service{repo: repo, cfg: cfg, eventBus: eventBus}
 }
 
 func (s *Service) MePlaceholder() dto.MessageResponse {
@@ -57,6 +64,8 @@ func (s *Service) ChangePubID(userID, currentPubID, newPubID string) (*dto.Chang
 		return nil, err
 	}
 
+	s.emitPubIDChangedEvent(userID, currentPubID, newPubID)
+
 	changesLeft := int(id.MaxPubIDChangesPerMonth) - int(changeCount) - 1
 
 	return &dto.ChangePubIDResponse{
@@ -92,4 +101,16 @@ func (s *Service) GetPubIDChangeHistory(userID string, limit int) (*dto.PubIDCha
 		History: history,
 		Total:   len(changes),
 	}, nil
+}
+
+func (s *Service) emitPubIDChangedEvent(userID, oldPubID, newPubID string) {
+	if s.eventBus == nil {
+		return
+	}
+
+	evt := event.NewEvent(event.UserPubIDChanged, event.SourceLocal, newPubID, 1, "", event.UserPubIDChangedPayload{
+		OldPubID: oldPubID,
+		NewPubID: newPubID,
+	})
+	s.eventBus.Emit(context.Background(), evt)
 }

@@ -9,14 +9,15 @@ import (
 	userrepository "github.com/CyaniAgent/Asagity/core/internal/module/user/repository"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/database"
+	"github.com/CyaniAgent/Asagity/core/internal/platform/event"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/mail"
 )
 
-func Register(r *chi.Mux, cfg config.Config, clients *database.Clients) {
+func Register(r *chi.Mux, cfg config.Config, clients *database.Clients, eventBus *event.Bus) {
 	authRepo := authrepository.New(clients)
 	userRepo := userrepository.New(clients)
 	mailSvc := mail.New(cfg)
-	svc := service.New(authRepo, userRepo, clients.Redis, cfg, mailSvc)
+	svc := service.NewWithEventBus(authRepo, userRepo, clients.Redis, cfg, mailSvc, eventBus)
 	h := handler.New(svc)
 
 	r.Post("/api/auth/register", h.Register)

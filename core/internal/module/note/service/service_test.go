@@ -47,7 +47,7 @@ func setupNoteService(t *testing.T) (*NoteService, func()) {
 	repo := repository.NewNoteRepository(db)
 	followRepo := followrepo.NewFollowRepository(db)
 
-	svc := NewNoteServiceWithDeps(repo, followRepo, nil, nil, nil)
+	svc := NewNoteServiceWithDeps(repo, followRepo, nil, nil, nil, nil)
 
 	cleanup := func() {
 		sqlDB, _ := db.DB()

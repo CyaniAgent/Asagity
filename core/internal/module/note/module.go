@@ -9,10 +9,11 @@ import (
 	"github.com/CyaniAgent/Asagity/core/internal/module/note/service"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/database"
+	"github.com/CyaniAgent/Asagity/core/internal/platform/event"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/search"
 )
 
-func Register(r *chi.Mux, cfg config.Config, clients *database.Clients, searchEngine *search.BleveEngine) {
+func Register(r *chi.Mux, cfg config.Config, clients *database.Clients, searchEngine *search.BleveEngine, eventBus *event.Bus) {
 	repo := repository.NewNoteRepository(clients.DB)
 	followRepo := followrepo.NewFollowRepository(clients.DB)
 
@@ -20,7 +21,7 @@ func Register(r *chi.Mux, cfg config.Config, clients *database.Clients, searchEn
 		panic("note module migration failed: " + err.Error())
 	}
 
-	svc := service.NewNoteServiceWithDeps(repo, followRepo, nil, searchEngine, clients.Redis)
+	svc := service.NewNoteServiceWithDeps(repo, followRepo, nil, searchEngine, clients.Redis, eventBus)
 	h := handler.NewNoteHandler(svc)
 
 	r.Post("/api/notes", h.CreateNote)
