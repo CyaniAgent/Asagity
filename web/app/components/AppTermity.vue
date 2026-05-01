@@ -63,7 +63,7 @@ onMounted(() => {
   >
     <div id="termity-container" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1 pb-4">
       <div v-for="(line, idx) in terminalHistory" :key="idx" class="whitespace-pre-wrap">
-        <span v-if="line.type === 'input'" class="text-cyan-400">root@asagity:~$ </span>
+        <span v-if="line.type === 'input'" class="text-cyan-400">> </span>
         <span :class="{
           'text-green-500': line.type === 'output',
           'text-yellow-500 font-bold': line.type === 'system',
@@ -72,7 +72,7 @@ onMounted(() => {
       </div>
       
       <div class="flex items-center mt-2">
-        <span class="text-cyan-400 shrink-0">root@asagity:~$ </span>
+        <span class="text-cyan-400 shrink-0">> </span>
         <input
           ref="inputRef"
           v-model="currentInput"
