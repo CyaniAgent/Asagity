@@ -109,7 +109,7 @@ export const useSystemStore = defineStore('system', () => {
       const soundManager = useSoundManager()
       soundManager.getAudioContext().catch((e: Error) => console.warn('AudioContext resume failed:', e))
 
-      const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA')
+      const silentAudio = new Audio('data:audio/ogg;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA')
       silentAudio.play().catch(() => { })
     }
 
