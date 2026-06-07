@@ -59,6 +59,16 @@ export const useSystemStore = defineStore('system', () => {
       if (localStorage.getItem('asgt_dev_mode_forever') === 'true') {
         enableDevMode(true)
       }
+
+      // Wait for fonts to load to prevent "bold jumping" (FOUT)
+      try {
+        await Promise.race([
+          document.fonts.ready,
+          new Promise(resolve => setTimeout(resolve, 2000))
+        ])
+      } catch (e) {
+        console.warn('Font loading sync failed or timed out:', e)
+      }
     }
 
     fetchHostInfoWithTimeout().catch(() => { })
@@ -134,8 +144,6 @@ export const useSystemStore = defineStore('system', () => {
 
       // 自动进入"仅前端模式"
       enableFrontendOnlyMode()
-
-      isFirstCheck.value = false
     }
   }
 
@@ -148,7 +156,7 @@ export const useSystemStore = defineStore('system', () => {
       if (forever) {
         localStorage.setItem('asgt_dev_mode_forever', 'true')
       }
-      
+
       const toast = useAppToast()
       toast.add({
         title: '已进入开发模式',
@@ -161,10 +169,10 @@ export const useSystemStore = defineStore('system', () => {
 
   function disableDevMode() {
     isDevMode.value = false
-    
+
     if (import.meta.client) {
       localStorage.removeItem('asgt_dev_mode_forever')
-      
+
       const toast = useAppToast()
       toast.add({
         title: '已退出开发模式',
@@ -221,6 +229,7 @@ export const useSystemStore = defineStore('system', () => {
       })
 
       restoreOnlineMode()
+      isFirstCheck.value = false
     } catch {
       if (!isDevMode.value) {
         triggerOfflineFallback()
@@ -270,6 +279,6 @@ export const useSystemStore = defineStore('system', () => {
     fetchHostInfo,
     fetchHostInfoWithTimeout,
     ERROR_CODE_INIT_FAILED,
-    ERROR_CODE_NETWORK_TIMEOUT
+    ERROR_CODE_NETWORK_TIMEOUT,
   }
 })

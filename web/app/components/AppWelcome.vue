@@ -53,7 +53,7 @@ function openRegister() {
         <div
           class="absolute bottom-0 left-[25%] w-[10%] h-[45vh] bg-black border-t-4 border-fuchsia-500/30 rounded-tr-md skyline-windows">
           <span
-            class="absolute -top-10 left-0 text-[10px] font-black text-fuchsia-500/40 tracking-widest whitespace-nowrap">Neo-Shinjuku</span>
+            class="absolute -top-10 left-0 text-[10px] font-normal text-fuchsia-500/40 whitespace-nowrap">Neo-Shinjuku</span>
         </div>
         <div
           class="absolute bottom-0 left-[45%] w-[20%] h-[75vh] bg-gray-950 border-t-2 border-cyan-400/40 rounded-tl-3xl shadow-[0_0_40px_rgba(57,197,187,0.1)] skyline-windows flex flex-col items-center pt-20">
@@ -68,7 +68,7 @@ function openRegister() {
         <div class="absolute -bottom-20 -left-10 w-[25%] h-[90vh] bg-black/95 blur-[6px] border-r border-cyan-500/20" />
         <div
           class="absolute bottom-[20%] right-[10%] px-4 py-1 border-2 border-fuchsia-500/40 rounded-sm rotate-12 animate-[flicker_4s_infinite] shadow-[0_0_15px_rgba(217,70,239,0.3)]">
-          <span class="text-xs font-black text-fuchsia-400/60 tracking-widest uppercase">ASAGITY-SYS</span>
+          <span class="text-xs font-normal text-fuchsia-400/60">ASAGITY-SYS</span>
         </div>
       </div>
     </div>
@@ -78,18 +78,18 @@ function openRegister() {
       <div
         class="flex items-center gap-6 px-4 py-2 bg-white/50 dark:bg-black/20 backdrop-blur-md rounded-2xl border border-gray-200/30 dark:border-white/5 self-end">
         <div class="flex flex-col">
-          <span class="text-[10px] text-gray-500 dark:text-gray-400 font-bold">Online</span>
-          <span class="text-sm font-black text-cyan-400 dark:text-cyan-400">1,204</span>
+          <span class="text-[10px] text-gray-500 dark:text-gray-400 font-normal">Online</span>
+          <span class="text-sm font-normal text-cyan-400 dark:text-cyan-400">1,204</span>
         </div>
         <div class="w-px h-6 bg-gray-300/50 dark:bg-white/10" />
         <div class="flex flex-col">
-          <span class="text-[10px] text-gray-500 dark:text-gray-400 font-bold">Users</span>
-          <span class="text-sm font-black text-gray-800 dark:text-gray-200">12,492</span>
+          <span class="text-[10px] text-gray-500 dark:text-gray-400 font-normal">Users</span>
+          <span class="text-sm font-normal text-gray-800 dark:text-gray-200">12,492</span>
         </div>
         <div class="w-px h-6 bg-gray-300/50 dark:bg-white/10" />
         <div class="flex flex-col">
-          <span class="text-[10px] text-gray-500 dark:text-gray-400 font-bold">Posts</span>
-          <span class="text-sm font-black text-gray-800 dark:text-gray-200">1.2M</span>
+          <span class="text-[10px] text-gray-500 dark:text-gray-400 font-normal">Posts</span>
+          <span class="text-sm font-normal text-gray-800 dark:text-gray-200">1.2M</span>
         </div>
       </div>
 
@@ -101,10 +101,10 @@ function openRegister() {
         <!-- Logo and Instance Info -->
         <div class="flex flex-col items-center text-center mb-6">
           <AppLogo class="w-16 h-16 drop-shadow-[0_0_15px_rgba(57,197,187,0.6)] mb-4 text-gray-900 dark:text-white" />
-          <h1 class="text-3xl font-black text-gray-900 dark:text-white drop-shadow-sm mb-1">
+          <h1 class="text-3xl font-normal text-gray-900 dark:text-white drop-shadow-sm mb-1">
             Asagity
           </h1>
-          <span class="text-[10px] font-bold text-cyan-600 dark:text-cyan-400">Instance ID:
+          <span class="text-[10px] font-normal text-cyan-600 dark:text-cyan-400">Instance ID:
             10241207</span>
         </div>
 
@@ -115,14 +115,14 @@ function openRegister() {
 
         <div class="flex flex-col gap-3">
           <button
-            class="w-full bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-900 dark:text-white font-black tracking-widest py-3.5 rounded-full transition-colors flex items-center justify-center gap-2"
+            class="w-full bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 text-gray-900 dark:text-white font-normal py-3.5 rounded-full transition-colors flex items-center justify-center gap-2"
             @click.stop="openLogin">
             <UIcon name="i-material-symbols-login-rounded" class="w-5 h-5" />
             登录
           </button>
 
           <button
-            class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-black tracking-widest py-3.5 rounded-full shadow-[0_0_15px_rgba(57,197,187,0.4)] transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+            class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-normal py-3.5 rounded-full shadow-[0_0_15px_rgba(57,197,187,0.4)] transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
             @click.stop="openRegister">
             <UIcon name="i-material-symbols-person-add-rounded" class="w-5 h-5" />
             加入本实例！
@@ -130,12 +130,12 @@ function openRegister() {
 
           <div class="flex items-center gap-3 my-2 opacity-50">
             <div class="h-px bg-gray-300 dark:bg-white/20 flex-1" />
-            <span class="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">or</span>
+            <span class="text-[10px] text-gray-500 dark:text-gray-400 font-normal">or</span>
             <div class="h-px bg-gray-300 dark:bg-white/20 flex-1" />
           </div>
 
           <button type="button"
-            class="w-full bg-transparent hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-bold tracking-wider py-2.5 rounded-xl border border-dashed border-gray-300 dark:border-gray-600 transition-colors text-xs flex items-center justify-center gap-2 group"
+            class="w-full bg-transparent hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-normal py-2.5 rounded-xl border border-dashed border-gray-300 dark:border-gray-600 transition-colors text-xs flex items-center justify-center gap-2 group"
             @click.stop="handleDeveloperEnter">
             <UIcon name="i-material-symbols-code-blocks-outline" class="w-4 h-4 group-hover:opacity-100 opacity-60" />
             Direct Enter (Dev Mode)

@@ -34,6 +34,19 @@ export const useThemeStore = defineStore('theme', () => {
     }
   })
 
+  const modeIcon = computed(() => {
+    switch (preference.value) {
+      case 'light':
+        return 'i-material-symbols-wb-sunny-rounded'
+      case 'dark':
+        return 'i-material-symbols-nightlight-round'
+      case 'system':
+        return 'i-material-symbols-laptop-chromebook-rounded'
+      default:
+        return 'i-material-symbols-laptop-chromebook-rounded'
+    }
+  })
+
   function init() {
     if (import.meta.client) {
       const stored = localStorage.getItem('asagity-color-mode') as ColorMode | null
@@ -73,10 +86,12 @@ export const useThemeStore = defineStore('theme', () => {
   }
 
   function toggle() {
-    if (preference.value === 'system') {
-      setPreference(currentMode.value === 'dark' ? 'light' : 'dark')
+    if (preference.value === 'light') {
+      setPreference('dark')
+    } else if (preference.value === 'dark') {
+      setPreference('system')
     } else {
-      setPreference(preference.value === 'dark' ? 'light' : 'dark')
+      setPreference('light')
     }
   }
 
@@ -90,6 +105,7 @@ export const useThemeStore = defineStore('theme', () => {
     isDark,
     currentMode,
     modeLabel,
+    modeIcon,
     init,
     setPreference,
     toggle

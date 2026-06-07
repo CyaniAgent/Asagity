@@ -2,31 +2,11 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useSystemStore } from '~/stores/system'
+import { useTimelineStore, type TimelinePost } from '~/stores/timeline'
 
 const route = useRoute()
 const systemStore = useSystemStore()
-
-interface User {
-  avatar: string
-  displayName: string
-  username: string
-  instance?: string
-}
-
-interface TimelinePost {
-  id: string
-  author: User
-  createdAt: Date | string
-  content: string
-  replyTo?: {
-    author: User
-  }
-  metrics: {
-    replies: number
-    reposts: number
-    reactions: number
-  }
-}
+const timelineStore = useTimelineStore()
 
 const timelineType = computed(() => {
   const tab = route.query.tab as string
@@ -45,25 +25,10 @@ const timelineEndpoint = computed(() => {
 
 const { data: timelineData, pending: timelineLoading } = useAsyncData(
   `timeline-${timelineType.value}`,
-  async () => {
-    if (systemStore.isDevMode) {
-      return [] as TimelinePost[]
-    }
-
-    try {
-      const api = useApi()
-      const response = await api.get(timelineEndpoint.value, {
-        query: { limit: 20 }
-      })
-      return response as TimelinePost[]
-    } catch (err) {
-      console.error('Failed to fetch timeline:', err)
-      return [] as TimelinePost[]
-    }
-  },
+  () => timelineStore.fetchTimeline(timelineEndpoint.value),
   {
-    default: () => [] as TimelinePost[],
-    watch: [timelineType]
+    default: () => timelineStore.posts,
+    watch: [timelineType, () => systemStore.isBackendOnline]
   }
 )
 </script>
@@ -74,7 +39,7 @@ const { data: timelineData, pending: timelineLoading } = useAsyncData(
     <div class="flex flex-col min-w-0 bg-white dark:bg-gray-900 w-full h-full">
       <!-- Post Stream -->
       <div class="flex flex-col min-h-screen">
-        <template v-if="timelineLoading">
+        <template v-if="timelineLoading && !timelineData?.length">
           <div class="flex items-center justify-center py-24">
             <UIcon
               name="i-material-symbols-progress-activity"

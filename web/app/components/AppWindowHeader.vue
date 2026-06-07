@@ -119,7 +119,7 @@ function switchMode() {
           class="w-4 h-4 text-cyan-600 dark:text-cyan-400"
         />
       </div>
-      <span class="text-[13px] font-black text-gray-800 dark:text-white truncate tracking-wide">
+      <span class="text-[13px] font-normal text-gray-800 dark:text-white truncate tracking-wide">
         {{ getTitle(type) }}
       </span>
     </div>

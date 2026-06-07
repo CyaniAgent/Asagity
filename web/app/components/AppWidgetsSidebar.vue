@@ -17,7 +17,7 @@ const federatedInstances: { domain: string, protocol: string, active: number }[]
     <div
       class="bg-white/50 dark:bg-gray-900/50 backdrop-blur-md rounded-[24px] border border-white/30 dark:border-gray-800/50 p-5 shadow-sm hover:shadow-md transition-shadow"
     >
-      <h3 class="text-[13px] font-black tracking-widest text-gray-500 dark:text-gray-400 uppercase mb-4 flex items-center gap-1.5">
+      <h3 class="text-[13px] font-normal text-gray-500 dark:text-gray-400 mb-4 flex items-center gap-1.5">
         <UIcon
           name="i-material-symbols-signal-cellular-alt"
           class="w-4 h-4 text-green-500"
@@ -25,8 +25,8 @@ const federatedInstances: { domain: string, protocol: string, active: number }[]
       </h3>
       <div class="flex items-center justify-between">
         <div class="flex flex-col">
-          <span class="text-[32px] font-black text-gray-900 dark:text-white leading-none tracking-tight">{{ onlineUsersCount }}</span>
-          <span class="text-[11px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Active Now</span>
+          <span class="text-[32px] font-normal text-gray-900 dark:text-white leading-none">{{ onlineUsersCount }}</span>
+          <span class="text-[11px] font-normal text-gray-400 mt-1">Active Now</span>
         </div>
         <div
           v-if="onlineAvatars.length > 0"
@@ -51,7 +51,7 @@ const federatedInstances: { domain: string, protocol: string, active: number }[]
     <div
       class="bg-white/50 dark:bg-gray-900/50 backdrop-blur-md rounded-[24px] border border-white/30 dark:border-gray-800/50 p-5 shadow-sm hover:shadow-md transition-shadow"
     >
-      <h3 class="text-[13px] font-black tracking-widest text-gray-500 dark:text-gray-400 uppercase mb-4 flex items-center gap-1.5">
+      <h3 class="text-[13px] font-normal text-gray-500 dark:text-gray-400 mb-4 flex items-center gap-1.5">
         <UIcon
           name="i-material-symbols-trending-up"
           class="w-4 h-4 text-cyan-500"
@@ -65,8 +65,8 @@ const federatedInstances: { domain: string, protocol: string, active: number }[]
             class="flex items-center justify-between group cursor-pointer"
           >
             <div class="flex flex-col">
-              <span class="text-[14px] font-bold text-gray-800 dark:text-gray-200 group-hover:text-cyan-500 transition-colors">#{{ topic.name }}</span>
-              <span class="text-[11px] font-bold text-gray-400">{{ topic.posts }} posts</span>
+              <span class="text-[14px] font-normal text-gray-800 dark:text-gray-200 group-hover:text-cyan-500 transition-colors">#{{ topic.name }}</span>
+              <span class="text-[11px] font-normal text-gray-400">{{ topic.posts }} posts</span>
             </div>
             <UIcon
               :name="topic.trend === 'up' ? 'i-material-symbols-arrow-outward' : topic.trend === 'down' ? 'i-material-symbols-south-east' : 'i-material-symbols-arrow-right-alt'"
@@ -91,7 +91,7 @@ const federatedInstances: { domain: string, protocol: string, active: number }[]
     <div
       class="bg-white/50 dark:bg-gray-900/50 backdrop-blur-md rounded-[24px] border border-white/30 dark:border-gray-800/50 p-5 shadow-sm hover:shadow-md transition-shadow"
     >
-      <h3 class="text-[13px] font-black tracking-widest text-gray-500 dark:text-gray-400 uppercase mb-4 flex items-center gap-1.5">
+      <h3 class="text-[13px] font-normal text-gray-500 dark:text-gray-400 mb-4 flex items-center gap-1.5">
         <UIcon
           name="i-material-symbols-person-add"
           class="w-4 h-4 text-blue-500"
@@ -110,8 +110,8 @@ const federatedInstances: { domain: string, protocol: string, active: number }[]
               class="transition-transform group-hover:scale-105"
             />
             <div class="flex flex-col flex-1 overflow-hidden">
-              <span class="text-[14px] font-bold text-gray-900 dark:text-white truncate group-hover:text-cyan-500 transition-colors">{{ user.displayName }}</span>
-              <span class="text-[11px] font-bold text-gray-400 truncate">@{{ user.username }}</span>
+              <span class="text-[14px] font-normal text-gray-900 dark:text-white truncate group-hover:text-cyan-500 transition-colors">{{ user.displayName }}</span>
+              <span class="text-[11px] font-normal text-gray-400 truncate">@{{ user.username }}</span>
             </div>
             <UButton
               icon="i-material-symbols-add"
@@ -138,7 +138,7 @@ const federatedInstances: { domain: string, protocol: string, active: number }[]
     <div
       class="bg-white/50 dark:bg-gray-900/50 backdrop-blur-md rounded-[24px] border border-white/30 dark:border-gray-800/50 p-5 shadow-sm hover:shadow-md transition-shadow"
     >
-      <h3 class="text-[13px] font-black tracking-widest text-gray-500 dark:text-gray-400 mb-4 flex items-center gap-1.5">
+      <h3 class="text-[13px] font-normal text-gray-500 dark:text-gray-400 mb-4 flex items-center gap-1.5">
         <UIcon
           name="i-material-symbols-hub"
           class="w-4 h-4 text-purple-500"
@@ -152,15 +152,15 @@ const federatedInstances: { domain: string, protocol: string, active: number }[]
             class="flex items-center justify-between group cursor-pointer p-2 -mx-2 rounded-xl hover:bg-white/40 dark:hover:bg-gray-800/40 transition-colors"
           >
             <div class="flex flex-col">
-              <span class="text-[13px] font-bold text-gray-800 dark:text-gray-200 group-hover:text-cyan-500 transition-colors">{{ instance.domain }}</span>
+              <span class="text-[13px] font-normal text-gray-800 dark:text-gray-200 group-hover:text-cyan-500 transition-colors">{{ instance.domain }}</span>
               <div class="flex items-center gap-1.5 mt-0.5">
                 <span
-                  class="px-1.5 py-0.5 rounded-md text-[9px] font-black tracking-wider"
+                  class="px-1.5 py-0.5 rounded-md text-[9px] font-normal"
                   :class="instance.protocol === 'ActivityPub' ? 'bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400' : 'bg-cyan-100 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-400'"
                 >
                   {{ instance.protocol }}
                 </span>
-                <span class="text-[10px] font-bold text-gray-400 flex items-center gap-0.5">
+                <span class="text-[10px] font-normal text-gray-400 flex items-center gap-0.5">
                   <UIcon
                     name="i-material-symbols-person"
                     class="w-3 h-3"

@@ -4,13 +4,47 @@ import { useRoute } from 'vue-router'
 import { useInstanceStore } from '~/stores/instance'
 import { useSystemStore } from '~/stores/system'
 import { useThemeStore } from '~/stores/theme'
+import { useUserStore } from '~/stores/user'
 import { useIconCache } from '~/composables/useIconCache'
-import { useElementBounding } from '@vueuse/core'
+import { useElementBounding, onClickOutside } from '@vueuse/core'
 
 const route = useRoute()
 const systemStore = useSystemStore()
+const userStore = useUserStore()
 const isWidgetsOpen = ref(false)
 const isWidgetsToggling = ref(false)
+
+const isUserPopoverOpen = ref(false)
+const userAvatarRef = ref<HTMLElement | null>(null)
+const userPopoverRef = ref<HTMLElement | null>(null)
+
+// Extract the single element from the ref array for avatar
+const userAvatarAnchor = computed(() => {
+  const el = userAvatarRef.value
+  return Array.isArray(el) ? el[0] : el
+})
+
+const { top: avatarTop, right: avatarRight, bottom: avatarBottom } = useElementBounding(userAvatarAnchor)
+
+const userPopoverPosition = computed(() => {
+  const popoverWidth = 288
+  const padding = 12
+  const viewportWidth = window.innerWidth
+  
+  // Align right edge of popover with right edge of avatar, with some padding
+  return {
+    top: avatarBottom.value + 12,
+    left: Math.max(padding, avatarRight.value - popoverWidth)
+  }
+})
+
+onClickOutside(userPopoverRef, () => {
+  isUserPopoverOpen.value = false
+}, { ignore: [userAvatarRef] })
+
+const toggleUserPopover = () => {
+  isUserPopoverOpen.value = !isUserPopoverOpen.value
+}
 
 const toggleWidgets = () => {
   isWidgetsToggling.value = true
@@ -356,10 +390,10 @@ const moreMenuGroups = [
           class="absolute left-20 opacity-0 group-hover/logo:opacity-100 translate-x-[-10px] group-hover/logo:translate-x-0 transition-all duration-300 pointer-events-none z-50">
           <div
             class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl px-4 py-2.5 rounded-2xl border border-white/20 dark:border-gray-800 shadow-2xl flex flex-col min-w-[140px]">
-            <span class="text-[10px] font-black text-cyan-500 mb-1">
+            <span class="text-[10px] font-normal text-cyan-500 mb-1">
               This Instance
             </span>
-            <span class="text-sm font-black text-gray-900 dark:text-white leading-tight">
+            <span class="text-sm font-normal text-gray-900 dark:text-white leading-tight">
               {{ instanceStore.name }}
             </span>
           </div>
@@ -373,12 +407,12 @@ const moreMenuGroups = [
             <!-- Special Case: "More" — hand-rolled popover -->
             <div v-if="item.label === '更多'" ref="moreMenuRef" class="w-full">
               <button type="button"
-                class="flex items-center gap-4 px-4 py-2.5 rounded-2xl w-full text-left transition-colors font-bold group/nav"
+                class="flex items-center gap-4 px-4 py-2.5 rounded-2xl w-full text-left transition-colors font-normal group/nav"
                 :class="moreMenuOpen || isItemActive(item)
                   ? 'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400'
                   : 'hover:bg-black/5 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300'" @click="toggleMoreMenu">
                 <UIcon :name="item.icon" class="w-[22px] h-[22px] opacity-70 shrink-0" />
-                <span class="text-[15px] tracking-wide">{{ item.label }}</span>
+                <span class="text-[15px]">{{ item.label }}</span>
                 <UIcon name="i-material-symbols-chevron-right"
                   class="w-4 h-4 ml-auto opacity-40 transition-transform duration-200"
                   :class="{ 'rotate-90': moreMenuOpen }" />
@@ -418,13 +452,13 @@ const moreMenuGroups = [
 
             <!-- Standard Navigation Link -->
             <NuxtLink v-else :to="item.to"
-              class="flex items-center gap-4 px-4 py-2.5 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors font-bold group/nav"
+              class="flex items-center gap-4 px-4 py-2.5 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors font-normal group/nav"
               :class="isItemActive(item)
                 ? 'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400'
                 : 'text-gray-700 dark:text-gray-300'">
               <UIcon :name="item.icon" class="w-[22px] h-[22px] transition-opacity"
                 :class="isItemActive(item) ? 'opacity-100' : 'opacity-70 group-hover/nav:opacity-100'" />
-              <span class="text-[15px] tracking-wide">{{ item.label }}</span>
+              <span class="text-[15px]">{{ item.label }}</span>
             </NuxtLink>
           </template>
           <div v-if="gIdx < navigation.length - 1" class="h-px bg-gray-200 dark:bg-white/10 my-2.5 mx-3" />
@@ -434,7 +468,7 @@ const moreMenuGroups = [
       <!-- 底部：拆分视图管理 (Split View Task Manager) -->
       <div v-if="splitViewStore.isOpen" class="px-4 pb-2 shrink-0 animate-[fade-in_0.3s_ease-out]">
         <div
-          class="text-[10px] font-black text-gray-400 dark:text-gray-500 mb-2 px-1 tracking-widest flex items-center gap-1">
+          class="text-[10px] font-normal text-gray-400 dark:text-gray-500 mb-2 px-1 flex items-center gap-1">
           <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
           Active display
         </div>
@@ -446,7 +480,7 @@ const moreMenuGroups = [
               <UIcon :name="splitViewIcon" class="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
             </div>
             <div class="flex flex-col overflow-hidden">
-              <span class="text-sm font-bold text-gray-900 dark:text-white truncate">
+              <span class="text-sm font-normal text-gray-900 dark:text-white truncate">
                 {{ splitViewTitle }}
               </span>
             </div>
@@ -459,7 +493,7 @@ const moreMenuGroups = [
 
       <div class="p-4 shrink-0">
         <UButton icon="i-material-symbols-send" label="发布" color="primary" size="xl"
-          class="w-full justify-center rounded-full shadow-[0_0_15px_rgba(57,197,187,0.5)] transition-all hover:scale-105 hover:shadow-[0_0_25px_rgba(57,197,187,0.8)] font-bold text-base bg-gradient-to-r from-cyan-500 to-primary-600" />
+          class="w-full justify-center rounded-full shadow-[0_0_15px_rgba(57,197,187,0.5)] transition-all hover:scale-105 hover:shadow-[0_0_25px_rgba(57,197,187,0.8)] font-normal text-base bg-gradient-to-r from-cyan-500 to-primary-600" />
       </div>
     </aside>
 
@@ -503,10 +537,10 @@ const moreMenuGroups = [
               :class="systemStore.isBackendOnline ? 'text-green-400' : 'text-red-400 animate-pulse'" />
 
             <!-- Development Mode Label -->
-            <div v-if="systemStore.isDevMode" class="flex items-center gap-1.5 pr-1 animate-pulse">
+            <div v-if="systemStore.isDevMode" class="flex items-center gap-1.5 pr-1">
               <div class="w-px h-3 bg-gray-300 dark:bg-gray-600 mx-0.5" />
               <UIcon name="i-material-symbols-terminal-rounded" class="w-3.5 h-3.5 text-cyan-500" />
-              <span class="text-[10px] font-black text-cyan-500 tracking-wider">In Development</span>
+              <span class="text-[10px] font-normal text-cyan-500">In Development</span>
             </div>
           </div>
 
@@ -518,7 +552,7 @@ const moreMenuGroups = [
               class="w-6 h-6 rounded-full object-cover shrink-0 shadow-sm transition-transform duration-700"
               :class="musicStore.isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''" alt="Art">
             <div class="w-24 overflow-hidden">
-              <div class="text-xs font-bold whitespace-nowrap inline-block text-gray-800 dark:text-gray-100"
+              <div class="text-xs font-normal whitespace-nowrap inline-block text-gray-800 dark:text-gray-100"
                 :class="musicStore.isPlaying ? 'animate-[marquee_10s_linear_infinite]' : ''">
                 {{ musicStore.currentTrack.title }}
               </div>
@@ -528,11 +562,10 @@ const moreMenuGroups = [
               @click.stop="musicStore.togglePlay()" />
           </div>
 
-          <!-- 主题切换按钮 -->
           <div
             class="flex items-center h-8 px-2 rounded-full bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm transition-all hover:scale-105 cursor-pointer group"
             :title="`当前: ${themeStore.modeLabel}`" @click="themeStore.toggle()">
-            <UIcon :name="themeStore.isDark ? 'i-material-symbols-dark-mode' : 'i-material-symbols-light-mode'"
+            <UIcon :name="themeStore.modeIcon"
               class="w-4 h-4 transition-colors" :class="themeStore.isDark ? 'text-cyan-400' : 'text-yellow-500'" />
           </div>
 
@@ -553,8 +586,27 @@ const moreMenuGroups = [
           </div>
 
           <!-- 用户头像 -->
-          <UAvatar src="https://avatars.githubusercontent.com/u/739984?v=4" alt="Avatar" size="sm"
-            class="ring-2 ring-cyan-500/50 cursor-pointer hover:ring-cyan-500 transition-all" />
+          <div ref="userAvatarRef" class="relative">
+            <UAvatar :src="userStore.avatar" :alt="userStore.user?.name || userStore.username" size="sm"
+              class="ring-2 ring-cyan-500/50 cursor-pointer hover:ring-cyan-500 transition-all"
+              @click="toggleUserPopover" />
+          </div>
+
+          <!-- User Popover Teleport -->
+          <ClientOnly>
+            <Teleport to="body">
+              <Transition enter-active-class="transition duration-150 ease-out"
+                enter-from-class="opacity-0 scale-95 -translate-y-2" enter-to-class="opacity-100 scale-100 translate-y-0"
+                leave-active-class="transition duration-100 ease-in"
+                leave-from-class="opacity-100 scale-100 translate-y-0"
+                leave-to-class="opacity-0 scale-95 -translate-y-2">
+                <div v-if="isUserPopoverOpen" ref="userPopoverRef" class="fixed z-[100] origin-top-right"
+                  :style="{ top: `${userPopoverPosition.top}px`, left: `${userPopoverPosition.left}px` }">
+                  <AppUserPopover @close="isUserPopoverOpen = false" />
+                </div>
+              </Transition>
+            </Teleport>
+          </ClientOnly>
         </div>
       </header>
 

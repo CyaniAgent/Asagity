@@ -15,7 +15,7 @@ export default defineNuxtRouteMiddleware((to) => {
       if (import.meta.client) {
         const toast = useAppToast()
         toast.add({
-          title: '访问受限 (RESTRICTED)',
+          title: '访问受限',
           description: '仅前端模式下无法访问该功能。',
           color: 'warning',
           icon: 'i-material-symbols-cloud-off-rounded'

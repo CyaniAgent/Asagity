@@ -16,43 +16,28 @@ function formatSampleRate(hz?: number) {
 </script>
 
 <template>
-  <AppFreeWindow
-    id="info"
-    v-slot="{}"
-    v-model="musicStore.isMusicInfoWindowOpen"
-    title="Stream Analysis"
-    icon="i-material-symbols-info"
-    :initial-width="360"
-    :initial-height="500"
-    :z-index="10000"
-    disable-transfer
-  >
+  <AppFreeWindow id="info" v-slot="{ }" v-model="musicStore.isMusicInfoWindowOpen" title="Stream Analysis"
+    icon="i-material-symbols-info" :initial-width="360" :initial-height="500" :z-index="10000" disable-transfer>
     <!-- Main Content -->
     <div class="p-8 space-y-8 overflow-y-auto custom-scrollbar flex-1">
       <!-- Identity Section -->
       <div class="flex items-start gap-6">
         <div class="relative shrink-0 group">
-          <div class="absolute inset-0 bg-white/20 blur-xl rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-          <img
-            :src="musicStore.currentTrack.albumArt"
-            class="w-24 h-24 rounded-2xl object-cover relative z-10"
-            alt=""
-          >
+          <div
+            class="absolute inset-0 bg-white/20 blur-xl rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+          <img :src="musicStore.currentTrack.albumArt" class="w-24 h-24 rounded-2xl object-cover relative z-10" alt="">
         </div>
         <div class="flex flex-col min-w-0">
-          <h2 class="text-xl font-black leading-tight truncate">
+          <h2 class="text-xl font-normal leading-tight truncate">
             {{ musicStore.currentTrack.title }}
           </h2>
-          <p class="text-sm font-bold opacity-60 truncate">
+          <p class="text-sm font-normal opacity-60 truncate">
             {{ musicStore.currentTrack.artist || 'Unknown Artist' }}
           </p>
-          <div
-            class="mt-3 self-start px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
-            :style="{
-              color: musicStore.textColor,
-              backgroundColor: `${musicStore.textColor}1A`
-            }"
-          >
+          <div class="mt-3 self-start px-3 py-1 rounded-full text-[10px] font-normal" :style="{
+            color: musicStore.textColor,
+            backgroundColor: `${musicStore.textColor}1A`
+          }">
             {{ musicStore.audioQuality }}
           </div>
         </div>
@@ -61,34 +46,34 @@ function formatSampleRate(hz?: number) {
       <!-- Technical Specs -->
       <div class="grid grid-cols-2 gap-4">
         <div class="bg-black/10 rounded-2xl p-4 transition-colors hover:bg-white/5">
-          <p class="text-[9px] font-black uppercase tracking-widest opacity-30 mb-1">
+          <p class="text-[9px] font-normal opacity-30 mb-1">
             Container
           </p>
-          <p class="text-sm font-bold">
+          <p class="text-sm font-normal">
             {{ musicStore.currentTrack.container || 'Unknown' }}
           </p>
         </div>
         <div class="bg-black/10 rounded-2xl p-4 transition-colors hover:bg-white/5">
-          <p class="text-[9px] font-black uppercase tracking-widest opacity-30 mb-1">
+          <p class="text-[9px] font-normal opacity-30 mb-1">
             Codec
           </p>
-          <p class="text-sm font-bold">
+          <p class="text-sm font-normal">
             {{ musicStore.currentTrack.codec || 'N/A' }}
           </p>
         </div>
         <div class="bg-black/10 rounded-2xl p-4 transition-colors hover:bg-white/5">
-          <p class="text-[9px] font-black uppercase tracking-widest opacity-30 mb-1">
+          <p class="text-[9px] font-normal opacity-30 mb-1">
             Bitrate
           </p>
-          <p class="text-sm font-bold font-mono opacity-90">
+          <p class="text-sm font-normal opacity-90">
             {{ formatKbps(musicStore.currentTrack.bitrate) }}
           </p>
         </div>
         <div class="bg-black/10 rounded-2xl p-4 transition-colors hover:bg-white/5">
-          <p class="text-[9px] font-black uppercase tracking-widest opacity-30 mb-1">
+          <p class="text-[9px] font-normal opacity-30 mb-1">
             Sampling
           </p>
-          <p class="text-sm font-bold opacity-90">
+          <p class="text-sm font-normal opacity-90">
             {{ formatSampleRate(musicStore.currentTrack.sampleRate) }}
           </p>
         </div>
@@ -96,25 +81,23 @@ function formatSampleRate(hz?: number) {
 
       <!-- ID3 Tags -->
       <div class="space-y-4">
-        <h3 class="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 flex items-center gap-2">
-          <span
-            class="w-1 h-3 rounded-full"
-            :style="{ backgroundColor: musicStore.textColor }"
-          />
+        <h3 class="text-[10px] font-normal opacity-40 flex items-center gap-2">
+          <span class="w-1 h-3 rounded-full" :style="{ backgroundColor: musicStore.textColor }" />
           Meta Registry
         </h3>
         <div class="space-y-3">
           <div class="flex justify-between items-center text-xs">
-            <span class="opacity-30 font-bold uppercase tracking-wider">Album</span>
-            <span class="font-medium truncate ml-4 max-w-[180px] opacity-80">{{ musicStore.currentTrack.album || 'Unknown' }}</span>
+            <span class="opacity-30 font-normal">Album</span>
+            <span class="font-medium truncate ml-4 max-w-[180px] opacity-80">{{ musicStore.currentTrack.album ||
+              'Unknown' }}</span>
           </div>
           <div class="flex justify-between items-center text-xs">
-            <span class="opacity-30 font-bold uppercase tracking-wider">Release</span>
+            <span class="opacity-30 font-normal">Release</span>
             <span class="font-medium opacity-80">{{ musicStore.currentTrack.year || 'N/A' }}</span>
           </div>
           <div class="flex justify-between items-center text-xs">
-            <span class="opacity-30 font-bold uppercase tracking-wider">Source ID</span>
-            <span class="font-mono truncate ml-4 max-w-[150px] opacity-40">{{ musicStore.currentTrack.id }}</span>
+            <span class="opacity-30 font-normal">Source ID</span>
+            <span class="truncate ml-4 max-w-[150px] opacity-40">{{ musicStore.currentTrack.id }}</span>
           </div>
         </div>
       </div>
@@ -129,10 +112,13 @@ function formatSampleRate(hz?: number) {
 .window-pop-enter-active {
   transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
 .window-pop-leave-active {
   transition: all 0.3s cubic-bezier(0.36, 0, 0.66, -0.56);
 }
-.window-pop-enter-from, .window-pop-leave-to {
+
+.window-pop-enter-from,
+.window-pop-leave-to {
   opacity: 0;
   transform: scale(0.9) translateY(20px);
 }
