@@ -12,11 +12,11 @@ export const useSoundManager = defineStore('soundManager', () => {
   const isPreloading = ref(false)
 
   const soundRegistry = {
-    ca: '/sounds/AyaseYuna/ca.ogg',
-    sys_error: '/sounds/AyaseYuna/sys_error.ogg',
-    sys_net_restored: '/sounds/AyaseYuna/sys_net_restored.ogg',
-    message_sent: '/sounds/Defaults/MessageSent.ogg',
-    message_received: '/sounds/Defaults/MessageReceived.ogg'
+    ca: '/sounds/AyaseYuna/ca.wav',
+    sys_error: '/sounds/AyaseYuna/sys_error.wav',
+    sys_net_restored: '/sounds/AyaseYuna/sys_net_restored.wav',
+    message_sent: '/sounds/Defaults/MessageSent.wav',
+    message_received: '/sounds/Defaults/MessageReceived.wav'
   }
 
   async function getAudioContext(): Promise<AudioContext> {
