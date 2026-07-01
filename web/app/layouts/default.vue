@@ -46,6 +46,35 @@ const toggleUserPopover = () => {
   isUserPopoverOpen.value = !isUserPopoverOpen.value
 }
 
+const isMusicPopoverOpen = ref(false)
+const musicCardRef = ref<HTMLElement | null>(null)
+const musicPopoverRef = ref<HTMLElement | null>(null)
+
+const musicCardAnchor = computed(() => {
+  const el = musicCardRef.value
+  return Array.isArray(el) ? el[0] : el
+})
+
+const { top: musicTop, right: musicRight, bottom: musicBottom } = useElementBounding(musicCardAnchor)
+
+const musicPopoverPosition = computed(() => {
+  const popoverWidth = 320
+  const padding = 12
+  
+  return {
+    top: musicBottom.value + 12,
+    left: Math.max(padding, musicRight.value - popoverWidth)
+  }
+})
+
+onClickOutside(musicPopoverRef, () => {
+  isMusicPopoverOpen.value = false
+}, { ignore: [musicCardRef] })
+
+const toggleMusicPopover = () => {
+  isMusicPopoverOpen.value = !isMusicPopoverOpen.value
+}
+
 const toggleWidgets = () => {
   isWidgetsToggling.value = true
   isWidgetsOpen.value = !isWidgetsOpen.value
@@ -546,11 +575,11 @@ const moreMenuGroups = [
 
           <!-- 音乐播放器组件 (联动 musicStore) -->
           <div
+            ref="musicCardRef"
             class="flex items-center gap-2 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-full pr-2 pl-1 py-1 border border-white/20 dark:border-gray-700/50 shadow-sm transition-all hover:scale-105 cursor-pointer group"
-            @click="splitViewStore.openMusic()">
+            @click="toggleMusicPopover">
             <img :src="musicStore.currentTrack.albumArt"
-              class="w-6 h-6 rounded-full object-cover shrink-0 shadow-sm transition-transform duration-700"
-              :class="musicStore.isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''" alt="Art">
+              class="w-6 h-6 rounded-full object-cover shrink-0 shadow-sm" alt="Art">
             <div class="w-24 overflow-hidden">
               <div class="text-xs font-normal whitespace-nowrap inline-block text-gray-800 dark:text-gray-100"
                 :class="musicStore.isPlaying ? 'animate-[marquee_10s_linear_infinite]' : ''">
@@ -607,6 +636,22 @@ const moreMenuGroups = [
               </Transition>
             </Teleport>
           </ClientOnly>
+
+          <!-- Music Popover Teleport -->
+          <ClientOnly>
+            <Teleport to="body">
+              <Transition enter-active-class="transition duration-150 ease-out"
+                enter-from-class="opacity-0 scale-95 -translate-y-2" enter-to-class="opacity-100 scale-100 translate-y-0"
+                leave-active-class="transition duration-100 ease-in"
+                leave-from-class="opacity-100 scale-100 translate-y-0"
+                leave-to-class="opacity-0 scale-95 -translate-y-2">
+                <div v-if="isMusicPopoverOpen" ref="musicPopoverRef" class="fixed z-[100] origin-top-right"
+                  :style="{ top: `${musicPopoverPosition.top}px`, left: `${musicPopoverPosition.left}px` }">
+                  <AppMusicPlayer />
+                </div>
+              </Transition>
+            </Teleport>
+          </ClientOnly>
         </div>
       </header>
 
@@ -647,7 +692,7 @@ const moreMenuGroups = [
                 : 'border-gray-200/50 dark:border-gray-800/50'
             ]">
               <!-- Unified Split View Header Controls -->
-              <AppWindowHeader v-if="splitViewStore.currentRightViewType !== 'music'" mode="split"
+              <AppWindowHeader mode="split"
                 :type="splitViewStore.currentRightViewType" :custom-title="splitViewTitle" :custom-icon="splitViewIcon"
                 :is-maximized="splitViewStore.isMaximized" />
 
@@ -657,7 +702,6 @@ const moreMenuGroups = [
                   :key="`user-${splitViewStore.refreshKey}`" />
                 <AppPostDetail v-else-if="splitViewStore.currentRightViewType === 'post' && splitViewStore.isOpen"
                   :key="`post-${splitViewStore.refreshKey}`" />
-                <AppMusicPlayer v-else-if="splitViewStore.currentRightViewType === 'music' && splitViewStore.isOpen" />
                 <AppNotifications
                   v-else-if="splitViewStore.currentRightViewType === 'notifications' && splitViewStore.isOpen"
                   :key="`notif-${splitViewStore.refreshKey}`" />

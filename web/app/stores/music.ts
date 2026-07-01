@@ -47,7 +47,6 @@ export const useMusicStore = defineStore('music', () => {
 
   // UI States
   const isLyricsWindowOpen = ref(false)
-  const isMusicInfoWindowOpen = ref(false)
   const isPlaylistWindowOpen = ref(false)
   const themeColor = ref('#39C5BB')
   const textColor = ref('#FFFFFF')
@@ -380,7 +379,6 @@ export const useMusicStore = defineStore('music', () => {
     playlist,
     currentIndex,
     isLyricsWindowOpen,
-    isMusicInfoWindowOpen,
     isPlaylistWindowOpen,
     themeColor,
 

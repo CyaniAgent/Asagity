@@ -44,11 +44,11 @@ function handleClose() {
 <template>
   <AppFreeWindow
     v-model="freeWindowStore.isOpen"
-    :disable-maximize="freeWindowStore.currentViewType === 'error'"
+    :disable-maximize="freeWindowStore.currentViewType === 'error' || freeWindowStore.currentViewType === 'music'"
     :disable-minimize="freeWindowStore.currentViewType === 'error'"
     :disable-transfer="freeWindowStore.currentViewType === 'error'"
-    :initial-width="freeWindowStore.currentViewType === 'error' ? 400 : undefined"
-    :initial-height="freeWindowStore.currentViewType === 'error' ? 480 : undefined"
+    :initial-width="freeWindowStore.currentViewType === 'error' ? 400 : (freeWindowStore.currentViewType === 'music' ? 342 : undefined)"
+    :initial-height="freeWindowStore.currentViewType === 'error' ? 480 : (freeWindowStore.currentViewType === 'music' ? 450 : undefined)"
     :title="freeWindowTitle"
     :icon="freeWindowIcon"
     @close="handleClose"
