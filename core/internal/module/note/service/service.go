@@ -15,6 +15,7 @@ import (
 	"github.com/CyaniAgent/Asagity/core/internal/module/note/repository"
 	noterepo "github.com/CyaniAgent/Asagity/core/internal/module/note/repository"
 	usermodel "github.com/CyaniAgent/Asagity/core/internal/module/user/model"
+	"github.com/CyaniAgent/Asagity/core/internal/platform/event"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/queue"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/search"
 )
@@ -25,19 +26,21 @@ type NoteService struct {
 	queueClient  *queue.Client
 	searchEngine *search.BleveEngine
 	redis        *redis.Client
+	eventBus     *event.Bus
 }
 
 func NewNoteService(repo *noterepo.NoteRepository) *NoteService {
 	return &NoteService{repo: repo}
 }
 
-func NewNoteServiceWithDeps(repo *noterepo.NoteRepository, followRepo *followrepo.FollowRepository, queueClient *queue.Client, searchEngine *search.BleveEngine, redis *redis.Client) *NoteService {
+func NewNoteServiceWithDeps(repo *noterepo.NoteRepository, followRepo *followrepo.FollowRepository, queueClient *queue.Client, searchEngine *search.BleveEngine, redis *redis.Client, eventBus *event.Bus) *NoteService {
 	return &NoteService{
 		repo:         repo,
 		followRepo:   followRepo,
 		queueClient:  queueClient,
 		searchEngine: searchEngine,
 		redis:        redis,
+		eventBus:     eventBus,
 	}
 }
 
@@ -96,6 +99,9 @@ func (s *NoteService) CreateNote(req *dto.CreateNoteRequest, userID string) (*no
 	if err := s.repo.CreateNoteWithReply(note, poll, pollOptions, mediaList, req.ParentID); err != nil {
 		return nil, err
 	}
+
+	// Emit event after successful transaction commit
+	s.emitNoteEvent(event.NoteCreated, userID, note)
 
 	// Async: Index to search engine & Federate to Asagity NET
 	go s.triggerPostCreateTasks(note)
@@ -176,6 +182,8 @@ func (s *NoteService) UpdateNote(id, userID string, req *dto.UpdateNoteRequest) 
 		return nil, err
 	}
 
+	s.emitNoteUpdatedEvent(userID, note)
+
 	return note, nil
 }
 
@@ -194,7 +202,12 @@ func (s *NoteService) DeleteNote(id, userID string) error {
 		return errors.New(dto.ErrNoteDeleted)
 	}
 
-	return s.repo.SoftDelete(id)
+	if err := s.repo.SoftDelete(id); err != nil {
+		return err
+	}
+
+	s.emitNoteDeletedEvent(userID, note)
+	return nil
 }
 
 // GetNoteByID gets a note by ID
@@ -569,12 +582,22 @@ func (s *NoteService) AddReaction(noteID, userID, emoji string) error {
 		Emoji:  emoji,
 	}
 
-	return s.repo.AddReaction(reaction)
+	if err := s.repo.AddReaction(reaction); err != nil {
+		return err
+	}
+
+	s.emitReactionEvent(event.NoteReactionAdded, userID, noteID, emoji)
+	return nil
 }
 
 // RemoveReaction removes a reaction from a note
 func (s *NoteService) RemoveReaction(noteID, userID, emoji string) error {
-	return s.repo.RemoveReaction(noteID, userID, emoji)
+	if err := s.repo.RemoveReaction(noteID, userID, emoji); err != nil {
+		return err
+	}
+
+	s.emitReactionEvent(event.NoteReactionRemoved, userID, noteID, emoji)
+	return nil
 }
 
 // GetSearchEngine returns the search engine instance
@@ -714,6 +737,7 @@ func (s *NoteService) VoteOnPoll(noteID, userID string, optionIDs []string) erro
 		}
 	}
 
+	s.emitPollVotedEvent(userID, noteID, optionIDs)
 	return nil
 }
 
@@ -776,4 +800,81 @@ func (s *NoteService) GetPollResults(noteID, userID string) (*dto.PollResponse, 
 
 func parseTime(s string) (time.Time, error) {
 	return time.Parse(time.RFC3339, s)
+}
+
+func (s *NoteService) emitEvent(ctx context.Context, evt event.Event) {
+	if s.eventBus != nil {
+		s.eventBus.Emit(ctx, evt)
+	}
+}
+
+func (s *NoteService) emitNoteEvent(eventType, actorID string, note *notemodel.Note) {
+	if s.eventBus == nil {
+		return
+	}
+
+	evt := event.NewEvent(eventType, event.SourceLocal, actorID, 1, "", event.NoteCreatedPayload{
+		NoteID:     note.ID,
+		PubID:      note.PubID,
+		Content:    note.Content,
+		Visibility: string(note.Visibility),
+		RootID: func() string {
+			if note.RootID != nil {
+				return *note.RootID
+			}
+			return ""
+		}(),
+		ParentID: func() string {
+			if note.ParentID != nil {
+				return *note.ParentID
+			}
+			return ""
+		}(),
+	})
+	s.eventBus.Emit(context.Background(), evt)
+}
+
+func (s *NoteService) emitNoteUpdatedEvent(actorID string, note *notemodel.Note) {
+	if s.eventBus == nil {
+		return
+	}
+	evt := event.NewEvent(event.NoteUpdated, event.SourceLocal, actorID, 1, "", event.NoteUpdatedPayload{
+		NoteID:  note.ID,
+		PubID:   note.PubID,
+		Content: note.Content,
+	})
+	s.eventBus.Emit(context.Background(), evt)
+}
+
+func (s *NoteService) emitNoteDeletedEvent(actorID string, note *notemodel.Note) {
+	if s.eventBus == nil {
+		return
+	}
+	evt := event.NewEvent(event.NoteDeleted, event.SourceLocal, actorID, 1, "", event.NoteDeletedPayload{
+		NoteID: note.ID,
+		PubID:  note.PubID,
+	})
+	s.eventBus.Emit(context.Background(), evt)
+}
+
+func (s *NoteService) emitReactionEvent(eventType, actorID, noteID, emoji string) {
+	if s.eventBus == nil {
+		return
+	}
+	evt := event.NewEvent(eventType, event.SourceLocal, actorID, 1, "", event.NoteReactionPayload{
+		NoteID: noteID,
+		Emoji:  emoji,
+	})
+	s.eventBus.Emit(context.Background(), evt)
+}
+
+func (s *NoteService) emitPollVotedEvent(actorID, noteID string, optionIDs []string) {
+	if s.eventBus == nil {
+		return
+	}
+	evt := event.NewEvent(event.NotePollVoted, event.SourceLocal, actorID, 1, "", event.NotePollVotedPayload{
+		NoteID:    noteID,
+		OptionIDs: optionIDs,
+	})
+	s.eventBus.Emit(context.Background(), evt)
 }

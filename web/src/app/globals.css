@@ -1,0 +1,229 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-cyan-50: #effcfb;
+  --color-cyan-100: #d6f7f5;
+  --color-cyan-200: #b0efeb;
+  --color-cyan-300: #7be0dc;
+  --color-cyan-400: #46c8c5;
+  --color-cyan-500: #39c5bb;
+  --color-cyan-600: #2b9f98;
+  --color-cyan-700: #25807b;
+  --color-cyan-800: #226764;
+  --color-cyan-900: #205553;
+  --color-cyan-950: #0f3635;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --font-sans: "HarmonyOS Sans SC", "HarmonyOS Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+:root {
+  --background: #121212;
+  --foreground: #ededed;
+}
+
+/* Latin & Numbers: HarmonyOS Sans */
+@font-face {
+  font-family: 'HarmonyOS Sans';
+  src: url('/fonts/HarmonyOS_Sans/HarmonyOS_Sans/HarmonyOS_Sans_Regular.ttf') format('truetype');
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0100-024F, U+0250-02AF, U+02B0-02FF, U+0300-036F,
+    U+0370-03FF, U+0400-04FF, U+2000-206F, U+2070-209F, U+20A0-20CF,
+    U+2100-214F, U+2150-218F, U+2190-21FF, U+2200-22FF, U+2460-24FF,
+    U+2500-257F, U+25A0-25FF, U+2600-26FF, U+2700-27BF, U+FF00-FFEF;
+}
+
+@font-face {
+  font-family: 'HarmonyOS Sans';
+  src: url('/fonts/HarmonyOS_Sans/HarmonyOS_Sans/HarmonyOS_Sans_Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0100-024F, U+0250-02AF, U+02B0-02FF, U+0300-036F,
+    U+0370-03FF, U+0400-04FF, U+2000-206F, U+2070-209F, U+20A0-20CF,
+    U+2100-214F, U+2150-218F, U+2190-21FF, U+2200-22FF, U+2460-24FF,
+    U+2500-257F, U+25A0-25FF, U+2600-26FF, U+2700-27BF, U+FF00-FFEF;
+}
+
+@font-face {
+  font-family: 'HarmonyOS Sans';
+  src: url('/fonts/HarmonyOS_Sans/HarmonyOS_Sans/HarmonyOS_Sans_Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0100-024F, U+0250-02AF, U+02B0-02FF, U+0300-036F,
+    U+0370-03FF, U+0400-04FF, U+2000-206F, U+2070-209F, U+20A0-20CF,
+    U+2100-214F, U+2150-218F, U+2190-21FF, U+2200-22FF, U+2460-24FF,
+    U+2500-257F, U+25A0-25FF, U+2600-26FF, U+2700-27BF, U+FF00-FFEF;
+}
+
+@font-face {
+  font-family: 'HarmonyOS Sans';
+  src: url('/fonts/HarmonyOS_Sans/HarmonyOS_Sans/HarmonyOS_Sans_Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0100-024F, U+0250-02AF, U+02B0-02FF, U+0300-036F,
+    U+0370-03FF, U+0400-04FF, U+2000-206F, U+2070-209F, U+20A0-20CF,
+    U+2100-214F, U+2150-218F, U+2190-21FF, U+2200-22FF, U+2460-24FF,
+    U+2500-257F, U+25A0-25FF, U+2600-26FF, U+2700-27BF, U+FF00-FFEF;
+}
+
+@font-face {
+  font-family: 'HarmonyOS Sans';
+  src: url('/fonts/HarmonyOS_Sans/HarmonyOS_Sans/HarmonyOS_Sans_Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0100-024F, U+0250-02AF, U+02B0-02FF, U+0300-036F,
+    U+0370-03FF, U+0400-04FF, U+2000-206F, U+2070-209F, U+20A0-20CF,
+    U+2100-214F, U+2150-218F, U+2190-21FF, U+2200-22FF, U+2460-24FF,
+    U+2500-257F, U+25A0-25FF, U+2600-26FF, U+2700-27BF, U+FF00-FFEF;
+}
+
+@font-face {
+  font-family: 'HarmonyOS Sans';
+  src: url('/fonts/HarmonyOS_Sans/HarmonyOS_Sans/HarmonyOS_Sans_Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0100-024F, U+0250-02AF, U+02B0-02FF, U+0300-036F,
+    U+0370-03FF, U+0400-04FF, U+2000-206F, U+2070-209F, U+20A0-20CF,
+    U+2100-214F, U+2150-218F, U+2190-21FF, U+2200-22FF, U+2460-24FF,
+    U+2500-257F, U+25A0-25FF, U+2600-26FF, U+2700-27BF, U+FF00-FFEF;
+}
+
+/* Chinese Simplified, Japanese, Korean & CJK symbols: HarmonyOS Sans SC */
+@font-face {
+  font-family: 'HarmonyOS Sans SC';
+  src: url('/fonts/HarmonyOS_Sans/HarmonyOS_Sans_SC/HarmonyOS_Sans_SC_Thin.ttf') format('truetype');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+2E80-2EFF, U+2F00-2FDF, U+3000-303F, U+3040-309F, U+30A0-30FF,
+    U+3100-312F, U+3200-32FF, U+3300-33FF, U+3400-4DBF, U+4E00-9FFF,
+    U+A000-A48F, U+AC00-D7AF, U+F900-FAFF, U+FE30-FE4F, U+FE50-FE6F,
+    U+FF00-FFEF, U+20000-2A6DF;
+}
+
+@font-face {
+  font-family: 'HarmonyOS Sans SC';
+  src: url('/fonts/HarmonyOS_Sans/HarmonyOS_Sans_SC/HarmonyOS_Sans_SC_Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+2E80-2EFF, U+2F00-2FDF, U+3000-303F, U+3040-309F, U+30A0-30FF,
+    U+3100-312F, U+3200-32FF, U+3300-33FF, U+3400-4DBF, U+4E00-9FFF,
+    U+A000-A48F, U+AC00-D7AF, U+F900-FAFF, U+FE30-FE4F, U+FE50-FE6F,
+    U+FF00-FFEF, U+20000-2A6DF;
+}
+
+@font-face {
+  font-family: 'HarmonyOS Sans SC';
+  src: url('/fonts/HarmonyOS_Sans/HarmonyOS_Sans_SC/HarmonyOS_Sans_SC_Regular.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+2E80-2EFF, U+2F00-2FDF, U+3000-303F, U+3040-309F, U+30A0-30FF,
+    U+3100-312F, U+3200-32FF, U+3300-33FF, U+3400-4DBF, U+4E00-9FFF,
+    U+A000-A48F, U+AC00-D7AF, U+F900-FAFF, U+FE30-FE4F, U+FE50-FE6F,
+    U+FF00-FFEF, U+20000-2A6DF;
+}
+
+@font-face {
+  font-family: 'HarmonyOS Sans SC';
+  src: url('/fonts/HarmonyOS_Sans/HarmonyOS_Sans_SC/HarmonyOS_Sans_SC_Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+2E80-2EFF, U+2F00-2FDF, U+3000-303F, U+3040-309F, U+30A0-30FF,
+    U+3100-312F, U+3200-32FF, U+3300-33FF, U+3400-4DBF, U+4E00-9FFF,
+    U+A000-A48F, U+AC00-D7AF, U+F900-FAFF, U+FE30-FE4F, U+FE50-FE6F,
+    U+FF00-FFEF, U+20000-2A6DF;
+}
+
+@font-face {
+  font-family: 'HarmonyOS Sans SC';
+  src: url('/fonts/HarmonyOS_Sans/HarmonyOS_Sans_SC/HarmonyOS_Sans_SC_Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+2E80-2EFF, U+2F00-2FDF, U+3000-303F, U+3040-309F, U+30A0-30FF,
+    U+3100-312F, U+3200-32FF, U+3300-33FF, U+3400-4DBF, U+4E00-9FFF,
+    U+A000-A48F, U+AC00-D7AF, U+F900-FAFF, U+FE30-FE4F, U+FE50-FE6F,
+    U+FF00-FFEF, U+20000-2A6DF;
+}
+
+@font-face {
+  font-family: 'HarmonyOS Sans SC';
+  src: url('/fonts/HarmonyOS_Sans/HarmonyOS_Sans_SC/HarmonyOS_Sans_SC_Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+2E80-2EFF, U+2F00-2FDF, U+3000-303F, U+3040-309F, U+30A0-30FF,
+    U+3100-312F, U+3200-32FF, U+3300-33FF, U+3400-4DBF, U+4E00-9FFF,
+    U+A000-A48F, U+AC00-D7AF, U+F900-FAFF, U+FE30-FE4F, U+FE50-FE6F,
+    U+FF00-FFEF, U+20000-2A6DF;
+}
+
+/* Monospace: JetBrains Mono */
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/monospace/JetBrainsMono/JetBrainsMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Global Typography */
+html {
+  font-family: var(--font-sans);
+  font-weight: 400;
+}
+
+body {
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
+}
+
+/* Custom Scrollbar - Glass Style */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(57, 197, 187, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(57, 197, 187, 0.5);
+}

@@ -8,16 +8,17 @@ import (
 	"github.com/CyaniAgent/Asagity/core/internal/module/follow/service"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/database"
+	"github.com/CyaniAgent/Asagity/core/internal/platform/event"
 )
 
-func Register(r *chi.Mux, cfg config.Config, clients *database.Clients) {
+func Register(r *chi.Mux, cfg config.Config, clients *database.Clients, eventBus *event.Bus) {
 	repo := repository.NewFollowRepository(clients.DB)
 
 	if err := repo.AutoMigrate(); err != nil {
 		panic("follow module migration failed: " + err.Error())
 	}
 
-	svc := service.NewFollowService(repo)
+	svc := service.NewFollowServiceWithBus(repo, eventBus)
 	h := handler.NewHandler(svc)
 
 	r.Post("/api/users/{id}/follow", h.FollowUser)

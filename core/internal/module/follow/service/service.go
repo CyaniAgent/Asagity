@@ -1,21 +1,28 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"time"
 
 	followdto "github.com/CyaniAgent/Asagity/core/internal/module/follow/dto"
 	followmodel "github.com/CyaniAgent/Asagity/core/internal/module/follow/model"
 	followrepo "github.com/CyaniAgent/Asagity/core/internal/module/follow/repository"
+	"github.com/CyaniAgent/Asagity/core/internal/platform/event"
 	"github.com/google/uuid"
 )
 
 type FollowService struct {
-	repo *followrepo.FollowRepository
+	repo     *followrepo.FollowRepository
+	eventBus *event.Bus
 }
 
 func NewFollowService(repo *followrepo.FollowRepository) *FollowService {
 	return &FollowService{repo: repo}
+}
+
+func NewFollowServiceWithBus(repo *followrepo.FollowRepository, eventBus *event.Bus) *FollowService {
+	return &FollowService{repo: repo, eventBus: eventBus}
 }
 
 // FollowUser - 关注用户
@@ -67,44 +74,56 @@ func (s *FollowService) FollowUser(followerID, followingID string) (*followmodel
 		return nil, err
 	}
 
+	s.emitFollowEvent(follow)
 	return follow, nil
 }
 
 // UnfollowUser - 取消关注
 func (s *FollowService) UnfollowUser(followerID, followingID string) error {
-	return s.repo.Delete(followerID, followingID)
+	if err := s.repo.Delete(followerID, followingID); err != nil {
+		return err
+	}
+
+	s.emitFollowStatusEvent(event.FollowRemoved, followerID, followingID)
+	return nil
 }
 
 // AcceptFollowRequest - 接受关注请求
 func (s *FollowService) AcceptFollowRequest(userID, followID string) error {
-	// 查找待处理的关注请求
 	follow, err := s.repo.FindByID(followID)
 	if err != nil {
 		return errors.New(followdto.ErrFollowRequestNotFound)
 	}
 
-	// 验证权限
 	if follow.FollowingID != userID {
 		return errors.New("FORBIDDEN")
 	}
 
-	return s.repo.UpdateStatus(followID, followmodel.FollowStatusAccepted)
+	if err := s.repo.UpdateStatus(followID, followmodel.FollowStatusAccepted); err != nil {
+		return err
+	}
+
+	s.emitFollowStatusEvent(event.FollowAccepted, follow.FollowerID, follow.FollowingID)
+	return nil
 }
 
 // RejectFollowRequest - 拒绝关注请求
 func (s *FollowService) RejectFollowRequest(userID, followID string) error {
-	// 查找待处理的关注请求
 	follow, err := s.repo.FindByID(followID)
 	if err != nil {
 		return errors.New(followdto.ErrFollowRequestNotFound)
 	}
 
-	// 验证权限
 	if follow.FollowingID != userID {
 		return errors.New("FORBIDDEN")
 	}
 
-	return s.repo.UpdateStatus(followID, followmodel.FollowStatusRejected)
+	if err := s.repo.UpdateStatus(followID, followmodel.FollowStatusRejected); err != nil {
+		return err
+	}
+
+	s.emitFollowStatusEvent(event.FollowRejected, follow.FollowerID, follow.FollowingID)
+	return nil
 }
 
 // GetFollowers - 获取粉丝列表
@@ -241,4 +260,37 @@ func (s *FollowService) IsFollowing(followerID, followingID string) (bool, error
 // GetFollowingUserIDs - 获取关注的用户ID（用于Home Timeline）
 func (s *FollowService) GetFollowingUserIDs(userID string) ([]string, error) {
 	return s.repo.GetFollowingUserIDs(userID)
+}
+
+func (s *FollowService) emitFollowEvent(follow *followmodel.Follow) {
+	if s.eventBus == nil {
+		return
+	}
+
+	eventType := event.FollowAccepted
+	if follow.Status == followmodel.FollowStatusPending {
+		eventType = event.FollowRequested
+	}
+
+	evt := event.NewEvent(eventType, event.SourceLocal, follow.FollowerID, 1, "", event.FollowPayload{
+		FollowID:    follow.ID,
+		FollowerID:  follow.FollowerID,
+		FollowingID: follow.FollowingID,
+		At:          event.Now(),
+	})
+	s.eventBus.Emit(context.Background(), evt)
+}
+
+func (s *FollowService) emitFollowStatusEvent(eventType, followerID, followingID string) {
+	if s.eventBus == nil {
+		return
+	}
+
+	evt := event.NewEvent(eventType, event.SourceLocal, followerID, 1, "", event.FollowPayload{
+		FollowID:    "",
+		FollowerID:  followerID,
+		FollowingID: followingID,
+		At:          event.Now(),
+	})
+	s.eventBus.Emit(context.Background(), evt)
 }
