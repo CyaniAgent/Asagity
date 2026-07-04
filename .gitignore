@@ -2,6 +2,18 @@
 .trae/
 .claude/
 CODE_WIKI.md
+web/CLAUDE.md
 
 # Enviroment variables
 .env
+
+# Test artifacts
+web/playwright-report/
+web/test-results/
+web/.vitest/
+web/coverage/
+
+# Build artifacts
+web/.next/
+web/out/
+web/dist/

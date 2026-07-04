@@ -4,7 +4,7 @@
   <p><b>一抹青色的去中心化多元社交宇宙。</b></p>
    
   [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
-  [![Frontend](https://img.shields.io/badge/Frontend-Nuxt%204-00DC82?logo=nuxt.js)](web/)
+  [![Frontend](https://img.shields.io/badge/Frontend-Next.js%2016-000000?logo=next.js)](web/)
   [![Backend](https://img.shields.io/badge/Backend-Go-00ADD8?logo=go)](core/)
   [![Status](https://img.shields.io/badge/Status-正在开发-orange.svg)]()
    
@@ -26,14 +26,14 @@
 - **Skyline Drive**：内置超强云盘系统。支持本机存储、S3 对象存储及 WebDAV 远程挂载。支持大文件分片上传，拥有媲美桌面级资源管理器的 UI。
 - **话题系统**：社区驱动的话题发现机制，支持活动追踪、趋势分析和实时帖子整合。
 - **二次元美学 UI**：打破传统三栏布局，采用现代 SaaS 级"倒 L 型"控制台布局。大量使用毛玻璃 (backdrop-blur) 效果、浅葱色 (Cyan) 点缀与极其流畅的动画过渡。
-- **趣味交互组件**：谁说社交平台只能发字？内置迷你音乐播放器挂件、动态自定义表情包、打字机特效签名及个性化在线状态。
-- **极致性能驱动**：后端由 Go 语言 (Goroutines) 驱动，轻松扛住海量联邦并发广播；前端采用 Nuxt 4 服务端渲染 (SSR)，首屏秒开，SEO 完美拉满。
+- **趣味交互组件**：内置迷你音乐播放器（含歌词同步）、动态自定义表情包、打字机特效签名及个性化在线状态。
+- **极致性能驱动**：后端由 Go 语言 (Goroutines) 驱动，轻松扛住海量联邦并发广播；前端采用 Next.js 16 (Turbopack)，首屏秒开，开发体验极致。
 
 ## 技术栈
 
 Asagity 采用清晰的 Monorepo（单体仓库）架构，前后端分离但协同开发：
 
-*   **前端 (`/web`)**: Vue 3, Nuxt 4 (SSR), Nuxt UI, Tailwind CSS v4, Pinia, VueUse.
+*   **前端 (`/web`)**: React 19, Next.js 16 (App Router, Turbopack), Tailwind CSS v4, Zustand, Framer Motion.
 *   **后端 (`/core`)**: Go, GORM, Asynq (基于 Redis 的强力异步任务队列).
 *   **底层基建**: PostgreSQL (极其依赖 JSONB 处理联邦数据), Redis (缓存与消息队列).
 *   **容器运行时**: 支持 Docker 与 Podman，配置分离管理。
@@ -83,19 +83,22 @@ cd web
 pnpm install
 pnpm dev
 ```
-在浏览器中访问 `http://localhost:2000`，欢迎来到青之城邦！
+在浏览器中访问 `http://localhost:3000`，欢迎来到青之城邦！
 
 ## 📁 项目结构
 
 ```
 Asagity/
-├── web/                    # 前端 (Nuxt 4)
-│   ├── app/
-│   │   ├── components/     # Vue 组件
-│   │   ├── pages/         # 页面路由
-│   │   ├── stores/         # Pinia 状态
-│   │   └── layouts/       # 布局组件
-│   └── ...
+├── web/                    # 前端 (Next.js 16 + React 19)
+│   ├── src/
+│   │   ├── app/            # App Router 页面路由
+│   │   ├── components/     # React 组件
+│   │   ├── stores/         # Zustand 状态管理
+│   │   ├── types/          # TypeScript 类型
+│   │   ├── lib/            # 工具函数 (api.ts, utils.ts)
+│   │   └── messages/       # i18n 语言包 (4 语言)
+│   ├── public/             # 静态资源 (字体, 音效, PWA)
+│   └── middleware.ts       # Auth 路由守卫
 ├── core/                   # 后端 (Go)
 │   ├── cmd/api/           # API 入口
 │   ├── internal/
@@ -112,7 +115,7 @@ Asagity/
 ```
 
 ## 🤝 参与贡献
-Asagity 目前正处于火热的早期开发阶段。无论你是擅长 Go 的硬核极客，还是精通 Vue 的 UI 魔法师，我们都极其欢迎你的 PR 和 Issue！
+Asagity 目前正处于火热的早期开发阶段。无论你是擅长 Go 的硬核极客，还是精通 React 的 UI 魔法师，我们都极其欢迎你的 PR 和 Issue！
 
 ## 📜 开源协议
 本项目采用 [AGPL-3.0 协议](LICENSE) 开源。
