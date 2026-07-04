@@ -3,10 +3,10 @@ package dto
 // 错误常量
 const (
 	ErrAlreadyFollowing      = "ALREADY_FOLLOWING"
-	ErrFollowNotAllowed      = "FOLLOW_NOT_ALLOWED"
-	ErrCannotFollowSelf      = "CANNOT_FOLLOW_SELF"
-	ErrFollowRequestNotFound = "FOLLOW_REQUEST_NOT_FOUND"
-	ErrNotFollowing          = "NOT_FOLLOWING"
+	ErrFollowNotAllowed      = "ERR 16611"
+	ErrCannotFollowSelf      = "ERR 19101"
+	ErrFollowRequestNotFound = "ERR 28801"
+	ErrNotFollowing         = "NOT_FOLLOWING"
 )
 
 // FollowResponse - 关注关系响应

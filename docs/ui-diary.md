@@ -61,27 +61,29 @@
 ## 6. 开发备忘 (Cheat Sheet)
 
 - **字体**：
-    - UI 文字：`MiSans` (全能中文字库)。
+    - UI 文字：`HarmonyOS Sans SC` (华为中文字库)。
     - 代码/等宽：`JetBrains Mono`。
 - **API 通信**：
-    - 状态管理：Pinia (`stores/`)。
+    - 状态管理：Zustand (`stores/`)。
     - 音频元数据：`music-metadata` v11 (Blob 原生解析)。
+- **图标**：`@fluentui/react-icons` v2 (Fluent UI System Icons)。
 
 ---
 ## 7. 动态自由窗口系统 (Dynamic Free Window System)
 
 ### 7.1 架构原理
-- **容器脱离 (Teleport)**：自由窗口通过 `<Teleport to="body">` 渲染，完全隔离 `Split View` 容器的尺寸变化及缩放副作用，解决详情页频繁重绘导致的 UI 抖动。
-- **自由交互 (useDraggable)**：集成 `@vueuse/core`，实现全屏范围内无感的拖拽位移。
+- **容器脱离 (Portal)**：自由窗口通过 `ReactDOM.createPortal()` 渲染至 `document.body`，完全隔离 `SplitView` 容器的尺寸变化及缩放副作用。
+- **自由交互 (react-rnd)**：集成 `react-rnd` (Rnd 组件)，实现全屏范围内无感的拖拽位移与缩放。
 - **组件实现**：
-    - `MusicLyricsWindow.vue`：沉浸式全屏歌词窗，支持**点击歌词跳转时间戳 (Seek-on-Click)**。
-    - `MusicInfoWindow.vue`：高保真音频流分析窗。
+    - `LyricsWindow.tsx`：沉浸式全屏歌词窗，支持**点击歌词跳转时间戳 (Seek-on-Click)**。
+    - `PlaylistWindow.tsx`：播放列表浮窗，基于 FreeWindow 搭建。
 
 ### 7.2 技术规格与质量检测 (Audio Analysis)
 - **音质分级逻辑**：
     - **Lossless**：FLAC, WAV, ALAC, AIFF, Monkey's Audio。
-    - **MP3 HQ**：Bitrate > 128kbps (Miku Green Color Badge)。
-    - **MP3 Normal**：Bitrate ≤ 128kbps (Gray Color Badge)。
+    - **Hi-Res**：Bitrate > 320kbps 或 Sample Rate > 48kHz。
+    - **HQ**：Bitrate > 128kbps (Miku Green Color Badge)。
+    - **Standard**：Bitrate ≤ 128kbps (Gray Color Badge)。
 - **元数据提取**：基于 `music-metadata` v11 实装比特率 (Bitrate)、采样率 (Sample Rate) 与原始 ID3 指向的 Album/Year/Codec 字段。
 
 ### 7.3 精致动效 (Premium Motion)
@@ -95,7 +97,7 @@
 - **亮度感应 (Luminance Sensing)**：
     - **公式**：`0.2126*R + 0.7152*G + 0.0722*B`。
     - **阈值**：亮度 > 140 时强制切换 `textColor` 为黑，否则为白。
-- **组件同步**：全局 `Teleport` 窗口通过 Vue 属性绑定实时同步 `textColor`，确保跨组件视觉统一。
+- **组件同步**：全局 FreeWindow 窗口通过 props 实时同步 `textColor`，确保跨组件视觉统一。
 
 ---
 *Updated by Antigravity Divine Engineer - 2026-03-22*
@@ -105,19 +107,19 @@
 ## 8. 歌词系统精修 (Lyrics System Refinement)
 
 ### 8.1 QQ音乐风格歌词展示
-- **歌词窗口 (`MusicLyricsWindow.vue`)**：移除所有边框，采用纯透明无框风格。歌词显示基于透明度与字体缩放区分当前行/非当前行，无背景气泡，完全靠排版和大小差异传达层级。
-- **主播放器三行歌词预览 (`MusicLyrics.vue`)**：保留完整 DOM 节点列表（不按索引裁切），通过 `watch` + `scrollToActive` 实现流畅滚动动画，非焦点行通过 `opacity: 0 / height: 0` 隐藏以保留动效（CSS 过渡生效的前提是节点始终存在）。
+- **歌词窗口 (`LyricsWindow.tsx`)**：移除所有边框，采用纯透明无框风格。歌词显示基于透明度与字体缩放区分当前行/非当前行，无背景气泡，完全靠排版和大小差异传达层级。
+- **主播放器单行歌词预览 (`LyricsPreview.tsx`)**：保留完整 DOM 节点列表（不按索引裁切），通过 `useEffect` + `scrollToActive` 实现流畅滚动动画，非焦点行通过 `opacity: 0 / height: 0` 隐藏以保留动效（CSS 过渡生效的前提是节点始终存在）。
 
-### 8.2 统一自由窗口架构 (`AppFreeWindow.vue`)
-- **核心设计**：提取为可复用基础组件，集成 `useDraggable`（拖拽）+ 自定义 Resize Handle（四角/四边缩放）。
-- **使用方**：`MusicLyricsWindow`、`MusicInfoWindow`、`MusicPlaylistWindow` 三大浮窗统一基于此组件搭建，确保样式无边框、交互一致。
+### 8.2 统一自由窗口架构 (`FreeWindow.tsx`)
+- **核心设计**：提取为可复用基础组件，集成 `react-rnd` (Rnd 组件) 实现拖拽 + 自定义 Resize Handle（四角/四边缩放）。
+- **使用方**：`LyricsWindow`、`PlaylistWindow` 统一基于此组件搭建，确保样式无边框、交互一致。
 
 ---
 
 ## 9. 歌单系统 (Playlist Architecture)
 
-- **数据层 (`music.ts`)**：`playlist` 数组预置三首测试曲目（`MusicTest0/1/2`）；新增 `isPlaylistWindowOpen` 状态位；`playNext(forced)` / `playPrev()` 同时支持随机 (Shuffle) 与循环 (Loop: one/all/none) 三种播放模式。
-- **播放列表浮窗 (`MusicPlaylistWindow.vue`)**：基于 `AppFreeWindow`，显示待播队列；当前正在播放曲目高亮 + 动画闪烁；悬停显示"播放"图标，双击立即切换。
+- **数据层 (`music.ts`)**：`playlist` 数组预置测试曲目；`playNext(forced)` / `playPrev()` 同时支持随机 (Shuffle) 与循环 (Loop: one/all/none) 三种播放模式。
+- **播放列表浮窗 (`PlaylistWindow.tsx`)**：基于 `FreeWindow`，显示待播队列；当前正在播放曲目高亮 + 动画闪烁；悬停显示"播放"图标，双击立即切换。
 - **控制区**："循环"按钮旁新增"播放列表"切换按钮，二者成对排布于控制台右侧。
 
 ---
@@ -125,46 +127,34 @@
 ## 10. 设置模块 (Settings Module)
 
 ### 10.1 动态顶栏子导航
-- **路由感知逻辑 (`default.vue`)**：新增 `currentHeaderTabs` 计算属性，检测 `route.path.startsWith('/settings')` 并切换到设置专属的 9 个分类标签（本用户、Skyline 云盘、安全与隐私等），离开设置路由则恢复时间线标签。
-- **视觉优化**：标签栏添加 `overflow-x-auto` 横向滚动 + `mask-image` 右侧边缘渐隐。
+- **路由感知逻辑 (`MainLayout.tsx`)**：新增 `currentTabs` 计算逻辑，检测 `pathname.startsWith('/settings')` 并切换到设置专属的 7 个分类标签（本用户、Skyline 云盘、安全与隐私等），离开设置路由则恢复时间线标签。
+- **视觉优化**：标签栏添加 `overflow-x-auto` 横向滚动。
 
-### 10.2 本用户设置页 (`/settings/profile.vue`)
-- **头像/横幅分离布局**：`flex-col sm:flex-row` 响应式架构，头像卡片固定在左 (`w-48 shrink-0`)，横幅 Banner 填充右侧剩余空间 (`flex-1`)，彻底解决旧设计中叠加导致的上下交叠问题。
-- **单行排版表单**：`flex flex-col gap-5 w-full` 强制所有 `UFormGroup` 独占一行，解决 Nuxt UI 默认 inline 折叠导致多个输入框挤在同一行的视觉错乱。
-- **账户危险区**：底部独立 `border-t` 分隔区，包含"设置配置"、"清除缓存"和醒目的 `error` 色"登出此帐号"按钮。
+### 10.2 本用户设置页 (`/settings/profile`)
+- **头像/横幅分离布局**：`flex-col sm:flex-row` 响应式架构，头像卡片固定在左 (`w-48 shrink-0`)，横幅 Banner 填充右侧剩余空间 (`flex-1`)。
+- **单行排版表单**：`flex flex-col gap-5 w-full` 强制所有表单字段独占一行。
+- **账户危险区**：底部独立 `border-t` 分隔区，包含"清除缓存"和醒目的 `text-red-500` "登出此帐号"按钮。
 
 ---
 
-## 11. Material Design 3 图标迁移 (MD3 Icon Migration)
+## 11. 图标体系 (Icon System)
 
-- **全局替换**：通过脚本对 `./app/` 内所有 `.vue` 和 `.ts` 文件执行 `i-lucide-*` → `i-material-symbols-*` 的映射替换（共 80+ 处）。
-- **关键映射表**：
-
-| Lucide | Material Symbols |
-| :--- | :--- |
-| `message-circle` | `chat-bubble` |
-| `corner-down-right` | `subdirectory-arrow-right` |
-| `map-pin` | `location-on` |
-| `repeat-2` | `repeat` |
-| `speaker` | `volume-up` |
-| `volume-x` | `volume-off` |
-| `calendar` | `event` |
-| `check-circle-2` | `check-circle` |
-
-- **依赖修复**：安装缺失的 `@iconify-json/material-symbols` 包，图标方可在 Nuxt Icon local 模式下正常离线加载。
-- **时间线剩余图标**：将 `i-ic-sharp-public` / `i-ic-baseline-person-outline` 统一切换至 M3 对应的 `public` / `person`。
+- **当前方案**：`@fluentui/react-icons` v2 (Fluent UI System Icons)。
+- **调用方式**：`<Icon name="icon_name" fontSize={20} />` 封装组件。
+- **覆盖范围**：100+ 图标，涵盖导航、操作、状态、媒体等类别。
+- **优势**：React 原生组件，tree-shakable，TypeScript 类型安全，无需外部字体加载。
 
 ---
 
 ## 12. 图标持久化与后端缓存 (Icon Persistence & Backend Caching)
 
 ### 12.1 架构下沉 (Logic Migration)
-- **Go 后端接管**：将原本位于 Nuxt Nitro 的图标代理与缓存逻辑迁移至 Go 后端 (`core`)。新增 `Asset` 模块统一处理远程资源的下载、MD5 哈希重命名与磁盘持久化。
-- **高性能中转**：前端通过 `/api/asset/icon?url=...` 发起请求，Go 后端利用原生 `http` 客户端实现极速抓取，大幅降低前端 Nitro 服务的压力。
+- **Go 后端接管**：将图标代理与缓存逻辑迁移至 Go 后端 (`core`)。新增 `Asset` 模块统一处理远程资源的下载、MD5 哈希重命名与磁盘持久化。
+- **高性能中转**：前端通过 `/api/asset/icon?url=...` 发起请求，Go 后端利用原生 `http` 客户端实现极速抓取。
 
 ### 12.2 跨项目资产共享 (Cross-Project Asset Storage)
-- **存储对齐**：为了确保“图标即前端资源”的逻辑，Go 后端利用相对路径直接将缓存文件写入前端项目文件夹 `web/app/assets/icons`。
-- **离线韧性**：由 `useIconCache` 组合器统一封装。一旦图标下载完成，即便远程源失效，后端依然能从前端挂载的文件系统中秒级读取并返回。
+- **存储对齐**：Go 后端利用相对路径直接将缓存文件写入前端项目文件夹。
+- **离线韧性**：一旦图标下载完成，即便远程源失效，后端依然能从文件系统中秒级读取并返回。
 ---
 
 *Updated by Antigravity Divine Engineer - 2026-04-04*
@@ -192,12 +182,12 @@ async function initSequence() {
   initProgress.value = 100
 }
 
-// 现在：立即完成，后台获取
-async function initSequence() {
-  isInitialized.value = true
-  initProgress.value = 100
-  fetchHostInfoWithTimeout().catch(() => {})  // 后台异步
-  launchApp()  // 立即启动
+// 现在：立即完成，后台获取 (Zustand)
+initSequence: async () => {
+  if (get().isInitialized) return
+  set({ isInitialized: true, initProgress: 100 })
+  get().fetchHostInfoWithTimeout()  // 后台异步
+  // launchApp() 在条件满足时自动调用
 }
 ```
 
@@ -210,83 +200,69 @@ async function initSequence() {
 ## 14. 路由缺失修复 (Missing Route Fixes)
 
 ### 14.1 问题
-- 多个导航链接指向不存在的页面，导致 Vue Router 警告
-- `AppErrorLogWindow` 组件被引用但不存在
+- 多个导航链接指向不存在的页面
+- 部分组件被引用但不存在
 
-### 14.2 创建的占位页面
+### 14.2 已实现的页面
 | 路由 | 页面 | 状态 |
 |------|------|------|
-| `/announcement` | 公告 | 临时占位 |
-| `/orgs` | 社团 | 临时占位 |
-| `/followed` | 已关注 | 临时占位 |
-| `/local` | 本实例 | 临时占位 |
-| `/more` | 更多 | 临时占位 |
-| `/post/[id]` | 帖子详情 | 临时占位 |
-| `/bookmarks` | 收藏 | 临时占位 |
-| `/miniapp` | Mini App | 临时占位 |
-| `/qrcode` | 多维码 | 临时占位 |
-| `/games` | 小游戏 | 临时占位 |
-| `/albums` | 图集 | 临时占位 |
-| `/achievements` | 成就 | 临时占位 |
-| `/developer` | 开发者 | 临时占位 |
-| `/chat/contacts` | 通讯录 | 已存在 |
-| `/chat/meet` | Asagity Meet | 已存在 |
+| `/` | 时间线/欢迎 | ✅ 已实现 |
+| `/post/[id]` | 帖子详情 | ✅ 已实现 |
+| `/user/[id]` | 用户主页 | ✅ 已实现 |
+| `/settings/*` | 设置 (7 子页面) | ✅ 已实现 |
+| `/drive/*` | Skyline Drive (3 页面) | ✅ 已实现 |
+| `/chat/*` | 聊天 (4 页面) | ✅ 已实现 |
+| `/panel/*` | 管理面板 (15+ 页面) | ✅ 已实现 |
+| `/about/*` | 关于 (4 页面) | ✅ 已实现 |
+| `/bookmarks` | 书签/收藏 | ✅ 已实现 |
+| `/topic/*` | 话题 | ✅ 已实现 |
+| `/announcement` | 公告 | ✅ 已实现 |
+| `/developer` | 开发者 + Termity | ✅ 已实现 |
 
-### 14.3 AppSplashScreen 简化
-- 移除 `AppErrorLogWindow` 引用（组件不存在）
+### 14.3 SplashScreen 简化
 - 移除重试按钮的"查看详细日志"功能
 - 简化错误处理流程
 
-### 14.4 useEventListener SSR 修复
+### 14.4 事件监听 SSR 修复
 ```typescript
-// 之前：VueUse useEventListener 在 SSR 时访问 subTree 报错
-useEventListener('mousemove', handler)
-useEventListener('mouseup', handler)
-
-// 现在：原生 addEventListener + 生命周期管理
-onMounted(() => {
+// React 方案：useEffect + cleanup
+useEffect(() => {
+  const handleMouseMove = (e: MouseEvent) => { /* ... */ }
+  const handleMouseUp = () => { /* ... */ }
   window.addEventListener('mousemove', handleMouseMove)
   window.addEventListener('mouseup', handleMouseUp)
-})
-onUnmounted(() => {
-  window.removeEventListener('mousemove', handleMouseMove)
-  window.removeEventListener('mouseup', handleMouseUp)
-})
+  return () => {
+    window.removeEventListener('mousemove', handleMouseMove)
+    window.removeEventListener('mouseup', handleMouseUp)
+  }
+}, [])
 ```
-
-### 14.5 图标名称修复
-- `photo-library-outline` → `photo-library`（可用的 Material Symbols 图标）
 
 ---
 
 ## 15. 当前页面状态 (Current Page State)
 
-### 15.1 可用页面
-- `/` - 时间线首页
-- `/topic` - 话题列表
-- `/topic/create` - 创建话题
-- `/drive` - Skyline 云盘
-- `/chat` - 聊天
-- `/settings` - 设置
-- `/settings/profile` - 个人资料
-- `/settings/personalization` - 个性化设置
-- `/panel` - 控制台
-- `/panel/about` - 关于页面
+### 15.1 已实现页面
+- `/` - 时间线首页 / 欢迎页
+- `/post/[id]` - 帖子详情
+- `/user/[id]` - 用户主页
+- `/settings/*` - 设置 (7 子页面)
+- `/drive/*` - Skyline Drive (3 页面)
+- `/chat/*` - 聊天 (4 页面)
+- `/panel/*` - 管理面板 (15+ 页面)
+- `/about/*` - 关于 (4 页面)
+- `/bookmarks` - 书签/收藏
+- `/topic/*` - 话题
+- `/announcement` - 公告
+- `/developer` - 开发者 + Termity 终端
 
 ### 15.2 占位页面（待开发）
-- `/announcement` - 公告
 - `/orgs` - 社团
-- `/followed` - 已关注
-- `/local` - 本实例
-- `/more` - 更多
-- `/post/[id]` - 帖子详情
-- `/bookmarks` - 收藏
 - `/miniapp` - Mini App
 - `/qrcode` - 多维码
 - `/games` - 小游戏
 - `/albums` - 图集
 - `/achievements` - 成就
-- `/developer` - 开发者
 
 ---
 
@@ -294,14 +270,13 @@ onUnmounted(() => {
 
 ### 16.1 网络相关
 - GitHub 头像 URL 在开发环境可能 `ERR_NAME_NOT_RESOLVED`（DNS 解析失败）
-- srcset 属性被截断警告（非代码问题）
 
 ### 16.2 未来优化方向
 - 完善各占位页面的实际功能
-- 实现帖子详情页 (`/post/[id]`)
-- 实现收藏功能 (`/bookmarks`)
-- 实现公告系统 (`/announcement`)
+- 实现社团系统 (`/orgs`)
+- 实现 Mini App 平台
+- 实现成就系统
 
 ---
 
-*Updated by Antigravity Divine Engineer - 2026-04-12*
+*Updated by CyaniAgent - 2026-07-04 (Vue → React migration complete)*

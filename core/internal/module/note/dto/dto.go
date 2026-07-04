@@ -160,11 +160,11 @@ type NoteError struct {
 }
 
 const (
-	ErrNoteNotFound   = "NOTE_NOT_FOUND"
-	ErrNoteDeleted    = "NOTE_DELETED"
-	ErrNoteForbidden  = "NOTE_FORBIDDEN"
-	ErrInvalidContent = "INVALID_CONTENT"
-	ErrInvalidPoll    = "INVALID_POLL"
+	ErrNoteNotFound    = "ERR 17311"
+	ErrNoteDeleted    = "ERR 21101"
+	ErrNoteForbidden = "ERR 20000"
+	ErrInvalidContent = "ERR 26110"
+	ErrInvalidPoll    = "ERR 26120"
 )
 
 func (e *NoteError) Error() string {

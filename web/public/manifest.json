@@ -1,0 +1,21 @@
+{
+  "name": "Asagity",
+  "short_name": "Asagity",
+  "description": "A cyan-tinted decentralized social universe",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#39C5BB",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["social", "productivity"],
+  "lang": "zh",
+  "dir": "ltr",
+  "scope": "/"
+}

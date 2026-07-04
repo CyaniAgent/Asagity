@@ -14,6 +14,7 @@ import (
 	usermodel "github.com/CyaniAgent/Asagity/core/internal/module/user/model"
 	userrepo "github.com/CyaniAgent/Asagity/core/internal/module/user/repository"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/config"
+	"github.com/CyaniAgent/Asagity/core/internal/platform/event"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/id"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/mail"
 	"github.com/golang-jwt/jwt/v5"
@@ -35,10 +36,15 @@ type Service struct {
 	redis    *redis.Client
 	cfg      config.Config
 	mail     *mail.Service
+	eventBus *event.Bus
 }
 
 func New(authRepo authrepo.Repository, userRepo *userrepo.Repository, redis *redis.Client, cfg config.Config, mail *mail.Service) *Service {
 	return &Service{authRepo: authRepo, userRepo: userRepo, redis: redis, cfg: cfg, mail: mail}
+}
+
+func NewWithEventBus(authRepo authrepo.Repository, userRepo *userrepo.Repository, redis *redis.Client, cfg config.Config, mail *mail.Service, eventBus *event.Bus) *Service {
+	return &Service{authRepo: authRepo, userRepo: userRepo, redis: redis, cfg: cfg, mail: mail, eventBus: eventBus}
 }
 
 func (s *Service) Register(req dto.RegisterRequest) (*dto.AuthResponse, error) {
@@ -73,6 +79,7 @@ func (s *Service) Register(req dto.RegisterRequest) (*dto.AuthResponse, error) {
 		return nil, err
 	}
 
+	s.emitAuthEvent(event.UserRegistered, user)
 	return s.generateAuthResponse(user)
 }
 
@@ -151,13 +158,14 @@ func (s *Service) Login(req dto.LoginRequest) (*dto.AuthResponse, error) {
 		user, err = s.userRepo.GetByUsername(req.Identifier)
 	}
 	if err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, errors.New(dto.ErrInvalidCredentials)
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswdHash), []byte(req.Password)); err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, errors.New(dto.ErrInvalidCredentials)
 	}
 
+	s.emitAuthEvent(event.AuthLogin, user)
 	return s.generateAuthResponse(user)
 }
 
@@ -166,7 +174,7 @@ func (s *Service) Refresh(refreshToken string) (*dto.AuthResponse, error) {
 
 	userID, err := s.redis.Get(ctx, "refresh:"+refreshToken).Result()
 	if err == redis.Nil {
-		return nil, errors.New("invalid refresh token")
+		return nil, errors.New(dto.ErrInvalidRefreshToken)
 	}
 	if err != nil {
 		return nil, err
@@ -179,6 +187,7 @@ func (s *Service) Refresh(refreshToken string) (*dto.AuthResponse, error) {
 		return nil, err
 	}
 
+	s.emitAuthEvent(event.AuthRefresh, user)
 	return s.generateAuthResponse(user)
 }
 
@@ -341,6 +350,8 @@ func (s *Service) VerifyRegisterEmail(req dto.VerifyEmailRequest) (*dto.AuthResp
 		return nil, err
 	}
 
+	s.emitAuthEvent(event.UserRegistered, user)
+
 	challenge.VerifiedAt = &[]time.Time{time.Now()}[0]
 	s.authRepo.MarkEmailChallengeVerified(challenge.ID)
 
@@ -448,4 +459,17 @@ func (s *Service) VerifyLoginEmail(req dto.VerifyEmailRequest, deviceFingerprint
 		RefreshToken: authResponse.RefreshToken,
 		User:         authResponse.User,
 	}, nil
+}
+
+func (s *Service) emitAuthEvent(eventType string, user *usermodel.User) {
+	if s.eventBus == nil {
+		return
+	}
+
+	evt := event.NewEvent(eventType, event.SourceLocal, user.PubID, 1, "", event.AuthPayload{
+		UserID:    user.ID,
+		PubID:     user.PubID,
+		Timestamp: event.Now(),
+	})
+	s.eventBus.Emit(context.Background(), evt)
 }

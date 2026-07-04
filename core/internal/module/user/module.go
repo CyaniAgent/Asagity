@@ -8,16 +8,17 @@ import (
 	"github.com/CyaniAgent/Asagity/core/internal/module/user/service"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/internal/platform/database"
+	"github.com/CyaniAgent/Asagity/core/internal/platform/event"
 )
 
-func Register(r *chi.Mux, cfg config.Config, clients *database.Clients) {
+func Register(r *chi.Mux, cfg config.Config, clients *database.Clients, eventBus *event.Bus) {
 	repo := repository.New(clients)
 
 	if err := repo.AutoMigrate(); err != nil {
 		panic("user module migration failed: " + err.Error())
 	}
 
-	svc := service.New(repo, cfg)
+	svc := service.NewWithEventBus(repo, cfg, eventBus)
 	h := handler.New(svc)
 
 	r.Get("/api/users/me", h.Me)
