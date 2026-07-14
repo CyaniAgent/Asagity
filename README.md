@@ -84,7 +84,7 @@ cd web
 pnpm install
 pnpm dev
 ```
-Visit `http://localhost:3000` to enter the Cyan Universe!
+Visit `http://localhost:2000` to enter the Cyan Universe!
 
 ## Project Structure
 

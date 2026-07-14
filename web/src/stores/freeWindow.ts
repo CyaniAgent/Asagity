@@ -117,6 +117,10 @@ export const useFreeWindowStore = create<FreeWindowState>()((set) => ({
       isOpen: false,
       isMaximized: false,
       isMinimized: false,
+      currentPost: null,
+      currentUser: null,
+      currentChat: null,
+      currentBrowserUrl: "",
     }),
 
   toggleMaximize: () =>

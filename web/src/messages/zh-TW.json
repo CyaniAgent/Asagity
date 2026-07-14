@@ -192,6 +192,11 @@
     "stop": "停止",
     "unknownArtist": "未知藝術家"
   },
+  "notFound": {
+    "back": "返回上一頁",
+    "goHome": "回到時間線",
+    "message": "啊哦，沒有找到這個頁面！\n稍後可以刷新頁面，或者聯繫管理員。"
+  },
   "network": {
     "connectionFailed": "連線失敗",
     "connectionFailedWithLogin": "連線失敗，請重新登入",
@@ -554,13 +559,25 @@
     "authenticateMatrix": "身份驗證矩陣",
     "authLayer": "認證層",
     "back": "返回",
+    "browseThisInstance": "瀏覽本實例",
+    "browseTimeline": "時間線",
+    "dataDashboard": "資料看板",
     "directEnter": "直接進入",
+    "federatedInstances": "聯合的實例",
+    "joinInstance": "加入實例",
+    "more": "更多...",
     "online": "線上",
     "posts": "貼文",
+    "terminal": "進入終端",
+    "terminalPassword": "請輸入終端密碼",
     "users": "使用者"
   },
   "window": {
+    "authWindow": "身份認證",
+    "dashboardWindow": "資料面板",
+    "federationWindow": "聯邦實例",
     "openInFreeWindow": "在自由視窗中開啟",
-    "openInSplitView": "在分割檢視中開啟"
+    "openInSplitView": "在分割檢視中開啟",
+    "timelineWindow": "時間線"
   }
 }

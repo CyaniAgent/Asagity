@@ -6,7 +6,7 @@
 
 ```bash
 pnpm install
-pnpm dev          # http://localhost:3000
+pnpm dev          # http://localhost:2000
 ```
 
 ## Commands

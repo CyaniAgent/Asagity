@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -39,7 +39,7 @@ interface PostItemProps {
   isDetailView?: boolean;
 }
 
-export function PostItem({ post, isDetailView }: PostItemProps) {
+export const PostItem = memo(function PostItem({ post, isDetailView }: PostItemProps) {
   const router = useRouter();
   const splitViewStore = useSplitViewStore();
   const contextMenuStore = useContextMenuStore();
@@ -177,4 +177,4 @@ export function PostItem({ post, isDetailView }: PostItemProps) {
       </div>
     </article>
   );
-}
+});

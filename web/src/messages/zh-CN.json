@@ -192,6 +192,11 @@
     "stop": "停止",
     "unknownArtist": "未知艺术家"
   },
+  "notFound": {
+    "back": "返回上一个页面",
+    "goHome": "回到时间线",
+    "message": "啊哦，没有找到这个页面！\n稍后可以刷新页面，或者联系管理员。"
+  },
   "network": {
     "connectionFailed": "连接失败",
     "connectionFailedWithLogin": "连接失败，请重新登录",
@@ -554,13 +559,25 @@
     "authenticateMatrix": "身份验证矩阵",
     "authLayer": "认证层",
     "back": "返回",
+    "browseThisInstance": "浏览这个实例",
+    "browseTimeline": "时间线",
+    "dataDashboard": "数据看板",
     "directEnter": "直接进入",
+    "federatedInstances": "联合的实例",
+    "joinInstance": "加入实例",
+    "more": "更多...",
     "online": "在线",
     "posts": "帖子",
+    "terminal": "进入终端",
+    "terminalPassword": "请输入终端密码",
     "users": "用户"
   },
   "window": {
+    "authWindow": "身份认证",
+    "dashboardWindow": "数据面板",
+    "federationWindow": "联邦实例",
     "openInFreeWindow": "在自由窗口中打开",
-    "openInSplitView": "在分屏视图中打开"
+    "openInSplitView": "在分屏视图中打开",
+    "timelineWindow": "时间线"
   }
 }

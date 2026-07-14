@@ -42,6 +42,7 @@ interface MusicState {
   progressPercentage: number;
   audioQuality: string;
   initAudio: () => void;
+  destroyAudio: () => void;
   seek: (time: number) => void;
   togglePlay: () => void;
   setProgress: (value: number) => void;
@@ -71,6 +72,7 @@ const DEFAULT_TRACK: Track = {
 };
 
 let audioElement: HTMLAudioElement | null = null;
+let currentBlobUrl: string | null = null;
 
 function parseLrc(lrcContent: string): LyricLine[] {
   try {
@@ -173,6 +175,18 @@ export const useMusicStore = create<MusicState>()(
         get().fetchMetadata(get().currentTrack.url);
       },
 
+      destroyAudio: () => {
+        if (!audioElement) return;
+        audioElement.pause();
+        audioElement.removeAttribute("src");
+        audioElement.load();
+        audioElement = null;
+        if (currentBlobUrl) {
+          URL.revokeObjectURL(currentBlobUrl);
+          currentBlobUrl = null;
+        }
+      },
+
       seek: (time) => {
         if (!audioElement) return;
         audioElement.currentTime = time;
@@ -216,7 +230,9 @@ export const useMusicStore = create<MusicState>()(
             if (pic) {
               const uint8Array = new Uint8Array(pic.data);
               const imgBlob = new Blob([uint8Array], { type: pic.format });
+              if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
               albumArt = URL.createObjectURL(imgBlob);
+              currentBlobUrl = albumArt;
             }
           }
 

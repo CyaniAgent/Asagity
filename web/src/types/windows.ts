@@ -9,7 +9,11 @@ export type ViewType =
   | "error"
   | "termity"
   | "lyrics_window"
-  | "playlist_window";
+  | "playlist_window"
+  | "auth"
+  | "welcome_timeline"
+  | "welcome_federation"
+  | "welcome_dashboard";
 
 export type RightViewType =
   | "post"
