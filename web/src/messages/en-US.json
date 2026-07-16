@@ -192,6 +192,11 @@
     "stop": "Stop",
     "unknownArtist": "Unknown Artist"
   },
+  "notFound": {
+    "back": "Go Back",
+    "goHome": "Back to Timeline",
+    "message": "Oops, this page could not be found!\nTry refreshing the page, or contact the administrator."
+  },
   "network": {
     "connectionFailed": "Connection Failed",
     "connectionFailedWithLogin": "Connection Failed, Please Login Again",
@@ -554,13 +559,25 @@
     "authenticateMatrix": "Authentication Matrix",
     "authLayer": "Authentication Layer",
     "back": "Back",
+    "browseThisInstance": "Browse This Instance",
+    "browseTimeline": "Timeline",
+    "dataDashboard": "Data Dashboard",
     "directEnter": "Direct Enter",
+    "federatedInstances": "Federated Instances",
+    "joinInstance": "Join Instance",
+    "more": "More...",
     "online": "Online",
     "posts": "Posts",
+    "terminal": "Enter Terminal",
+    "terminalPassword": "Enter terminal password",
     "users": "Users"
   },
   "window": {
+    "authWindow": "Authentication",
+    "dashboardWindow": "Data Dashboard",
+    "federationWindow": "Federated Instances",
     "openInFreeWindow": "Open in Free Window",
-    "openInSplitView": "Open in Split View"
+    "openInSplitView": "Open in Split View",
+    "timelineWindow": "Timeline"
   }
 }

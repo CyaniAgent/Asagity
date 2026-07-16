@@ -1,12 +1,10 @@
 import { create } from "zustand";
 
-interface SoundCache {
-  [key: string]: AudioBuffer | null;
-}
+const MAX_CACHE_SIZE = 10;
 
 interface SoundManagerState {
   audioContext: AudioContext | null;
-  soundCache: SoundCache;
+  soundCache: Map<string, AudioBuffer>;
   isPreloaded: boolean;
   isPreloading: boolean;
   soundRegistry: Record<string, string>;
@@ -19,7 +17,7 @@ interface SoundManagerState {
 
 export const useSoundManagerStore = create<SoundManagerState>()((set, get) => ({
   audioContext: null,
-  soundCache: {},
+  soundCache: new Map(),
   isPreloaded: false,
   isPreloading: false,
 
@@ -44,8 +42,8 @@ export const useSoundManagerStore = create<SoundManagerState>()((set, get) => ({
   },
 
   loadSound: async (name, url) => {
-    if (get().soundCache[name]) {
-      return get().soundCache[name];
+    if (get().soundCache.has(name)) {
+      return get().soundCache.get(name) ?? null;
     }
 
     try {
@@ -57,9 +55,17 @@ export const useSoundManagerStore = create<SoundManagerState>()((set, get) => ({
       }
       const arrayBuffer = await response.arrayBuffer();
       const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-      set((state) => ({
-        soundCache: { ...state.soundCache, [name]: audioBuffer },
-      }));
+
+      set((state) => {
+        const newCache = new Map(state.soundCache);
+        if (newCache.size >= MAX_CACHE_SIZE) {
+          const firstKey = newCache.keys().next().value;
+          if (firstKey) newCache.delete(firstKey);
+        }
+        newCache.set(name, audioBuffer);
+        return { soundCache: newCache };
+      });
+
       return audioBuffer;
     } catch (err) {
       console.warn(`SoundManager: Failed to load sound ${name}:`, err);
@@ -85,7 +91,7 @@ export const useSoundManagerStore = create<SoundManagerState>()((set, get) => ({
 
   play: async (name) => {
     const registry = get().soundRegistry;
-    const buffer = get().soundCache[name] || (await get().loadSound(name, registry[name]));
+    const buffer = get().soundCache.get(name) || (await get().loadSound(name, registry[name]));
     if (!buffer) {
       console.warn(`SoundManager: Cannot play ${name} - not loaded`);
       return;

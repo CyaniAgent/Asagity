@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, memo } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -22,7 +22,7 @@ interface NavItem {
   isMore?: boolean;
 }
 
-export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(function Sidebar(
+export const Sidebar = memo(forwardRef<HTMLDivElement, SidebarProps>(function Sidebar(
   { onMoreClick, moreButtonRef },
   _ref
 ) {
@@ -151,4 +151,4 @@ export const Sidebar = forwardRef<HTMLDivElement, SidebarProps>(function Sidebar
       </div>
     </aside>
   );
-});
+}));

@@ -19,7 +19,7 @@ export function SplashScreen() {
 
       <div className="relative z-10 flex flex-col items-center animate-[fadeInUp_0.8s_cubic-bezier(0.2,0.8,0.2,1)_forwards]">
         <div className="w-32 h-32 flex items-center justify-center mb-16">
-          <Image src={instanceStore.logoURL} width={128} height={128} className="w-full h-full object-contain" alt="Logo" />
+          <Image src={instanceStore.logoURL} width={128} height={128} className="w-full h-full object-contain" alt="Logo" priority />
         </div>
 
         <div className="relative flex flex-col items-center w-64">

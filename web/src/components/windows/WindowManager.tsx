@@ -13,6 +13,12 @@ const LyricsWindow = lazy(() =>
 const PlaylistWindow = lazy(() =>
   import("@/components/music/PlaylistWindow").then((m) => ({ default: m.PlaylistWindow }))
 );
+const AuthForm = lazy(() =>
+  import("@/components/auth/AuthForm").then((m) => ({ default: m.AuthForm }))
+);
+const TimelineFeed = lazy(() =>
+  import("@/components/post/TimelineFeed").then((m) => ({ default: m.TimelineFeed }))
+);
 
 function WindowManagerFallback() {
   return (
@@ -46,6 +52,14 @@ function getViewConfig(viewType: string | null) {
       return { title: "Lyrics Window", icon: "lyrics", width: 400, height: 600, disableTransfer: true };
     case "playlist_window":
       return { title: "Playlist", icon: "queue_music", width: 350, height: 500, disableTransfer: true };
+    case "auth":
+      return { title: "身份认证", icon: "lock", width: 420, height: 560, disableMinimize: true };
+    case "welcome_timeline":
+      return { title: "时间线", icon: "public", width: 500, height: 600, disableMinimize: true };
+    case "welcome_federation":
+      return { title: "联邦实例", icon: "globe", width: 500, height: 600, disableMinimize: true };
+    case "welcome_dashboard":
+      return { title: "数据面板", icon: "dashboard", width: 500, height: 600, disableMinimize: true };
     default:
       return { title: "Free Window", icon: "tab_move", width: 450, height: 600 };
   }
@@ -75,6 +89,14 @@ function renderContent(viewType: string | null, refreshKey: number, browserUrl: 
       return <Suspense fallback={<WindowManagerFallback />}><LyricsWindow /></Suspense>;
     case "playlist_window":
       return <Suspense fallback={<WindowManagerFallback />}><PlaylistWindow /></Suspense>;
+    case "auth":
+      return <Suspense fallback={<WindowManagerFallback />}><AuthForm /></Suspense>;
+    case "welcome_timeline":
+      return <Suspense fallback={<WindowManagerFallback />}><TimelineFeed /></Suspense>;
+    case "welcome_federation":
+      return <div className="flex items-center justify-center h-full text-gray-400 text-sm">联邦实例列表开发中</div>;
+    case "welcome_dashboard":
+      return <div className="flex items-center justify-center h-full text-gray-400 text-sm">数据面板开发中</div>;
     default:
       return <div className="p-4 text-gray-500">未知视图类型</div>;
   }
