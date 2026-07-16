@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { useSystemStore } from "@/stores/system";
 import { useUserStore } from "@/stores/user";
 import { useSplitViewStore } from "@/stores/splitView";
@@ -12,14 +13,26 @@ import { useMusicStore } from "@/stores/music";
 import { Sidebar } from "./Sidebar";
 import { MoreMenuPopover } from "./MoreMenuPopover";
 import { SplitView } from "./SplitView";
-import { SplashScreen } from "@/components/ui/SplashScreen";
-import { ContextMenu } from "@/components/ui/ContextMenu";
-import { NetworkStatus } from "@/components/shared/NetworkStatus";
 import { MobileNav } from "./MobileNav";
 import { Icon } from "@/components/ui/Icon";
 import { useI18n } from "@/components/providers/I18nProvider";
 
-export function MainLayout({ children }: { children: React.ReactNode }) {
+const SplashScreen = dynamic(
+  () => import("@/components/ui/SplashScreen").then((m) => m.SplashScreen),
+  { ssr: false }
+);
+
+const ContextMenu = dynamic(
+  () => import("@/components/ui/ContextMenu").then((m) => m.ContextMenu),
+  { ssr: false }
+);
+
+const NetworkStatus = dynamic(
+  () => import("@/components/shared/NetworkStatus").then((m) => m.NetworkStatus),
+  { ssr: false }
+);
+
+export function MainLayout({ children, notFound }: { children: React.ReactNode; notFound?: boolean }) {
   const { t } = useI18n();
   const pathname = usePathname();
   const router = useRouter();
@@ -98,6 +111,11 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   const aboutTabs: { label: string; icon: string; to: string }[] = [];
 
+  const notFoundTabs = [
+    { label: t("notFound.back"), icon: "arrow_back", to: "__back__" },
+    { label: t("tabs.timeline"), icon: "public", to: "/" },
+  ];
+
   useEffect(() => {
     systemStore.initSequence();
   }, []);
@@ -114,6 +132,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   }, [moreMenuOpen]);
 
   const currentTabs = (() => {
+    if (notFound) return notFoundTabs;
     if (pathname.startsWith("/chat")) return chatTabs;
     if (pathname.startsWith("/settings")) return settingsTabs;
     if (pathname.startsWith("/drive")) return driveTabs;
@@ -170,15 +189,31 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               <nav className="flex items-center gap-1 overflow-x-auto custom-scrollbar no-scrollbar">
                 {currentTabs.map((tab) => {
                   const active = isItemActive(tab);
+                  const isBack = tab.to === "__back__";
+                  const className = `flex items-center gap-1.5 whitespace-nowrap py-2 px-3 rounded-xl text-sm transition-all ${
+                    active
+                      ? "text-cyan-600 dark:text-cyan-400 font-semibold"
+                      : "text-gray-500 hover:text-gray-700 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5"
+                  }`;
+
+                  if (isBack) {
+                    return (
+                      <button
+                        key={tab.to}
+                        onClick={() => router.back()}
+                        className={className}
+                      >
+                        <Icon name={tab.icon} fontSize={16} />
+                        {tab.label}
+                      </button>
+                    );
+                  }
+
                   return (
                     <Link
                       key={tab.to}
                       href={tab.to}
-                      className={`flex items-center gap-1.5 whitespace-nowrap py-2 px-3 rounded-xl text-sm transition-all ${
-                        active
-                          ? "text-cyan-600 dark:text-cyan-400 font-semibold"
-                          : "text-gray-500 hover:text-gray-700 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5"
-                      }`}
+                      className={className}
                     >
                       <Icon name={tab.icon} fontSize={16} />
                       {tab.label}

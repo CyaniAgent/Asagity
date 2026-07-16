@@ -192,6 +192,11 @@
     "stop": "停止",
     "unknownArtist": "不明なアーティスト"
   },
+  "notFound": {
+    "back": "前のページに戻る",
+    "goHome": "タイムラインに戻る",
+    "message": "おっと、このページは見つかりませんでした！\nページを再読み込みするか、管理者に連絡してください。"
+  },
   "network": {
     "connectionFailed": "接続失敗",
     "connectionFailedWithLogin": "接続失敗、再ログインしてください",
@@ -554,13 +559,25 @@
     "authenticateMatrix": "認証マトリックス",
     "authLayer": "認証レイヤー",
     "back": "戻る",
+    "browseThisInstance": "このインスタンスを閲覧",
+    "browseTimeline": "タイムライン",
+    "dataDashboard": "データダッシュボード",
     "directEnter": "直接入場",
+    "federatedInstances": "連合インスタンス",
+    "joinInstance": "インスタンスに参加",
+    "more": "もっと...",
     "online": "オンライン",
     "posts": "投稿",
+    "terminal": "ターミナルに入る",
+    "terminalPassword": "ターミナルパスワードを入力してください",
     "users": "ユーザー"
   },
   "window": {
+    "authWindow": "認証",
+    "dashboardWindow": "データダッシュボード",
+    "federationWindow": "連合インスタンス",
     "openInFreeWindow": "フリーウィンドウで開く",
-    "openInSplitView": "分割表示で開く"
+    "openInSplitView": "分割表示で開く",
+    "timelineWindow": "タイムライン"
   }
 }

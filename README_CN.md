@@ -118,7 +118,7 @@ Asagity/
 Asagity 目前正处于火热的早期开发阶段。无论你是擅长 Go 的硬核极客，还是精通 React 的 UI 魔法师，我们都极其欢迎你的 PR 和 Issue！
 
 ## 📜 开源协议
-本项目采用 [AGPL-3.0 协议](LICENSE) 开源。
+本项目采用 [MIT 协议](LICENSE) 开源。
 
 ---
 <div align="center">

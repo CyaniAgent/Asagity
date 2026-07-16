@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import {
   Home24Regular,
   Home24Filled,
@@ -82,6 +83,12 @@ import {
   ArrowUpload24Regular,
   Edit24Regular,
   ViewDesktop24Regular,
+  ArrowRight16Regular,
+  ArrowEnter16Regular,
+  Earth16Filled,
+  Timeline20Filled,
+  ServerLink20Filled,
+  ChartMultiple16Filled,
   type FluentIcon,
 } from "@fluentui/react-icons";
 
@@ -173,6 +180,12 @@ const iconMap: Record<string, FluentIcon> = {
   upload: ArrowUpload24Regular,
   edit: Edit24Regular,
   view: ViewDesktop24Regular,
+  arrow_right_16: ArrowRight16Regular,
+  arrow_enter_16: ArrowEnter16Regular,
+  earth_16_filled: Earth16Filled,
+  timeline_20_filled: Timeline20Filled,
+  server_link_20_filled: ServerLink20Filled,
+  chart_multiple_16_filled: ChartMultiple16Filled,
 };
 
 interface IconProps {
@@ -182,7 +195,7 @@ interface IconProps {
   fontSize?: number | string;
 }
 
-export function Icon({ name, className = "", filled = false, fontSize }: IconProps) {
+export const Icon = memo(function Icon({ name, className = "", filled = false, fontSize }: IconProps) {
   const baseName = name.replace("_filled", "");
   const key = filled ? `${baseName}_filled` : name;
   const IconComponent = iconMap[key] || iconMap[baseName] || iconMap["tag"];
@@ -193,4 +206,4 @@ export function Icon({ name, className = "", filled = false, fontSize }: IconPro
       style={fontSize ? { fontSize, width: "1em", height: "1em" } : undefined}
     />
   );
-}
+});

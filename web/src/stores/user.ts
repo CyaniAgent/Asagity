@@ -95,7 +95,10 @@ export const useUserStore = create<UserState>()(
 
       refreshAccessToken: async () => {
         try {
-          const res = await fetch("/api/auth/refresh", { method: "POST" });
+          const res = await fetch("/api/auth/refresh", {
+            method: "POST",
+            signal: AbortSignal.timeout(10000),
+          });
           if (!res.ok) return false;
           const data = await res.json();
           if (data.ok && data.data) {
@@ -125,6 +128,7 @@ export const useUserStore = create<UserState>()(
             headers: {
               Authorization: `Bearer ${state.accessToken}`,
             },
+            signal: AbortSignal.timeout(10000),
           });
 
           if (!res.ok) throw new Error("Failed to fetch user");

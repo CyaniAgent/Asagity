@@ -35,6 +35,10 @@ function getIcon(type: ViewType | null | undefined, customIcon?: string) {
     case "error": return "error";
     case "lyrics_window": return "lyrics";
     case "playlist_window": return "queue_music";
+    case "auth": return "lock";
+    case "welcome_timeline": return "public";
+    case "welcome_federation": return "globe";
+    case "welcome_dashboard": return "dashboard";
     default: return "tab_move";
   }
 }
@@ -54,6 +58,10 @@ function getTitle(type: ViewType | null | undefined, mode: string, customTitle?:
     case "error": return t_("window.systemError");
     case "lyrics_window": return t_("window.lyricsWindow");
     case "playlist_window": return t_("window.playlist");
+    case "auth": return t_("window.authWindow");
+    case "welcome_timeline": return t_("window.timelineWindow");
+    case "welcome_federation": return t_("window.federationWindow");
+    case "welcome_dashboard": return t_("window.dashboardWindow");
     default: return mode === "split" ? t_("window.splitView") : t_("window.freeWindow");
   }
 }

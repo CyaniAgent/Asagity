@@ -5,6 +5,7 @@ interface ApiOptions {
   query?: Record<string, unknown>;
   body?: Record<string, unknown> | BodyInit | null;
   method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD";
+  signal?: AbortSignal;
 }
 
 interface ApiResponse<T> {
@@ -37,6 +38,7 @@ async function request<T>(
       options.body && typeof options.body === "object" && !(options.body instanceof FormData)
         ? JSON.stringify(options.body)
         : options.body ?? undefined,
+    signal: options.signal,
     ...(options.query
       ? { url: `${url}?${new URLSearchParams(options.query as Record<string, string>).toString()}` }
       : {}),

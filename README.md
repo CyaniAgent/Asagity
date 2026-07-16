@@ -84,7 +84,7 @@ cd web
 pnpm install
 pnpm dev
 ```
-Visit `http://localhost:3000` to enter the Cyan Universe!
+Visit `http://localhost:2000` to enter the Cyan Universe!
 
 ## Project Structure
 
@@ -119,7 +119,7 @@ Asagity/
 Asagity is currently in its early development phase. PRs, issues, and feature requests are highly welcome! 
 
 ## License
-This project is licensed under the [AGPL-3.0 License](LICENSE).
+This project is licensed under the [MIT License](LICENSE).
 
 ---
 <div align="center">

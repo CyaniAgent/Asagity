@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Rnd } from "react-rnd";
 import { createPortal } from "react-dom";
 import { WindowHeader } from "@/components/layout/WindowHeader";
@@ -43,7 +43,20 @@ export function FreeWindow({
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [size, setSize] = useState({ width: initialWidth, height: initialHeight });
   const [mounted, setMounted] = useState(false);
+
   const [visible, setVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [restoreAnim, setRestoreAnim] = useState(false);
+  const timersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+
+  const addTimer = useCallback((fn: () => void, ms: number) => {
+    const id = setTimeout(() => {
+      timersRef.current.delete(id);
+      fn();
+    }, ms);
+    timersRef.current.add(id);
+    return id;
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -54,23 +67,100 @@ export function FreeWindow({
   }, [initialWidth, initialHeight]);
 
   useEffect(() => {
+    return () => {
+      timersRef.current.forEach(clearTimeout);
+      timersRef.current.clear();
+    };
+  }, []);
+
+  useEffect(() => {
     if (isOpen) {
       requestAnimationFrame(() => setVisible(true));
     } else {
       setVisible(false);
+      setIsClosing(false);
+      setIsMinimized(false);
+      setIsMaximized(false);
+      setRestoreAnim(false);
     }
   }, [isOpen]);
 
   if (!mounted) return null;
 
   const handleToggleMaximize = () => {
-    setIsMaximized(!isMaximized);
-    if (!isMaximized) setIsMinimized(false);
+    setIsMaximized((prev) => {
+      if (!prev) setIsMinimized(false);
+      return !prev;
+    });
+    setIsClosing(false);
   };
 
   const handleToggleMinimize = () => {
-    setIsMinimized(!isMinimized);
-    if (!isMinimized) setIsMaximized(false);
+    if (isMinimized) {
+      setIsMinimized(false);
+      setRestoreAnim(false);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setRestoreAnim(true);
+          addTimer(() => setRestoreAnim(false), 300);
+        });
+      });
+    } else {
+      setIsClosing(true);
+      addTimer(() => {
+        setIsMinimized(true);
+        setIsClosing(false);
+      }, 350);
+    }
+    setIsMaximized(false);
+  };
+
+  const handleClose = () => {
+    setIsClosing(true);
+    addTimer(() => {
+      setIsClosing(false);
+      onClose?.();
+    }, 200);
+  };
+
+  const handleTransitionEnd = () => {
+    if (restoreAnim) {
+      setRestoreAnim(false);
+    }
+  };
+
+  const getTransition = () => {
+    if (isClosing) {
+      if (isMinimized) return "opacity 200ms ease";
+      return "opacity 350ms ease, transform 350ms ease";
+    }
+    if (restoreAnim) {
+      return "opacity 300ms ease, transform 300ms ease";
+    }
+    if (isMaximized) {
+      return "all 200ms ease";
+    }
+    return "all 200ms ease";
+  };
+
+  const getTransformStyle = () => {
+    if (isClosing && !isMinimized) {
+      return "translateY(100vh) scale(0.8)";
+    }
+    if (restoreAnim) {
+      return "translateY(0) scale(1)";
+    }
+    if (!visible && !isClosing) {
+      return "scale(0.95) translateY(10px)";
+    }
+    return "scale(1) translateY(0)";
+  };
+
+  const getOpacity = () => {
+    if (isClosing && !isMinimized) return 0;
+    if (restoreAnim) return 1;
+    if (!visible && !isClosing) return 0;
+    return 1;
   };
 
   return createPortal(
@@ -103,18 +193,16 @@ export function FreeWindow({
       bounds="window"
       style={{
         display: isMinimized ? "none" : undefined,
-        opacity: visible && !isMinimized ? 1 : 0,
-        transform: visible && !isMinimized ? "scale(1) translateY(0)" : "scale(0.9) translateY(20px)",
-        transition: isMaximized
-          ? "all 0.5s cubic-bezier(0.4,0,0.2,1)"
-          : "opacity 0.4s cubic-bezier(0.34,1.56,0.64,1), transform 0.4s cubic-bezier(0.34,1.56,0.64,1)",
+        opacity: getOpacity(),
+        transform: getTransformStyle(),
+        transition: getTransition(),
+        zIndex: 9990,
       }}
       className="z-[9990]"
+      onTransitionEnd={handleTransitionEnd}
     >
       <div
-        className={`flex flex-col h-full rounded-[30px] border shadow-[0_10px_40px_rgba(0,0,0,0.15)] overflow-hidden bg-white/90 dark:bg-gray-900/90 backdrop-blur-3xl border-gray-200/50 dark:border-gray-800/80 ${
-          isMaximized ? "duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]" : ""
-        }`}
+        className={`flex flex-col h-full rounded-[30px] border shadow-[0_10px_40px_rgba(0,0,0,0.15)] overflow-hidden bg-white/90 dark:bg-gray-900/90 backdrop-blur-3xl border-gray-200/50 dark:border-gray-800/80`}
       >
         {/* Drag Handle / Header */}
         <div className={`shrink-0 w-full ${isMaximized ? "cursor-default" : ""}`}>
@@ -129,7 +217,7 @@ export function FreeWindow({
               disableTransfer={disableTransfer}
               disableMaximize={disableMaximize}
               disableMinimize={disableMinimize}
-              onClose={onClose}
+              onClose={handleClose}
               onToggleMaximize={handleToggleMaximize}
               onToggleMinimize={handleToggleMinimize}
               onRefresh={onRefresh}
