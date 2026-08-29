@@ -47,7 +47,7 @@ function getViewConfig(viewType: string | null) {
     case "browser":
       return { title: "浏览器", icon: "language", width: 800, height: 600 };
     case "termity":
-      return { title: "Termity (Recovery)", icon: "terminal", width: 700, height: 500 };
+      return { title: "Termity", icon: "terminal", width: 700, height: 500 };
     case "lyrics_window":
       return { title: "Lyrics Window", icon: "lyrics", width: 400, height: 600, disableTransfer: true };
     case "playlist_window":

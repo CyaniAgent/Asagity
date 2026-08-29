@@ -18,7 +18,7 @@ export function FreeWindowContainer() {
   const getTitle = () => {
     switch (currentViewType) {
       case "termity":
-        return "Termity (Recovery)";
+        return "Termity";
       case "lyrics_window":
         return "Lyrics Window";
       case "playlist_window":

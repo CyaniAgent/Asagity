@@ -68,7 +68,7 @@ const mockPosts: TimelinePost[] = [
       instance: "asagity.io",
     },
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12),
-    content: "**Termity v2.0 发布！** 🖥️\n\n全新的 Recovery Shell 现已上线，支持更多命令和更好的交互体验。\n\n使用 `help` 查看可用命令列表。\n\n#更新日志 #Termity",
+    content: "**Termity v2.0 发布！** 🖥️\n\n全新的 Termity 现已上线，支持更多命令和更好的交互体验。\n\n使用 `help` 查看可用命令列表。\n\n#更新日志 #Termity",
     metrics: { replies: 18, reposts: 42, reactions: 167 },
   },
 ];

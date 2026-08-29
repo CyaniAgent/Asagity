@@ -5,6 +5,7 @@ import { useSystemStore } from "@/stores/system";
 import { useInstanceStore } from "@/stores/instance";
 import { useUserStore } from "@/stores/user";
 import { useFreeWindowStore } from "@/stores/freeWindow";
+import { useLocaleStore, localeNames, type Locale } from "@/stores/locale";
 
 interface TerminalLine {
   type: "input" | "output" | "system" | "error" | "warning";
@@ -32,6 +33,8 @@ const COMMANDS: Record<string, { name: string; description: string; subcommands?
     name: "Function Switch",
     description: "修改 Asagity 的一些可修改功能",
     subcommands: {
+      "lang switch {locale}": "切换网站显示语言",
+      "lang current": "查看当前显示语言",
       "enable Develop": "通过开发者凭据登录（会话级）",
       "enable Develop time=meta": "通过开发者凭据登录（持久化）",
       "disable Develop": "退出开发者账户并解除持久化",
@@ -78,22 +81,19 @@ function parseArgs(fullArgs: string): Record<string, string> {
   return result;
 }
 
-const TERMITY_PASSWORD = "TermitybyAsagity2026";
-
 export function Termity() {
   const systemStore = useSystemStore();
   const instanceStore = useInstanceStore();
   const userStore = useUserStore();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [passwordInput, setPasswordInput] = useState("");
-  const [passwordError, setPasswordError] = useState(false);
   const [history, setHistory] = useState<TerminalLine[]>([
-    { type: "system", text: "Asagity Recovery Terminal [Termity v2.0.0]" },
+    { type: "system", text: "Termity [v2.0.0]" },
     { type: "system", text: 'Type "help" to see available commands.' },
     { type: "system", text: "" },
   ]);
   const [input, setInput] = useState("");
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
+  const MAX_HISTORY_LINES = 500;
+  const MAX_COMMAND_HISTORY = 100;
   const [historyIndex, setHistoryIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -130,18 +130,11 @@ export function Termity() {
   }, []);
 
   const addLine = useCallback((line: TerminalLine) => {
-    setHistory((prev) => [...prev, line]);
+    setHistory((prev) => {
+      const next = [...prev, line];
+      return next.length > MAX_HISTORY_LINES ? next.slice(-MAX_HISTORY_LINES) : next;
+    });
   }, []);
-
-  const handlePasswordSubmit = useCallback(() => {
-    if (passwordInput === TERMITY_PASSWORD) {
-      setIsAuthenticated(true);
-      setPasswordError(false);
-    } else {
-      setPasswordError(true);
-      setPasswordInput("");
-    }
-  }, [passwordInput]);
 
   const executeCommand = useCallback(
     (cmd: string) => {
@@ -150,7 +143,10 @@ export function Termity() {
 
       addLine({ type: "input", text: trimmed });
 
-      setCommandHistory((prev) => [...prev, trimmed]);
+      setCommandHistory((prev) => {
+        const next = [...prev, trimmed];
+        return next.length > MAX_COMMAND_HISTORY ? next.slice(-MAX_COMMAND_HISTORY) : next;
+      });
       setHistoryIndex(-1);
 
       const parts = trimmed.split(/\s+/);
@@ -160,7 +156,7 @@ export function Termity() {
       switch (root) {
         case "help": {
           addLine({ type: "system", text: "┌─────────────────────────────────────────────┐" });
-          addLine({ type: "system", text: "│         Asagity Recovery Terminal           │" });
+          addLine({ type: "system", text: "│                 Termity                     │" });
           addLine({ type: "system", text: "│              Command List                   │" });
           addLine({ type: "system", text: "├─────────────────────────────────────────────┤" });
           Object.entries(COMMANDS).forEach(([cmd, info]) => {
@@ -213,6 +209,27 @@ export function Termity() {
             addLine({ type: "output", text: `  ${"latest release".padEnd(35)} │ 获取 main 分支最新 release` });
             addLine({ type: "output", text: `  ${"{ver} commit branch={br}".padEnd(35)} │ 获取指定分支指定版本 commit` });
             addLine({ type: "output", text: `  ${"{ver} release branch={br}".padEnd(35)} │ 获取指定分支指定版本 release` });
+          } else if (args[0] === "lang") {
+            if (args[1] === "current") {
+              const current = useLocaleStore.getState().locale;
+              addLine({ type: "output", text: `Current language: ${current} (${localeNames[current]})` });
+            } else if (args[1] === "switch" && args[2]) {
+              const target = args[2] as Locale;
+              const supported = ["zh-CN", "zh-TW", "en-US", "ja-JP"];
+              if (!supported.includes(target)) {
+                addLine({ type: "error", text: `Unsupported locale: ${target}` });
+                addLine({ type: "output", text: `Supported: ${supported.join(", ")}` });
+              } else if (!userStore.isLoggedIn) {
+                addLine({ type: "warning", text: "此操作需要登录。" });
+              } else {
+                const prev = useLocaleStore.getState().locale;
+                useLocaleStore.getState().setLocale(target);
+                addLine({ type: "output", text: `Language switched: ${prev} → ${target} (${localeNames[target]})` });
+              }
+            } else {
+              addLine({ type: "output", text: 'Usage: func lang switch {locale} | func lang current' });
+              addLine({ type: "output", text: `Supported locales: ${Object.keys(localeNames).join(", ")}` });
+            }
           } else if (args[0] === "enable" && args[1] === "Develop") {
             const subArgs = parseArgs(args.slice(2).join(" "));
             if (subArgs["time"] === "meta") {
@@ -410,45 +427,6 @@ export function Termity() {
     [input, executeCommand, commandHistory, historyIndex]
   );
 
-  if (!isAuthenticated) {
-    return (
-      <div
-        className="w-full h-full bg-[#0a0a0a] text-green-500 font-mono text-sm p-4 flex flex-col overflow-hidden cursor-text"
-      >
-        <div className="pointer-events-none absolute inset-0 z-10 opacity-[0.03]"
-          style={{
-            background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 255, 0, 0.1) 2px, rgba(0, 255, 0, 0.1) 4px)",
-          }}
-        />
-        <div className="flex-1 flex flex-col justify-center">
-          <div className="mb-2 text-yellow-500 font-bold">Access required! You need to enter Termity password.</div>
-          <form onSubmit={(e) => { e.preventDefault(); handlePasswordSubmit(); }} className="flex items-center">
-            <span className="text-green-500">Password: </span>
-            <input
-              ref={inputRef}
-              type="password"
-              value={passwordInput}
-              onChange={(e) => { setPasswordInput(e.target.value); setPasswordError(false); }}
-              className="flex-1 bg-transparent border-none outline-none text-white ml-1 caret-green-500"
-              spellCheck={false}
-              autoComplete="off"
-              autoFocus
-            />
-          </form>
-          {passwordError && (
-            <div className="mt-2 text-red-400">Permission denied. Please try again.</div>
-          )}
-        </div>
-        <style jsx>{`
-          .scrollbar-termity::-webkit-scrollbar { width: 6px; }
-          .scrollbar-termity::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.5); }
-          .scrollbar-termity::-webkit-scrollbar-thumb { background: rgba(34, 197, 94, 0.5); border-radius: 4px; }
-          .scrollbar-termity::-webkit-scrollbar-thumb:hover { background: rgba(34, 197, 94, 0.8); }
-        `}</style>
-      </div>
-    );
-  }
-
   return (
     <div
       className="w-full h-full bg-[#0a0a0a] text-green-500 font-mono text-sm p-4 flex flex-col overflow-hidden cursor-text"
@@ -499,7 +477,7 @@ export function Termity() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .scrollbar-termity::-webkit-scrollbar {
           width: 6px;
         }

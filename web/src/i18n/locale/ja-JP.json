@@ -214,7 +214,7 @@
     "openTerminal": "ターミナルを開く",
     "qrCode": "QRコード",
     "qrCodePlaceholder": "QRコードの説明",
-    "recoveryShell": "Asagity回復シェル"
+    "recoveryShell": "復旧シェル"
   },
   "panel": {
     "action": "操作",
@@ -555,22 +555,39 @@
     "visibility": "公開範囲",
     "visibleToAll": "全員に公開"
   },
+  "termity": {
+    "authDescription": "関連ユーザーに連絡してターミナルパスワードを取得するか、このインスタンスに登録・ログインして使用してください。",
+    "authRequired": "ターミナルパスワードが必要です",
+    "passwordPlaceholder": "ターミナルパスワードを入力してください",
+    "verificationFailed": "認証に失敗しました。正しいパスワードを入力してください",
+    "verify": "確認"
+  },
   "welcome": {
+    "aboutInstance": "インスタンスについて",
     "authenticateMatrix": "認証マトリックス",
     "authLayer": "認証レイヤー",
     "back": "戻る",
     "browseThisInstance": "このインスタンスを閲覧",
     "browseTimeline": "タイムライン",
+    "contactUs": "お問い合わせ",
     "dataDashboard": "データダッシュボード",
+    "developer": "開発者",
     "directEnter": "直接入場",
     "federatedInstances": "連合インスタンス",
+    "federation": "連合",
     "joinInstance": "インスタンスに参加",
+    "loginExisting": "アカウントでログイン",
+    "adPool": "広告プール",
     "more": "もっと...",
     "online": "オンライン",
     "posts": "投稿",
+    "termity": "Termity",
     "terminal": "ターミナルに入る",
     "terminalPassword": "ターミナルパスワードを入力してください",
-    "users": "ユーザー"
+    "users": "ユーザー",
+    "verseNET": "Verse ネットワーク情報",
+    "verseNETNormal": "正常",
+    "verseNETDisconnected": "切断"
   },
   "window": {
     "authWindow": "認証",

@@ -2,6 +2,8 @@
 
 import dynamic from "next/dynamic";
 import { I18nProvider } from "@/components/providers/I18nProvider";
+import { ThemeInit } from "@/components/providers/ThemeInit";
+import { TermityAuthModal } from "@/components/termity/TermityAuthModal";
 
 const WindowManager = dynamic(
   () => import("@/components/windows/WindowManager").then((m) => m.WindowManager),
@@ -10,9 +12,13 @@ const WindowManager = dynamic(
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
-    <I18nProvider>
-      {children}
-      <WindowManager />
-    </I18nProvider>
+    <>
+      <ThemeInit />
+      <I18nProvider>
+        {children}
+        <WindowManager />
+        <TermityAuthModal />
+      </I18nProvider>
+    </>
   );
 }

@@ -40,11 +40,22 @@ export function MainLayout({ children, notFound }: { children: React.ReactNode; 
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [userPopoverOpen, setUserPopoverOpen] = useState(false);
 
-  const systemStore = useSystemStore();
-  const userStore = useUserStore();
+  const isBackendOnline = useSystemStore((s) => s.isBackendOnline);
+  const isDevMode = useSystemStore((s) => s.isDevMode);
+  const initSequence = useSystemStore((s) => s.initSequence);
+  const userAvatar = useUserStore((s) => s.avatar);
+  const username = useUserStore((s) => s.username);
+  const userName = useUserStore((s) => s.user?.name);
+  const logout = useUserStore((s) => s.logout);
   const splitViewStore = useSplitViewStore();
-  const themeStore = useThemeStore();
-  const musicStore = useMusicStore();
+  const isDark = useThemeStore((s) => s.isDark);
+  const modeLabel = useThemeStore((s) => s.modeLabel);
+  const preference = useThemeStore((s) => s.preference);
+  const toggleTheme = useThemeStore((s) => s.toggle);
+  const currentTrackTitle = useMusicStore((s) => s.currentTrack.title);
+  const currentTrackAlbumArt = useMusicStore((s) => s.currentTrack.albumArt);
+  const isPlaying = useMusicStore((s) => s.isPlaying);
+  const togglePlay = useMusicStore((s) => s.togglePlay);
 
   const moreMenuRef = useRef<HTMLButtonElement>(null);
   const moreButtonRef = useRef<HTMLButtonElement>(null);
@@ -117,7 +128,7 @@ export function MainLayout({ children, notFound }: { children: React.ReactNode; 
   ];
 
   useEffect(() => {
-    systemStore.initSequence();
+    initSequence();
   }, []);
 
   useEffect(() => {
@@ -228,12 +239,12 @@ export function MainLayout({ children, notFound }: { children: React.ReactNode; 
             {/* Connection Status */}
             <div
               className="flex items-center gap-2 px-2 h-8 rounded-full bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm cursor-help"
-              title={systemStore.isBackendOnline ? t("header.serverConnected") : t("header.serverDisconnected")}
+              title={isBackendOnline ? t("header.serverConnected") : t("header.serverDisconnected")}
             >
-              <span className={systemStore.isBackendOnline ? "text-green-400" : "text-red-400 animate-pulse"}>
-                <Icon name={systemStore.isBackendOnline ? "signal_cellular_alt" : "wifi_off"} fontSize={16} />
+              <span className={isBackendOnline ? "text-green-400" : "text-red-400 animate-pulse"}>
+                <Icon name={isBackendOnline ? "signal_cellular_alt" : "wifi_off"} fontSize={16} />
               </span>
-              {systemStore.isDevMode && (
+              {isDevMode && (
                 <>
                   <div className="w-px h-3 bg-gray-300 dark:bg-gray-600 mx-0.5" />
                   <Icon name="terminal" className="text-cyan-500" fontSize={14} />
@@ -244,28 +255,28 @@ export function MainLayout({ children, notFound }: { children: React.ReactNode; 
 
             {/* Music Player Mini */}
             <div className="flex items-center gap-2 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-full pr-2 pl-1 py-1 border border-white/20 dark:border-gray-700/50 shadow-sm cursor-pointer hover:scale-105 transition-transform">
-              <Image src={musicStore.currentTrack.albumArt} width={24} height={24} className="w-6 h-6 rounded-full object-cover shadow-sm" alt="Art" />
+              <Image src={currentTrackAlbumArt} width={24} height={24} className="w-6 h-6 rounded-full object-cover shadow-sm" alt="Art" />
               <div className="w-24 overflow-hidden">
-                <div className={`text-xs font-normal whitespace-nowrap inline-block text-gray-800 dark:text-gray-100 ${musicStore.isPlaying ? "animate-[marquee_10s_linear_infinite]" : ""}`}>
-                  {musicStore.currentTrack.title}
+                <div className={`text-xs font-normal whitespace-nowrap inline-block text-gray-800 dark:text-gray-100 ${isPlaying ? "animate-[marquee_10s_linear_infinite]" : ""}`}>
+                  {currentTrackTitle}
                 </div>
               </div>
               <button
-                onClick={(e) => { e.stopPropagation(); musicStore.togglePlay(); }}
+                onClick={(e) => { e.stopPropagation(); togglePlay(); }}
                 className="rounded-full hover:bg-cyan-500/20 p-1 transition-colors"
               >
-                <Icon name={musicStore.isPlaying ? "pause" : "play_arrow"} fontSize={16} />
+                <Icon name={isPlaying ? "pause" : "play_arrow"} fontSize={16} />
               </button>
             </div>
 
             {/* Theme Toggle */}
             <button
-              onClick={themeStore.toggle}
+              onClick={toggleTheme}
               className="flex items-center h-8 px-2 rounded-full bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm hover:scale-105 transition-transform"
-              title={`${t("header.current")}${themeStore.modeLabel}`}
+              title={`${t("header.current")}${modeLabel}`}
             >
-              <span className={themeStore.isDark ? "text-cyan-400" : "text-yellow-500"}>
-                <Icon name={themeStore.preference === "dark" ? "dark_mode" : themeStore.preference === "light" ? "light_mode" : "settings_brightness"} fontSize={16} />
+              <span className={isDark ? "text-cyan-400" : "text-yellow-500"}>
+                <Icon name={preference === "dark" ? "dark_mode" : preference === "light" ? "light_mode" : "settings_brightness"} fontSize={16} />
               </span>
             </button>
 
@@ -294,11 +305,11 @@ export function MainLayout({ children, notFound }: { children: React.ReactNode; 
             {/* User Avatar */}
             <div className="relative">
               <button
-                onClick={() => userStore.username ? router.push(`/user/${userStore.username}`) : setUserPopoverOpen(!userPopoverOpen)}
+                onClick={() => username ? router.push(`/user/${username}`) : setUserPopoverOpen(!userPopoverOpen)}
                 className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-cyan-500/50 hover:ring-cyan-500 transition-all cursor-pointer"
               >
-                {userStore.avatar ? (
-                  <Image src={userStore.avatar} width={32} height={32} className="w-full h-full object-cover" alt="Avatar" />
+                {userAvatar ? (
+                  <Image src={userAvatar} width={32} height={32} className="w-full h-full object-cover" alt="Avatar" />
                 ) : (
                   <div className="w-full h-full bg-cyan-500/20 flex items-center justify-center">
                     <Icon name="person" className="text-cyan-500" fontSize={16} />
@@ -311,14 +322,14 @@ export function MainLayout({ children, notFound }: { children: React.ReactNode; 
                   <div
                     className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-200/50 dark:border-gray-800/50 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 -mx-4 -mt-4 px-4 pt-4 rounded-t-3xl transition-colors"
                     onClick={() => {
-                      router.push(`/user/${userStore.username}`);
+                      router.push(`/user/${username}`);
                       setUserPopoverOpen(false);
                     }}
                   >
-                    <Image src={userStore.avatar} width={40} height={40} className="w-10 h-10 rounded-full object-cover" alt="Avatar" />
+                    <Image src={userAvatar} width={40} height={40} className="w-10 h-10 rounded-full object-cover" alt="Avatar" />
                     <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-900 dark:text-white">{userStore.user?.name}</span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">@{userStore.username}</span>
+                      <span className="text-sm font-semibold text-gray-900 dark:text-white">{userName}</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">@{username}</span>
                     </div>
                   </div>
                   <div className="flex flex-col gap-1">
@@ -326,7 +337,7 @@ export function MainLayout({ children, notFound }: { children: React.ReactNode; 
                       <Icon name="settings" fontSize={16} />
                       {t("header.settings")}
                     </Link>
-                    <button onClick={() => { userStore.logout(); setUserPopoverOpen(false); }} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
+                    <button onClick={() => { logout(); setUserPopoverOpen(false); }} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
                       <Icon name="close" fontSize={16} />
                       {t("header.logout")}
                     </button>

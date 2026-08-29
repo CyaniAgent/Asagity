@@ -73,6 +73,14 @@ const DEFAULT_TRACK: Track = {
 
 let audioElement: HTMLAudioElement | null = null;
 let currentBlobUrl: string | null = null;
+let pendingMetadataAbort: AbortController | null = null;
+
+const audioListeners = {
+  timeupdate: null as (() => void) | null,
+  play: null as (() => void) | null,
+  pause: null as (() => void) | null,
+  ended: null as (() => void) | null,
+};
 
 function parseLrc(lrcContent: string): LyricLine[] {
   try {
@@ -154,7 +162,7 @@ export const useMusicStore = create<MusicState>()(
         audioElement = new Audio();
         audioElement.volume = get().volume / 100;
 
-        audioElement.addEventListener("timeupdate", () => {
+        audioListeners.timeupdate = () => {
           if (!audioElement) return;
           const currentTime = audioElement.currentTime;
           set({ progress: currentTime });
@@ -166,11 +174,16 @@ export const useMusicStore = create<MusicState>()(
             return currentTime >= line.timestamp && (!next || currentTime < next.timestamp);
           });
           set({ currentLyricIndex: index });
-        });
+        };
 
-        audioElement.addEventListener("play", () => set({ isPlaying: true }));
-        audioElement.addEventListener("pause", () => set({ isPlaying: false }));
-        audioElement.addEventListener("ended", () => get().playNext(true));
+        audioListeners.play = () => set({ isPlaying: true });
+        audioListeners.pause = () => set({ isPlaying: false });
+        audioListeners.ended = () => get().playNext(true);
+
+        audioElement.addEventListener("timeupdate", audioListeners.timeupdate);
+        audioElement.addEventListener("play", audioListeners.play);
+        audioElement.addEventListener("pause", audioListeners.pause);
+        audioElement.addEventListener("ended", audioListeners.ended);
 
         get().fetchMetadata(get().currentTrack.url);
       },
@@ -178,9 +191,21 @@ export const useMusicStore = create<MusicState>()(
       destroyAudio: () => {
         if (!audioElement) return;
         audioElement.pause();
+        if (audioListeners.timeupdate) audioElement.removeEventListener("timeupdate", audioListeners.timeupdate);
+        if (audioListeners.play) audioElement.removeEventListener("play", audioListeners.play);
+        if (audioListeners.pause) audioElement.removeEventListener("pause", audioListeners.pause);
+        if (audioListeners.ended) audioElement.removeEventListener("ended", audioListeners.ended);
+        audioListeners.timeupdate = null;
+        audioListeners.play = null;
+        audioListeners.pause = null;
+        audioListeners.ended = null;
         audioElement.removeAttribute("src");
         audioElement.load();
         audioElement = null;
+        if (pendingMetadataAbort) {
+          pendingMetadataAbort.abort();
+          pendingMetadataAbort = null;
+        }
         if (currentBlobUrl) {
           URL.revokeObjectURL(currentBlobUrl);
           currentBlobUrl = null;
@@ -216,10 +241,17 @@ export const useMusicStore = create<MusicState>()(
       },
 
       fetchMetadata: async (url) => {
+        if (pendingMetadataAbort) {
+          pendingMetadataAbort.abort();
+        }
+        pendingMetadataAbort = new AbortController();
+        const signal = pendingMetadataAbort.signal;
+
         set({ isLoading: true });
         try {
           const { parseBlob } = await import("music-metadata");
-          const response = await fetch(url);
+          const response = await fetch(url, { signal });
+          if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
           const blob = await response.blob();
           const metadata = await parseBlob(blob);
 
@@ -255,32 +287,37 @@ export const useMusicStore = create<MusicState>()(
 
           if (typeof window !== "undefined") {
             const img = new Image();
+            img.crossOrigin = "anonymous";
             img.src = albumArt;
             img.onload = () => {
-              const canvas = document.createElement("canvas");
-              const ctx = canvas.getContext("2d");
-              if (!ctx) return;
-              canvas.width = 10;
-              canvas.height = 10;
-              ctx.drawImage(img, 0, 0, 10, 10);
+              try {
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+                if (!ctx) return;
+                canvas.width = 10;
+                canvas.height = 10;
+                ctx.drawImage(img, 0, 0, 10, 10);
 
-              const data = ctx.getImageData(0, 0, 10, 10).data;
-              let r = 0, g = 0, b = 0;
-              for (let i = 0; i < data.length; i += 4) {
-                r += data[i] ?? 0;
-                g += data[i + 1] ?? 0;
-                b += data[i + 2] ?? 0;
+                const data = ctx.getImageData(0, 0, 10, 10).data;
+                let r = 0, g = 0, b = 0;
+                for (let i = 0; i < data.length; i += 4) {
+                  r += data[i] ?? 0;
+                  g += data[i + 1] ?? 0;
+                  b += data[i + 2] ?? 0;
+                }
+                const count = data.length / 4;
+                r = Math.floor(r / count);
+                g = Math.floor(g / count);
+                b = Math.floor(b / count);
+
+                const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+                set({
+                  themeColor: `rgb(${r}, ${g}, ${b})`,
+                  textColor: luminance > 140 ? "#000000" : "#FFFFFF",
+                });
+              } finally {
+                img.src = "";
               }
-              const count = data.length / 4;
-              r = Math.floor(r / count);
-              g = Math.floor(g / count);
-              b = Math.floor(b / count);
-
-              const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-              set({
-                themeColor: `rgb(${r}, ${g}, ${b})`,
-                textColor: luminance > 140 ? "#000000" : "#FFFFFF",
-              });
             };
           }
 
@@ -298,9 +335,13 @@ export const useMusicStore = create<MusicState>()(
           if (audioElement) {
             audioElement.src = url;
           }
-        } catch (error) {
+        } catch (error: unknown) {
+          if (error instanceof DOMException && error.name === "AbortError") return;
           console.error("Music metadata error:", error);
         } finally {
+          if (pendingMetadataAbort?.signal === signal) {
+            pendingMetadataAbort = null;
+          }
           set({ isLoading: false });
         }
       },

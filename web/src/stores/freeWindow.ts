@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useUserStore } from "@/stores/user";
 import type { PostUser, PostMetrics, UserDetail, ChatMessage } from "@/types/models";
 import type { ViewType } from "@/types/windows";
 
@@ -29,12 +30,15 @@ interface FreeWindowState {
   currentViewType: ViewType | null;
   isMaximized: boolean;
   isMinimized: boolean;
+  isTermityAuthOpen: boolean;
   refreshKey: number;
   position: { x: number; y: number };
   openFromContext: (type: ViewType, data: { post?: Post | null; user?: UserDetail | null; chat?: ChatMessage | null }, tabs?: { activeTab?: string; profileTab?: string }) => void;
   openBrowser: (url: string) => void;
   openError: (title: string, message: string, code?: string, silent?: boolean) => void;
   openTermity: () => void;
+  confirmTermityAuth: () => void;
+  closeTermityAuth: () => void;
   openLyrics: () => void;
   openPlaylist: () => void;
   close: () => void;
@@ -57,6 +61,7 @@ export const useFreeWindowStore = create<FreeWindowState>()((set) => ({
   currentViewType: null,
   isMaximized: false,
   isMinimized: false,
+  isTermityAuthOpen: false,
   refreshKey: 0,
   position: {
     x: typeof window !== "undefined" ? window.innerWidth / 2 - 200 : 100,
@@ -91,12 +96,29 @@ export const useFreeWindowStore = create<FreeWindowState>()((set) => ({
       isOpen: true,
     }),
 
-  openTermity: () =>
+  openTermity: () => {
+    const { isLoggedIn } = useUserStore.getState();
+    if (isLoggedIn) {
+      set({
+        currentViewType: "termity",
+        isMinimized: false,
+        isOpen: true,
+      });
+    } else {
+      set({ isTermityAuthOpen: true });
+    }
+  },
+
+  confirmTermityAuth: () =>
     set({
+      isTermityAuthOpen: false,
       currentViewType: "termity",
       isMinimized: false,
       isOpen: true,
     }),
+
+  closeTermityAuth: () =>
+    set({ isTermityAuthOpen: false }),
 
   openLyrics: () =>
     set({

@@ -555,22 +555,39 @@
     "visibility": "可见性",
     "visibleToAll": "所有人可见"
   },
+  "termity": {
+    "authDescription": "请联系相关用户获取终端密码，或者注册/登录本实例账户才可使用。",
+    "authRequired": "此操作需要终端密码",
+    "passwordPlaceholder": "请输入终端密码",
+    "verificationFailed": "验证失败，请输入正确的密码",
+    "verify": "验证"
+  },
   "welcome": {
+    "aboutInstance": "关于实例",
     "authenticateMatrix": "身份验证矩阵",
     "authLayer": "认证层",
     "back": "返回",
     "browseThisInstance": "浏览这个实例",
     "browseTimeline": "时间线",
+    "contactUs": "联系我们",
     "dataDashboard": "数据看板",
+    "developer": "开发者",
     "directEnter": "直接进入",
     "federatedInstances": "联合的实例",
+    "federation": "联邦",
     "joinInstance": "加入实例",
+    "loginExisting": "已有账户登录",
+    "adPool": "广告池",
     "more": "更多...",
     "online": "在线",
     "posts": "帖子",
+    "termity": "Termity",
     "terminal": "进入终端",
     "terminalPassword": "请输入终端密码",
-    "users": "用户"
+    "users": "用户",
+    "verseNET": "Verse 网络信息",
+    "verseNETNormal": "正常",
+    "verseNETDisconnected": "已断开"
   },
   "window": {
     "authWindow": "身份认证",

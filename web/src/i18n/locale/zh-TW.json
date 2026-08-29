@@ -214,7 +214,7 @@
     "openTerminal": "開啟終端機",
     "qrCode": "QR Code",
     "qrCodePlaceholder": "QR Code 描述",
-    "recoveryShell": "Asagity 恢復 Shell"
+    "recoveryShell": "恢復終端"
   },
   "panel": {
     "action": "操作",
@@ -555,22 +555,39 @@
     "visibility": "可見性",
     "visibleToAll": "所有人可見"
   },
+  "termity": {
+    "authDescription": "請聯繫相關用戶獲取終端密碼，或者註冊/登入本實例帳戶才可使用。",
+    "authRequired": "此操作需要終端密碼",
+    "passwordPlaceholder": "請輸入終端密碼",
+    "verificationFailed": "驗證失敗，請輸入正確的密碼",
+    "verify": "驗證"
+  },
   "welcome": {
+    "aboutInstance": "關於實例",
     "authenticateMatrix": "身份驗證矩陣",
     "authLayer": "認證層",
     "back": "返回",
     "browseThisInstance": "瀏覽本實例",
     "browseTimeline": "時間線",
+    "contactUs": "聯絡我們",
     "dataDashboard": "資料看板",
+    "developer": "開發者",
     "directEnter": "直接進入",
     "federatedInstances": "聯合的實例",
+    "federation": "聯邦",
     "joinInstance": "加入實例",
+    "loginExisting": "已有帳戶登入",
+    "adPool": "廣告池",
     "more": "更多...",
     "online": "線上",
     "posts": "貼文",
+    "termity": "Termity",
     "terminal": "進入終端",
     "terminalPassword": "請輸入終端密碼",
-    "users": "使用者"
+    "users": "使用者",
+    "verseNET": "Verse 網路資訊",
+    "verseNETNormal": "正常",
+    "verseNETDisconnected": "已斷開"
   },
   "window": {
     "authWindow": "身份認證",

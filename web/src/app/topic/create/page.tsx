@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/Icon";
 import { useI18n } from "@/components/providers/I18nProvider";
@@ -12,12 +12,19 @@ export default function TopicCreatePage() {
   const [topicDescription, setTopicDescription] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (submitTimerRef.current) clearTimeout(submitTimerRef.current);
+    };
+  }, []);
 
   const handleSubmit = async () => {
     if (!topicName.trim()) return;
     setIsSubmitting(true);
     // TODO: Call API to create topic
-    setTimeout(() => {
+    submitTimerRef.current = setTimeout(() => {
       setIsSubmitting(false);
       router.push("/topic");
     }, 1000);

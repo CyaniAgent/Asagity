@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useSystemStore } from "@/stores/system";
 import { useUserStore } from "@/stores/user";
@@ -15,6 +15,12 @@ export function NetworkStatus() {
   const [clickCount, setClickCount] = useState(0);
   const [clickTimer, setClickTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const { t } = useI18n();
+
+  useEffect(() => {
+    return () => {
+      if (clickTimer) clearTimeout(clickTimer);
+    };
+  }, [clickTimer]);
 
   const isWelcomePage = pathname === "/" && !isLoggedIn;
   const isOffline = !isBackendOnline && hasLaunched && !isDevMode;

@@ -214,7 +214,7 @@
     "openTerminal": "Open Terminal",
     "qrCode": "QR Code",
     "qrCodePlaceholder": "QR Code Description",
-    "recoveryShell": "Asagity Recovery Shell"
+    "recoveryShell": "Recovery Shell"
   },
   "panel": {
     "action": "Action",
@@ -555,22 +555,39 @@
     "visibility": "Visibility",
     "visibleToAll": "Visible to All"
   },
+  "termity": {
+    "authDescription": "Please contact the relevant user to get the terminal password, or register/login to this instance to use it.",
+    "authRequired": "Terminal Password Required",
+    "passwordPlaceholder": "Enter terminal password",
+    "verificationFailed": "Verification failed, please enter the correct password",
+    "verify": "Verify"
+  },
   "welcome": {
+    "aboutInstance": "About Instance",
     "authenticateMatrix": "Authentication Matrix",
     "authLayer": "Authentication Layer",
     "back": "Back",
     "browseThisInstance": "Browse This Instance",
     "browseTimeline": "Timeline",
+    "contactUs": "Contact Us",
     "dataDashboard": "Data Dashboard",
+    "developer": "Developer",
     "directEnter": "Direct Enter",
     "federatedInstances": "Federated Instances",
+    "federation": "Federation",
     "joinInstance": "Join Instance",
+    "loginExisting": "Login with Account",
+    "adPool": "Ad Pool",
     "more": "More...",
     "online": "Online",
     "posts": "Posts",
+    "termity": "Termity",
     "terminal": "Enter Terminal",
     "terminalPassword": "Enter terminal password",
-    "users": "Users"
+    "users": "Users",
+    "verseNET": "Verse Network Info",
+    "verseNETNormal": "Normal",
+    "verseNETDisconnected": "Disconnected"
   },
   "window": {
     "authWindow": "Authentication",
