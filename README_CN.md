@@ -122,5 +122,5 @@ Asagity 目前正处于火热的早期开发阶段。无论你是擅长 Go 的�
 
 ---
 <div align="center">
-  <i>Crafted with 🩵 by <a href="https://github.com/CyaniAgent">CyaniAgent and every contributor.</a></i>
+  <i>Crafted with 🩵 by <a href="https://github.com/CyaniAgent">CyaniAgent </a> and every contributor.</i>
 </div>

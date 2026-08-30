@@ -123,5 +123,5 @@ This project is licensed under the [AGPL-3.0 License](LICENSE).
 
 ---
 <div align="center">
-  <i>Crafted with 🩵 by <a href="https://github.com/CyaniAgent">CyaniAgent and every contributor.</a></i>
+  <i>Crafted with 🩵 by <a href="https://github.com/CyaniAgent">CyaniAgent</a> and every contributor.</i>
 </div>
