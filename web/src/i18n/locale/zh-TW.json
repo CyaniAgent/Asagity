@@ -594,7 +594,7 @@
     "dashboardWindow": "資料面板",
     "federationWindow": "聯邦實例",
     "openInFreeWindow": "在自由視窗中開啟",
-    "openInSplitView": "在分割檢視中開啟",
+    "openAsTab": "作為標籤頁開啟",
     "timelineWindow": "時間線"
   }
 }

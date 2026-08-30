@@ -4,8 +4,8 @@
   <p><b>The Cyan-tinted Decentralized Social Universe.</b></p>
    
   [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
-  [![Frontend](https://img.shields.io/badge/Frontend-Next.js%2016-000000?logo=next.js)](web/)
-  [![Backend](https://img.shields.io/badge/Backend-Go-00ADD8?logo=go)](core/)
+  [![Client](https://img.shields.io/badge/Client-React%2019-61DAFB?logo=react)](web/)
+  [![Server](https://img.shields.io/badge/Server-Go%20%2B%20ASP.NET%20Core-00ADD8?logo=go)](core/)
   [![Status](https://img.shields.io/badge/Status-In%20Development-orange.svg)]()
    
   [English](./README.md) | [简体中文](./README_CN.md)
@@ -18,23 +18,23 @@
 **Asagity** is a modern, anime-inspired, decentralized federated social platform developed by **CyaniAgent**. 
 It's not just another microblogging instance; it's a digital utopia that combines real-time social networking with a powerful multi-backend cloud drive. 
 
-Built with the **ActivityPub** protocol, Asagity allows you to seamlessly interact with users across the entire Fediverse (Mastodon, Misskey, Pleroma, etc.), all while enjoying a gorgeous, glassmorphism "Dashboard" UI.
+Built on the self-developed **Verse for Asagity** backend engine, leveraging the Verse primary protocol with ActivityPub compatibility, Asagity allows you to seamlessly interact with users across the entire Fediverse (Mastodon, Misskey, Pleroma, etc.), all while enjoying a highly customizable tab-based experience.
 
 ## Key Features
 
-- **Native Federation**: Fully compatible with the ActivityPub protocol. Connect, reply, and resonate with the entire Fediverse.
+- **Native Federation**: Built on the self-developed Verse for Asagity backend engine, leveraging the Verse primary protocol with ActivityPub compatibility. Connect, reply, and resonate with the entire Fediverse.
 - **Skyline Drive**: A built-in, powerful cloud drive system. Supports local storage, S3-compatible object storage, and remote WebDAV mounting. Features chunked uploads and a native file manager UI.
 - **Topics System**: Community-driven topic discovery with activity tracking, trending analysis, and real-time post integration.
-- **Anime-vibe & Dashboard UI**: Breaking the traditional three-column layout. Asagity uses a modern SaaS-like "Inverted-L" layout with rich glassmorphism (backdrop-blur) effects, customizable themes, and a "Cyan" (Asagi) soul.
+- **Highly Customizable UI**: Breaking the traditional three-column layout. Asagity adopts an advanced tab mechanism with on-open loading, on-close release, and minimized-page preloading, delivering an OS-level page experience.
 - **Rich Toy-like Widgets**: Built-in mini music player with lyrics sync, custom dynamic emojis, typing effects, and weather-based online status.
-- **Blazing Fast**: Powered by Go (Goroutines) for massive concurrent federation broadcasting, and Next.js 16 (Turbopack) for instant frontend delivery.
+- **Blazing Fast**: Powered by Go + ASP.NET Core for massive concurrent federation broadcasting, and React 19 for instant client-side delivery.
 
 ## Tech Stack
 
-Asagity is built as a symmetric Monorepo, separating the UI layer from the heavy-lifting core.
+Asagity is built as a symmetric Monorepo, separating the client layer from the server core.
 
-*   **Frontend (`/web`)**: React 19, Next.js 16 (App Router, Turbopack), Tailwind CSS v4, Zustand, Framer Motion.
-*   **Backend (`/core`)**: Go, GORM, Asynq (Redis-based task queue).
+*   **Client (`/web`)**: React 19, Tailwind CSS v4, Zustand.
+*   **Server (`/core`)**: Go + ASP.NET Core, GORM, Asynq (Redis-based task queue).
 *   **Infrastructure**: PostgreSQL (Main database with JSONB), Redis (Cache & Queue).
 *   **Container Runtime**: Docker & Podman support with separate container configs.
 
@@ -68,7 +68,7 @@ cd container/podman && ./start.sh
 podman compose -f container/podman/podman-compose.yaml up -d
 ```
 
-### 2. Start the Backend (Core)
+### 2. Start the Server (Core)
 ```bash
 cd core
 # Copy the env example and configure it
@@ -77,7 +77,7 @@ go mod tidy
 go run .
 ```
 
-### 3. Start the Frontend (Web)
+### 3. Start the Client (Web)
 Open a new terminal window:
 ```bash
 cd web
@@ -90,7 +90,7 @@ Visit `http://localhost:2000` to enter the Cyan Universe!
 
 ```
 Asagity/
-├── web/                    # Frontend (Next.js 16 + React 19)
+├── web/                    # Client (React 19)
 │   ├── src/
 │   │   ├── app/            # App Router pages
 │   │   ├── components/     # React components
@@ -100,7 +100,7 @@ Asagity/
 │   │   └── messages/       # i18n (zh-CN, zh-TW, en-US, ja-JP)
 │   ├── public/             # Static assets (fonts, sounds, PWA)
 │   └── middleware.ts       # Auth route guard
-├── core/                   # Backend (Go)
+├── core/                   # Server (Go + ASP.NET Core)
 │   ├── cmd/api/            # API entrypoint
 │   ├── internal/
 │   │   ├── module/         # Domain modules
@@ -119,9 +119,9 @@ Asagity/
 Asagity is currently in its early development phase. PRs, issues, and feature requests are highly welcome! 
 
 ## License
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [AGPL-3.0 License](LICENSE).
 
 ---
 <div align="center">
-  <i>Crafted with 🩵 by <a href="https://github.com/CyaniAgent">CyaniAgent</a></i>
+  <i>Crafted with 🩵 by <a href="https://github.com/CyaniAgent">CyaniAgent and every contributor.</a></i>
 </div>

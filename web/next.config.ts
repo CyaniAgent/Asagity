@@ -49,10 +49,6 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  experimental: {
-    webpackMemoryOptimizations: true,
-    preloadEntriesOnStart: false,
-  },
 
   productionBrowserSourceMaps: false,
 

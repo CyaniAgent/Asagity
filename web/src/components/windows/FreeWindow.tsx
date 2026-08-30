@@ -4,12 +4,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Rnd } from "react-rnd";
 import { createPortal } from "react-dom";
 import { WindowHeader } from "@/components/layout/WindowHeader";
+import type { ViewType } from "@/types/windows";
 
 interface FreeWindowProps {
   isOpen: boolean;
   title?: string;
   icon?: string;
-  type?: string;
+  type?: ViewType;
   initialWidth?: number;
   initialHeight?: number;
   resizable?: boolean;
@@ -209,7 +210,7 @@ export function FreeWindow({
           <div className="window-drag-handle">
             <WindowHeader
               mode="free"
-              type={type as Parameters<typeof WindowHeader>[0]["type"]}
+              type={type}
               customTitle={title}
               customIcon={icon}
               isMaximized={isMaximized}

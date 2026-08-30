@@ -111,9 +111,9 @@ export function WindowHeader({
           <button
             onClick={onSwitchMode}
             className="rounded-full text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-black/5 dark:hover:bg-white/10 p-1.5 transition-colors"
-            title={mode === "split" ? t("window.openInFreeWindow") : t("window.openInSplitView")}
+            title={mode === "split" ? t("window.openInFreeWindow") : t("window.openAsTab")}
           >
-            <Icon name={mode === "split" ? "open_in_new" : "dock_to_right"} fontSize={14} />
+            <Icon name={mode === "split" ? "open_in_new" : "window_arrow_up"} fontSize={14} />
           </button>
         )}
 
@@ -135,7 +135,7 @@ export function WindowHeader({
             className="rounded-full text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 p-1.5 transition-colors"
             title={isMaximized ? t("common.restore") : t("common.maximize")}
           >
-            <Icon name={isMaximized ? "close_fullscreen" : "open_in_full"} fontSize={14} />
+            <Icon name="maximize" fontSize={14} />
           </button>
         )}
 

@@ -594,7 +594,7 @@
     "dashboardWindow": "数据面板",
     "federationWindow": "联邦实例",
     "openInFreeWindow": "在自由窗口中打开",
-    "openInSplitView": "在分屏视图中打开",
+    "openAsTab": "作为标签页打开",
     "timelineWindow": "时间线"
   }
 }

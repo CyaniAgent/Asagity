@@ -594,7 +594,7 @@
     "dashboardWindow": "データダッシュボード",
     "federationWindow": "連合インスタンス",
     "openInFreeWindow": "フリーウィンドウで開く",
-    "openInSplitView": "分割表示で開く",
+    "openAsTab": "タブとして開く",
     "timelineWindow": "タイムライン"
   }
 }

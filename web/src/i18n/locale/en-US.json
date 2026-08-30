@@ -594,7 +594,7 @@
     "dashboardWindow": "Data Dashboard",
     "federationWindow": "Federated Instances",
     "openInFreeWindow": "Open in Free Window",
-    "openInSplitView": "Open in Split View",
+    "openAsTab": "Open as Tab",
     "timelineWindow": "Timeline"
   }
 }

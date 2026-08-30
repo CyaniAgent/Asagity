@@ -2,6 +2,7 @@
 
 import { lazy, Suspense } from "react";
 import { useFreeWindowStore } from "@/stores/freeWindow";
+import { useUserStore } from "@/stores/user";
 import { FreeWindow } from "@/components/windows/FreeWindow";
 
 const Termity = lazy(() =>
@@ -108,12 +109,13 @@ export function WindowManager() {
   const refreshKey = useFreeWindowStore((s) => s.refreshKey);
   const currentBrowserUrl = useFreeWindowStore((s) => s.currentBrowserUrl);
   const close = useFreeWindowStore((s) => s.close);
-  const toggleMaximize = useFreeWindowStore((s) => s.toggleMaximize);
   const triggerRefresh = useFreeWindowStore((s) => s.triggerRefresh);
+  const isLoggedIn = useUserStore((s) => s.isLoggedIn);
 
   if (!isOpen || !currentViewType) return null;
 
   const config = getViewConfig(currentViewType);
+  const isWelcomePage = !isLoggedIn;
 
   return (
     <FreeWindow
@@ -124,11 +126,10 @@ export function WindowManager() {
       initialWidth={config.width}
       initialHeight={config.height}
       disableMaximize={config.disableMaximize}
-      disableMinimize={config.disableMinimize}
-      disableTransfer={config.disableTransfer}
+      disableMinimize={config.disableMinimize || isWelcomePage}
+      disableTransfer={config.disableTransfer || isWelcomePage}
       onClose={close}
       onRefresh={triggerRefresh}
-      onSwitchMode={toggleMaximize}
     >
       {renderContent(currentViewType, refreshKey, currentBrowserUrl)}
     </FreeWindow>

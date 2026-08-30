@@ -28,11 +28,8 @@ interface FreeWindowState {
   activeTab: string;
   profileTab: string;
   currentViewType: ViewType | null;
-  isMaximized: boolean;
-  isMinimized: boolean;
   isTermityAuthOpen: boolean;
   refreshKey: number;
-  position: { x: number; y: number };
   openFromContext: (type: ViewType, data: { post?: Post | null; user?: UserDetail | null; chat?: ChatMessage | null }, tabs?: { activeTab?: string; profileTab?: string }) => void;
   openBrowser: (url: string) => void;
   openError: (title: string, message: string, code?: string, silent?: boolean) => void;
@@ -42,8 +39,6 @@ interface FreeWindowState {
   openLyrics: () => void;
   openPlaylist: () => void;
   close: () => void;
-  toggleMaximize: () => void;
-  toggleMinimize: () => void;
   triggerRefresh: () => void;
   setTab: (tab: string) => void;
   setProfileTab: (tab: string) => void;
@@ -59,14 +54,8 @@ export const useFreeWindowStore = create<FreeWindowState>()((set) => ({
   activeTab: "comments",
   profileTab: "home",
   currentViewType: null,
-  isMaximized: false,
-  isMinimized: false,
   isTermityAuthOpen: false,
   refreshKey: 0,
-  position: {
-    x: typeof window !== "undefined" ? window.innerWidth / 2 - 200 : 100,
-    y: 100,
-  },
 
   openFromContext: (type, data, tabs = {}) =>
     set({
@@ -76,7 +65,6 @@ export const useFreeWindowStore = create<FreeWindowState>()((set) => ({
       currentChat: data.chat || null,
       activeTab: tabs.activeTab || "comments",
       profileTab: tabs.profileTab || "home",
-      isMinimized: false,
       isOpen: true,
     }),
 
@@ -84,7 +72,6 @@ export const useFreeWindowStore = create<FreeWindowState>()((set) => ({
     set({
       currentBrowserUrl: url,
       currentViewType: "browser",
-      isMinimized: false,
       isOpen: true,
     }),
 
@@ -92,7 +79,6 @@ export const useFreeWindowStore = create<FreeWindowState>()((set) => ({
     set({
       errorData: { title, message, code, silent },
       currentViewType: "error",
-      isMinimized: false,
       isOpen: true,
     }),
 
@@ -101,7 +87,6 @@ export const useFreeWindowStore = create<FreeWindowState>()((set) => ({
     if (isLoggedIn) {
       set({
         currentViewType: "termity",
-        isMinimized: false,
         isOpen: true,
       });
     } else {
@@ -113,7 +98,6 @@ export const useFreeWindowStore = create<FreeWindowState>()((set) => ({
     set({
       isTermityAuthOpen: false,
       currentViewType: "termity",
-      isMinimized: false,
       isOpen: true,
     }),
 
@@ -123,39 +107,23 @@ export const useFreeWindowStore = create<FreeWindowState>()((set) => ({
   openLyrics: () =>
     set({
       currentViewType: "lyrics_window",
-      isMinimized: false,
       isOpen: true,
     }),
 
   openPlaylist: () =>
     set({
       currentViewType: "playlist_window",
-      isMinimized: false,
       isOpen: true,
     }),
 
   close: () =>
     set({
       isOpen: false,
-      isMaximized: false,
-      isMinimized: false,
       currentPost: null,
       currentUser: null,
       currentChat: null,
       currentBrowserUrl: "",
     }),
-
-  toggleMaximize: () =>
-    set((state) => ({
-      isMaximized: !state.isMaximized,
-      isMinimized: state.isMaximized ? state.isMinimized : false,
-    })),
-
-  toggleMinimize: () =>
-    set((state) => ({
-      isMinimized: !state.isMinimized,
-      isMaximized: state.isMinimized ? state.isMaximized : false,
-    })),
 
   triggerRefresh: () =>
     set((state) => ({
