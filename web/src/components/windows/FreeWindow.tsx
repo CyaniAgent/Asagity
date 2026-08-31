@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Rnd } from "react-rnd";
 import { createPortal } from "react-dom";
@@ -18,6 +16,7 @@ interface FreeWindowProps {
   disableMaximize?: boolean;
   disableMinimize?: boolean;
   onClose?: () => void;
+  onFocus?: () => void;
   onRefresh?: () => void;
   onSwitchMode?: () => void;
   children: React.ReactNode;
@@ -35,6 +34,7 @@ export function FreeWindow({
   disableMaximize = false,
   disableMinimize = false,
   onClose,
+  onFocus,
   onRefresh,
   onSwitchMode,
   children,
@@ -49,6 +49,7 @@ export function FreeWindow({
   const [isClosing, setIsClosing] = useState(false);
   const [restoreAnim, setRestoreAnim] = useState(false);
   const timersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+  const rafRef = useRef<number>(0);
 
   const addTimer = useCallback((fn: () => void, ms: number) => {
     const id = setTimeout(() => {
@@ -69,6 +70,7 @@ export function FreeWindow({
 
   useEffect(() => {
     return () => {
+      cancelAnimationFrame(rafRef.current);
       timersRef.current.forEach(clearTimeout);
       timersRef.current.clear();
     };
@@ -76,8 +78,15 @@ export function FreeWindow({
 
   useEffect(() => {
     if (isOpen) {
-      requestAnimationFrame(() => setVisible(true));
+      setVisible(false);
+      setIsClosing(false);
+      // Double rAF: first ensures DOM update (hidden), second fires AFTER browser paint
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = requestAnimationFrame(() => setVisible(true));
+      });
     } else {
+      cancelAnimationFrame(rafRef.current);
       setVisible(false);
       setIsClosing(false);
       setIsMinimized(false);
@@ -132,27 +141,27 @@ export function FreeWindow({
 
   const getTransition = () => {
     if (isClosing) {
-      if (isMinimized) return "opacity 200ms ease";
-      return "opacity 350ms ease, transform 350ms ease";
+      if (isMinimized) return "opacity 180ms cubic-bezier(0.4, 0, 1, 1)";
+      return "opacity 220ms cubic-bezier(0.4, 0, 1, 1), transform 220ms cubic-bezier(0.4, 0, 1, 1)";
     }
     if (restoreAnim) {
-      return "opacity 300ms ease, transform 300ms ease";
+      return "opacity 280ms cubic-bezier(0, 0, 0.2, 1), transform 280ms cubic-bezier(0, 0, 0.2, 1)";
     }
     if (isMaximized) {
-      return "all 200ms ease";
+      return "all 200ms cubic-bezier(0, 0, 0.2, 1)";
     }
-    return "all 200ms ease";
+    return "opacity 260ms cubic-bezier(0, 0, 0.2, 1), transform 260ms cubic-bezier(0.16, 1, 0.3, 1)";
   };
 
   const getTransformStyle = () => {
     if (isClosing && !isMinimized) {
-      return "translateY(100vh) scale(0.8)";
+      return "scale(0.92) translateY(12px)";
     }
     if (restoreAnim) {
       return "translateY(0) scale(1)";
     }
     if (!visible && !isClosing) {
-      return "scale(0.95) translateY(10px)";
+      return "scale(0.88) translateY(24px)";
     }
     return "scale(1) translateY(0)";
   };
@@ -166,6 +175,7 @@ export function FreeWindow({
 
   return createPortal(
     <Rnd
+      onMouseDown={() => onFocus?.()}
       size={
         isMaximized
           ? { width: window.innerWidth - 32, height: window.innerHeight - 32 }
@@ -176,7 +186,7 @@ export function FreeWindow({
           ? { x: 16, y: 16 }
           : position
       }
-      onDragStop={(_e, d) => {
+      onDrag={(_e, d) => {
         setPosition({ x: d.x, y: d.y });
       }}
       onResizeStop={(_e, _direction, ref, _delta, pos) => {
@@ -194,16 +204,21 @@ export function FreeWindow({
       bounds="window"
       style={{
         display: isMinimized ? "none" : undefined,
-        opacity: getOpacity(),
-        transform: getTransformStyle(),
-        transition: getTransition(),
         zIndex: 9990,
       }}
       className="z-[9990]"
-      onTransitionEnd={handleTransitionEnd}
     >
       <div
-        className={`flex flex-col h-full rounded-[30px] border shadow-[0_10px_40px_rgba(0,0,0,0.15)] overflow-hidden bg-white/90 dark:bg-gray-900/90 backdrop-blur-3xl border-gray-200/50 dark:border-gray-800/80`}
+        style={{
+          opacity: getOpacity(),
+          transform: getTransformStyle(),
+          transition: getTransition(),
+          willChange: "transform, opacity",
+          width: "100%",
+          height: "100%",
+        }}
+        onTransitionEnd={handleTransitionEnd}
+        className="flex flex-col h-full rounded-[30px] border shadow-[0_10px_40px_rgba(0,0,0,0.15)] overflow-hidden bg-white/90 dark:bg-gray-900/90 backdrop-blur-3xl border-gray-200/50 dark:border-gray-800/80"
       >
         {/* Drag Handle / Header */}
         <div className={`shrink-0 w-full ${isMaximized ? "cursor-default" : ""}`}>

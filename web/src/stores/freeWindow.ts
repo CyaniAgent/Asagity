@@ -1,135 +1,149 @@
 import { create } from "zustand";
 import { useUserStore } from "@/stores/user";
-import type { PostUser, PostMetrics, UserDetail, ChatMessage } from "@/types/models";
 import type { ViewType } from "@/types/windows";
 
-interface Post {
+/** Unique window instance. */
+export interface Window {
   id: string;
-  author: PostUser;
-  createdAt: Date | string;
-  content: string;
-  metrics: PostMetrics;
+  viewType: ViewType;
+  /** Browser iframe URL */
+  browserUrl?: string;
+  /** Error data */
+  errorData?: { title: string; message: string; code: string; silent: boolean };
+  /** Per-window refresh counter */
+  refreshKey: number;
+  /** Auto-minimized by memory manager */
+  isMinimized: boolean;
+  /** Unix-ms timestamp for LRU eviction */
+  lastFocusedAt: number;
 }
 
-interface ErrorData {
-  title: string;
-  message: string;
-  code: string;
-  silent: boolean;
+/* ------------------------------------------------------------------ */
+
+let nextId = 1;
+const uid = () => String(nextId++);
+
+/** Singleton types — only one instance allowed at a time. */
+const SINGLETONS: ViewType[] = ["termity", "auth", "lyrics_window", "playlist_window"];
+
+function makeWindow(viewType: ViewType, extra?: Pick<Window, "browserUrl" | "errorData">): Window {
+  return {
+    id: uid(),
+    viewType,
+    browserUrl: extra?.browserUrl,
+    errorData: extra?.errorData,
+    refreshKey: 0,
+    isMinimized: false,
+    lastFocusedAt: Date.now(),
+  };
 }
+
+/* ------------------------------------------------------------------ */
 
 interface FreeWindowState {
-  isOpen: boolean;
-  currentPost: Post | null;
-  currentUser: UserDetail | null;
-  currentChat: ChatMessage | null;
-  currentBrowserUrl: string;
-  errorData: ErrorData;
-  activeTab: string;
-  profileTab: string;
-  currentViewType: ViewType | null;
+  /** All open windows */
+  windows: Window[];
+  /** ID of the most-recently-focused window */
+  focusedId: string | null;
+  /** Termity auth modal (global) */
   isTermityAuthOpen: boolean;
-  refreshKey: number;
-  openFromContext: (type: ViewType, data: { post?: Post | null; user?: UserDetail | null; chat?: ChatMessage | null }, tabs?: { activeTab?: string; profileTab?: string }) => void;
-  openBrowser: (url: string) => void;
-  openError: (title: string, message: string, code?: string, silent?: boolean) => void;
+
+  // ── Actions ──────────────────────────────────────────────────────
+  openFromContext: (
+    viewType: ViewType,
+    data?: { browserUrl?: string; errorData?: Window["errorData"] },
+  ) => string;
   openTermity: () => void;
   confirmTermityAuth: () => void;
   closeTermityAuth: () => void;
-  openLyrics: () => void;
-  openPlaylist: () => void;
-  close: () => void;
-  triggerRefresh: () => void;
-  setTab: (tab: string) => void;
-  setProfileTab: (tab: string) => void;
+  close: (id: string) => void;
+  focus: (id: string) => void;
+  minimizeOldest: (ids: string[]) => void;
+  triggerRefresh: (id: string) => void;
 }
 
-export const useFreeWindowStore = create<FreeWindowState>()((set) => ({
-  isOpen: false,
-  currentPost: null,
-  currentUser: null,
-  currentChat: null,
-  currentBrowserUrl: "",
-  errorData: { title: "", message: "", code: "", silent: false },
-  activeTab: "comments",
-  profileTab: "home",
-  currentViewType: null,
+export const useFreeWindowStore = create<FreeWindowState>()((set, get) => ({
+  windows: [],
+  focusedId: null,
   isTermityAuthOpen: false,
-  refreshKey: 0,
 
-  openFromContext: (type, data, tabs = {}) =>
-    set({
-      currentViewType: type,
-      currentPost: data.post || null,
-      currentUser: data.user || null,
-      currentChat: data.chat || null,
-      activeTab: tabs.activeTab || "comments",
-      profileTab: tabs.profileTab || "home",
-      isOpen: true,
-    }),
+  /* ── Open ──────────────────────────────────────────────────────── */
+  openFromContext: (viewType, data) => {
+    const state = get();
 
-  openBrowser: (url) =>
-    set({
-      currentBrowserUrl: url,
-      currentViewType: "browser",
-      isOpen: true,
-    }),
+    // Singleton guard: if one already exists, focus it and return its id
+    if (SINGLETONS.includes(viewType)) {
+      const existing = state.windows.find((w) => w.viewType === viewType);
+      if (existing) {
+        set({
+          focusedId: existing.id,
+          windows: state.windows.map((w) =>
+            w.id === existing.id ? { ...w, lastFocusedAt: Date.now(), isMinimized: false } : w,
+          ),
+        });
+        return existing.id;
+      }
+    }
 
-  openError: (title, message, code = "", silent = false) =>
+    const win = makeWindow(viewType, data);
     set({
-      errorData: { title, message, code, silent },
-      currentViewType: "error",
-      isOpen: true,
-    }),
+      windows: [...state.windows, win],
+      focusedId: win.id,
+    });
+    return win.id;
+  },
 
   openTermity: () => {
     const { isLoggedIn } = useUserStore.getState();
     if (isLoggedIn) {
-      set({
-        currentViewType: "termity",
-        isOpen: true,
-      });
+      get().openFromContext("termity");
     } else {
       set({ isTermityAuthOpen: true });
     }
   },
 
-  confirmTermityAuth: () =>
-    set({
-      isTermityAuthOpen: false,
-      currentViewType: "termity",
-      isOpen: true,
+  confirmTermityAuth: () => {
+    set({ isTermityAuthOpen: false });
+    get().openFromContext("termity");
+  },
+
+  closeTermityAuth: () => set({ isTermityAuthOpen: false }),
+
+  /* ── Close ─────────────────────────────────────────────────────── */
+  close: (id) =>
+    set((state) => {
+      const next = state.windows.filter((w) => w.id !== id);
+      return {
+        windows: next,
+        focusedId:
+          state.focusedId === id
+            ? (next.length > 0 ? next[next.length - 1].id : null)
+            : state.focusedId,
+      };
     }),
 
-  closeTermityAuth: () =>
-    set({ isTermityAuthOpen: false }),
-
-  openLyrics: () =>
-    set({
-      currentViewType: "lyrics_window",
-      isOpen: true,
-    }),
-
-  openPlaylist: () =>
-    set({
-      currentViewType: "playlist_window",
-      isOpen: true,
-    }),
-
-  close: () =>
-    set({
-      isOpen: false,
-      currentPost: null,
-      currentUser: null,
-      currentChat: null,
-      currentBrowserUrl: "",
-    }),
-
-  triggerRefresh: () =>
+  /* ── Focus ─────────────────────────────────────────────────────── */
+  focus: (id) =>
     set((state) => ({
-      refreshKey: state.refreshKey + 1,
+      focusedId: id,
+      windows: state.windows.map((w) =>
+        w.id === id ? { ...w, lastFocusedAt: Date.now(), isMinimized: false } : w,
+      ),
     })),
 
-  setTab: (tab) => set({ activeTab: tab }),
-  setProfileTab: (tab) => set({ profileTab: tab }),
+  /* ── Memory manager ────────────────────────────────────────────── */
+  minimizeOldest: (ids) =>
+    set((state) => ({
+      windows: state.windows.map((w) =>
+        ids.includes(w.id) ? { ...w, isMinimized: true } : w,
+      ),
+    })),
+
+  /* ── Refresh ───────────────────────────────────────────────────── */
+  triggerRefresh: (id) =>
+    set((state) => ({
+      windows: state.windows.map((w) =>
+        w.id === id ? { ...w, refreshKey: w.refreshKey + 1 } : w,
+      ),
+    })),
 }));

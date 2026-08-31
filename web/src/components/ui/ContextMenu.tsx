@@ -174,7 +174,7 @@ export function ContextMenu() {
           <Divider />
           <div className="flex flex-col gap-0.5">
             <MenuItem icon="vertical_split" label={t("contextMenu.openInSplitView")} onClick={() => handleAction(() => splitViewStore.openBrowser((data as { href?: string })?.href || ""))} />
-            <MenuItem icon="open_in_new" label={t("contextMenu.openInFreeWindow")} onClick={() => handleAction(() => freeWindowStore.openBrowser((data as { href?: string })?.href || ""))} />
+            <MenuItem icon="open_in_new" label={t("contextMenu.openInFreeWindow")} onClick={() => handleAction(() => freeWindowStore.openFromContext("browser", { browserUrl: (data as { href?: string })?.href || "" }))} />
           </div>
         </>
       )}
@@ -194,7 +194,7 @@ export function ContextMenu() {
             <MenuItem icon="open_in_new" label={t("contextMenu.openInNewTab")} bold onClick={() => handleAction(() => openExternal((data as { url?: string })?.url || ""))} />
             <MenuItem icon="laptop_mac" label={t("contextMenu.openInInternalBrowser")} onClick={() => handleAction(() => splitViewStore.openBrowser((data as { url?: string })?.url || ""))} />
             <MenuItem icon="vertical_split" label={t("contextMenu.openInSplitView")} onClick={() => handleAction(() => splitViewStore.openBrowser((data as { url?: string })?.url || ""))} />
-            <MenuItem icon="open_in_new" label={t("contextMenu.openInFreeWindow")} onClick={() => handleAction(() => freeWindowStore.openBrowser((data as { url?: string })?.url || ""))} />
+            <MenuItem icon="open_in_new" label={t("contextMenu.openInFreeWindow")} onClick={() => handleAction(() => freeWindowStore.openFromContext("browser", { browserUrl: (data as { url?: string })?.url || "" }))} />
           </div>
           <Divider />
           <div className="flex flex-col gap-0.5">
@@ -208,7 +208,7 @@ export function ContextMenu() {
       {type === "global" && (
         <div className="flex flex-col gap-0.5">
           <MenuItem icon="refresh" label={t("common.refresh")} onClick={() => handleAction(() => window.location.reload())} />
-          <MenuItem icon="open_in_new" label={t("contextMenu.openInFreeWindow")} onClick={() => handleAction(() => freeWindowStore.openFromContext("post", { post: data as null }, {}))} />
+          <MenuItem icon="open_in_new" label={t("contextMenu.openInFreeWindow")} onClick={() => handleAction(() => freeWindowStore.openFromContext("post"))} />
           <MenuItem icon="ios_share" label={t("contextMenu.sharePage")} onClick={() => handleAction(sharePage)} />
         </div>
       )}

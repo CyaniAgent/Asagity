@@ -81,7 +81,7 @@ function parseArgs(fullArgs: string): Record<string, string> {
   return result;
 }
 
-export function Termity() {
+export function Termity({ windowId }: { windowId: string }) {
   const systemStore = useSystemStore();
   const instanceStore = useInstanceStore();
   const userStore = useUserStore();
@@ -368,7 +368,7 @@ export function Termity() {
         case "exit": {
           addLine({ type: "system", text: "正在关闭 Termity 会话..." });
           addTimer(() => {
-            useFreeWindowStore.getState().close();
+            useFreeWindowStore.getState().close(windowId);
           }, 300);
           break;
         }

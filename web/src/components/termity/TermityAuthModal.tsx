@@ -45,7 +45,7 @@ export function TermityAuthModal() {
 
   const handleLogin = useCallback(() => {
     handleClose();
-    freeWindowStore.openFromContext("auth", { post: null, user: null, chat: null });
+    freeWindowStore.openFromContext("auth");
   }, [handleClose, freeWindowStore]);
 
   const handleKeyDown = useCallback(

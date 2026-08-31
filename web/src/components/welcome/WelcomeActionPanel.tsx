@@ -34,9 +34,9 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
 
   /* ── Handlers ── */
   const closeMenu = () => { setMenuOpen(false); setDevOpen(false); };
-  const handleJoin = () => { openFromContext("auth", { post: null, user: null, chat: null }); };
-  const handleLogin = () => { openFromContext("auth", { post: null, user: null, chat: null }); };
-  const handleOpenTimeline = () => { openFromContext("welcome_timeline", { post: null, user: null, chat: null }); closeMenu(); };
+  const handleJoin = () => { openFromContext("auth"); };
+  const handleLogin = () => { openFromContext("auth"); };
+  const handleOpenTimeline = () => { openFromContext("welcome_timeline"); closeMenu(); };
   const handleOpenTermity = () => { useFreeWindowStore.getState().openTermity(); closeMenu(); };
 
   const menuCls = isDark

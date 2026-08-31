@@ -84,11 +84,9 @@ export function WindowHeader({
   const { t } = useI18n();
 
   return (
-    <div className="px-4 py-3 flex justify-between items-center bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200/50 dark:border-white/5 shrink-0 cursor-grab active:cursor-grabbing rounded-t-[30px] select-none">
+    <div className="px-3 py-1.5 flex justify-between items-center bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200/50 dark:border-white/5 shrink-0 cursor-grab active:cursor-grabbing rounded-t-[30px] select-none">
       <div className="flex items-center gap-2 overflow-hidden max-w-[50%]">
-        <div className="w-7 h-7 rounded-full bg-white dark:bg-white/10 flex items-center justify-center shrink-0 shadow-sm border border-gray-100 dark:border-white/5">
-          <Icon name={getIcon(type, customIcon)} className="text-cyan-600 dark:text-cyan-400" fontSize={14} />
-        </div>
+        <Icon name={getIcon(type, customIcon)} className="text-cyan-600 dark:text-cyan-400 shrink-0" fontSize={16} />
         <span className="text-[13px] font-normal text-gray-800 dark:text-white truncate tracking-wide">
           {getTitle(type, mode, customTitle, t)}
         </span>
