@@ -22,11 +22,11 @@ export const useSoundManagerStore = create<SoundManagerState>()((set, get) => ({
   isPreloading: false,
 
   soundRegistry: {
-    ca: "/sounds/AyaseYuna/ca.wav",
-    sys_error: "/sounds/AyaseYuna/sys_error.wav",
-    sys_net_restored: "/sounds/AyaseYuna/sys_net_restored.wav",
-    message_sent: "/sounds/Defaults/MessageSent.ogg",
-    message_received: "/sounds/Defaults/MessageReceived.ogg",
+    ca: "/sounds/AyaxYuna/ca.wav",
+    sys_error: "/sounds/System/Error.wav",
+    sys_net_restored: "/sounds/AyaxYuna/sys_net_restored.wav",
+    message_sent: "/sounds/System/MessageSent.wav",
+    message_received: "/sounds/System/MessageReceived.wav",
   },
 
   getAudioContext: async () => {
