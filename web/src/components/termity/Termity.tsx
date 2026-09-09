@@ -7,6 +7,7 @@ import { useUserStore } from "@/stores/user";
 import { useFreeWindowStore } from "@/stores/freeWindow";
 import { useLocaleStore, localeNames, type Locale } from "@/stores/locale";
 import { useI18n } from "@/components/providers/I18nProvider";
+import { usePortalDebuggerStore } from "@/stores/portalDebugger";
 
 interface TerminalLine {
   type: "input" | "output" | "system" | "error" | "warning";
@@ -51,6 +52,8 @@ function getCommands(t: (key: string) => string): Record<string, { name: string;
         "enable Develop": t("termity.funcSubDevEnable"),
         "enable Develop time=meta": t("termity.funcSubDevEnablePersist"),
         "disable Develop": t("termity.funcSubDevDisable"),
+        "pdebug show": t("termity.funcSubPdebugShow"),
+        "pdebug hide": t("termity.funcSubPdebugHide"),
       },
     },
     info: {
@@ -272,6 +275,16 @@ export function Termity({ windowId }: { windowId: string }) {
             localStorage.removeItem("asagity_dev_persistent");
             addLine({ type: "output", text: "> Developer Account LOGGED OUT" });
             addLine({ type: "output", text: `  ${t("termity.devDisabled")}` });
+          } else if (args[0] === "pdebug") {
+            if (args[1] === "show") {
+              usePortalDebuggerStore.getState().showEntry();
+              addLine({ type: "output", text: `> Portal Debugger: ${t("termity.pdebugShown")}` });
+            } else if (args[1] === "hide") {
+              usePortalDebuggerStore.getState().hideEntry();
+              addLine({ type: "output", text: `> Portal Debugger: ${t("termity.pdebugHidden")}` });
+            } else {
+              addLine({ type: "output", text: t("termity.pdebugUsage") });
+            }
           } else if (args[0] === "Develop" || args[0] === "develop") {
             const developCmd = args.slice(1);
             const subArgs = parseArgs(developCmd.join(" "));

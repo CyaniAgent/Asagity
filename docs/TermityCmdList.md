@@ -4,7 +4,7 @@
 | `auth` | Account | 查看当前账号信息、设备、授权等账号相关内容 |
 | `clear` | Clear | 清空终端输出 |
 | `exit` | Exit Termity | 退出此 Termity 会话 |
-| `func` | Function Switch | 修改 Asagity 的一些可修改功能 |
+| `func` | Function Switch | 修改 Asagity 的一些可修改功能（含开发者模式、Portal Debugger 控制等） |
 | `help` | Help | 帮助，查看所有可用的指令 |
 | `info` | Server Information | 查看本 Asagity 实例的相关信息 |
 | `remote` | Remote Instance | 通过 Bearer Token 连接到其他实例（开发中） |

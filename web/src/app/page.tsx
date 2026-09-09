@@ -3,13 +3,8 @@
 import dynamic from "next/dynamic";
 import { useUserStore } from "@/stores/user";
 
-const MainLayout = dynamic(
-  () => import("@/components/layout/MainLayout").then((m) => m.MainLayout),
-  { ssr: false }
-);
-
-const TimelineFeed = dynamic(
-  () => import("@/components/post/TimelineFeed").then((m) => m.TimelineFeed),
+const DashboardLayout = dynamic(
+  () => import("@/components/layout/DashboardLayout").then((m) => m.DashboardLayout),
   { ssr: false }
 );
 
@@ -25,9 +20,5 @@ export default function HomePage() {
     return <Welcome />;
   }
 
-  return (
-    <MainLayout>
-      <TimelineFeed />
-    </MainLayout>
-  );
+  return <DashboardLayout />;
 }
