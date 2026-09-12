@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { ClientLink as Link } from "@/components/ui/ClientLink";
+import { usePathname } from "@/hooks/usePathname";
 import { Icon } from "@/components/ui/Icon";
 
 const mobileNavItems = [

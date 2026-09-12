@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/hooks/useRouter";
 import { useContextMenuStore } from "@/stores/contextMenu";
 import { useSplitViewStore } from "@/stores/splitView";
 import { useFreeWindowStore } from "@/stores/freeWindow";

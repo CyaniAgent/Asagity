@@ -1,9 +1,9 @@
 "use client";
 
 import { forwardRef, memo } from "react";
-import { usePathname } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
+import { usePathname } from "@/hooks/usePathname";
+import { ClientLink as Link } from "@/components/ui/ClientLink";
+// Image: replaced next/image with standard img
 import { useInstanceStore } from "@/stores/instance";
 import { useSplitViewStore } from "@/stores/splitView";
 import { Icon } from "@/components/ui/Icon";
@@ -55,7 +55,7 @@ export const Sidebar = memo(forwardRef<HTMLDivElement, SidebarProps>(function Si
       {/* Logo */}
       <Link href="/about" className="h-24 flex items-center px-6 shrink-0 group/logo cursor-pointer">
         <div className="w-12 h-12 flex items-center justify-center group-hover/logo:scale-110 transition-all duration-300">
-          <Image src={instanceStore.logoURL} width={48} height={48} className="w-full h-full object-cover" alt="Logo" />
+          <img src={instanceStore.logoURL} width={48} height={48} className="w-full h-full object-cover" alt="Logo" />
         </div>
         <div className="absolute left-20 opacity-0 group-hover/logo:opacity-100 translate-x-[-10px] group-hover/logo:translate-x-0 transition-all duration-300 pointer-events-none z-50">
           <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl px-4 py-2.5 rounded-2xl border border-white/20 dark:border-gray-800 shadow-2xl flex flex-col min-w-[140px]">

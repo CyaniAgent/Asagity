@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/hooks/usePathname";
 import { useSystemStore } from "@/stores/system";
 import { useUserStore } from "@/stores/user";
 import { useFreeWindowStore } from "@/stores/freeWindow";

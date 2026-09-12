@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, memo } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { ClientLink as Link } from "@/components/ui/ClientLink";
+// Image: replaced next/image with standard img
+import { useRouter } from "@/hooks/useRouter";
 import { formatDistanceToNowStrict } from "date-fns";
 import { zhCN } from "date-fns/locale"; // TODO: Dynamic locale based on i18n locale
 import { useSplitViewStore } from "@/stores/splitView";
@@ -87,7 +87,7 @@ export const PostItem = memo(function PostItem({ post, isDetailView }: PostItemP
           className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-cyan-400 transition-all cursor-pointer shadow-sm block"
         >
           {post.author.avatar ? (
-            <Image src={post.author.avatar} width={40} height={40} className="w-full h-full object-cover" alt={post.author.displayName} />
+            <img src={post.author.avatar} width={40} height={40} className="w-full h-full object-cover" alt={post.author.displayName} />
           ) : (
             <div className="w-full h-full bg-cyan-500/20 flex items-center justify-center">
               <Icon name="person" className="text-cyan-500" fontSize={20} />
@@ -142,7 +142,7 @@ export const PostItem = memo(function PostItem({ post, isDetailView }: PostItemP
               {t("post.repliedTo")}
               <span className="font-medium text-cyan-600 dark:text-cyan-400 cursor-pointer hover:underline flex items-center gap-1">
                 {post.replyTo.author.avatar && (
-                  <Image src={post.replyTo.author.avatar} width={16} height={16} className="w-4 h-4 rounded-full object-cover" alt="" />
+                  <img src={post.replyTo.author.avatar} width={16} height={16} className="w-4 h-4 rounded-full object-cover" alt="" />
                 )}
                 {post.replyTo.author.displayName}
               </span>

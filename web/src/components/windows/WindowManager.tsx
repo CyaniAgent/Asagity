@@ -68,7 +68,7 @@ function getViewConfig(viewType: string | null) {
   }
 }
 
-function renderContent(viewType: string | null, refreshKey: number, browserUrl?: string) {
+function renderContent(viewType: string | null, refreshKey: number, browserUrl?: string, windowId?: string) {
   switch (viewType) {
     case "error":
       return <div className="p-4 text-red-500">系统错误内容</div>;
@@ -87,7 +87,7 @@ function renderContent(viewType: string | null, refreshKey: number, browserUrl?:
     case "browser":
       return <iframe src={browserUrl} className="w-full h-full border-0" title="Browser" />;
     case "termity":
-      return <Suspense fallback={<WindowManagerFallback />}><Termity /></Suspense>;
+      return <Suspense fallback={<WindowManagerFallback />}><Termity windowId={windowId!} /></Suspense>;
     case "lyrics_window":
       return <Suspense fallback={<WindowManagerFallback />}><LyricsWindow /></Suspense>;
     case "playlist_window":
@@ -142,7 +142,7 @@ export function WindowManager() {
             onFocus={() => focus(win.id)}
             onRefresh={() => triggerRefresh(win.id)}
           >
-            {renderContent(win.viewType, win.refreshKey, win.browserUrl)}
+            {renderContent(win.viewType, win.refreshKey, win.browserUrl, win.id)}
           </FreeWindow>
         );
       })}

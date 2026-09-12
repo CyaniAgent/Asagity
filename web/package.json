@@ -2,14 +2,12 @@
   "name": "web",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev --turbopack --port 2000 --hostname ::",
-    "build": "next build",
-    "start": "next start --port 2000 --hostname ::",
-    "lint": "next lint --fix",
-    "lint:check": "next lint",
+    "dev": "vite --port 2000 --host ::",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 2000 --host ::",
     "typecheck": "tsc --noEmit",
-    "analyze": "ANALYZE=true pnpm build",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
@@ -26,12 +24,10 @@
     "lrc-kit": "^1.2.1",
     "mfm-js": "^0.26.0",
     "music-metadata": "^11.13.0",
-    "next": "16.2.9",
-    "next-intl": "^4.13.1",
+    "re-resizable": "^6.11.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-resizable-panels": "^4.12.0",
-    "react-rnd": "^10.5.3",
     "react-window": "^2.2.7",
     "recharts": "^3.9.1",
     "tailwind-merge": "^3.6.0",
@@ -39,7 +35,6 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
-    "@next/bundle-analyzer": "^16.2.10",
     "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
@@ -52,6 +47,7 @@
     "jsdom": "^29.1.1",
     "tailwindcss": "^4",
     "typescript": "^5",
+    "vite": "^8.2.2",
     "vitest": "^4.1.9"
   }
 }

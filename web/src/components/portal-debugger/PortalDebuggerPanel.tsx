@@ -1,94 +1,44 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "@/components/ui/Icon";
 import { usePortalDebuggerStore } from "@/stores/portalDebugger";
-import { ReactLintTab, type LintIssue } from "./tabs/ReactLintTab";
+import { useRuntimeErrors } from "@/hooks/useRuntimeErrors";
+import { useI18n } from "@/components/providers/I18nProvider";
+import { ProblemsTab } from "./tabs/ProblemsTab";
+import { DebugTab } from "./tabs/DebugTab";
+import { HideComponentTab } from "./tabs/HideComponentTab";
 
 type TabDef = {
   id: string;
-  label: string;
+  labelKey: string;
   icon: string;
 };
 
 const tabs: TabDef[] = [
-  { id: "react-lint", label: "React Lint", icon: "wand" },
+  { id: "problems", labelKey: "portalDebugger.tabProblems", icon: "error" },
+  { id: "debug", labelKey: "portalDebugger.tabDebug", icon: "terminal" },
+  { id: "hide-component", labelKey: "portalDebugger.tabHideComponent", icon: "eye" },
 ];
 
-function DemoLintScanner({ onResult }: { onResult: (issues: LintIssue[]) => void }) {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onResult([
-        {
-          id: "demo-1",
-          severity: "warning",
-          message: "React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array.",
-          file: "src/components/timeline/TimelineFeed.tsx",
-          line: 42,
-          column: 5,
-          rule: "react-hooks/exhaustive-deps",
-          source: "eslint",
-        },
-        {
-          id: "demo-2",
-          severity: "error",
-          message: "Cannot read properties of undefined (reading 'map'). Ensure data is initialized before rendering.",
-          file: "src/components/post/PostItem.tsx",
-          line: 87,
-          column: 12,
-          rule: "react/no-undefined-as-props",
-          source: "react-compiler",
-        },
-        {
-          id: "demo-3",
-          severity: "info",
-          message: "Component 'PostItem' can be wrapped in React.memo to avoid re-renders when props haven't changed.",
-          file: "src/components/post/PostItem.tsx",
-          line: 1,
-          column: 1,
-          rule: "react memo",
-          source: "custom",
-        },
-        {
-          id: "demo-4",
-          severity: "warning",
-          message: "Unused import: 'useState' in 'src/components/drive/DriveFileList.tsx'. Remove it to reduce bundle size.",
-          file: "src/components/drive/DriveFileList.tsx",
-          line: 3,
-          column: 10,
-          rule: "no-unused-vars",
-          source: "eslint",
-        },
-        {
-          id: "demo-5",
-          severity: "info",
-          message: "Inline style object created on every render. Consider memoizing with useMemo.",
-          file: "src/components/music/MusicPlayer.tsx",
-          line: 156,
-          column: 8,
-          rule: "custom",
-          source: "custom",
-        },
-      ]);
-    }, 1200);
-    return () => clearTimeout(timer);
-  }, []);
-
-  return null;
-}
-
 export const PortalDebuggerPanel = memo(function PortalDebuggerPanel() {
+  const { t } = useI18n();
   const isOpen = usePortalDebuggerStore((s) => s.isOpen);
   const activeTab = usePortalDebuggerStore((s) => s.activeTab);
   const setActiveTab = usePortalDebuggerStore((s) => s.setActiveTab);
   const close = usePortalDebuggerStore((s) => s.close);
+  const runtimeErrors = usePortalDebuggerStore((s) => s.runtimeErrors);
+  const addRuntimeError = usePortalDebuggerStore((s) => s.addRuntimeError);
+  const clearRuntimeErrors = usePortalDebuggerStore((s) => s.clearRuntimeErrors);
+  const removeRuntimeError = usePortalDebuggerStore((s) => s.removeRuntimeError);
 
   const panelRef = useRef<HTMLDivElement>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
-  const [lintIssues, setLintIssues] = useState<LintIssue[]>([]);
-  const [isScanning, setIsScanning] = useState(false);
+
+  // 注册运行时错误捕获
+  useRuntimeErrors({ onError: addRuntimeError });
 
   // Open / close animation
   useEffect(() => {
@@ -126,20 +76,6 @@ export const PortalDebuggerPanel = memo(function PortalDebuggerPanel() {
     return () => document.removeEventListener("keydown", handleKey);
   }, [isOpen, close]);
 
-  const handleLintRefresh = useCallback(() => {
-    setIsScanning(true);
-    setLintIssues([]);
-  }, []);
-
-  const handleLintClear = useCallback(() => {
-    setLintIssues([]);
-  }, []);
-
-  const handleLintResult = useCallback((issues: LintIssue[]) => {
-    setLintIssues(issues);
-    setIsScanning(false);
-  }, []);
-
   if (!shouldRender) return null;
 
   return createPortal(
@@ -162,7 +98,7 @@ export const PortalDebuggerPanel = memo(function PortalDebuggerPanel() {
         <div className="flex items-center gap-2">
           <Icon name="terminal" fontSize={16} className="text-cyan-500" />
           <span className="text-[13px] font-semibold text-gray-800 dark:text-gray-200">
-            Portal Debugger
+            {t("portalDebugger.title")}
           </span>
         </div>
         <button
@@ -190,27 +126,23 @@ export const PortalDebuggerPanel = memo(function PortalDebuggerPanel() {
             `}
           >
             <Icon name={tab.icon} fontSize={13} />
-            {tab.label}
+            {t(tab.labelKey)}
           </button>
         ))}
       </div>
 
       {/* Tab Content */}
       <div className="flex-1 min-h-0 overflow-hidden">
-        {activeTab === "react-lint" && (
-          <ReactLintTab
-            issues={lintIssues}
-            onClear={handleLintClear}
-            onRefresh={handleLintRefresh}
-            isScanning={isScanning}
+        {activeTab === "problems" && (
+          <ProblemsTab
+            errors={runtimeErrors}
+            onClear={clearRuntimeErrors}
+            onDismiss={removeRuntimeError}
           />
         )}
+        {activeTab === "debug" && <DebugTab />}
+        {activeTab === "hide-component" && <HideComponentTab />}
       </div>
-
-      {/* Demo scanner trigger */}
-      {activeTab === "react-lint" && isScanning && (
-        <DemoLintScanner onResult={handleLintResult} />
-      )}
     </div>,
     document.body
   );

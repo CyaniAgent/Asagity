@@ -1,21 +1,22 @@
-"use client";
+import type { ReactNode } from "react";
 
 /**
  * DashboardLayout - 登录后的主布局框架
  *
- * 与 Next.js 路由解耦的四区域布局：
+ * 四区域布局：
  *   ┌─────────────────────────────────────────┐
  *   │          信息与状态栏 / 上侧小组件         │
  *   ├────────┬───────────────────┬─────────────┤
  *   │ 页面   │                   │  右侧       │
- *   │ 管理器 │    标签页显示区域   │  小组件     │
- *   │ /配置  │                   │  显示区域   │
+ *   │ 管理器 │    内容区域        │  小组件     │
+ *   │ /配置  │   (children)      │  显示区域   │
  *   │ 菜单   │                   │             │
  *   └────────┴───────────────────┴─────────────┘
  *
- * 当前仅显示区域占位信息，不包含任何功能。
+ * 路由渲染已移至 ClientLayout 的 TopRouter，
+ * DashboardLayout 仅负责布局外壳。
  */
-export function DashboardLayout() {
+export function DashboardLayout({ children }: { children?: ReactNode }) {
   return (
     <div className="h-screen w-screen flex flex-col bg-gray-100 dark:bg-[#121212] overflow-hidden font-sans">
       {/* ── 顶部区域：信息与状态栏 / 上侧小组件显示区域 ── */}
@@ -36,11 +37,9 @@ export function DashboardLayout() {
           </span>
         </aside>
 
-        {/* 中央区域：标签页显示区域 */}
-        <main className="flex-1 flex items-center justify-center min-w-0 bg-gray-100 dark:bg-[#121212]">
-          <span className="text-sm text-gray-400 dark:text-gray-500 select-none">
-            标签页显示区域
-          </span>
+        {/* 中央区域：内容区域 */}
+        <main className="flex-1 flex flex-col min-w-0 bg-gray-100 dark:bg-[#121212]">
+          {children}
         </main>
 
         {/* 右侧区域：右侧小组件显示区域 */}

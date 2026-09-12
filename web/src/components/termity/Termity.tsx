@@ -56,6 +56,18 @@ function getCommands(t: (key: string) => string): Record<string, { name: string;
         "pdebug hide": t("termity.funcSubPdebugHide"),
       },
     },
+    time: {
+      name: "Time",
+      description: t("termity.cmdTime"),
+    },
+    date: {
+      name: "Date",
+      description: t("termity.cmdDate"),
+    },
+    whoami: {
+      name: "Who Am I",
+      description: t("termity.cmdWhoami"),
+    },
     info: {
       name: "Server Information",
       description: t("termity.cmdInfo"),
@@ -94,6 +106,46 @@ function showSubcommandHelp(
   Object.entries(subcommands).forEach(([cmd, desc]) => {
     addLine({ type: "output", text: `  ${cmd.padEnd(30)} │ ${desc}` });
   });
+}
+
+const WEEKDAYS_ZH = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+const WEEKDAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function parseGMTOffset(gmt: string): number {
+  const m = gmt.match(/^(\+|-)?(\d{1,2})(?::(\d{2}))?$/);
+  if (!m) throw new Error("Invalid GMT offset");
+  const sign = m[1] === "-" ? -1 : 1;
+  const hours = parseInt(m[2], 10);
+  const minutes = m[3] ? parseInt(m[3], 10) : 0;
+  return sign * (hours * 60 + minutes);
+}
+
+function applyGMTOffset(date: Date, gmtStr: string): Date {
+  const targetOffset = parseGMTOffset(gmtStr);
+  const localOffset = -date.getTimezoneOffset();
+  const diff = (targetOffset - localOffset) * 60 * 1000;
+  return new Date(date.getTime() + diff);
+}
+
+function formatDate(d: Date): string {
+  const y = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, "0");
+  const da = String(d.getDate()).padStart(2, "0");
+  const wd = WEEKDAYS_ZH[d.getDay()];
+  const h = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  const s = String(d.getSeconds()).padStart(2, "0");
+  return `${y}/${mo}/${da} ${wd} ${h}:${mi}:${s}`;
+}
+
+function formatISO8601(d: Date): string {
+  const y = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, "0");
+  const da = String(d.getDate()).padStart(2, "0");
+  const h = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  const s = String(d.getSeconds()).padStart(2, "0");
+  return `${y}-${mo}-${da}T${h}:${mi}:${s}`;
 }
 
 function parseArgs(fullArgs: string): Record<string, string> {
@@ -388,6 +440,58 @@ export function Termity({ windowId }: { windowId: string }) {
               }
             }
           }
+          break;
+        }
+
+        case "time": {
+          const gmtArg = args.find((a) => a.startsWith("--GMT="));
+          const now = new Date();
+          try {
+            const adjusted = gmtArg ? applyGMTOffset(now, gmtArg.slice(6)) : now;
+            const h = String(adjusted.getHours()).padStart(2, "0");
+            const m = String(adjusted.getMinutes()).padStart(2, "0");
+            const s = String(adjusted.getSeconds()).padStart(2, "0");
+            const tzLabel = gmtArg ? ` (UTC${gmtArg.slice(6)})` : "";
+            addLine({ type: "output", text: `${h}:${m}:${s}${tzLabel}` });
+          } catch {
+            addLine({ type: "error", text: t("termity.timeInvalidGMT") });
+          }
+          break;
+        }
+
+        case "date": {
+          const gmtArg = args.find((a) => a.startsWith("--GMT="));
+          const fmtArg = args.find((a) => a.startsWith("--format="));
+          const now = new Date();
+          try {
+            const adjusted = gmtArg ? applyGMTOffset(now, gmtArg.slice(6)) : now;
+            if (fmtArg) {
+              const fmtVal = fmtArg.slice(9).replace(/^['"]|['"]$/g, "").toLowerCase();
+              if (fmtVal === "iso" || fmtVal === "iso8601") {
+                addLine({ type: "output", text: formatISO8601(adjusted) });
+              } else {
+                addLine({ type: "error", text: t("termity.dateInvalidFormat") });
+                addLine({ type: "output", text: formatDate(adjusted) });
+              }
+            } else {
+              addLine({ type: "output", text: formatDate(adjusted) });
+            }
+          } catch {
+            addLine({ type: "error", text: t("termity.dateInvalidGMT") });
+            addLine({ type: "output", text: formatDate(now) });
+          }
+          break;
+        }
+
+        case "whoami": {
+          if (!userStore.isLoggedIn) {
+            addLine({ type: "warning", text: t("termity.loginRequired") });
+            break;
+          }
+          const u = userStore.user;
+          addLine({ type: "output", text: `${u?.name || "-"} (@${u?.username || "-"})` });
+          addLine({ type: "output", text: `  PubID:  ${u?.pubid || "-"}` });
+          addLine({ type: "output", text: `  Role:   ${u?.role || "user"}` });
           break;
         }
 

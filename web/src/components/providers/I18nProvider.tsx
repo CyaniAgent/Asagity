@@ -2,7 +2,9 @@
 
 import { useEffect, useState, createContext, useContext, useCallback, useMemo } from "react";
 import { useLocaleStore, type Locale } from "@/stores/locale";
-import type { Messages } from "next-intl";
+
+/** 消息类型 — 键值对映射 */
+type Messages = Record<string, string | Record<string, unknown>>;
 
 const messageLoaders: Record<Locale, () => Promise<{ default: Messages }>> = {
   "zh-CN": () => import("@/i18n/locale/zh-CN.json"),

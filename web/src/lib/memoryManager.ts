@@ -24,7 +24,8 @@ function isLowMemory(): boolean {
 }
 
 function check() {
-  if (!onAutoMinimize) return;
+  const callback = onAutoMinimize;
+  if (!callback) return;
   // Import store dynamically to avoid circular deps
   import("@/stores/freeWindow").then(({ useFreeWindowStore }) => {
     const { windows, minimizeOldest } = useFreeWindowStore.getState();
@@ -36,7 +37,7 @@ function check() {
       const toMinimize = sorted.slice(0, sorted.length - 2).map((w) => w.id);
       if (toMinimize.length > 0) {
         minimizeOldest(toMinimize);
-        onAutoMinimize(toMinimize);
+        callback(toMinimize);
       }
     } else if (visibleWindows.length > MAX_WINDOWS) {
       // Hard cap: minimize oldest beyond limit
@@ -44,7 +45,7 @@ function check() {
       const toMinimize = sorted.slice(0, visibleWindows.length - MAX_WINDOWS).map((w) => w.id);
       if (toMinimize.length > 0) {
         minimizeOldest(toMinimize);
-        onAutoMinimize(toMinimize);
+        callback(toMinimize);
       }
     }
   });
