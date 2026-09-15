@@ -17,7 +17,7 @@ func New(repo repository.Repository, cfg config.Config) *Service {
 }
 
 func (s *Service) Version() dto.VersionResponse {
-	return dto.VersionResponse{Name: "Asagity Core", Version: "dev"}
+	return dto.VersionResponse{Name: "Asagity Core", Version: s.cfg.AppVersion}
 }
 
 func (s *Service) Meta() dto.MetaResponse {

@@ -34,8 +34,8 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
 
   /* ── Handlers ── */
   const closeMenu = () => { setMenuOpen(false); setDevOpen(false); };
-  const handleJoin = () => { openFromContext("auth"); };
-  const handleLogin = () => { openFromContext("auth"); };
+  const handleJoin = () => { openFromContext("register_window"); closeMenu(); };
+  const handleLogin = () => { openFromContext("login_window"); closeMenu(); };
   const handleOpenTimeline = () => { openFromContext("welcome_timeline"); closeMenu(); };
   const handleOpenTermity = () => { useFreeWindowStore.getState().openTermity(); closeMenu(); };
 

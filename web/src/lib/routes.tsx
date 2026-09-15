@@ -36,6 +36,14 @@ export const aboutRoutes: RouteEntry[] = [
   { path: "/about/federation", component: lazy(() => import("@/pages/about/federation/page").then((m) => ({ default: m.default }))) },
 ];
 
+/* ------------------------------------------------------------------ */
+/*  认证页面 — 不使用 MainLayout                                         */
+/* ------------------------------------------------------------------ */
+
+export const authRoutes: RouteEntry[] = [
+  { path: "/login", component: lazy(() => import("@/pages/login/page").then((m) => ({ default: m.default }))), wrapInMainLayout: false },
+];
+
 export const socialRoutes: RouteEntry[] = [
   { path: "/achievements", component: lazy(() => import("@/pages/achievements/page").then((m) => ({ default: m.default }))) },
   { path: "/albums", component: lazy(() => import("@/pages/albums/page").then((m) => ({ default: m.default }))) },
@@ -126,6 +134,7 @@ export const panelRoutes: RouteEntry[] = [
 
 export const allRoutes: RouteEntry[] = [
   ...redirectRoutes,
+  ...authRoutes,
   ...aboutRoutes,
   ...socialRoutes,
   ...chatRoutes,

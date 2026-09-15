@@ -47,15 +47,15 @@
     "updatedAt": "更新日時"
   },
   "auth": {
-    "accessKey": "アクセスキー",
+    "password": "パスワード",
     "authFailed": "認証失敗",
-    "communicationNode": "通信ノード",
-    "confirmKey": "キーを確認",
+    "email": "メールアドレス",
+    "confirmPassword": "パスワード確認",
     "emailHint": "メールヒント",
     "forgotKey": "キーを忘れた",
     "hasAccess": "すでにアクセス権あり",
     "hubIdEmail": "Hub IDまたはメール",
-    "hubIdentifier": "Hub識別子",
+    "username": "ユーザー名",
     "initializing": "初期化中...",
     "initNewAccount": "新アカウントを初期化",
     "login": "ログイン",
@@ -668,6 +668,38 @@
     "resetAll": "すべてリセット",
     "scanning": "スキャン中..."
   },
+  "register": {
+    "joinInstance": "インスタンスに参加！",
+    "stepAgreement": "規約確認",
+    "stepInfo": "情報入力",
+    "stepVerify": "認証",
+    "agreementTitle": "インスタンスに参加する前に、関連規約を確認し同意してください。",
+    "agreementDesc": "よくお読みください。インスタンスでの行動基準となります。",
+    "docGuidelines": "コミュニティガイドライン",
+    "docPrivacy": "プライバシーポリシー",
+    "docTerms": "利用規約",
+    "docNotes": "ユーザー注意事項",
+    "required": "必須",
+    "optional": "任意",
+    "scrollToRead": "下までスクロールして続行",
+    "readAllRequired": "必須規約をすべてお読みください",
+    "startButton": "始めよう！",
+    "infoTitle": "情報を入力しましょう！",
+    "infoDesc": "とても重要なステップです。",
+    "usernameTooShort": "ユーザー名は3文字以上必要です",
+    "usernameInvalid": "英字、数字、アンダースコアのみ使用できます",
+    "passwordTooShort": "パスワードは8文字以上必要です",
+    "joinButton": "参加する！",
+    "verifyTitle": "ラストステップ！",
+    "verifyDesc": "身分を確認すれば、完了です！",
+    "verifyCode": "認証コード（8文字）",
+    "resendCode": "認証コードを再送信",
+    "codeSent": "コードを送信しました",
+    "finishButton": "登録を完了！"
+  },
+  "loginPage": {
+    "subtitle": "おかえりなさい。認証情報を入力してください"
+  },
   "welcome": {
     "aboutInstance": "インスタンスについて",
     "authenticateMatrix": "認証マトリックス",
@@ -701,6 +733,8 @@
     "federationWindow": "連合インスタンス",
     "openInFreeWindow": "フリーウィンドウで開く",
     "openAsTab": "タブとして開く",
-    "timelineWindow": "タイムライン"
+    "timelineWindow": "タイムライン",
+    "loginWindow": "ログイン",
+    "registerWindow": "アカウント作成"
   }
 }

@@ -26,6 +26,7 @@ type Config struct {
 	HostArch         string
 	HostCPU          string
 	HostMemory       string
+	AppVersion       string
 	MailSMTPHost     string
 	MailSMTPPort     string
 	MailSMTPUser     string
@@ -55,6 +56,7 @@ func Load() (Config, error) {
 		HostArch:         os.Getenv("HOST_ARCH"),
 		HostCPU:          os.Getenv("HOST_CPU"),
 		HostMemory:       os.Getenv("HOST_MEMORY"),
+		AppVersion:       envOrDefault("APP_VERSION", "dev"),
 		MailSMTPHost:     envOrDefault("MAIL_SMTP_HOST", "smtp.gmail.com"),
 		MailSMTPPort:     envOrDefault("MAIL_SMTP_PORT", "587"),
 		MailSMTPUser:     os.Getenv("MAIL_SMTP_USER"),
@@ -76,12 +78,12 @@ func loadEnv() {
 	candidates := []string{".env"}
 
 	if cwd, err := os.Getwd(); err == nil {
-		candidates = append(candidates, 
+		candidates = append(candidates,
 			filepath.Join(cwd, ".env"),
 			filepath.Join(cwd, "..", ".env"),
 			filepath.Join(cwd, "..", "..", ".env"),
 		)
-		
+
 		absParent, _ := filepath.Abs(filepath.Join(cwd, ".."))
 		if filepath.Base(absParent) == "core" {
 			candidates = append(candidates, filepath.Join(absParent, ".env"))

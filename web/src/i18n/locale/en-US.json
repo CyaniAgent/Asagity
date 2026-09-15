@@ -47,15 +47,15 @@
     "updatedAt": "Updated at"
   },
   "auth": {
-    "accessKey": "Access Key",
+    "password": "Password",
     "authFailed": "Authentication Failed",
-    "communicationNode": "Communication Node",
-    "confirmKey": "Confirm Key",
+    "email": "Email",
+    "confirmPassword": "Confirm Password",
     "emailHint": "Email Hint",
     "forgotKey": "Forgot Key",
     "hasAccess": "Already Have Access",
     "hubIdEmail": "Hub ID or Email",
-    "hubIdentifier": "Hub Identifier",
+    "username": "Username",
     "initializing": "Initializing...",
     "initNewAccount": "Initialize New Account",
     "login": "Login",
@@ -668,6 +668,38 @@
     "resetAll": "Reset all",
     "scanning": "Scanning..."
   },
+  "register": {
+    "joinInstance": "Join Instance!",
+    "stepAgreement": "Agreements",
+    "stepInfo": "Your Info",
+    "stepVerify": "Verification",
+    "agreementTitle": "Before joining, please review and accept the agreements.",
+    "agreementDesc": "Please read carefully, as these govern your behavior on this instance.",
+    "docGuidelines": "Community Guidelines",
+    "docPrivacy": "Privacy Policy",
+    "docTerms": "Terms of Service",
+    "docNotes": "User Notes",
+    "required": "Required",
+    "optional": "Optional",
+    "scrollToRead": "Scroll to the bottom to continue",
+    "readAllRequired": "Please read all required agreements",
+    "startButton": "Let's go!",
+    "infoTitle": "Fill in your information!",
+    "infoDesc": "This is a crucial step.",
+    "usernameTooShort": "Username must be at least 3 characters",
+    "usernameInvalid": "Only letters, numbers, and underscores allowed",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "joinButton": "Join!",
+    "verifyTitle": "One last step!",
+    "verifyDesc": "Verify your identity and you're all set!",
+    "verifyCode": "Verification Code (8 characters)",
+    "resendCode": "Resend verification code",
+    "codeSent": "Code sent",
+    "finishButton": "Complete Registration!"
+  },
+  "loginPage": {
+    "subtitle": "Welcome back, enter your credentials to continue"
+  },
   "welcome": {
     "aboutInstance": "About Instance",
     "authenticateMatrix": "Authentication Matrix",
@@ -701,6 +733,8 @@
     "federationWindow": "Federated Instances",
     "openInFreeWindow": "Open in Free Window",
     "openAsTab": "Open as Tab",
-    "timelineWindow": "Timeline"
+    "timelineWindow": "Timeline",
+    "loginWindow": "Login",
+    "registerWindow": "Create Account"
   }
 }

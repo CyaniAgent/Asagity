@@ -31,8 +31,28 @@ function gracefulExitPlugin() {
   };
 }
 
+/** 翻译文件热重启插件：修改 i18n 文件时自动重启开发服务器 */
+function i18nRestartPlugin() {
+  return {
+    name: "i18n-restart",
+    configureServer(server: ViteDevServer) {
+      const i18nDir = path.resolve(__dirname, "src/i18n");
+      server.watcher.add(i18nDir);
+
+      server.watcher.on("change", (file: string) => {
+        if (file.startsWith(i18nDir)) {
+          console.log(
+            "\n\x1b[36mThe translation file has been modified, and the development server has been restarted to apply the changes in real time.\x1b[0m"
+          );
+          server.restart();
+        }
+      });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), gracefulExitPlugin()],
+  plugins: [react(), gracefulExitPlugin(), i18nRestartPlugin()],
 
   resolve: {
     alias: {

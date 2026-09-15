@@ -47,15 +47,15 @@
     "updatedAt": "更新於"
   },
   "auth": {
-    "accessKey": "存取金鑰",
+    "password": "密碼",
     "authFailed": "認證失敗",
-    "communicationNode": "通訊節點",
-    "confirmKey": "確認金鑰",
+    "email": "電子郵件",
+    "confirmPassword": "驗證密碼",
     "emailHint": "電子郵件提示",
     "forgotKey": "忘記金鑰",
     "hasAccess": "已有存取權限",
     "hubIdEmail": "Hub ID 或電子郵件",
-    "hubIdentifier": "Hub 識別碼",
+    "username": "使用者名稱",
     "initializing": "初始化中...",
     "initNewAccount": "初始化新帳號",
     "login": "登入",
@@ -668,6 +668,38 @@
     "resetAll": "全部重置",
     "scanning": "掃描中..."
   },
+  "register": {
+    "joinInstance": "加入實例！",
+    "stepAgreement": "相關協議",
+    "stepInfo": "填寫資訊",
+    "stepVerify": "鑑權驗證",
+    "agreementTitle": "在加入實例之前，需要確認並同意相關協議。",
+    "agreementDesc": "請認真閱讀，這會關係到您在實例的行為舉止。",
+    "docGuidelines": "實例行為準則",
+    "docPrivacy": "隱私政策",
+    "docTerms": "服務條款",
+    "docNotes": "實例使用者注意事項",
+    "required": "必須",
+    "optional": "可選",
+    "scrollToRead": "滾動到底部以繼續",
+    "readAllRequired": "請閱讀所有必須協議",
+    "startButton": "開始吧！",
+    "infoTitle": "來填寫資訊吧！",
+    "infoDesc": "這是至關重要的一部分。",
+    "usernameTooShort": "使用者名稱至少需要 3 個字元",
+    "usernameInvalid": "僅支援字母、數字和底線",
+    "passwordTooShort": "密碼至少需要 8 個字元",
+    "joinButton": "加入！",
+    "verifyTitle": "最後一步！",
+    "verifyDesc": "驗證您的身分，就可以開始啦！",
+    "verifyCode": "驗證碼（8 位）",
+    "resendCode": "重新發送驗證碼",
+    "codeSent": "驗證碼已發送",
+    "finishButton": "完成註冊！"
+  },
+  "loginPage": {
+    "subtitle": "歡迎回來，輸入您的憑證以繼續"
+  },
   "welcome": {
     "aboutInstance": "關於實例",
     "authenticateMatrix": "身份驗證矩陣",
@@ -701,6 +733,8 @@
     "federationWindow": "聯邦實例",
     "openInFreeWindow": "在自由視窗中開啟",
     "openAsTab": "作為標籤頁開啟",
-    "timelineWindow": "時間線"
+    "timelineWindow": "時間線",
+    "loginWindow": "登入",
+    "registerWindow": "註冊新帳號"
   }
 }

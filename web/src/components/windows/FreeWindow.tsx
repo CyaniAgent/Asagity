@@ -234,8 +234,8 @@ export function FreeWindow({
         position: "fixed",
         left: x,
         top: y,
-        width: w,
-        height: h,
+        width: isMaximized ? w : undefined,
+        height: isMaximized ? h : undefined,
         display: isMinimized ? "none" : undefined,
         zIndex: 9990,
         opacity: getOpacity(),
@@ -246,7 +246,14 @@ export function FreeWindow({
       className="z-[9990]"
     >
       <Resizable
-        size={{ width: "100%", height: "100%" }}
+        size={isMaximized ? { width: w, height: h } : { width: size.width, height: size.height }}
+        onResize={(_event, _direction, elementRef) => {
+          const newW = parseInt(elementRef.style.width, 10);
+          const newH = parseInt(elementRef.style.height, 10);
+          if (!isNaN(newW) && !isNaN(newH)) {
+            setSize({ width: newW, height: newH });
+          }
+        }}
         onResizeStop={(_event, _direction, elementRef) => {
           const newW = parseInt(elementRef.style.width, 10);
           const newH = parseInt(elementRef.style.height, 10);

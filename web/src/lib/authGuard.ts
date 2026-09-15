@@ -13,10 +13,10 @@
 import { useRouterStore } from "@/stores/router";
 
 /** 公开页面路径 */
-const PUBLIC_PAGES = ["/", "/login", "/register", "/about"];
+const PUBLIC_PAGES = ["/", "/login", "/about"];
 
 /** 需要重定向到首页的登录后页面（login/register） */
-const REDIRECT_WHEN_LOGGED_IN = ["/login", "/register"];
+const REDIRECT_WHEN_LOGGED_IN = ["/login"];
 
 /**
  * 读取 cookie 值

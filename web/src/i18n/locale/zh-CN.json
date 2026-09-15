@@ -47,15 +47,15 @@
     "updatedAt": "更新于"
   },
   "auth": {
-    "accessKey": "访问密钥",
+    "password": "密码",
     "authFailed": "认证失败",
-    "communicationNode": "通信节点",
-    "confirmKey": "确认密钥",
+    "email": "邮箱",
+    "confirmPassword": "验证密码",
     "emailHint": "邮箱提示",
     "forgotKey": "忘记密钥",
     "hasAccess": "已有访问权限",
     "hubIdEmail": "Hub ID 或邮箱",
-    "hubIdentifier": "Hub 标识符",
+    "username": "用户名",
     "initializing": "初始化中...",
     "initNewAccount": "初始化新账号",
     "login": "登录",
@@ -668,6 +668,38 @@
     "resetAll": "全部重置",
     "scanning": "扫描中..."
   },
+  "register": {
+    "joinInstance": "加入实例！",
+    "stepAgreement": "相关协议",
+    "stepInfo": "填写信息",
+    "stepVerify": "鉴权验证",
+    "agreementTitle": "在加入实例之前，需要确认并同意相关协议。",
+    "agreementDesc": "请认真阅读，这会关乎您在实例的行为举止。",
+    "docGuidelines": "实例行为准则",
+    "docPrivacy": "隐私政策",
+    "docTerms": "服务条款",
+    "docNotes": "实例用户注意事项",
+    "required": "必须",
+    "optional": "可选",
+    "scrollToRead": "滚动到底部以继续",
+    "readAllRequired": "请阅读所有必须协议",
+    "startButton": "开始吧！",
+    "infoTitle": "来填写信息吧！",
+    "infoDesc": "这是至关重要的一部分。",
+    "usernameTooShort": "用户名至少需要 3 个字符",
+    "usernameInvalid": "仅支持字母、数字和下划线",
+    "passwordTooShort": "密码至少需要 8 个字符",
+    "joinButton": "加入！",
+    "verifyTitle": "最后一步！",
+    "verifyDesc": "验证您的身份，就可以开始啦！",
+    "verifyCode": "验证码（8 位）",
+    "resendCode": "重新发送验证码",
+    "codeSent": "验证码已发送",
+    "finishButton": "完成注册！"
+  },
+  "loginPage": {
+    "subtitle": "欢迎回来，输入您的凭据以继续"
+  },
   "welcome": {
     "aboutInstance": "关于实例",
     "authenticateMatrix": "身份验证矩阵",
@@ -701,6 +733,8 @@
     "federationWindow": "联邦实例",
     "openInFreeWindow": "在自由窗口中打开",
     "openAsTab": "作为标签页打开",
-    "timelineWindow": "时间线"
+    "timelineWindow": "时间线",
+    "loginWindow": "登录",
+    "registerWindow": "注册新账号"
   }
 }

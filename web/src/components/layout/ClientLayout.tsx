@@ -6,9 +6,13 @@ import { ThemeInit } from "@/components/providers/ThemeInit";
 import { TermityAuthModal } from "@/components/termity/TermityAuthModal";
 import { PortalDebugger } from "@/components/portal-debugger/PortalDebugger";
 import { initAuth } from "@/lib/authGuard";
+import { fetchAppVersion } from "@/lib/version";
 import { usePathname } from "@/hooks/usePathname";
 import { allRoutes } from "@/lib/routes";
 import { RouteView } from "@/components/layout/RouteView";
+
+import { AuthModal } from "@/components/auth/AuthModal";
+import { useFreeWindowStore } from "@/stores/freeWindow";
 
 const WindowManager = lazy(() => import("@/components/windows/WindowManager").then((m) => ({ default: m.WindowManager })));
 const HomePage = lazy(() => import("@/pages/page").then((m) => ({ default: m.default })));
@@ -30,9 +34,16 @@ function TopRouter() {
 }
 
 export function ClientLayout() {
+  const isAuthOpen = useFreeWindowStore((s) => s.isAuthOpen);
+
   // 初始化路由守卫（替代 Next.js middleware）
   useEffect(() => {
     initAuth();
+  }, []);
+
+  // 从后端获取当前版本号
+  useEffect(() => {
+    fetchAppVersion();
   }, []);
 
   return (
@@ -41,6 +52,7 @@ export function ClientLayout() {
       <I18nProvider>
         <TopRouter />
         <WindowManager />
+        {isAuthOpen && <AuthModal />}
         <TermityAuthModal />
         <PortalDebugger />
       </I18nProvider>

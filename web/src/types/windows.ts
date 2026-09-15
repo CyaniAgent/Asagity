@@ -11,6 +11,8 @@ export type ViewType =
   | "lyrics_window"
   | "playlist_window"
   | "auth"
+  | "login_window"
+  | "register_window"
   | "welcome_timeline"
   | "welcome_federation"
   | "welcome_dashboard";
