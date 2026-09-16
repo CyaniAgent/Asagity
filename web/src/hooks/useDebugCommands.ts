@@ -4,6 +4,7 @@ import { useCallback, useRef } from "react";
 import { useLocaleStore, type Locale } from "@/stores/locale";
 import { useThemeStore, type ColorMode } from "@/stores/theme";
 import { useNotificationStore } from "@/stores/notifications";
+import { useToastStore } from "@/stores/toast";
 
 export interface DebugCommandResult {
   message: string;
@@ -22,6 +23,24 @@ let logIdCounter = 0;
 function generateLogId(): string {
   logIdCounter += 1;
   return `dbg-${Date.now()}-${logIdCounter}`;
+}
+
+/**
+ * 从参数列表中提取 key:value 键值对
+ * 例: ["taskid:abc", "taskname:hello", "tasktime:30"]
+ * → { taskid: "abc", taskname: "hello", tasktime: "30" }
+ */
+function parseKeyValues(args: string[]): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const arg of args) {
+    const colonIdx = arg.indexOf(":");
+    if (colonIdx > 0) {
+      const key = arg.slice(0, colonIdx);
+      const value = arg.slice(colonIdx + 1);
+      result[key] = value;
+    }
+  }
+  return result;
 }
 
 /* ── 内置命令注册 ─────────────────────────────────────────── */
@@ -155,6 +174,168 @@ function buildBuiltinCommands(): DebugCommand[] {
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : String(err);
           return { message: `Error: ${msg}`, severity: "error" };
+        }
+      },
+    },
+    /* ── fedo: 联邦操作模拟 ──────────────────────────────── */
+    {
+      name: "fedo",
+      description: "Federation operations simulator (elastic task lifecycle)",
+      usage: "fedo elastic <recv_req|start|end|err|trans> [key:value ...]",
+      execute: (args) => {
+        const sub = args[0]?.toLowerCase();
+        if (sub !== "elastic") {
+          return {
+            message:
+              'Usage: fedo elastic <recv_req|start|end|err|trans> [key:value ...]\n' +
+              "  recv_req  — 收到远端联邦实例的弹性资源转发请求\n" +
+              "  start     — 确认资源转发请求，任务开始\n" +
+              "  end       — 任务结束（限时到达/任务完成）\n" +
+              "  err       — 模拟任务因错误中断\n" +
+              "  trans     — 模拟任务被其他远端实例接力",
+            severity: "warning",
+          };
+        }
+
+        const action = args[1]?.toLowerCase();
+        const kv = parseKeyValues(args.slice(2));
+
+        switch (action) {
+          /* ── recv_req: 收到远端弹性资源转发请求 ── */
+          case "recv_req": {
+            const taskId = kv.taskid || `fedo-${Date.now().toString(36)}`;
+            const taskName = kv.taskname || "unnamed-task";
+            const taskTime = kv.tasktime ? Number(kv.tasktime) : 300;
+            const taskDesc = kv.taskdesc || "No description";
+            window.dispatchEvent(
+              new CustomEvent("pdebug:fedo:elastic:recv_req", {
+                detail: { taskId, taskName, taskTime, taskDesc },
+              })
+            );
+            useToastStore.getState().addToast({
+              icon: "cloud",
+              title: "FedElastic — recv_req",
+              message: `收到远端弹性资源转发请求: ${taskName} (${taskId}), 时限 ${taskTime}s`,
+            });
+            return {
+              message:
+                `[FedElastic] recv_req\n` +
+                `  Task ID   : ${taskId}\n` +
+                `  Task Name : ${taskName}\n` +
+                `  Time Limit: ${taskTime}s\n` +
+                `  Desc      : ${taskDesc}`,
+              severity: "info",
+            };
+          }
+
+          /* ── start: 确认/开始任务 ── */
+          case "start": {
+            const taskId = kv.taskid || `fedo-${Date.now().toString(36)}`;
+            const taskName = kv.taskname || "unnamed-task";
+            const taskTime = kv.tasktime ? Number(kv.tasktime) : 300;
+            const taskDesc = kv.taskdesc || "No description";
+            window.dispatchEvent(
+              new CustomEvent("pdebug:fedo:elastic:start", {
+                detail: { taskId, taskName, taskTime, taskDesc },
+              })
+            );
+            useToastStore.getState().addToast({
+              icon: "check_circle",
+              title: "FedElastic — start",
+              message: `任务开始: ${taskName} (${taskId}), 时限 ${taskTime}s`,
+            });
+            return {
+              message:
+                `[FedElastic] start ✓\n` +
+                `  Task ID   : ${taskId}\n` +
+                `  Task Name : ${taskName}\n` +
+                `  Time Limit: ${taskTime}s\n` +
+                `  Desc      : ${taskDesc}`,
+              severity: "success",
+            };
+          }
+
+          /* ── end: 任务结束 ── */
+          case "end": {
+            const taskId = kv.taskid || args[2];
+            if (!taskId) {
+              return { message: "Usage: fedo elastic end taskid:{ID}", severity: "warning" };
+            }
+            window.dispatchEvent(
+              new CustomEvent("pdebug:fedo:elastic:end", {
+                detail: { taskId },
+              })
+            );
+            useToastStore.getState().addToast({
+              icon: "check_circle",
+              title: "FedElastic — end",
+              message: `任务已结束: ${taskId}`,
+            });
+            return {
+              message: `[FedElastic] end ✓ — Task "${taskId}" completed / timed out`,
+              severity: "success",
+            };
+          }
+
+          /* ── err: 模拟任务错误中断 ── */
+          case "err": {
+            const taskId = kv.taskid || args[2];
+            const errCode = kv.err_code || "UNKNOWN";
+            if (!taskId) {
+              return { message: "Usage: fedo elastic err taskid:{ID} err_code:{CODE}", severity: "warning" };
+            }
+            window.dispatchEvent(
+              new CustomEvent("pdebug:fedo:elastic:err", {
+                detail: { taskId, errCode },
+              })
+            );
+            useToastStore.getState().addToast({
+              icon: "error",
+              title: "FedElastic — err",
+              message: `任务异常中断: ${taskId} (err: ${errCode})`,
+            });
+            return {
+              message:
+                `[FedElastic] err ✗\n` +
+                `  Task ID  : ${taskId}\n` +
+                `  Err Code : ${errCode}`,
+              severity: "error",
+            };
+          }
+
+          /* ── trans: 任务接力到其他实例 ── */
+          case "trans": {
+            const taskId = kv.taskid || args[2];
+            const targetInstId = kv.targetinst_id;
+            if (!taskId || !targetInstId) {
+              return { message: "Usage: fedo elastic trans taskid:{ID} targetinst_id:{INST_ID}", severity: "warning" };
+            }
+            window.dispatchEvent(
+              new CustomEvent("pdebug:fedo:elastic:trans", {
+                detail: { taskId, targetInstId },
+              })
+            );
+            useToastStore.getState().addToast({
+              icon: "cloud",
+              title: "FedElastic — trans",
+              message: `任务接力: ${taskId} → ${targetInstId}`,
+            });
+            return {
+              message:
+                `[FedElastic] trans → relay\n` +
+                `  Task ID     : ${taskId}\n` +
+                `  Target Inst : ${targetInstId}`,
+              severity: "info",
+            };
+          }
+
+          default:
+            return {
+              message:
+                `Unknown elastic sub-action: "${action || "(none)"}"\n` +
+                "Available: recv_req | start | end | err | trans",
+              severity: "warning",
+            };
         }
       },
     },

@@ -13,6 +13,7 @@ import { RouteView } from "@/components/layout/RouteView";
 
 import { AuthModal } from "@/components/auth/AuthModal";
 import { useFreeWindowStore } from "@/stores/freeWindow";
+import { ToastContainer } from "@/components/toast";
 
 const WindowManager = lazy(() => import("@/components/windows/WindowManager").then((m) => ({ default: m.WindowManager })));
 const HomePage = lazy(() => import("@/pages/page").then((m) => ({ default: m.default })));
@@ -53,6 +54,7 @@ export function ClientLayout() {
         <TopRouter />
         <WindowManager />
         {isAuthOpen && <AuthModal />}
+        <ToastContainer />
         <TermityAuthModal />
         <PortalDebugger />
       </I18nProvider>

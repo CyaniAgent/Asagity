@@ -96,6 +96,7 @@ import {
   Timeline20Filled,
   ServerLink20Filled,
   ChartMultiple16Filled,
+  ClockAlarm24Regular,
   type FluentIcon,
 } from "@fluentui/react-icons";
 
@@ -200,6 +201,7 @@ const iconMap: Record<string, FluentIcon> = {
   timeline_20_filled: Timeline20Filled,
   server_link_20_filled: ServerLink20Filled,
   chart_multiple_16_filled: ChartMultiple16Filled,
+  clock_alarm: ClockAlarm24Regular,
 };
 
 interface IconProps {
