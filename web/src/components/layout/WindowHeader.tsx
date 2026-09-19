@@ -36,6 +36,8 @@ function getIcon(type: ViewType | null | undefined, customIcon?: string) {
     case "lyrics_window": return "lyrics";
     case "playlist_window": return "queue_music";
     case "auth": return "lock";
+    case "login_window": return "lock";
+    case "register_window": return "person_add";
     case "welcome_timeline": return "public";
     case "welcome_federation": return "globe";
     case "welcome_dashboard": return "dashboard";
@@ -59,6 +61,8 @@ function getTitle(type: ViewType | null | undefined, mode: string, customTitle?:
     case "lyrics_window": return t_("window.lyricsWindow");
     case "playlist_window": return t_("window.playlist");
     case "auth": return t_("window.authWindow");
+    case "login_window": return t_("window.loginWindow");
+    case "register_window": return t_("window.registerWindow");
     case "welcome_timeline": return t_("window.timelineWindow");
     case "welcome_federation": return t_("window.federationWindow");
     case "welcome_dashboard": return t_("window.dashboardWindow");

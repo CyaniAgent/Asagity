@@ -47,6 +47,8 @@ interface FreeWindowState {
   focusedId: string | null;
   /** Termity auth modal (global) */
   isTermityAuthOpen: boolean;
+  /** Auth modal (login / register) */
+  isAuthOpen: boolean;
 
   // ── Actions ──────────────────────────────────────────────────────
   openFromContext: (
@@ -56,6 +58,8 @@ interface FreeWindowState {
   openTermity: () => void;
   confirmTermityAuth: () => void;
   closeTermityAuth: () => void;
+  openAuth: () => void;
+  closeAuth: () => void;
   close: (id: string) => void;
   focus: (id: string) => void;
   minimizeOldest: (ids: string[]) => void;
@@ -66,6 +70,7 @@ export const useFreeWindowStore = create<FreeWindowState>()((set, get) => ({
   windows: [],
   focusedId: null,
   isTermityAuthOpen: false,
+  isAuthOpen: false,
 
   /* ── Open ──────────────────────────────────────────────────────── */
   openFromContext: (viewType, data) => {
@@ -108,6 +113,9 @@ export const useFreeWindowStore = create<FreeWindowState>()((set, get) => ({
   },
 
   closeTermityAuth: () => set({ isTermityAuthOpen: false }),
+
+  openAuth: () => set({ isAuthOpen: true }),
+  closeAuth: () => set({ isAuthOpen: false }),
 
   /* ── Close ─────────────────────────────────────────────────────── */
   close: (id) =>

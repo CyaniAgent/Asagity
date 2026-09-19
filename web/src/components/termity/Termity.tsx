@@ -6,6 +6,8 @@ import { useInstanceStore } from "@/stores/instance";
 import { useUserStore } from "@/stores/user";
 import { useFreeWindowStore } from "@/stores/freeWindow";
 import { useLocaleStore, localeNames, type Locale } from "@/stores/locale";
+import { useI18n } from "@/components/providers/I18nProvider";
+import { usePortalDebuggerStore } from "@/stores/portalDebugger";
 
 interface TerminalLine {
   type: "input" | "output" | "system" | "error" | "warning";
@@ -15,48 +17,75 @@ interface TerminalLine {
 const GITHUB_REPO = "CyaniAgent/Asagity";
 const GITHUB_API = `https://api.github.com/repos/${GITHUB_REPO}`;
 
-const COMMANDS: Record<string, { name: string; description: string; subcommands?: Record<string, string> }> = {
-  help: {
-    name: "Help",
-    description: "帮助，查看所有可用的指令",
-  },
-  anet: {
-    name: "Asagity NET Config",
-    description: "Asagity NET 监测、管理、配置",
-    subcommands: {
-      status: "查看 Asagity NET 连接状态",
-      ping: "测试网络延迟",
-      config: "查看当前网络配置",
+function getCommands(t: (key: string) => string): Record<string, { name: string; description: string; subcommands?: Record<string, string> }> {
+  return {
+    help: {
+      name: "Help",
+      description: t("termity.cmdHelp"),
     },
-  },
-  func: {
-    name: "Function Switch",
-    description: "修改 Asagity 的一些可修改功能",
-    subcommands: {
-      "lang switch {locale}": "切换网站显示语言",
-      "lang current": "查看当前显示语言",
-      "enable Develop": "通过开发者凭据登录（会话级）",
-      "enable Develop time=meta": "通过开发者凭据登录（持久化）",
-      "disable Develop": "退出开发者账户并解除持久化",
+    vnet: {
+      name: "Verse NET",
+      description: t("termity.cmdVnet"),
+      subcommands: {
+        status: t("termity.vnetSubStatus"),
+        ping: t("termity.vnetSubPing"),
+        config: t("termity.vnetSubConfig"),
+      },
     },
-  },
-  info: {
-    name: "Server Information",
-    description: "查看本 Asagity 实例的相关信息",
-  },
-  exit: {
-    name: "Exit Termity",
-    description: "退出此 Termity 会话",
-  },
-  remote: {
-    name: "Remote Instance",
-    description: "通过 Bearer Token 连接到其他实例（开发中）",
-  },
-  clear: {
-    name: "Clear",
-    description: "清空终端输出",
-  },
-};
+    auth: {
+      name: "Account",
+      description: t("termity.cmdAuth"),
+      subcommands: {
+        info: t("termity.authSubInfo"),
+        devices: t("termity.authSubDevices"),
+        tokens: t("termity.authSubTokens"),
+        linked: t("termity.authSubLinked"),
+        logout: t("termity.authSubLogout"),
+      },
+    },
+    func: {
+      name: "Function Switch",
+      description: t("termity.cmdFunc"),
+      subcommands: {
+        "lang switch {locale}": t("termity.funcSubLangSwitch"),
+        "lang current": t("termity.funcSubLangCurrent"),
+        "enable Develop": t("termity.funcSubDevEnable"),
+        "enable Develop time=meta": t("termity.funcSubDevEnablePersist"),
+        "disable Develop": t("termity.funcSubDevDisable"),
+        "pdebug show": t("termity.funcSubPdebugShow"),
+        "pdebug hide": t("termity.funcSubPdebugHide"),
+      },
+    },
+    time: {
+      name: "Time",
+      description: t("termity.cmdTime"),
+    },
+    date: {
+      name: "Date",
+      description: t("termity.cmdDate"),
+    },
+    whoami: {
+      name: "Who Am I",
+      description: t("termity.cmdWhoami"),
+    },
+    info: {
+      name: "Server Information",
+      description: t("termity.cmdInfo"),
+    },
+    exit: {
+      name: "Exit Termity",
+      description: t("termity.cmdExit"),
+    },
+    remote: {
+      name: "Remote Instance",
+      description: t("termity.cmdRemote"),
+    },
+    clear: {
+      name: "Clear",
+      description: t("termity.cmdClear"),
+    },
+  };
+}
 
 async function githubFetch(path: string): Promise<{ ok: number; data: unknown }> {
   const res = await fetch(`${GITHUB_API}${path}`, {
@@ -65,6 +94,58 @@ async function githubFetch(path: string): Promise<{ ok: number; data: unknown }>
   });
   const data = await res.json();
   return { ok: res.status, data };
+}
+
+function showSubcommandHelp(
+  addLine: (line: TerminalLine) => void,
+  title: string,
+  subcommands: Record<string, string>,
+  t: (key: string) => string
+) {
+  addLine({ type: "output", text: `${title} - ${t("termity.subcmdList")}:` });
+  Object.entries(subcommands).forEach(([cmd, desc]) => {
+    addLine({ type: "output", text: `  ${cmd.padEnd(30)} │ ${desc}` });
+  });
+}
+
+const WEEKDAYS_ZH = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+const WEEKDAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function parseGMTOffset(gmt: string): number {
+  const m = gmt.match(/^(\+|-)?(\d{1,2})(?::(\d{2}))?$/);
+  if (!m) throw new Error("Invalid GMT offset");
+  const sign = m[1] === "-" ? -1 : 1;
+  const hours = parseInt(m[2], 10);
+  const minutes = m[3] ? parseInt(m[3], 10) : 0;
+  return sign * (hours * 60 + minutes);
+}
+
+function applyGMTOffset(date: Date, gmtStr: string): Date {
+  const targetOffset = parseGMTOffset(gmtStr);
+  const localOffset = -date.getTimezoneOffset();
+  const diff = (targetOffset - localOffset) * 60 * 1000;
+  return new Date(date.getTime() + diff);
+}
+
+function formatDate(d: Date): string {
+  const y = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, "0");
+  const da = String(d.getDate()).padStart(2, "0");
+  const wd = WEEKDAYS_ZH[d.getDay()];
+  const h = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  const s = String(d.getSeconds()).padStart(2, "0");
+  return `${y}/${mo}/${da} ${wd} ${h}:${mi}:${s}`;
+}
+
+function formatISO8601(d: Date): string {
+  const y = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, "0");
+  const da = String(d.getDate()).padStart(2, "0");
+  const h = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  const s = String(d.getSeconds()).padStart(2, "0");
+  return `${y}-${mo}-${da}T${h}:${mi}:${s}`;
 }
 
 function parseArgs(fullArgs: string): Record<string, string> {
@@ -82,6 +163,7 @@ function parseArgs(fullArgs: string): Record<string, string> {
 }
 
 export function Termity({ windowId }: { windowId: string }) {
+  const { t } = useI18n();
   const systemStore = useSystemStore();
   const instanceStore = useInstanceStore();
   const userStore = useUserStore();
@@ -153,6 +235,8 @@ export function Termity({ windowId }: { windowId: string }) {
       const root = parts[0].toLowerCase();
       const args = parts.slice(1);
 
+      const COMMANDS = getCommands(t);
+
       switch (root) {
         case "help": {
           addLine({ type: "system", text: "┌─────────────────────────────────────────────┐" });
@@ -166,50 +250,46 @@ export function Termity({ windowId }: { windowId: string }) {
             });
           });
           addLine({ type: "system", text: "└─────────────────────────────────────────────┘" });
-          addLine({ type: "system", text: 'Use "[command] --help" for sub-command details.' });
+          addLine({ type: "system", text: t("termity.helpHint") });
           break;
         }
 
-        case "anet": {
-          if (args[0] === "--help") {
-            addLine({ type: "output", text: "Asagity NET Config - 子命令列表:" });
-            Object.entries(COMMANDS.anet.subcommands!).forEach(([cmd, desc]) => {
-              addLine({ type: "output", text: `  ${cmd.padEnd(20)} │ ${desc}` });
-            });
-          } else if (args[0] === "status") {
+        case "vnet": {
+          if (args[0] === "--help" || args.length === 0 || !COMMANDS.vnet.subcommands![args[0]]) {
+            showSubcommandHelp(addLine, t("termity.vnetTitle"), COMMANDS.vnet.subcommands!, t);
+            break;
+          }
+          if (args[0] === "status") {
             const online = systemStore.isBackendOnline;
             addLine({
               type: online ? "output" : "error",
-              text: `Asagity NET 状态: ${online ? "已连接" : "离线"}`,
+              text: `${t("termity.vnetTitle")} ${t("termity.status")}: ${online ? t("termity.connected") : t("termity.offline")}`,
             });
           } else if (args[0] === "ping") {
-            addLine({ type: "system", text: "正在测试网络延迟..." });
+            addLine({ type: "system", text: t("termity.vnetPinging") });
             addTimer(() => {
-              addLine({ type: "output", text: "Pong! 延迟: 42ms" });
+              addLine({ type: "output", text: `Pong! ${t("termity.latency")}: 42ms` });
             }, 500);
           } else if (args[0] === "config") {
-            addLine({ type: "output", text: "网络配置:" });
-            addLine({ type: "output", text: `  后端地址: ${typeof window !== "undefined" ? window.location.origin : "N/A"}` });
-            addLine({ type: "output", text: `  连接状态: ${systemStore.isBackendOnline ? "在线" : "离线"}` });
-          } else {
-            addLine({ type: "output", text: '使用 "anet --help" 查看可用子命令。' });
+            addLine({ type: "output", text: `${t("termity.networkConfig")}:` });
+            addLine({ type: "output", text: `  ${t("termity.backendAddr")}: ${typeof window !== "undefined" ? window.location.origin : "N/A"}` });
+            addLine({ type: "output", text: `  ${t("termity.connStatus")}: ${systemStore.isBackendOnline ? t("termity.online") : t("termity.offline")}` });
           }
           break;
         }
 
         case "func": {
-          if (args[0] === "--help") {
-            addLine({ type: "output", text: "Function Switch - 子命令列表:" });
-            Object.entries(COMMANDS.func.subcommands!).forEach(([cmd, desc]) => {
-              addLine({ type: "output", text: `  ${cmd.padEnd(35)} │ ${desc}` });
-            });
+          if (args[0] === "--help" || args.length === 0) {
+            showSubcommandHelp(addLine, "Function Switch", COMMANDS.func.subcommands!, t);
             addLine({ type: "output", text: "" });
-            addLine({ type: "output", text: "Develop 高级命令:" });
-            addLine({ type: "output", text: `  ${"latest commit".padEnd(35)} │ 获取 main 分支最近 commit` });
-            addLine({ type: "output", text: `  ${"latest release".padEnd(35)} │ 获取 main 分支最新 release` });
-            addLine({ type: "output", text: `  ${"{ver} commit branch={br}".padEnd(35)} │ 获取指定分支指定版本 commit` });
-            addLine({ type: "output", text: `  ${"{ver} release branch={br}".padEnd(35)} │ 获取指定分支指定版本 release` });
-          } else if (args[0] === "lang") {
+            addLine({ type: "output", text: `${t("termity.developAdvanced")}:` });
+            addLine({ type: "output", text: `  ${"latest commit".padEnd(35)} │ ${t("termity.devLatestCommit")}` });
+            addLine({ type: "output", text: `  ${"latest release".padEnd(35)} │ ${t("termity.devLatestRelease")}` });
+            addLine({ type: "output", text: `  ${"{ver} commit branch={br}".padEnd(35)} │ ${t("termity.devVerCommit")}` });
+            addLine({ type: "output", text: `  ${"{ver} release branch={br}".padEnd(35)} │ ${t("termity.devVerRelease")}` });
+            break;
+          }
+          if (args[0] === "lang") {
             if (args[1] === "current") {
               const current = useLocaleStore.getState().locale;
               addLine({ type: "output", text: `Current language: ${current} (${localeNames[current]})` });
@@ -220,7 +300,7 @@ export function Termity({ windowId }: { windowId: string }) {
                 addLine({ type: "error", text: `Unsupported locale: ${target}` });
                 addLine({ type: "output", text: `Supported: ${supported.join(", ")}` });
               } else if (!userStore.isLoggedIn) {
-                addLine({ type: "warning", text: "此操作需要登录。" });
+                addLine({ type: "warning", text: t("termity.loginRequired") });
               } else {
                 const prev = useLocaleStore.getState().locale;
                 useLocaleStore.getState().setLocale(target);
@@ -236,23 +316,33 @@ export function Termity({ windowId }: { windowId: string }) {
               userStore.developerEnter();
               localStorage.setItem("asagity_dev_persistent", "true");
               addLine({ type: "output", text: "> Developer Entry ENABLED (Persistent)" });
-              addLine({ type: "output", text: "  开发者账户已通过持久化存储登录。刷新页面后仍保持登录。" });
+              addLine({ type: "output", text: `  ${t("termity.devEnabledPersist")}` });
             } else {
               userStore.developerEnter();
               addLine({ type: "output", text: "> Developer Entry ENABLED (Session)" });
-              addLine({ type: "output", text: "  开发者账户已登录。刷新页面后将退出。" });
+              addLine({ type: "output", text: `  ${t("termity.devEnabledSession")}` });
             }
           } else if (args[0] === "disable" && args[1] === "Develop") {
             userStore.logout();
             localStorage.removeItem("asagity_dev_persistent");
             addLine({ type: "output", text: "> Developer Account LOGGED OUT" });
-            addLine({ type: "output", text: "  已退出开发者账户并解除持久化登录。" });
+            addLine({ type: "output", text: `  ${t("termity.devDisabled")}` });
+          } else if (args[0] === "pdebug") {
+            if (args[1] === "show") {
+              usePortalDebuggerStore.getState().showEntry();
+              addLine({ type: "output", text: `> Portal Debugger: ${t("termity.pdebugShown")}` });
+            } else if (args[1] === "hide") {
+              usePortalDebuggerStore.getState().hideEntry();
+              addLine({ type: "output", text: `> Portal Debugger: ${t("termity.pdebugHidden")}` });
+            } else {
+              addLine({ type: "output", text: t("termity.pdebugUsage") });
+            }
           } else if (args[0] === "Develop" || args[0] === "develop") {
             const developCmd = args.slice(1);
             const subArgs = parseArgs(developCmd.join(" "));
 
             if (developCmd.length === 0) {
-              addLine({ type: "output", text: '使用 "func --help" 查看 Develop 命令列表。' });
+              addLine({ type: "output", text: t("termity.devHelpHint") });
               break;
             }
 
@@ -261,10 +351,10 @@ export function Termity({ windowId }: { windowId: string }) {
             if (developAction === "latest") {
               const type = developCmd[1]?.toLowerCase();
               if (type === "commit") {
-                addLine({ type: "system", text: "正在获取 main 分支最新 commit..." });
+                addLine({ type: "system", text: t("termity.devFetchingMainCommit") });
                 githubFetch("/commits/main").then(({ ok, data }) => {
                   if (ok !== 200) {
-                    addLine({ type: "error", text: `GitHub API 错误: ${ok}` });
+                    addLine({ type: "error", text: `${t("termity.githubApiError")}: ${ok}` });
                     return;
                   }
                   const d = data as { sha: string; commit: { message: string; author: { name: string }; committer: { date: string } } };
@@ -274,13 +364,13 @@ export function Termity({ windowId }: { windowId: string }) {
                   addLine({ type: "output", text: `  Date:     ${d.commit.committer.date}` });
                 });
               } else if (type === "release") {
-                addLine({ type: "system", text: "正在获取 main 分支最新 release..." });
+                addLine({ type: "system", text: t("termity.devFetchingMainRelease") });
                 Promise.all([
                   githubFetch("/releases/latest"),
                   githubFetch("/releases"),
                 ]).then(([latestRes, releasesRes]) => {
                   if (latestRes.ok !== 200) {
-                    addLine({ type: "error", text: `GitHub API 错误: ${latestRes.ok}` });
+                    addLine({ type: "error", text: `${t("termity.githubApiError")}: ${latestRes.ok}` });
                     return;
                   }
                   const latest = latestRes.data as { tag_name: string; name: string; body: string; published_at: string };
@@ -293,7 +383,7 @@ export function Termity({ windowId }: { windowId: string }) {
                     if (releases.length > 1) {
                       const prev = releases[1];
                       if (prev.tag_name !== latest.tag_name) {
-                        addLine({ type: "warning", text: `  ${prev.tag_name} -> ${latest.tag_name} (新版本可用)` });
+                        addLine({ type: "warning", text: `  ${prev.tag_name} -> ${latest.tag_name} (${t("termity.newVersionAvailable")})` });
                       }
                     }
                   }
@@ -306,7 +396,7 @@ export function Termity({ windowId }: { windowId: string }) {
                   }
                 });
               } else {
-                addLine({ type: "output", text: '用法: func Develop latest commit | latest release' });
+                addLine({ type: "output", text: t("termity.devUsageLatest") });
               }
             } else {
               const version = developAction;
@@ -314,10 +404,10 @@ export function Termity({ windowId }: { windowId: string }) {
               const branch = subArgs["branch"] || "main";
 
               if (type === "commit") {
-                addLine({ type: "system", text: `正在获取 ${branch} 分支 ${version} commit...` });
+                addLine({ type: "system", text: `${t("termity.devFetchingBranchCommit")} ${branch} ${version}...` });
                 githubFetch(`/commits/${version}`).then(({ ok, data }) => {
                   if (ok !== 200) {
-                    addLine({ type: "error", text: `GitHub API 错误: ${ok}` });
+                    addLine({ type: "error", text: `${t("termity.githubApiError")}: ${ok}` });
                     return;
                   }
                   const d = data as { sha: string; commit: { message: string; author: { name: string }; committer: { date: string } } };
@@ -327,10 +417,10 @@ export function Termity({ windowId }: { windowId: string }) {
                   addLine({ type: "output", text: `  Date:     ${d.commit.committer.date}` });
                 });
               } else if (type === "release") {
-                addLine({ type: "system", text: `正在获取 ${branch} 分支 ${version} release...` });
+                addLine({ type: "system", text: `${t("termity.devFetchingBranchRelease")} ${branch} ${version}...` });
                 githubFetch(`/releases/tags/${version}`).then(({ ok, data }) => {
                   if (ok !== 200) {
-                    addLine({ type: "error", text: `GitHub API 错误: ${ok}` });
+                    addLine({ type: "error", text: `${t("termity.githubApiError")}: ${ok}` });
                     return;
                   }
                   const d = data as { tag_name: string; name: string; body: string; published_at: string };
@@ -345,28 +435,78 @@ export function Termity({ windowId }: { windowId: string }) {
                   }
                 });
               } else {
-                addLine({ type: "output", text: '用法: func Develop {version} commit branch={branch}' });
+                addLine({ type: "output", text: t("termity.devUsageVersion") });
                 addLine({ type: "output", text: '      func Develop {version} release branch={branch}' });
               }
             }
-          } else {
-            addLine({ type: "output", text: '使用 "func --help" 查看可用子命令。' });
           }
           break;
         }
 
+        case "time": {
+          const gmtArg = args.find((a) => a.startsWith("--GMT="));
+          const now = new Date();
+          try {
+            const adjusted = gmtArg ? applyGMTOffset(now, gmtArg.slice(6)) : now;
+            const h = String(adjusted.getHours()).padStart(2, "0");
+            const m = String(adjusted.getMinutes()).padStart(2, "0");
+            const s = String(adjusted.getSeconds()).padStart(2, "0");
+            const tzLabel = gmtArg ? ` (UTC${gmtArg.slice(6)})` : "";
+            addLine({ type: "output", text: `${h}:${m}:${s}${tzLabel}` });
+          } catch {
+            addLine({ type: "error", text: t("termity.timeInvalidGMT") });
+          }
+          break;
+        }
+
+        case "date": {
+          const gmtArg = args.find((a) => a.startsWith("--GMT="));
+          const fmtArg = args.find((a) => a.startsWith("--format="));
+          const now = new Date();
+          try {
+            const adjusted = gmtArg ? applyGMTOffset(now, gmtArg.slice(6)) : now;
+            if (fmtArg) {
+              const fmtVal = fmtArg.slice(9).replace(/^['"]|['"]$/g, "").toLowerCase();
+              if (fmtVal === "iso" || fmtVal === "iso8601") {
+                addLine({ type: "output", text: formatISO8601(adjusted) });
+              } else {
+                addLine({ type: "error", text: t("termity.dateInvalidFormat") });
+                addLine({ type: "output", text: formatDate(adjusted) });
+              }
+            } else {
+              addLine({ type: "output", text: formatDate(adjusted) });
+            }
+          } catch {
+            addLine({ type: "error", text: t("termity.dateInvalidGMT") });
+            addLine({ type: "output", text: formatDate(now) });
+          }
+          break;
+        }
+
+        case "whoami": {
+          if (!userStore.isLoggedIn) {
+            addLine({ type: "warning", text: t("termity.loginRequired") });
+            break;
+          }
+          const u = userStore.user;
+          addLine({ type: "output", text: `${u?.name || "-"} (@${u?.username || "-"})` });
+          addLine({ type: "output", text: `  PubID:  ${u?.pubid || "-"}` });
+          addLine({ type: "output", text: `  Role:   ${u?.role || "user"}` });
+          break;
+        }
+
         case "info": {
-          addLine({ type: "output", text: "服务器信息:" });
-          addLine({ type: "output", text: `  名称: ${instanceStore.name || "Asagity"}` });
-          addLine({ type: "output", text: `  别名: ${instanceStore.alias || "asagity.io"}` });
-          addLine({ type: "output", text: `  版本: ${instanceStore.version || "2.0.0"}` });
-          addLine({ type: "output", text: `  描述: ${instanceStore.description || "Asagity NET"}` });
-          addLine({ type: "output", text: `  开发者: ${userStore.isLoggedIn ? userStore.username || "已登录" : "未登录"}` });
+          addLine({ type: "output", text: `${t("termity.serverInfo")}:` });
+          addLine({ type: "output", text: `  ${t("termity.infoName")}: ${instanceStore.name || "Asagity"}` });
+          addLine({ type: "output", text: `  ${t("termity.infoAlias")}: ${instanceStore.alias || "asagity.io"}` });
+          addLine({ type: "output", text: `  ${t("termity.infoVersion")}: ${instanceStore.version || "2.0.0"}` });
+          addLine({ type: "output", text: `  ${t("termity.infoDesc")}: ${instanceStore.description || "Asagity"}` });
+          addLine({ type: "output", text: `  ${t("termity.infoDev")}: ${userStore.isLoggedIn ? userStore.username || t("termity.loggedIn") : t("termity.notLoggedIn")}` });
           break;
         }
 
         case "exit": {
-          addLine({ type: "system", text: "正在关闭 Termity 会话..." });
+          addLine({ type: "system", text: t("termity.closingSession") });
           addTimer(() => {
             useFreeWindowStore.getState().close(windowId);
           }, 300);
@@ -378,21 +518,99 @@ export function Termity({ windowId }: { windowId: string }) {
           break;
         }
 
+        case "auth": {
+          if (args[0] === "--help" || args.length === 0 || !COMMANDS.auth.subcommands![args[0]]) {
+            showSubcommandHelp(addLine, "Account", COMMANDS.auth.subcommands!, t);
+            break;
+          }
+          if (args[0] === "info") {
+            if (!userStore.isLoggedIn) {
+              addLine({ type: "warning", text: t("termity.loginRequired") });
+              break;
+            }
+            const u = userStore.user;
+            addLine({ type: "output", text: `${t("termity.accountInfo")}:` });
+            addLine({ type: "output", text: `  ${t("termity.infoName")}: ${u?.name || "-"}` });
+            addLine({ type: "output", text: `  ${"username"}: ${u?.username || "-"}` });
+            addLine({ type: "output", text: `  ${"PubID"}: ${u?.pubid || "-"}` });
+            addLine({ type: "output", text: `  ${"Role"}: ${u?.role || "user"}` });
+            addLine({ type: "output", text: `  ${"Avatar"}: ${u?.avatar_url || "-"}` });
+          } else if (args[0] === "devices") {
+            if (!userStore.isLoggedIn) {
+              addLine({ type: "warning", text: t("termity.loginRequired") });
+              break;
+            }
+            addLine({ type: "system", text: t("termity.authFetchingDevices") });
+            fetch("/api/auth/devices", {
+              headers: { Authorization: `Bearer ${userStore.accessToken}` },
+            }).then(async (res) => {
+              if (!res.ok) {
+                addLine({ type: "error", text: `API ${res.status}` });
+                return;
+              }
+              const data = await res.json() as { devices?: { id: string; device_name: string; ip_address: string; last_seen_at: string; trusted_at: string | null }[] };
+              const devices = data.devices || data;
+              if (!Array.isArray(devices) || devices.length === 0) {
+                addLine({ type: "output", text: t("termity.authNoDevices") });
+                return;
+              }
+              addLine({ type: "output", text: `${t("termity.authDeviceList")}:` });
+              devices.forEach((d) => {
+                const trusted = d.trusted_at ? ` ✓` : "";
+                addLine({ type: "output", text: `  ${d.device_name || d.id} (${d.ip_address})${trusted}` });
+                addLine({ type: "output", text: `    ${t("termity.authLastSeen")}: ${d.last_seen_at}` });
+              });
+            }).catch(() => {
+              addLine({ type: "error", text: t("termity.authDevicesError") });
+            });
+          } else if (args[0] === "tokens") {
+            if (!userStore.isLoggedIn) {
+              addLine({ type: "warning", text: t("termity.loginRequired") });
+              break;
+            }
+            addLine({ type: "output", text: `${t("termity.authTokenInfo")}:` });
+            addLine({ type: "output", text: `  Access Token: ${userStore.accessToken ? "••••" + userStore.accessToken.slice(-6) : "-"}` });
+            addLine({ type: "output", text: `  Refresh Token: ${userStore.refreshToken ? "••••" + userStore.refreshToken.slice(-6) : "-"}` });
+          } else if (args[0] === "linked") {
+            if (!userStore.isLoggedIn) {
+              addLine({ type: "warning", text: t("termity.loginRequired") });
+              break;
+            }
+            addLine({ type: "output", text: t("termity.authLinkedAccounts") });
+            addLine({ type: "output", text: `  ${t("termity.authLinkedNone")}` });
+          } else if (args[0] === "logout") {
+            if (!userStore.isLoggedIn) {
+              addLine({ type: "warning", text: t("termity.loginRequired") });
+              break;
+            }
+            if (args[1] === "all") {
+              userStore.logoutAll().then(() => {
+                addLine({ type: "output", text: t("termity.authLogoutAllSuccess") });
+              });
+            } else {
+              userStore.logout().then(() => {
+                addLine({ type: "output", text: t("termity.authLogoutSuccess") });
+              });
+            }
+          }
+          break;
+        }
+
         case "remote": {
-          addLine({ type: "warning", text: "Remote Instance 功能目前仍在开发中。" });
-          addLine({ type: "output", text: "该功能将支持通过 Bearer Token 连接到其他 ActivityPub / Asagity 实例。" });
+          addLine({ type: "warning", text: t("termity.remoteInDev") });
+          addLine({ type: "output", text: t("termity.remoteDesc") });
           break;
         }
 
         default: {
-          addLine({ type: "error", text: `未知命令: ${root}` });
-          addLine({ type: "output", text: '输入 "help" 查看可用命令。' });
+          addLine({ type: "error", text: `${t("termity.unknownCmd")}: ${root}` });
+          addLine({ type: "output", text: t("termity.helpHint") });
         }
       }
 
       addLine({ type: "system", text: "" });
     },
-    [addLine, systemStore, instanceStore, userStore]
+    [addLine, systemStore, instanceStore, userStore, t]
   );
 
   const handleKeyDown = useCallback(

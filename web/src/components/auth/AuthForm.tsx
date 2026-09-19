@@ -151,7 +151,7 @@ export function AuthForm({ onModeSwitch, compact }: AuthFormProps) {
           <div className="flex flex-col gap-1.5">
             <div className="flex justify-between items-center ml-1">
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                {t("auth.accessKey")}
+                {t("auth.password")}
               </label>
               <button type="button" className="text-[9px] font-bold text-cyan-500 hover:text-cyan-400">
                 {t("auth.forgotKey")}
@@ -194,7 +194,7 @@ export function AuthForm({ onModeSwitch, compact }: AuthFormProps) {
         <form onSubmit={handleRegister} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">
-              {t("auth.hubIdentifier")}
+              {t("auth.username")}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -214,7 +214,7 @@ export function AuthForm({ onModeSwitch, compact }: AuthFormProps) {
 
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">
-              {t("auth.communicationNode")}
+              {t("auth.email")}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -234,7 +234,7 @@ export function AuthForm({ onModeSwitch, compact }: AuthFormProps) {
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">
-                {t("auth.accessKey")}
+                {t("auth.password")}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -254,7 +254,7 @@ export function AuthForm({ onModeSwitch, compact }: AuthFormProps) {
 
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">
-                {t("auth.confirmKey")}
+                {t("auth.confirmPassword")}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">

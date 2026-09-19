@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
+import { ClientLink as Link } from "@/components/ui/ClientLink";
+// Image: replaced next/image with standard img
+import { usePathname } from "@/hooks/usePathname";
+import { useRouter } from "@/hooks/useRouter";
+
 import { useSystemStore } from "@/stores/system";
 import { useUserStore } from "@/stores/user";
 import { useSplitViewStore } from "@/stores/splitView";
@@ -15,22 +16,12 @@ import { MoreMenuPopover } from "./MoreMenuPopover";
 import { SplitView } from "./SplitView";
 import { MobileNav } from "./MobileNav";
 import { Icon } from "@/components/ui/Icon";
+import { lazy } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
 
-const SplashScreen = dynamic(
-  () => import("@/components/ui/SplashScreen").then((m) => m.SplashScreen),
-  { ssr: false }
-);
-
-const ContextMenu = dynamic(
-  () => import("@/components/ui/ContextMenu").then((m) => m.ContextMenu),
-  { ssr: false }
-);
-
-const NetworkStatus = dynamic(
-  () => import("@/components/shared/NetworkStatus").then((m) => m.NetworkStatus),
-  { ssr: false }
-);
+const SplashScreen = lazy(() => import("@/components/ui/SplashScreen").then((m) => ({ default: m.SplashScreen })));
+const ContextMenu = lazy(() => import("@/components/ui/ContextMenu").then((m) => ({ default: m.ContextMenu })));
+const NetworkStatus = lazy(() => import("@/components/shared/NetworkStatus").then((m) => ({ default: m.NetworkStatus })));
 
 export function MainLayout({ children, notFound }: { children: React.ReactNode; notFound?: boolean }) {
   const { t } = useI18n();
@@ -255,7 +246,7 @@ export function MainLayout({ children, notFound }: { children: React.ReactNode; 
 
             {/* Music Player Mini */}
             <div className="flex items-center gap-2 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-full pr-2 pl-1 py-1 border border-white/20 dark:border-gray-700/50 shadow-sm cursor-pointer hover:scale-105 transition-transform">
-              <Image src={currentTrackAlbumArt} width={24} height={24} className="w-6 h-6 rounded-full object-cover shadow-sm" alt="Art" />
+              <img src={currentTrackAlbumArt} width={24} height={24} className="w-6 h-6 rounded-full object-cover shadow-sm" alt="Art" />
               <div className="w-24 overflow-hidden">
                 <div className={`text-xs font-normal whitespace-nowrap inline-block text-gray-800 dark:text-gray-100 ${isPlaying ? "animate-[marquee_10s_linear_infinite]" : ""}`}>
                   {currentTrackTitle}
@@ -309,7 +300,7 @@ export function MainLayout({ children, notFound }: { children: React.ReactNode; 
                 className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-cyan-500/50 hover:ring-cyan-500 transition-all cursor-pointer"
               >
                 {userAvatar ? (
-                  <Image src={userAvatar} width={32} height={32} className="w-full h-full object-cover" alt="Avatar" />
+                  <img src={userAvatar} width={32} height={32} className="w-full h-full object-cover" alt="Avatar" />
                 ) : (
                   <div className="w-full h-full bg-cyan-500/20 flex items-center justify-center">
                     <Icon name="person" className="text-cyan-500" fontSize={16} />
@@ -326,7 +317,7 @@ export function MainLayout({ children, notFound }: { children: React.ReactNode; 
                       setUserPopoverOpen(false);
                     }}
                   >
-                    <Image src={userAvatar} width={40} height={40} className="w-10 h-10 rounded-full object-cover" alt="Avatar" />
+                    <img src={userAvatar} width={40} height={40} className="w-10 h-10 rounded-full object-cover" alt="Avatar" />
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-900 dark:text-white">{userName}</span>
                       <span className="text-xs text-gray-500 dark:text-gray-400">@{username}</span>

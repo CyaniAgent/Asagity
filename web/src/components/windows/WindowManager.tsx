@@ -19,6 +19,12 @@ const PlaylistWindow = lazy(() =>
 const AuthForm = lazy(() =>
   import("@/components/auth/AuthForm").then((m) => ({ default: m.AuthForm }))
 );
+const RegisterPage = lazy(() =>
+  import("@/components/auth/RegisterPage").then((m) => ({ default: m.RegisterPage }))
+);
+const LoginPage = lazy(() =>
+  import("@/components/auth/LoginPage").then((m) => ({ default: m.LoginPage }))
+);
 const TimelineFeed = lazy(() =>
   import("@/components/post/TimelineFeed").then((m) => ({ default: m.TimelineFeed }))
 );
@@ -57,6 +63,10 @@ function getViewConfig(viewType: string | null) {
       return { title: "Playlist", icon: "queue_music", width: 350, height: 500, disableTransfer: true };
     case "auth":
       return { title: "身份认证", icon: "lock", width: 420, height: 560, disableMinimize: true };
+    case "login_window":
+      return { title: "登录", icon: "lock", width: 780, height: 520, disableMinimize: true };
+    case "register_window":
+      return { title: "注册新账号", icon: "person_add", width: 820, height: 580, disableMinimize: true };
     case "welcome_timeline":
       return { title: "时间线", icon: "public", width: 500, height: 600, disableMinimize: true };
     case "welcome_federation":
@@ -68,7 +78,7 @@ function getViewConfig(viewType: string | null) {
   }
 }
 
-function renderContent(viewType: string | null, refreshKey: number, browserUrl?: string) {
+function renderContent(viewType: string | null, refreshKey: number, browserUrl?: string, windowId?: string) {
   switch (viewType) {
     case "error":
       return <div className="p-4 text-red-500">系统错误内容</div>;
@@ -87,13 +97,17 @@ function renderContent(viewType: string | null, refreshKey: number, browserUrl?:
     case "browser":
       return <iframe src={browserUrl} className="w-full h-full border-0" title="Browser" />;
     case "termity":
-      return <Suspense fallback={<WindowManagerFallback />}><Termity /></Suspense>;
+      return <Suspense fallback={<WindowManagerFallback />}><Termity windowId={windowId!} /></Suspense>;
     case "lyrics_window":
       return <Suspense fallback={<WindowManagerFallback />}><LyricsWindow /></Suspense>;
     case "playlist_window":
       return <Suspense fallback={<WindowManagerFallback />}><PlaylistWindow /></Suspense>;
     case "auth":
       return <Suspense fallback={<WindowManagerFallback />}><AuthForm /></Suspense>;
+    case "login_window":
+      return <Suspense fallback={<WindowManagerFallback />}><LoginPage /></Suspense>;
+    case "register_window":
+      return <Suspense fallback={<WindowManagerFallback />}><RegisterPage /></Suspense>;
     case "welcome_timeline":
       return <Suspense fallback={<WindowManagerFallback />}><TimelineFeed /></Suspense>;
     case "welcome_federation":
@@ -142,7 +156,7 @@ export function WindowManager() {
             onFocus={() => focus(win.id)}
             onRefresh={() => triggerRefresh(win.id)}
           >
-            {renderContent(win.viewType, win.refreshKey, win.browserUrl)}
+            {renderContent(win.viewType, win.refreshKey, win.browserUrl, win.id)}
           </FreeWindow>
         );
       })}
