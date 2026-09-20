@@ -41,6 +41,10 @@ core/bin/
 core/*.exe
 core/.env
 
+# .NET build artifacts (Verse.Api / Verse.Modules)
+**/bin/
+**/obj/
+
 # IDEs
 .idea/
 .vscode/

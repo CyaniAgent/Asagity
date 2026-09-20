@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/Verse.Modules/">
+    <Project Path="Verse.Modules/Verse.Module.Asset/Verse.Module.Asset.csproj" />
+    <Project Path="Verse.Modules/Verse.Module.Auth/Verse.Module.Auth.csproj" />
+    <Project Path="Verse.Modules/Verse.Module.Drive/Verse.Module.Drive.csproj" />
+    <Project Path="Verse.Modules/Verse.Module.Follow/Verse.Module.Follow.csproj" />
+    <Project Path="Verse.Modules/Verse.Module.Instance/Verse.Module.Instance.csproj" />
+    <Project Path="Verse.Modules/Verse.Module.Music/Verse.Module.Music.csproj" />
+    <Project Path="Verse.Modules/Verse.Module.Note/Verse.Module.Note.csproj" />
+    <Project Path="Verse.Modules/Verse.Module.User/Verse.Module.User.csproj" />
+  </Folder>
+  <Project Path="Verse.Api/Verse.Api.csproj" />
+  <Project Path="Verse.Shared/Verse.Shared.csproj" />
+</Solution>

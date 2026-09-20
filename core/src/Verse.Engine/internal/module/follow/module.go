@@ -1,0 +1,34 @@
+package follow
+
+import (
+	"github.com/go-chi/chi/v5"
+
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/follow/handler"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/follow/repository"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/follow/service"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/config"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/database"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/event"
+)
+
+func Register(r *chi.Mux, cfg config.Config, clients *database.Clients, eventBus *event.Bus) {
+	repo := repository.NewFollowRepository(clients.DB)
+
+	if err := repo.AutoMigrate(); err != nil {
+		panic("follow module migration failed: " + err.Error())
+	}
+
+	svc := service.NewFollowServiceWithBus(repo, eventBus)
+	h := handler.NewHandler(svc)
+
+	r.Post("/api/users/{id}/follow", h.FollowUser)
+	r.Delete("/api/users/{id}/follow", h.UnfollowUser)
+
+	r.Get("/api/users/{id}/followers", h.GetFollowers)
+	r.Get("/api/users/{id}/following", h.GetFollowing)
+	r.Get("/api/users/{id}/follow-count", h.GetFollowCount)
+
+	r.Get("/api/follow/requests/pending", h.GetPendingRequests)
+	r.Post("/api/follow/requests/{id}/accept", h.AcceptFollowRequest)
+	r.Post("/api/follow/requests/{id}/reject", h.RejectFollowRequest)
+}

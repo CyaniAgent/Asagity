@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Verse.Api</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Verse.Shared\Verse.Shared.csproj" />
+    <ProjectReference Include="..\Verse.Modules\Verse.Module.Asset\Verse.Module.Asset.csproj" />
+    <ProjectReference Include="..\Verse.Modules\Verse.Module.Auth\Verse.Module.Auth.csproj" />
+    <ProjectReference Include="..\Verse.Modules\Verse.Module.User\Verse.Module.User.csproj" />
+    <ProjectReference Include="..\Verse.Modules\Verse.Module.Note\Verse.Module.Note.csproj" />
+    <ProjectReference Include="..\Verse.Modules\Verse.Module.Drive\Verse.Module.Drive.csproj" />
+    <ProjectReference Include="..\Verse.Modules\Verse.Module.Follow\Verse.Module.Follow.csproj" />
+    <ProjectReference Include="..\Verse.Modules\Verse.Module.Instance\Verse.Module.Instance.csproj" />
+    <ProjectReference Include="..\Verse.Modules\Verse.Module.Music\Verse.Module.Music.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
+  </ItemGroup>
+
+</Project>
