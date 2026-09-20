@@ -228,7 +228,8 @@ func printWarning() {
 }
 
 func startAPI() error {
-	coreDir := filepath.Join(projectRoot, "core")
+	// Go engine entry moved to core/src/Verse.Engine (see core/README.md).
+	coreDir := filepath.Join(projectRoot, "core", "src", "Verse.Engine")
 	if _, err := os.Stat(coreDir); err != nil {
 		return fmt.Errorf("core directory not found: %v", err)
 	}
@@ -665,7 +666,8 @@ func checkHealth() bool {
 func showLogs(service string) error {
 	switch service {
 	case "api":
-		coreDir := filepath.Join(projectRoot, "core")
+		// Go engine entry moved to core/src/Verse.Engine (see core/README.md).
+		coreDir := filepath.Join(projectRoot, "core", "src", "Verse.Engine")
 		cmd := exec.Command("go", "run", ".")
 		cmd.Dir = coreDir
 		cmd.Stdout = os.Stdout

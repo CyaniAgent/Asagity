@@ -1,0 +1,11 @@
+<Project>
+  <!--
+    Shared MSBuild settings for the Verse solution.
+    AllowMissingPrunePackageData: the build environment ships a trimmed SDK
+    without the ASP.NET Core targeting pack (NETSDK1226). Revisit when the
+    publish/runtime-pack strategy is decided.
+  -->
+  <PropertyGroup>
+    <AllowMissingPrunePackageData>true</AllowMissingPrunePackageData>
+  </PropertyGroup>
+</Project>

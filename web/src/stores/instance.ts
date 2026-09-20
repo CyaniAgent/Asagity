@@ -17,7 +17,7 @@ export const useInstanceStore = create<InstanceState>()((set) => ({
   name: "Asagity",
   alias: "asagity.io",
   description: "Asagity - 一个为创作者与梦想家打造的多维社交平台。连接、分享，并构建属于你的世界。",
-  version: "Ver 2026.Indevelopment",
+  version: "Ver. 2026.Q4.Dev",
   logoURL: "/favicon.ico",
 
   setName: (name) => set({ name }),
