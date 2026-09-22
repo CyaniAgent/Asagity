@@ -9,7 +9,11 @@ import (
 )
 
 type Config struct {
-	ServerPort       string
+	ServerPort string
+	// Mode is the raw ASAGITY_MODE value; resolved to mode.Mode at boot.
+	// Empty means production. The --mode flag overrides it.
+	Mode             string
+	SQLitePath       string
 	DBHost           string
 	DBPort           string
 	DBUser           string
@@ -40,6 +44,8 @@ func Load() (Config, error) {
 
 	return Config{
 		ServerPort:       envOrDefault("SERVER_PORT", "2048"),
+		Mode:             os.Getenv("ASAGITY_MODE"),
+		SQLitePath:       envOrDefault("LITE_SQLITE_PATH", "./data/lite/asagity.db"),
 		DBHost:           envOrDefault("DB_HOST", "localhost"),
 		DBPort:           envOrDefault("DB_PORT", "5432"),
 		DBUser:           envOrDefault("DB_USER", "asagity"),

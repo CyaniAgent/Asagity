@@ -12,6 +12,7 @@ import (
 	followmodule "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/follow"
 	instancemodule "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/instance"
 	notemodule "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/note"
+	shellmodule "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/shell"
 	usermodule "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/user"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/database"
@@ -67,6 +68,7 @@ func New(cfg config.Config, clients *database.Clients) *App {
 	drivemodule.Register(mux, cfg, clients)
 	followmodule.Register(mux, cfg, clients, eventBus)
 	notemodule.Register(mux, cfg, clients, searchEngine, eventBus)
+	shellmodule.Register(mux, cfg, eventBus)
 
 	mux.Get("/ws/timeline", ws.NewHandler(wsServer, ws.ChannelEventTypes(ws.ChannelTimeline)...))
 	mux.Get("/ws/notifications", ws.NewHandler(wsServer, ws.ChannelEventTypes(ws.ChannelNotifications)...))

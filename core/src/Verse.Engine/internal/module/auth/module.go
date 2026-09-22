@@ -17,7 +17,7 @@ func Register(r *chi.Mux, cfg config.Config, clients *database.Clients, eventBus
 	authRepo := authrepository.New(clients)
 	userRepo := userrepository.New(clients)
 	mailSvc := mail.New(cfg)
-	svc := service.NewWithEventBus(authRepo, userRepo, clients.Redis, cfg, mailSvc, eventBus)
+	svc := service.NewWithEventBus(authRepo, userRepo, clients.Cache, cfg, mailSvc, eventBus)
 	h := handler.New(svc)
 
 	r.Post("/api/auth/register", h.Register)

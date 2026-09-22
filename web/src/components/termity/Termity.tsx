@@ -8,14 +8,12 @@ import { useFreeWindowStore } from "@/stores/freeWindow";
 import { useLocaleStore, localeNames, type Locale } from "@/stores/locale";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { usePortalDebuggerStore } from "@/stores/portalDebugger";
+import { fetchBackend } from "@/lib/backend";
 
 interface TerminalLine {
   type: "input" | "output" | "system" | "error" | "warning";
   text: string;
 }
-
-const GITHUB_REPO = "CyaniAgent/Asagity";
-const GITHUB_API = `https://api.github.com/repos/${GITHUB_REPO}`;
 
 function getCommands(t: (key: string) => string): Record<string, { name: string; description: string; subcommands?: Record<string, string> }> {
   return {
@@ -87,12 +85,30 @@ function getCommands(t: (key: string) => string): Record<string, { name: string;
   };
 }
 
-async function githubFetch(path: string): Promise<{ ok: number; data: unknown }> {
-  const res = await fetch(`${GITHUB_API}${path}`, {
-    headers: { Accept: "application/vnd.github.v3+json" },
+async function shellFetch(path: string): Promise<{ ok: number; data: unknown }> {
+  // Platform-shell gateway: Go engine (:2048) is primary, .NET Verse.Api
+  // (:2050) is the automatic fallback via fetchBackend. This replaces the
+  // previous direct browser -> api.github.com calls (CORS / rate-limit safe).
+  const res = await fetchBackend(path, {
+    headers: { Accept: "application/json" },
     signal: AbortSignal.timeout(8000),
   });
-  const data = await res.json();
+  let data: unknown = null;
+  try {
+    data = await res.json();
+  } catch {
+    data = null;
+  }
+  // Backend uses {ok:true,data:{...}} envelope; unwrap one level when present.
+  if (
+    data !== null &&
+    typeof data === "object" &&
+    "ok" in (data as Record<string, unknown>) &&
+    "data" in (data as Record<string, unknown>)
+  ) {
+    const env = data as { ok: boolean; data: unknown };
+    if (env.ok) return { ok: res.status, data: env.data };
+  }
   return { ok: res.status, data };
 }
 
@@ -260,20 +276,46 @@ export function Termity({ windowId }: { windowId: string }) {
             break;
           }
           if (args[0] === "status") {
-            const online = systemStore.isBackendOnline;
+            const s = useSystemStore.getState();
+            const online = s.isBackendOnline;
             addLine({
               type: online ? "output" : "error",
-              text: `${t("termity.vnetTitle")} ${t("termity.status")}: ${online ? t("termity.connected") : t("termity.offline")}`,
+              text: `${t("termity.vnetTitle")} ${t("termity.status")}: ${online ? t("termity.connected") : t("termity.offline")} [engine :2048 ${s.isEngineOnline ? "online" : "offline"} | api :2050 ${s.isApiOnline ? "online" : "offline"}]`,
             });
+            // Backend-measured EventBus detail (Go engine shell gateway).
+            shellFetch("/api/shell/vnet").then(({ ok, data }) => {
+              if (ok !== 200) return;
+              const d = data as { eventbus_subscribers?: number; version?: string };
+              addLine({
+                type: "output",
+                text: `  backend vnet: engine online, eventbus_subscribers=${d.eventbus_subscribers ?? "-"}, version=${d.version ?? "-"}`,
+              });
+            }).catch(() => {});
           } else if (args[0] === "ping") {
             addLine({ type: "system", text: t("termity.vnetPinging") });
-            addTimer(() => {
-              addLine({ type: "output", text: `Pong! ${t("termity.latency")}: 42ms` });
-            }, 500);
+            const started = Date.now();
+            shellFetch("/api/shell/ping").then(({ ok, data }) => {
+              if (ok !== 200) {
+                addLine({ type: "error", text: `${t("termity.githubApiError")}: ${ok}` });
+                return;
+              }
+              const d = data as { backend?: string; version?: string };
+              addLine({ type: "output", text: `Pong! ${t("termity.latency")}: ${Date.now() - started}ms [${d.backend ?? "backend"}${d.version ? ` ${d.version}` : ""}]` });
+            }).catch(() => {
+              addLine({ type: "error", text: t("termity.authDevicesError") });
+            });
           } else if (args[0] === "config") {
+            const s = useSystemStore.getState();
             addLine({ type: "output", text: `${t("termity.networkConfig")}:` });
+            addLine({ type: "output", text: `  engine :2048 (/healthz): ${s.isEngineOnline ? t("termity.online") : t("termity.offline")}` });
+            addLine({ type: "output", text: `  api    :2050 (/healthz-api): ${s.isApiOnline ? t("termity.online") : t("termity.offline")}` });
             addLine({ type: "output", text: `  ${t("termity.backendAddr")}: ${typeof window !== "undefined" ? window.location.origin : "N/A"}` });
-            addLine({ type: "output", text: `  ${t("termity.connStatus")}: ${systemStore.isBackendOnline ? t("termity.online") : t("termity.offline")}` });
+            addLine({ type: "output", text: `  ${t("termity.connStatus")}: ${s.isBackendOnline ? t("termity.online") : t("termity.offline")}` });
+            shellFetch("/api/shell/meta").then(({ ok, data }) => {
+              if (ok !== 200) return;
+              const d = data as { backend?: string; version?: string; time?: string };
+              addLine({ type: "output", text: `  shell gateway: ${d.backend ?? "-"} version=${d.version ?? "-"} time=${d.time ?? "-"}` });
+            }).catch(() => {});
           }
           break;
         }
@@ -352,41 +394,30 @@ export function Termity({ windowId }: { windowId: string }) {
               const type = developCmd[1]?.toLowerCase();
               if (type === "commit") {
                 addLine({ type: "system", text: t("termity.devFetchingMainCommit") });
-                githubFetch("/commits/main").then(({ ok, data }) => {
+                shellFetch("/api/shell/github/latest-commit?ref=main").then(({ ok, data }) => {
                   if (ok !== 200) {
                     addLine({ type: "error", text: `${t("termity.githubApiError")}: ${ok}` });
                     return;
                   }
-                  const d = data as { sha: string; commit: { message: string; author: { name: string }; committer: { date: string } } };
+                  const d = data as { sha: string; message: string; author: string; date: string };
                   addLine({ type: "output", text: `  SHA:      ${d.sha.slice(0, 7)}` });
-                  addLine({ type: "output", text: `  Message:  ${d.commit.message.split("\n")[0]}` });
-                  addLine({ type: "output", text: `  Author:   ${d.commit.author.name}` });
-                  addLine({ type: "output", text: `  Date:     ${d.commit.committer.date}` });
+                  addLine({ type: "output", text: `  Message:  ${d.message.split("\n")[0]}` });
+                  addLine({ type: "output", text: `  Author:   ${d.author}` });
+                  addLine({ type: "output", text: `  Date:     ${d.date}` });
+                }).catch(() => {
+                  addLine({ type: "error", text: t("termity.authDevicesError") });
                 });
               } else if (type === "release") {
                 addLine({ type: "system", text: t("termity.devFetchingMainRelease") });
-                Promise.all([
-                  githubFetch("/releases/latest"),
-                  githubFetch("/releases"),
-                ]).then(([latestRes, releasesRes]) => {
-                  if (latestRes.ok !== 200) {
-                    addLine({ type: "error", text: `${t("termity.githubApiError")}: ${latestRes.ok}` });
+                shellFetch("/api/shell/github/latest-release").then(({ ok, data }) => {
+                  if (ok !== 200) {
+                    addLine({ type: "error", text: `${t("termity.githubApiError")}: ${ok}` });
                     return;
                   }
-                  const latest = latestRes.data as { tag_name: string; name: string; body: string; published_at: string };
+                  const latest = data as { tag_name: string; name: string; body: string; published_at: string };
                   addLine({ type: "output", text: `  Version:  ${latest.tag_name}` });
                   addLine({ type: "output", text: `  Name:     ${latest.name}` });
                   addLine({ type: "output", text: `  Date:     ${latest.published_at}` });
-
-                  if (releasesRes.ok === 200) {
-                    const releases = releasesRes.data as { tag_name: string }[];
-                    if (releases.length > 1) {
-                      const prev = releases[1];
-                      if (prev.tag_name !== latest.tag_name) {
-                        addLine({ type: "warning", text: `  ${prev.tag_name} -> ${latest.tag_name} (${t("termity.newVersionAvailable")})` });
-                      }
-                    }
-                  }
 
                   if (latest.body) {
                     addLine({ type: "output", text: "  Changelog:" });
@@ -405,20 +436,22 @@ export function Termity({ windowId }: { windowId: string }) {
 
               if (type === "commit") {
                 addLine({ type: "system", text: `${t("termity.devFetchingBranchCommit")} ${branch} ${version}...` });
-                githubFetch(`/commits/${version}`).then(({ ok, data }) => {
+                shellFetch(`/api/shell/github/latest-commit?ref=${encodeURIComponent(version)}`).then(({ ok, data }) => {
                   if (ok !== 200) {
                     addLine({ type: "error", text: `${t("termity.githubApiError")}: ${ok}` });
                     return;
                   }
-                  const d = data as { sha: string; commit: { message: string; author: { name: string }; committer: { date: string } } };
+                  const d = data as { sha: string; message: string; author: string; date: string };
                   addLine({ type: "output", text: `  SHA:      ${d.sha.slice(0, 7)}` });
-                  addLine({ type: "output", text: `  Message:  ${d.commit.message.split("\n")[0]}` });
-                  addLine({ type: "output", text: `  Author:   ${d.commit.author.name}` });
-                  addLine({ type: "output", text: `  Date:     ${d.commit.committer.date}` });
+                  addLine({ type: "output", text: `  Message:  ${d.message.split("\n")[0]}` });
+                  addLine({ type: "output", text: `  Author:   ${d.author}` });
+                  addLine({ type: "output", text: `  Date:     ${d.date}` });
+                }).catch(() => {
+                  addLine({ type: "error", text: t("termity.authDevicesError") });
                 });
               } else if (type === "release") {
                 addLine({ type: "system", text: `${t("termity.devFetchingBranchRelease")} ${branch} ${version}...` });
-                githubFetch(`/releases/tags/${version}`).then(({ ok, data }) => {
+                shellFetch(`/api/shell/github/release?tag=${encodeURIComponent(version)}`).then(({ ok, data }) => {
                   if (ok !== 200) {
                     addLine({ type: "error", text: `${t("termity.githubApiError")}: ${ok}` });
                     return;
@@ -488,20 +521,51 @@ export function Termity({ windowId }: { windowId: string }) {
             addLine({ type: "warning", text: t("termity.loginRequired") });
             break;
           }
-          const u = userStore.user;
-          addLine({ type: "output", text: `${u?.name || "-"} (@${u?.username || "-"})` });
-          addLine({ type: "output", text: `  PubID:  ${u?.pubid || "-"}` });
-          addLine({ type: "output", text: `  Role:   ${u?.role || "user"}` });
+          // Prefer backend source of truth; fall back to local store when offline.
+          if (userStore.accessToken && userStore.accessToken !== "dev_mock_token_39") {
+            fetchBackend("/api/auth/me", {
+              headers: { Authorization: `Bearer ${userStore.accessToken}` },
+              signal: AbortSignal.timeout(5000),
+            }).then(async (res) => {
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              const body = await res.json() as { ok: boolean; data: { name?: string; username?: string; pub_id?: string; pubid?: string; role?: string } };
+              const u = body.data ?? {};
+              addLine({ type: "output", text: `${u.name || "-"} (@${u.username || "-"})` });
+              addLine({ type: "output", text: `  PubID:  ${u.pub_id || u.pubid || "-"}` });
+              addLine({ type: "output", text: `  Role:   ${u.role || "user"} (backend)` });
+            }).catch(() => {
+              const u = userStore.user;
+              addLine({ type: "output", text: `${u?.name || "-"} (@${u?.username || "-"})` });
+              addLine({ type: "output", text: `  PubID:  ${u?.pubid || "-"}` });
+              addLine({ type: "output", text: `  Role:   ${u?.role || "user"} (local)` });
+            });
+          } else {
+            const u = userStore.user;
+            addLine({ type: "output", text: `${u?.name || "-"} (@${u?.username || "-"})` });
+            addLine({ type: "output", text: `  PubID:  ${u?.pubid || "-"}` });
+            addLine({ type: "output", text: `  Role:   ${u?.role || "user"}` });
+          }
           break;
         }
 
         case "info": {
           addLine({ type: "output", text: `${t("termity.serverInfo")}:` });
-          addLine({ type: "output", text: `  ${t("termity.infoName")}: ${instanceStore.name || "Asagity"}` });
-          addLine({ type: "output", text: `  ${t("termity.infoAlias")}: ${instanceStore.alias || "asagity.io"}` });
-          addLine({ type: "output", text: `  ${t("termity.infoVersion")}: ${instanceStore.version || "2.0.0"}` });
-          addLine({ type: "output", text: `  ${t("termity.infoDesc")}: ${instanceStore.description || "Asagity"}` });
-          addLine({ type: "output", text: `  ${t("termity.infoDev")}: ${userStore.isLoggedIn ? userStore.username || t("termity.loggedIn") : t("termity.notLoggedIn")}` });
+          // Backend first (/api/meta/instance + /api/meta/version), local store fallback.
+          Promise.all([
+            fetchBackend("/api/meta/instance", { signal: AbortSignal.timeout(5000) }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+            fetchBackend("/api/meta/version", { signal: AbortSignal.timeout(5000) }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+          ]).then(([metaBody, verBody]) => {
+            const meta = (metaBody as { ok: boolean; data: { name?: string; alias?: string; description?: string } } | null)?.data;
+            const ver = (verBody as { ok: boolean; data: { version?: string } } | { version?: string } | null);
+            const version = (ver as { data?: { version?: string }; version?: string } | null)?.data?.version
+              ?? (ver as { version?: string } | null)?.version
+              ?? instanceStore.version;
+            addLine({ type: "output", text: `  ${t("termity.infoName")}: ${meta?.name || instanceStore.name || "Asagity"} (backend)` });
+            addLine({ type: "output", text: `  ${t("termity.infoAlias")}: ${meta?.alias || instanceStore.alias || "asagity.io"}` });
+            addLine({ type: "output", text: `  ${t("termity.infoVersion")}: ${version || "2.0.0"}` });
+            addLine({ type: "output", text: `  ${t("termity.infoDesc")}: ${meta?.description || instanceStore.description || "Asagity"}` });
+            addLine({ type: "output", text: `  ${t("termity.infoDev")}: ${userStore.isLoggedIn ? userStore.username || t("termity.loggedIn") : t("termity.notLoggedIn")}` });
+          });
           break;
         }
 
@@ -528,22 +592,42 @@ export function Termity({ windowId }: { windowId: string }) {
               addLine({ type: "warning", text: t("termity.loginRequired") });
               break;
             }
-            const u = userStore.user;
-            addLine({ type: "output", text: `${t("termity.accountInfo")}:` });
-            addLine({ type: "output", text: `  ${t("termity.infoName")}: ${u?.name || "-"}` });
-            addLine({ type: "output", text: `  ${"username"}: ${u?.username || "-"}` });
-            addLine({ type: "output", text: `  ${"PubID"}: ${u?.pubid || "-"}` });
-            addLine({ type: "output", text: `  ${"Role"}: ${u?.role || "user"}` });
-            addLine({ type: "output", text: `  ${"Avatar"}: ${u?.avatar_url || "-"}` });
+            fetchBackend("/api/auth/me", {
+              headers: { Authorization: `Bearer ${userStore.accessToken}` },
+              signal: AbortSignal.timeout(5000),
+            }).then(async (res) => {
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              const body = await res.json() as { ok: boolean; data: { name?: string; username?: string; pub_id?: string; avatar_url?: string; role?: string } };
+              const u = body.data ?? {};
+              addLine({ type: "output", text: `${t("termity.accountInfo")} (backend):` });
+              addLine({ type: "output", text: `  ${t("termity.infoName")}: ${u.name || "-"}` });
+              addLine({ type: "output", text: `  ${"username"}: ${u.username || "-"}` });
+              addLine({ type: "output", text: `  ${"PubID"}: ${u.pub_id || "-"}` });
+              addLine({ type: "output", text: `  ${"Role"}: ${u.role || "user"}` });
+              addLine({ type: "output", text: `  ${"Avatar"}: ${u.avatar_url || "-"}` });
+            }).catch(() => {
+              const u = userStore.user;
+              addLine({ type: "output", text: `${t("termity.accountInfo")} (local):` });
+              addLine({ type: "output", text: `  ${t("termity.infoName")}: ${u?.name || "-"}` });
+              addLine({ type: "output", text: `  ${"username"}: ${u?.username || "-"}` });
+              addLine({ type: "output", text: `  ${"PubID"}: ${u?.pubid || "-"}` });
+              addLine({ type: "output", text: `  ${"Role"}: ${u?.role || "user"}` });
+              addLine({ type: "output", text: `  ${"Avatar"}: ${u?.avatar_url || "-"}` });
+            });
           } else if (args[0] === "devices") {
             if (!userStore.isLoggedIn) {
               addLine({ type: "warning", text: t("termity.loginRequired") });
               break;
             }
             addLine({ type: "system", text: t("termity.authFetchingDevices") });
-            fetch("/api/auth/devices", {
+            fetchBackend("/api/auth/devices", {
               headers: { Authorization: `Bearer ${userStore.accessToken}` },
+              signal: AbortSignal.timeout(8000),
             }).then(async (res) => {
+              if (res.status === 404 || res.status === 501) {
+                addLine({ type: "warning", text: "devices endpoint not implemented on backend yet (404/501)" });
+                return;
+              }
               if (!res.ok) {
                 addLine({ type: "error", text: `API ${res.status}` });
                 return;

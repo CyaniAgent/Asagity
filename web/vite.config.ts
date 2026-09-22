@@ -2,7 +2,7 @@
  * Vite 配置 — 替代 next.config.ts
  *
  * 提供：
- * - 开发服务器 API 代理（/api → localhost:2048）
+ * - 开发服务器 API 代理（/api → localhost:2048，/api-net → localhost:2050）
  * - 路径别名（@/ → src/）
  * - 构建优化
  *
@@ -63,14 +63,26 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      // API 代理 — 替代 next.config.ts rewrites
+      // Go verse-engine (:2048) — primary API + health + WebSocket.
+      // .NET Verse.Api (:2050) exposes the same /api/* surface,
+      // mirrored here under /api-net/* + /healthz-api for dual listening.
       "/api": {
         target: "http://localhost:2048",
         changeOrigin: true,
       },
+      "/api-net": {
+        target: "http://localhost:2050",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api-net/, "/api"),
+      },
       "/healthz": {
         target: "http://localhost:2048",
         changeOrigin: true,
+      },
+      "/healthz-api": {
+        target: "http://localhost:2050",
+        changeOrigin: true,
+        rewrite: () => "/healthz",
       },
       // WebSocket 代理
       "/ws": {

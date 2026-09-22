@@ -1,0 +1,5 @@
+# versetool build output.
+# Build with: go build -o bin/versetool ./cmd/verse   (run from core/src/Verse.Cli)
+# Everything in this directory is untracked except this file.
+*
+!.gitignore

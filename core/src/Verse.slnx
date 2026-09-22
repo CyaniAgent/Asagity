@@ -7,6 +7,7 @@
     <Project Path="Verse.Modules/Verse.Module.Instance/Verse.Module.Instance.csproj" />
     <Project Path="Verse.Modules/Verse.Module.Music/Verse.Module.Music.csproj" />
     <Project Path="Verse.Modules/Verse.Module.Note/Verse.Module.Note.csproj" />
+    <Project Path="Verse.Modules/Verse.Module.Shell/Verse.Module.Shell.csproj" />
     <Project Path="Verse.Modules/Verse.Module.User/Verse.Module.User.csproj" />
   </Folder>
   <Project Path="Verse.Api/Verse.Api.csproj" />

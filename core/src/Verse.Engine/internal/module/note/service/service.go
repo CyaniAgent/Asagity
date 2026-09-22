@@ -7,14 +7,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/redis/go-redis/v9"
-
 	followrepo "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/follow/repository"
 	dto "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/note/dto"
 	notemodel "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/note/model"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/note/repository"
 	noterepo "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/note/repository"
 	usermodel "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/user/model"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/cache"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/event"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/queue"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/search"
@@ -25,7 +24,7 @@ type NoteService struct {
 	followRepo   *followrepo.FollowRepository
 	queueClient  *queue.Client
 	searchEngine *search.BleveEngine
-	redis        *redis.Client
+	cache        cache.Cache
 	eventBus     *event.Bus
 }
 
@@ -33,13 +32,13 @@ func NewNoteService(repo *noterepo.NoteRepository) *NoteService {
 	return &NoteService{repo: repo}
 }
 
-func NewNoteServiceWithDeps(repo *noterepo.NoteRepository, followRepo *followrepo.FollowRepository, queueClient *queue.Client, searchEngine *search.BleveEngine, redis *redis.Client, eventBus *event.Bus) *NoteService {
+func NewNoteServiceWithDeps(repo *noterepo.NoteRepository, followRepo *followrepo.FollowRepository, queueClient *queue.Client, searchEngine *search.BleveEngine, cache cache.Cache, eventBus *event.Bus) *NoteService {
 	return &NoteService{
 		repo:         repo,
 		followRepo:   followRepo,
 		queueClient:  queueClient,
 		searchEngine: searchEngine,
-		redis:        redis,
+		cache:        cache,
 		eventBus:     eventBus,
 	}
 }
@@ -397,9 +396,9 @@ func (s *NoteService) getNoteMetricsWithCache(noteID string) dto.NoteMetrics {
 	cacheKey := "note:metrics:" + noteID
 	ctx := context.Background()
 
-	// Try Redis cache first
-	if s.redis != nil {
-		cached, err := s.redis.Get(ctx, cacheKey).Result()
+	// Try cache first
+	if s.cache != nil {
+		cached, err := s.cache.Get(ctx, cacheKey)
 		if err == nil && cached != "" {
 			var metrics dto.NoteMetrics
 			if err := json.Unmarshal([]byte(cached), &metrics); err == nil {
@@ -414,10 +413,10 @@ func (s *NoteService) getNoteMetricsWithCache(noteID string) dto.NoteMetrics {
 		return dto.NoteMetrics{}
 	}
 
-	// Cache to Redis for 5 minutes
-	if s.redis != nil {
+	// Cache metrics for 5 minutes
+	if s.cache != nil {
 		metricsJSON, _ := json.Marshal(*metrics)
-		_ = s.redis.Set(ctx, cacheKey, metricsJSON, 5*time.Minute).Err()
+		_ = s.cache.Set(ctx, cacheKey, string(metricsJSON), 5*time.Minute)
 	}
 
 	return *metrics

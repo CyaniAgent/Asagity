@@ -13,12 +13,12 @@ import (
 	authrepo "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/auth/repository"
 	usermodel "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/user/model"
 	userrepo "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/user/repository"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/cache"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/event"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/id"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/mail"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -33,18 +33,18 @@ const (
 type Service struct {
 	authRepo authrepo.Repository
 	userRepo *userrepo.Repository
-	redis    *redis.Client
+	cache    cache.Cache
 	cfg      config.Config
 	mail     *mail.Service
 	eventBus *event.Bus
 }
 
-func New(authRepo authrepo.Repository, userRepo *userrepo.Repository, redis *redis.Client, cfg config.Config, mail *mail.Service) *Service {
-	return &Service{authRepo: authRepo, userRepo: userRepo, redis: redis, cfg: cfg, mail: mail}
+func New(authRepo authrepo.Repository, userRepo *userrepo.Repository, cache cache.Cache, cfg config.Config, mail *mail.Service) *Service {
+	return &Service{authRepo: authRepo, userRepo: userRepo, cache: cache, cfg: cfg, mail: mail}
 }
 
-func NewWithEventBus(authRepo authrepo.Repository, userRepo *userrepo.Repository, redis *redis.Client, cfg config.Config, mail *mail.Service, eventBus *event.Bus) *Service {
-	return &Service{authRepo: authRepo, userRepo: userRepo, redis: redis, cfg: cfg, mail: mail, eventBus: eventBus}
+func NewWithEventBus(authRepo authrepo.Repository, userRepo *userrepo.Repository, cache cache.Cache, cfg config.Config, mail *mail.Service, eventBus *event.Bus) *Service {
+	return &Service{authRepo: authRepo, userRepo: userRepo, cache: cache, cfg: cfg, mail: mail, eventBus: eventBus}
 }
 
 func (s *Service) Register(req dto.RegisterRequest) (*dto.AuthResponse, error) {
@@ -132,7 +132,7 @@ func (s *Service) RegisterWithEmail(req dto.RegisterWithEmailRequest) (*dto.Regi
 		"password_hash": string(hashedPassword),
 	}
 	regJSON, _ := json.Marshal(regData)
-	s.redis.Set(ctx, "register:"+challengeID, string(regJSON), VerificationCodeExpiry)
+	s.cache.Set(ctx, "register:"+challengeID, string(regJSON), VerificationCodeExpiry)
 
 	if s.mail.IsEnabled() {
 		if err := s.mail.SendVerificationEmail(normalizedEmail, code, "register_with_email"); err != nil {
@@ -172,15 +172,15 @@ func (s *Service) Login(req dto.LoginRequest) (*dto.AuthResponse, error) {
 func (s *Service) Refresh(refreshToken string) (*dto.AuthResponse, error) {
 	ctx := context.Background()
 
-	userID, err := s.redis.Get(ctx, "refresh:"+refreshToken).Result()
-	if err == redis.Nil {
+	userID, err := s.cache.Get(ctx, "refresh:"+refreshToken)
+	if err == cache.ErrNotFound {
 		return nil, errors.New(dto.ErrInvalidRefreshToken)
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	s.redis.Del(ctx, "refresh:"+refreshToken)
+	s.cache.Del(ctx, "refresh:"+refreshToken)
 
 	user, err := s.userRepo.GetByID(userID)
 	if err != nil {
@@ -193,21 +193,21 @@ func (s *Service) Refresh(refreshToken string) (*dto.AuthResponse, error) {
 
 func (s *Service) Logout(refreshToken string) error {
 	ctx := context.Background()
-	return s.redis.Del(ctx, "refresh:"+refreshToken).Err()
+	return s.cache.Del(ctx, "refresh:"+refreshToken)
 }
 
 func (s *Service) LogoutAll(userID string) error {
 	ctx := context.Background()
 	pattern := "refresh:*"
-	keys, err := s.redis.Keys(ctx, pattern).Result()
+	keys, err := s.cache.Keys(ctx, pattern)
 	if err != nil {
 		return err
 	}
 
 	for _, key := range keys {
-		val, _ := s.redis.Get(ctx, key).Result()
+		val, _ := s.cache.Get(ctx, key)
 		if val == userID {
-			s.redis.Del(ctx, key)
+			s.cache.Del(ctx, key)
 		}
 	}
 	return nil
@@ -273,7 +273,7 @@ func (s *Service) generateRefreshToken(userID string) (string, error) {
 
 	ctx := context.Background()
 	key := "refresh:" + token
-	if err := s.redis.Set(ctx, key, userID, RefreshTokenDuration).Err(); err != nil {
+	if err := s.cache.Set(ctx, key, userID, RefreshTokenDuration); err != nil {
 		return "", err
 	}
 
@@ -323,7 +323,7 @@ func (s *Service) VerifyRegisterEmail(req dto.VerifyEmailRequest) (*dto.AuthResp
 	}
 
 	ctx := context.Background()
-	regDataStr, err := s.redis.Get(ctx, "register:"+challenge.ID).Result()
+	regDataStr, err := s.cache.Get(ctx, "register:"+challenge.ID)
 	if err != nil {
 		return nil, errors.New("registration data not found")
 	}
@@ -333,7 +333,7 @@ func (s *Service) VerifyRegisterEmail(req dto.VerifyEmailRequest) (*dto.AuthResp
 		return nil, errors.New("invalid registration data")
 	}
 
-	s.redis.Del(ctx, "register:"+challenge.ID)
+	s.cache.Del(ctx, "register:"+challenge.ID)
 
 	user := &usermodel.User{
 		ID:          generateID(),
