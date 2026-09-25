@@ -41,6 +41,13 @@ core/bin/
 core/*.exe
 core/.env
 
+# .NET build artifacts (Verse.Api / Verse.Modules)
+# NOTE: `*/bin/*` (not `*/bin/`) so per-tool artifact guards like
+# core/src/Verse.Cli/bin/.gitignore stay trackable while outputs stay ignored.
+**/bin/*
+!**/bin/.gitignore
+**/obj/
+
 # IDEs
 .idea/
 .vscode/

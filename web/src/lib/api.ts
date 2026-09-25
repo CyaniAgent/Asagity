@@ -1,4 +1,5 @@
 import { useUserStore } from "@/stores/user";
+import { fetchBackend } from "@/lib/backend";
 
 interface ApiOptions {
   headers?: Record<string, string>;
@@ -16,8 +17,6 @@ interface ApiResponse<T> {
   };
 }
 
-const BASE_URL = "";
-
 async function request<T>(
   url: string,
   options: ApiOptions = {}
@@ -31,7 +30,12 @@ async function request<T>(
     headers["Authorization"] = `Bearer ${accessToken}`;
   }
 
-  const response = await fetch(`${BASE_URL}${url}`, {
+  const queryString = options.query
+    ? `?${new URLSearchParams(options.query as Record<string, string>).toString()}`
+    : "";
+  const path = `${url}${queryString}`;
+
+  const response = await fetchBackend(path, {
     method: options.method,
     headers,
     body:
@@ -39,9 +43,6 @@ async function request<T>(
         ? JSON.stringify(options.body)
         : options.body ?? undefined,
     signal: options.signal,
-    ...(options.query
-      ? { url: `${url}?${new URLSearchParams(options.query as Record<string, string>).toString()}` }
-      : {}),
   });
 
   if (!response.ok) {

@@ -1,0 +1,8 @@
+{
+  "id": "player",
+  "entry": "../client/index.tsx",
+  "slot": "sidebar",
+  "size": { "min": [300, 200], "default": [320, 480] },
+  "isolation": "shadow-dom",
+  "permissions": ["audio.playback", "ui.widgets"]
+}
