@@ -1,8 +1,19 @@
 import { create } from "zustand";
 import type { HostInfo } from "@/types/models";
+import {
+  API_HEALTH_PATH,
+  ENGINE_HEALTH_PATH,
+  NET_API_PREFIX,
+  probeHealth,
+} from "@/lib/backend";
+
+export type BackendStatus = "both" | "engine-only" | "api-only" | "offline";
 
 interface SystemState {
   isBackendOnline: boolean;
+  isEngineOnline: boolean;
+  isApiOnline: boolean;
+  backendStatus: BackendStatus;
   isFrontendOnlyMode: boolean;
   isDevMode: boolean;
   isInitialized: boolean;
@@ -40,6 +51,9 @@ export const ERROR_CODES = {
 
 export const useSystemStore = create<SystemState>()((set, get) => ({
   isBackendOnline: true,
+  isEngineOnline: true,
+  isApiOnline: true,
+  backendStatus: "both",
   isFrontendOnlyMode: false,
   isDevMode: false,
   isInitialized: false,
@@ -153,26 +167,35 @@ export const useSystemStore = create<SystemState>()((set, get) => ({
     }
   },
 
+  // Dual-backend heartbeat: Go engine (:2048) + .NET API (:2050).
+  // isBackendOnline stays true while EITHER side answers (backward compat
+  // for NetworkStatus / MainLayout / timeline guards); the per-backend
+  // flags expose the fine-grained state for debugging (Termity `vnet`).
   checkBackendHealth: async () => {
-    try {
-      const res = await fetch("/healthz", {
-        method: "GET",
-        signal: AbortSignal.timeout(2000),
-        headers: { "Cache-Control": "no-cache" },
-      });
+    const [engineOk, apiOk] = await Promise.all([
+      probeHealth(ENGINE_HEALTH_PATH, 2000),
+      probeHealth(API_HEALTH_PATH, 2000),
+    ]);
 
-      if (res.ok) {
-        get().restoreOnlineMode();
-        set({ isFirstCheck: false });
-      } else {
-        if (!get().isDevMode) {
-          get().triggerOfflineFallback();
-        }
-      }
-    } catch {
-      if (!get().isDevMode) {
-        get().triggerOfflineFallback();
-      }
+    const status: BackendStatus = engineOk && apiOk
+      ? "both"
+      : engineOk
+        ? "engine-only"
+        : apiOk
+          ? "api-only"
+          : "offline";
+
+    set({
+      isEngineOnline: engineOk,
+      isApiOnline: apiOk,
+      backendStatus: status,
+      isFirstCheck: false,
+    });
+
+    if (engineOk || apiOk) {
+      get().restoreOnlineMode();
+    } else if (!get().isDevMode) {
+      get().triggerOfflineFallback();
     }
   },
 
@@ -197,13 +220,19 @@ export const useSystemStore = create<SystemState>()((set, get) => ({
   },
 
   fetchHostInfo: async () => {
-    try {
-      const res = await fetch("/api/system/environment");
-      const data: HostInfo = await res.json();
-      set({ hostInfo: data });
-    } catch {
-      console.warn("Failed to fetch host info");
+    // Engine first (:2048), .NET mirror (:2050) as fallback.
+    for (const path of ["/api/system/environment", `${NET_API_PREFIX}/system/environment`]) {
+      try {
+        const res = await fetch(path, { signal: AbortSignal.timeout(5000) });
+        if (!res.ok) continue;
+        const data: HostInfo = await res.json();
+        set({ hostInfo: data });
+        return;
+      } catch {
+        // try next backend
+      }
     }
+    console.warn("Failed to fetch host info (engine :2048 + api :2050 unreachable)");
   },
 
   fetchHostInfoWithTimeout: () => {
@@ -211,18 +240,29 @@ export const useSystemStore = create<SystemState>()((set, get) => ({
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     fetch("/api/system/environment", { signal: controller.signal })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`engine responded ${res.status}`);
+        return res.json();
+      })
       .then((data: HostInfo) => {
         set({ hostInfo: data });
       })
-      .catch((err: unknown) => {
-        const error = err as { name?: string; message?: string };
-        if (error.name === "AbortError" || error.message?.includes("abort")) {
-          console.warn("Host info fetch timeout, continuing without it");
-        } else {
-          console.warn("Failed to fetch host info:", err);
-        }
-      })
+      .catch(() =>
+        // Fallback to .NET Verse.Api (:2050) before giving up.
+        fetch(`${NET_API_PREFIX}/system/environment`, { signal: controller.signal })
+          .then((res) => res.json())
+          .then((data: HostInfo) => {
+            set({ hostInfo: data });
+          })
+          .catch((err: unknown) => {
+            const error = err as { name?: string; message?: string };
+            if (error.name === "AbortError" || error.message?.includes("abort")) {
+              console.warn("Host info fetch timeout, continuing without it");
+            } else {
+              console.warn("Failed to fetch host info:", err);
+            }
+          })
+      )
       .finally(() => {
         clearTimeout(timeoutId);
       });

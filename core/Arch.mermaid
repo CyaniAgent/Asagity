@@ -1,0 +1,100 @@
+flowchart TD
+    subgraph Management [Management Tooling - Verse.Cli]
+        VerseTool["Verse tool\n(Go-based CLI Manager)\nCommands: verse start | stop | restart | status\nApps: verse app list | enable | disable (.aap)"]
+        Runner["runner\n(Dual-process API + Engine\nscheduling & supervision)"]
+        Doctor["doctor\n(Environment & DB\nself-healing diagnostics)"]
+        AppMgr["appmgr\n(AAP application management)"]
+        VerseTool --> Runner
+        VerseTool --> Doctor
+        VerseTool --> AppMgr
+    end
+
+    subgraph External [External Layer]
+        Client["Web Client / Mobile"]
+        Fediverse["Fediverse Peers (Mastodon / Misskey / Pleroma)"]
+    end
+
+    subgraph ApiLayer ["API Layer (src/Verse.Api)"]
+        Api["Verse.Api\n(ASP.NET Core Server :2048)\nProgram.cs dynamically scans & loads Modules"]
+        Middlewares["Middlewares\n(JWT Auth, CORS, VSQL route-resolving)"]
+        Api --> Middlewares
+    end
+
+    subgraph Modules ["Modular Domains (src/Verse.Modules)"]
+        AuthMod["Verse.Module.Auth\n(Login, Register, OTP, Device Trust)"]
+        UserMod["Verse.Module.User\n(Profile, pubid, Groups)"]
+        NoteMod["Verse.Module.Note\n(Posts, Repost, Reactions, Trees, VSQL)"]
+        DriveMod["Verse.Module.Drive\n(Skyline Drive, Chunked Upload, Local/S3/WebDAV)"]
+        FollowMod["Verse.Module.Follow\n(Follow, Block, Mute)"]
+        InstanceMod["Verse.Module.Instance\n(Meta, Healthz, Federation Health)"]
+        MusicMod["Verse.Module.Music\n(Player, LRC Lyrics, Quality Tags)"]
+    end
+
+    subgraph ModuleArch ["Module Internal Pattern (Self-developed)"]
+        MRoute["Routes + Handler\n(Thin HTTP Parser)"]
+        MService["Service\n(Thick Business Logic)"]
+        MRepo["Repository + Model\n(Persistence & DTO)"]
+        MEvent["Event Subscription\n(note.created, etc.)"]
+        MRoute --> MService --> MRepo
+        MService -.-> MEvent
+    end
+
+    subgraph Engine ["Go Core Engine (src/Verse.Engine)"]
+        EngineDaemon["cmd/verse-engine\n(Go engine daemon)"]
+        EventBus["pkg/eventbus\n(Async EventBus: 16 Workers, 100k Idempotency)"]
+        EventBridge["pkg/eventbus (Bridge)\n(Redis Pub/Sub Cluster Broadcast)"]
+        VSQL["pkg/vsql\n(VSQL Interpreter + In-House Search)"]
+        ActivityPub["pkg/activitypub\n(ActivityPub & NeoLinkage Adapters)"]
+        WS["pkg/websocket\n(/ws/timeline, /ws/notifications, /ws/global)"]
+        EngineDaemon --> EventBus
+        EngineDaemon --> VSQL
+        EngineDaemon --> ActivityPub
+        EngineDaemon --> WS
+    end
+
+    subgraph Storage ["Persistence & Infrastructures (storage/)"]
+        PG[(PostgreSQL Database\nJSONB Federated Data\nstorage/migrations)]
+        RedisCache[(Redis\nCache, Tokens, Pub/Sub, Queue)]
+        VSQLIndex[(Verse Search Data & Query Index)]
+    end
+
+    %% Management Control
+    Runner -->|"Manages Lifecycle"| Api
+    Runner -->|"Manages Lifecycle"| EngineDaemon
+
+    %% External Connections
+    Client <-->|"HTTP / REST API & WebSocket"| Middlewares
+    Fediverse <-->|"ActivityPub / Verse Protocol"| ActivityPub
+
+    %% Api & Modules
+    Middlewares --> Modules
+
+    %% Modules & Engine
+    AuthMod -.->|"Publish Auth Events"| EventBus
+    UserMod -.->|"Publish User Events"| EventBus
+    NoteMod -.->|"Query & Index"| VSQL
+    NoteMod -.->|"Publish note.created"| EventBus
+    DriveMod -.->|"Storage Backends"| Storage
+    FollowMod -.->|"Publish Follow Events"| EventBus
+    MusicMod -.->|"AAP App Sample"| EventBus
+
+    %% App Environment wiring (third-party Apps are never called "modules")
+    Middlewares -.->|"UI injection (navbar/sidebar/timeline)"| AppSandbox
+    AppSandbox -.->|"Subscribe events only"| EventBus
+    AppMgr -.->|"Install / enable .aap"| ThirdApp
+
+    subgraph AppEnv ["App Environment (Third-party AAP)"]
+        ThirdApp["Third-party App (.aap)\nAsagity Application Package\n(manifest.json + frontend/backend + assets)"]
+        AppSandbox["Sandboxed runtime\n(UI injection + gated APIs)\n(EventBus subscribe only, no direct DB)"]
+        ThirdApp --> AppSandbox
+    end
+
+    %% Engine Inter-connections
+    EventBus <--> EventBridge
+    EventBridge <--> RedisCache
+    EventBus --> WS
+
+    %% Storage Binding
+    MRepo --> PG
+    EventBridge --> RedisCache
+    VSQL --> VSQLIndex

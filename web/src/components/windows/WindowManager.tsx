@@ -2,7 +2,10 @@
 
 import { lazy, Suspense } from "react";
 import { useFreeWindowStore } from "@/stores/freeWindow";
+import { useUserStore } from "@/stores/user";
 import { FreeWindow } from "@/components/windows/FreeWindow";
+import { startMemoryMonitor } from "@/lib/memoryManager";
+import { useEffect } from "react";
 
 const Termity = lazy(() =>
   import("@/components/termity/Termity").then((m) => ({ default: m.Termity }))
@@ -12,6 +15,18 @@ const LyricsWindow = lazy(() =>
 );
 const PlaylistWindow = lazy(() =>
   import("@/components/music/PlaylistWindow").then((m) => ({ default: m.PlaylistWindow }))
+);
+const AuthForm = lazy(() =>
+  import("@/components/auth/AuthForm").then((m) => ({ default: m.AuthForm }))
+);
+const RegisterPage = lazy(() =>
+  import("@/components/auth/RegisterPage").then((m) => ({ default: m.RegisterPage }))
+);
+const LoginPage = lazy(() =>
+  import("@/components/auth/LoginPage").then((m) => ({ default: m.LoginPage }))
+);
+const TimelineFeed = lazy(() =>
+  import("@/components/post/TimelineFeed").then((m) => ({ default: m.TimelineFeed }))
 );
 
 function WindowManagerFallback() {
@@ -41,17 +56,29 @@ function getViewConfig(viewType: string | null) {
     case "browser":
       return { title: "浏览器", icon: "language", width: 800, height: 600 };
     case "termity":
-      return { title: "Termity (Recovery)", icon: "terminal", width: 700, height: 500 };
+      return { title: "Termity", icon: "terminal", width: 700, height: 500 };
     case "lyrics_window":
       return { title: "Lyrics Window", icon: "lyrics", width: 400, height: 600, disableTransfer: true };
     case "playlist_window":
       return { title: "Playlist", icon: "queue_music", width: 350, height: 500, disableTransfer: true };
+    case "auth":
+      return { title: "身份认证", icon: "lock", width: 420, height: 560, disableMinimize: true };
+    case "login_window":
+      return { title: "登录", icon: "lock", width: 780, height: 520, disableMinimize: true };
+    case "register_window":
+      return { title: "注册新账号", icon: "person_add", width: 820, height: 580, disableMinimize: true };
+    case "welcome_timeline":
+      return { title: "时间线", icon: "public", width: 500, height: 600, disableMinimize: true };
+    case "welcome_federation":
+      return { title: "联邦实例", icon: "globe", width: 500, height: 600, disableMinimize: true };
+    case "welcome_dashboard":
+      return { title: "数据面板", icon: "dashboard", width: 500, height: 600, disableMinimize: true };
     default:
       return { title: "Free Window", icon: "tab_move", width: 450, height: 600 };
   }
 }
 
-function renderContent(viewType: string | null, refreshKey: number, browserUrl: string) {
+function renderContent(viewType: string | null, refreshKey: number, browserUrl?: string, windowId?: string) {
   switch (viewType) {
     case "error":
       return <div className="p-4 text-red-500">系统错误内容</div>;
@@ -70,45 +97,69 @@ function renderContent(viewType: string | null, refreshKey: number, browserUrl: 
     case "browser":
       return <iframe src={browserUrl} className="w-full h-full border-0" title="Browser" />;
     case "termity":
-      return <Suspense fallback={<WindowManagerFallback />}><Termity /></Suspense>;
+      return <Suspense fallback={<WindowManagerFallback />}><Termity windowId={windowId!} /></Suspense>;
     case "lyrics_window":
       return <Suspense fallback={<WindowManagerFallback />}><LyricsWindow /></Suspense>;
     case "playlist_window":
       return <Suspense fallback={<WindowManagerFallback />}><PlaylistWindow /></Suspense>;
+    case "auth":
+      return <Suspense fallback={<WindowManagerFallback />}><AuthForm /></Suspense>;
+    case "login_window":
+      return <Suspense fallback={<WindowManagerFallback />}><LoginPage /></Suspense>;
+    case "register_window":
+      return <Suspense fallback={<WindowManagerFallback />}><RegisterPage /></Suspense>;
+    case "welcome_timeline":
+      return <Suspense fallback={<WindowManagerFallback />}><TimelineFeed /></Suspense>;
+    case "welcome_federation":
+      return <div className="flex items-center justify-center h-full text-gray-400 text-sm">联邦实例列表开发中</div>;
+    case "welcome_dashboard":
+      return <div className="flex items-center justify-center h-full text-gray-400 text-sm">数据面板开发中</div>;
     default:
       return <div className="p-4 text-gray-500">未知视图类型</div>;
   }
 }
 
 export function WindowManager() {
-  const isOpen = useFreeWindowStore((s) => s.isOpen);
-  const currentViewType = useFreeWindowStore((s) => s.currentViewType);
-  const refreshKey = useFreeWindowStore((s) => s.refreshKey);
-  const currentBrowserUrl = useFreeWindowStore((s) => s.currentBrowserUrl);
+  const windows = useFreeWindowStore((s) => s.windows);
   const close = useFreeWindowStore((s) => s.close);
-  const toggleMaximize = useFreeWindowStore((s) => s.toggleMaximize);
+  const focus = useFreeWindowStore((s) => s.focus);
   const triggerRefresh = useFreeWindowStore((s) => s.triggerRefresh);
+  const isLoggedIn = useUserStore((s) => s.isLoggedIn);
+  const isWelcomePage = !isLoggedIn;
 
-  if (!isOpen || !currentViewType) return null;
+  // Start memory monitor once
+  useEffect(() => {
+    startMemoryMonitor((ids) => {
+      console.log(`[MemoryManager] Auto-minimized ${ids.length} window(s)`);
+    });
+  }, []);
 
-  const config = getViewConfig(currentViewType);
+  if (windows.length === 0) return null;
 
   return (
-    <FreeWindow
-      isOpen={isOpen}
-      title={config.title}
-      icon={config.icon}
-      type={currentViewType}
-      initialWidth={config.width}
-      initialHeight={config.height}
-      disableMaximize={config.disableMaximize}
-      disableMinimize={config.disableMinimize}
-      disableTransfer={config.disableTransfer}
-      onClose={close}
-      onRefresh={triggerRefresh}
-      onSwitchMode={toggleMaximize}
-    >
-      {renderContent(currentViewType, refreshKey, currentBrowserUrl)}
-    </FreeWindow>
+    <>
+      {windows.map((win) => {
+        const config = getViewConfig(win.viewType);
+        return (
+          <FreeWindow
+            key={win.id}
+            isOpen={!win.isMinimized}
+            title={config.title}
+            icon={config.icon}
+            type={win.viewType}
+            initialWidth={config.width}
+            initialHeight={config.height}
+            disableMaximize={config.disableMaximize}
+            disableMinimize={config.disableMinimize || isWelcomePage}
+            disableTransfer={config.disableTransfer || isWelcomePage}
+            onClose={() => close(win.id)}
+            onFocus={() => focus(win.id)}
+            onRefresh={() => triggerRefresh(win.id)}
+          >
+            {renderContent(win.viewType, win.refreshKey, win.browserUrl, win.id)}
+          </FreeWindow>
+        );
+      })}
+    </>
   );
 }

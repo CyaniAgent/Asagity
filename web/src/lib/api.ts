@@ -1,10 +1,12 @@
 import { useUserStore } from "@/stores/user";
+import { fetchBackend } from "@/lib/backend";
 
 interface ApiOptions {
   headers?: Record<string, string>;
   query?: Record<string, unknown>;
   body?: Record<string, unknown> | BodyInit | null;
   method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD";
+  signal?: AbortSignal;
 }
 
 interface ApiResponse<T> {
@@ -14,8 +16,6 @@ interface ApiResponse<T> {
     message?: string;
   };
 }
-
-const BASE_URL = "";
 
 async function request<T>(
   url: string,
@@ -30,16 +30,19 @@ async function request<T>(
     headers["Authorization"] = `Bearer ${accessToken}`;
   }
 
-  const response = await fetch(`${BASE_URL}${url}`, {
+  const queryString = options.query
+    ? `?${new URLSearchParams(options.query as Record<string, string>).toString()}`
+    : "";
+  const path = `${url}${queryString}`;
+
+  const response = await fetchBackend(path, {
     method: options.method,
     headers,
     body:
       options.body && typeof options.body === "object" && !(options.body instanceof FormData)
         ? JSON.stringify(options.body)
         : options.body ?? undefined,
-    ...(options.query
-      ? { url: `${url}?${new URLSearchParams(options.query as Record<string, string>).toString()}` }
-      : {}),
+    signal: options.signal,
   });
 
   if (!response.ok) {

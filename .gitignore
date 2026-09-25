@@ -17,3 +17,9 @@ web/coverage/
 web/.next/
 web/out/
 web/dist/
+# Verse tool runtime (pids, logs, lite sqlite, built daemon)
+.verse/
+
+# Verse engine runtime data (cwd-relative, recreated on boot)
+core/src/Verse.Engine/data/
+core/src/Verse.Engine/storage/

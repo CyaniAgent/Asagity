@@ -35,6 +35,12 @@ function getIcon(type: ViewType | null | undefined, customIcon?: string) {
     case "error": return "error";
     case "lyrics_window": return "lyrics";
     case "playlist_window": return "queue_music";
+    case "auth": return "lock";
+    case "login_window": return "lock";
+    case "register_window": return "person_add";
+    case "welcome_timeline": return "public";
+    case "welcome_federation": return "globe";
+    case "welcome_dashboard": return "dashboard";
     default: return "tab_move";
   }
 }
@@ -54,6 +60,12 @@ function getTitle(type: ViewType | null | undefined, mode: string, customTitle?:
     case "error": return t_("window.systemError");
     case "lyrics_window": return t_("window.lyricsWindow");
     case "playlist_window": return t_("window.playlist");
+    case "auth": return t_("window.authWindow");
+    case "login_window": return t_("window.loginWindow");
+    case "register_window": return t_("window.registerWindow");
+    case "welcome_timeline": return t_("window.timelineWindow");
+    case "welcome_federation": return t_("window.federationWindow");
+    case "welcome_dashboard": return t_("window.dashboardWindow");
     default: return mode === "split" ? t_("window.splitView") : t_("window.freeWindow");
   }
 }
@@ -76,11 +88,9 @@ export function WindowHeader({
   const { t } = useI18n();
 
   return (
-    <div className="px-4 py-3 flex justify-between items-center bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200/50 dark:border-white/5 shrink-0 cursor-grab active:cursor-grabbing rounded-t-[30px] select-none">
+    <div className="px-3 py-1.5 flex justify-between items-center bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200/50 dark:border-white/5 shrink-0 cursor-grab active:cursor-grabbing rounded-t-[30px] select-none">
       <div className="flex items-center gap-2 overflow-hidden max-w-[50%]">
-        <div className="w-7 h-7 rounded-full bg-white dark:bg-white/10 flex items-center justify-center shrink-0 shadow-sm border border-gray-100 dark:border-white/5">
-          <Icon name={getIcon(type, customIcon)} className="text-cyan-600 dark:text-cyan-400" fontSize={14} />
-        </div>
+        <Icon name={getIcon(type, customIcon)} className="text-cyan-600 dark:text-cyan-400 shrink-0" fontSize={16} />
         <span className="text-[13px] font-normal text-gray-800 dark:text-white truncate tracking-wide">
           {getTitle(type, mode, customTitle, t)}
         </span>
@@ -103,9 +113,9 @@ export function WindowHeader({
           <button
             onClick={onSwitchMode}
             className="rounded-full text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-black/5 dark:hover:bg-white/10 p-1.5 transition-colors"
-            title={mode === "split" ? t("window.openInFreeWindow") : t("window.openInSplitView")}
+            title={mode === "split" ? t("window.openInFreeWindow") : t("window.openAsTab")}
           >
-            <Icon name={mode === "split" ? "open_in_new" : "dock_to_right"} fontSize={14} />
+            <Icon name={mode === "split" ? "open_in_new" : "window_arrow_up"} fontSize={14} />
           </button>
         )}
 
@@ -127,7 +137,7 @@ export function WindowHeader({
             className="rounded-full text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 p-1.5 transition-colors"
             title={isMaximized ? t("common.restore") : t("common.maximize")}
           >
-            <Icon name={isMaximized ? "close_fullscreen" : "open_in_full"} fontSize={14} />
+            <Icon name="maximize" fontSize={14} />
           </button>
         )}
 

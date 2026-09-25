@@ -1,5 +1,6 @@
 "use client";
 
+import { List } from "react-window";
 import { PostItem } from "./PostItem";
 import type { TimelinePost } from "@/types/models";
 
@@ -67,20 +68,35 @@ const mockPosts: TimelinePost[] = [
       instance: "asagity.io",
     },
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12),
-    content: "**Termity v2.0 发布！** 🖥️\n\n全新的 Recovery Shell 现已上线，支持更多命令和更好的交互体验。\n\n使用 `help` 查看可用命令列表。\n\n#更新日志 #Termity",
+    content: "**Termity v2.0 发布！** 🖥️\n\n全新的 Termity 现已上线，支持更多命令和更好的交互体验。\n\n使用 `help` 查看可用命令列表。\n\n#更新日志 #Termity",
     metrics: { replies: 18, reposts: 42, reactions: 167 },
   },
 ];
+
+const ITEM_HEIGHT = 200;
+
+function PostRow({ index, style }: { index: number; style: React.CSSProperties }) {
+  const post = mockPosts[index];
+  if (!post) return null;
+  return (
+    <div style={style}>
+      <PostItem post={post} />
+    </div>
+  );
+}
 
 export function TimelineFeed() {
   return (
     <div className="w-full h-full animate-[fadeIn_0.4s_ease-out] -m-6 lg:-m-10 flex flex-col">
       <div className="flex flex-col min-w-0 bg-white dark:bg-gray-900 w-full h-full">
-        <div className="flex flex-col min-h-screen">
-          {mockPosts.map((post) => (
-            <PostItem key={post.id} post={post} />
-          ))}
-        </div>
+        <List<{}>
+          rowComponent={PostRow}
+          rowCount={mockPosts.length}
+          rowHeight={ITEM_HEIGHT}
+          rowProps={{}}
+          overscanCount={5}
+          style={{ width: "100%", height: "100%" }}
+        />
       </div>
     </div>
   );

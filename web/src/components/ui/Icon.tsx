@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import {
   Home24Regular,
   Home24Filled,
@@ -23,6 +24,7 @@ import {
   ArrowMinimize24Regular,
   ArrowMaximize24Regular,
   WindowNew24Regular,
+  WindowArrowUp24Regular,
   Person24Regular,
   Person24Filled,
   Document24Regular,
@@ -68,6 +70,8 @@ import {
   DesktopSignal24Regular,
   LayoutDynamic24Regular,
   WindowDevTools24Regular,
+  WindowDevTools24Filled,
+  CheckmarkCircle24Filled,
   Database24Regular,
   Shield24Regular,
   Key24Regular,
@@ -82,6 +86,17 @@ import {
   ArrowUpload24Regular,
   Edit24Regular,
   ViewDesktop24Regular,
+  EyeOff24Regular,
+  Mail24Regular,
+  ShieldCheckmark24Regular,
+  PersonAdd24Regular,
+  ArrowRight16Regular,
+  ArrowEnter16Regular,
+  Earth16Filled,
+  Timeline20Filled,
+  ServerLink20Filled,
+  ChartMultiple16Filled,
+  ClockAlarm24Regular,
   type FluentIcon,
 } from "@fluentui/react-icons";
 
@@ -108,6 +123,7 @@ const iconMap: Record<string, FluentIcon> = {
   minimize: ArrowMinimize24Regular,
   maximize: ArrowMaximize24Regular,
   open_in_new: WindowNew24Regular,
+  window_arrow_up: WindowArrowUp24Regular,
   person: Person24Regular,
   person_filled: Person24Filled,
   article: Document24Regular,
@@ -131,6 +147,10 @@ const iconMap: Record<string, FluentIcon> = {
   download: ArrowDownload24Regular,
   share: Share24Regular,
   eye: Eye24Regular,
+  eye_off: EyeOff24Regular,
+  mail: Mail24Regular,
+  verified: ShieldCheckmark24Regular,
+  person_add: PersonAdd24Regular,
   copy: Copy24Regular,
   delete: Delete24Regular,
   refresh: ArrowSync24Regular,
@@ -157,6 +177,8 @@ const iconMap: Record<string, FluentIcon> = {
   military_tech: Trophy24Regular,
   help_outline: Question24Regular,
   terminal: WindowDevTools24Regular,
+  window_dev_tools_filled: WindowDevTools24Filled,
+  check_circle: CheckmarkCircle24Filled,
   text_list: TextBulletList24Regular,
   weather_drizzle: WeatherDrizzle24Regular,
   database: Database24Regular,
@@ -173,6 +195,13 @@ const iconMap: Record<string, FluentIcon> = {
   upload: ArrowUpload24Regular,
   edit: Edit24Regular,
   view: ViewDesktop24Regular,
+  arrow_right_16: ArrowRight16Regular,
+  arrow_enter_16: ArrowEnter16Regular,
+  earth_16_filled: Earth16Filled,
+  timeline_20_filled: Timeline20Filled,
+  server_link_20_filled: ServerLink20Filled,
+  chart_multiple_16_filled: ChartMultiple16Filled,
+  clock_alarm: ClockAlarm24Regular,
 };
 
 interface IconProps {
@@ -182,7 +211,7 @@ interface IconProps {
   fontSize?: number | string;
 }
 
-export function Icon({ name, className = "", filled = false, fontSize }: IconProps) {
+export const Icon = memo(function Icon({ name, className = "", filled = false, fontSize }: IconProps) {
   const baseName = name.replace("_filled", "");
   const key = filled ? `${baseName}_filled` : name;
   const IconComponent = iconMap[key] || iconMap[baseName] || iconMap["tag"];
@@ -193,4 +222,4 @@ export function Icon({ name, className = "", filled = false, fontSize }: IconPro
       style={fontSize ? { fontSize, width: "1em", height: "1em" } : undefined}
     />
   );
-}
+});

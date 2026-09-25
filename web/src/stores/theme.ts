@@ -9,7 +9,9 @@ interface ThemeState {
   isDark: boolean;
   currentMode: "light" | "dark";
   modeLabel: string;
+  _mediaQueryHandler: ((e: MediaQueryListEvent) => void) | null;
   init: () => void;
+  destroy: () => void;
   setPreference: (mode: ColorMode) => void;
   toggle: () => void;
   applyColorMode: () => void;
@@ -20,6 +22,7 @@ export const useThemeStore = create<ThemeState>()(
     (set, get) => ({
       preference: "system",
       systemPreference: "dark",
+      _mediaQueryHandler: null,
 
       get isDark() {
         const state = get();
@@ -58,12 +61,24 @@ export const useThemeStore = create<ThemeState>()(
         const systemPref = mediaQuery.matches ? "dark" : "light";
         set({ systemPreference: systemPref });
 
-        mediaQuery.addEventListener("change", (e) => {
+        const handler = (e: MediaQueryListEvent) => {
           set({ systemPreference: e.matches ? "dark" : "light" });
           get().applyColorMode();
-        });
+        };
+        mediaQuery.addEventListener("change", handler);
+        set({ _mediaQueryHandler: handler });
 
         get().applyColorMode();
+      },
+
+      destroy: () => {
+        if (typeof window === "undefined") return;
+        const handler = get()._mediaQueryHandler;
+        if (handler) {
+          const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+          mediaQuery.removeEventListener("change", handler);
+          set({ _mediaQueryHandler: null });
+        }
       },
 
       setPreference: (mode) => {
