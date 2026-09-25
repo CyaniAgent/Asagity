@@ -1,0 +1,46 @@
+{
+  "$schema": "https://asagity.org/schema/aap-v2.json",
+  "manifestVersion": 2,
+  "id": "com.CyaniAgent.MusicPlayer",
+  "package": "music-player",
+  "displayName": {
+    "zh-CN": "音乐播放器",
+    "zh-TW": "音樂播放器",
+    "en-US": "Music Player",
+    "ja-JP": "音楽プレイヤー"
+  },
+  "description": {
+    "zh-CN": "从内置组件独立出来的迷你音乐 App：播放控制、歌词同步、音质标签。前端独立演进，后端仅保留音质标签查询。",
+    "en-US": "Music mini-app extracted from the built-in component: playback, lyrics sync, quality tags."
+  },
+  "version": "0.1.0",
+  "license": "AGPL-3.0-only",
+  "author": {
+    "name": "CyaniAgent",
+    "url": "https://asagity.org"
+  },
+  "compatibility": {
+    "asagity": ">=1.0.0",
+    "api": ">=1.0.0"
+  },
+  "runtimes": {
+    "client": "react",
+    "server": "none"
+  },
+  "entry": {
+    "client": "./client/index.tsx"
+  },
+  "config": {
+    "permissions": "./config/permissions.json",
+    "events": "./config/events.json",
+    "slots": "./config/slots.json",
+    "settingsSchema": "./config/settings.schema.json",
+    "defaults": "./config/default.json"
+  },
+  "bridge": {
+    "routes": "./bridge/routes.json"
+  },
+  "assets": {
+    "icon": "./assets/icons/icon.svg"
+  }
+}
