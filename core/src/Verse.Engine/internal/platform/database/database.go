@@ -15,7 +15,9 @@ import (
 	drivemodel "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/drive/model"
 	instancemodel "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/instance/model"
 	usermodel "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/user/model"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/cache"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/config"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/mode"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
@@ -25,6 +27,11 @@ import (
 type Clients struct {
 	DB    *gorm.DB
 	Redis *redis.Client
+	// Cache is the KV store services use. Production wraps Redis;
+	// lite mode uses the in-process memory cache.
+	Cache cache.Cache
+	// Mode records which runtime mode opened these clients.
+	Mode mode.Mode
 }
 
 func Open(cfg config.Config) (*Clients, error) {
@@ -65,7 +72,7 @@ func Open(cfg config.Config) (*Clients, error) {
 		return nil, err
 	}
 
-	return &Clients{DB: db, Redis: rdb}, nil
+	return &Clients{DB: db, Redis: rdb, Cache: cache.NewRedisCache(rdb), Mode: mode.Production}, nil
 }
 
 func seedInitialData(db *gorm.DB) error {

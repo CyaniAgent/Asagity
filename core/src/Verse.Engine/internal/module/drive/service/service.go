@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -23,8 +24,15 @@ func New(repo repository.Repository, cfg config.Config) *Service {
 	if storageDir == "" {
 		storageDir = "./storage/drive"
 	}
+	// The configured path may point at a container mount (e.g. /app/...) that
+	// is not writable on a dev machine; fall back to a local directory
+	// instead of taking the whole server down.
 	if err := os.MkdirAll(storageDir, 0755); err != nil {
-		panic(fmt.Sprintf("failed to create storage directory: %v", err))
+		log.Printf("[drive] storage dir %q not writable (%v); falling back to ./storage/drive", storageDir, err)
+		storageDir = "./storage/drive"
+		if err := os.MkdirAll(storageDir, 0755); err != nil {
+			panic(fmt.Sprintf("failed to create storage directory: %v", err))
+		}
 	}
 	return &Service{repo: repo, cfg: cfg, storageDir: storageDir}
 }

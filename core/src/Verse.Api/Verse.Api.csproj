@@ -13,6 +13,7 @@
     <ProjectReference Include="..\Verse.Modules\Verse.Module.Auth\Verse.Module.Auth.csproj" />
     <ProjectReference Include="..\Verse.Modules\Verse.Module.User\Verse.Module.User.csproj" />
     <ProjectReference Include="..\Verse.Modules\Verse.Module.Note\Verse.Module.Note.csproj" />
+    <ProjectReference Include="..\Verse.Modules\Verse.Module.Shell\Verse.Module.Shell.csproj" />
     <ProjectReference Include="..\Verse.Modules\Verse.Module.Drive\Verse.Module.Drive.csproj" />
     <ProjectReference Include="..\Verse.Modules\Verse.Module.Follow\Verse.Module.Follow.csproj" />
     <ProjectReference Include="..\Verse.Modules\Verse.Module.Instance\Verse.Module.Instance.csproj" />

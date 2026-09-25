@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { UserProfile, AuthData } from "@/types/models";
+import { fetchBackend } from "@/lib/backend";
 
 interface UserState {
   isLoggedIn: boolean;
@@ -65,7 +66,7 @@ export const useUserStore = create<UserState>()(
 
       logout: async () => {
         try {
-          await fetch("/api/auth/logout", { method: "POST" });
+          await fetchBackend("/api/auth/logout", { method: "POST" });
         } catch {
           // Ignore logout errors
         }
@@ -80,7 +81,7 @@ export const useUserStore = create<UserState>()(
 
       logoutAll: async () => {
         try {
-          await fetch("/api/auth/logout-all", { method: "POST" });
+          await fetchBackend("/api/auth/logout-all", { method: "POST" });
         } catch {
           // Ignore logout errors
         }
@@ -95,7 +96,7 @@ export const useUserStore = create<UserState>()(
 
       refreshAccessToken: async () => {
         try {
-          const res = await fetch("/api/auth/refresh", {
+          const res = await fetchBackend("/api/auth/refresh", {
             method: "POST",
             signal: AbortSignal.timeout(10000),
           });
@@ -124,7 +125,7 @@ export const useUserStore = create<UserState>()(
         }
 
         try {
-          const res = await fetch("/api/auth/me", {
+          const res = await fetchBackend("/api/auth/me", {
             headers: {
               Authorization: `Bearer ${state.accessToken}`,
             },

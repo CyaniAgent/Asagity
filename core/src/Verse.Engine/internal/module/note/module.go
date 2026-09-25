@@ -21,7 +21,7 @@ func Register(r *chi.Mux, cfg config.Config, clients *database.Clients, searchEn
 		panic("note module migration failed: " + err.Error())
 	}
 
-	svc := service.NewNoteServiceWithDeps(repo, followRepo, nil, searchEngine, clients.Redis, eventBus)
+	svc := service.NewNoteServiceWithDeps(repo, followRepo, nil, searchEngine, clients.Cache, eventBus)
 	h := handler.NewNoteHandler(svc)
 
 	r.Post("/api/notes", h.CreateNote)

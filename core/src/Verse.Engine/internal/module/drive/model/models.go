@@ -30,7 +30,7 @@ const (
 )
 
 type DriveFile struct {
-	ID             uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	ID             uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID         uuid.UUID      `gorm:"type:uuid;not null;index" json:"user_id"`
 	ParentID       *uuid.UUID     `gorm:"type:uuid;index" json:"parent_id"`
 	Name           string         `gorm:"size:255;not null" json:"name"`
