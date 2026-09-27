@@ -22,9 +22,9 @@
 | 文档 | 内容 | 状态 |
 |---|---|---|
 | `decisions.md` | 六项基线决策与依据（本目录已落地） | ✅ |
-| `spec.md` | 能力模型（tools / resources / events）、统一 IDL、传输无关映射 | 📝 待写 |
+| `spec.md` | 能力模型（tools / resources / events）、统一 IDL（protobuf）、传输映射、握手版本错误模型 | ✅ |
 | `permissions.md` | 权限语义（Chrome MV3 式最小权限 + 安装时 consent） | 📝 待写 |
-| `trust.md` | 三级信任：沙箱 / SQL / 全局 + manifest `trust.level` 声明 + 非管理员 L3 假服务规则 | 📝 待写 |
+| `trust.md` | 三级信任（沙箱/SQL/全局）+ 动态授权 + 晋升降级 + 审计撤销 | ✅ |
 | `frontend.md` | iframe sandbox + postMessage Bridge；官方直挂为例外 | 📝 待写 |
 | `lifecycle.md` | 安装/启用/禁用/更新/卸载与 `verse app` 的对接（含 L3 假服务启动） | 📝 待写 |
 | `spike-wazero.md` | wazero 最小 guest 验证结论（deny-by-default + 授权作用域 + host function） | ✅ |

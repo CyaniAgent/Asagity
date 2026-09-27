@@ -27,8 +27,8 @@
 
 ## 待决事项（规划阶段解决）
 
-- IDL 具体语法：WIT vs protobuf（二选一）。
-- 能力原语清单：tools / resources / events 是否够用。
+- ~~IDL 具体语法：WIT vs protobuf（二选一）~~ → ✅ 已定：语义用 WIT 风格书写，线上编码 protobuf，WIT Component 为远期迁移路径（`spec.md` §4）。
+- ~~能力原语清单：tools / resources / events 是否够用~~ → ✅ 已定三原语（`spec.md` §3），不够时走加法发布。
 - 签名基础设施：官方签名密钥管理与验证链。
 - `manifest.json` 需新增字段：`bridge`（IDL 版本/能力声明）、`sandbox`（WASM target、授权上限）、`trust.level`（sandbox | sql | global，见决策 4）。
 - 非管理员开发者 L3 调试用的假服务：按交互代码选择并启动容器化 mock 的规则与目录约定。
