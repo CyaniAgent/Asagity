@@ -13,6 +13,13 @@ type contextKey string
 const UserIDKey contextKey = "user_id"
 const UserPubIDKey contextKey = "user_pubid"
 
+// Group, token-scope and app bindings for the permission layer
+// (internal/platform/authz). Absent on legacy tokens: getters below
+// then yield "" / nil, i.e. a self-acting non-admin user.
+const UserGroupKey contextKey = "user_group"
+const TokenScopesKey contextKey = "token_scopes"
+const AppIDKey contextKey = "app_id"
+
 func Cors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*") // For development, allow all
@@ -55,6 +62,18 @@ func Auth(secret string) func(http.Handler) http.Handler {
 						ctx = context.WithValue(ctx, UserPubIDKey, pubID)
 					}
 
+					if group, ok := claims["grp"].(string); ok {
+						ctx = context.WithValue(ctx, UserGroupKey, group)
+					}
+
+					if scope, ok := claims["scope"].(string); ok {
+						ctx = context.WithValue(ctx, TokenScopesKey, scope)
+					}
+
+					if appID, ok := claims["app"].(string); ok {
+						ctx = context.WithValue(ctx, AppIDKey, appID)
+					}
+
 					next.ServeHTTP(w, r.WithContext(ctx))
 					return
 				}
@@ -75,6 +94,34 @@ func GetUserID(ctx context.Context) string {
 func GetUserPubID(ctx context.Context) string {
 	if pubID, ok := ctx.Value(UserPubIDKey).(string); ok {
 		return pubID
+	}
+	return ""
+}
+
+// GetUserGroup returns the caller's user-group id ("admin" for
+// administrators) or "" when the token carries none.
+func GetUserGroup(ctx context.Context) string {
+	if group, ok := ctx.Value(UserGroupKey).(string); ok {
+		return group
+	}
+	return ""
+}
+
+// GetTokenScopes returns the space-separated scope list of scoped
+// application tokens, or nil for self-acting user tokens.
+func GetTokenScopes(ctx context.Context) []string {
+	raw, _ := ctx.Value(TokenScopesKey).(string)
+	if raw == "" {
+		return nil
+	}
+	return strings.Fields(raw)
+}
+
+// GetAppID returns the bound application id of scoped tokens,
+// or "" for self-acting user tokens.
+func GetAppID(ctx context.Context) string {
+	if appID, ok := ctx.Value(AppIDKey).(string); ok {
+		return appID
 	}
 	return ""
 }

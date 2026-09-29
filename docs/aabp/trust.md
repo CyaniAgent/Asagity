@@ -32,7 +32,7 @@
 "trust": {
   "level": "sandbox | sql | global",
   "permissions": ["notes:read", "drive:write"],
-  "deny": ["profile:write"],
+  "deny": ["account:write"],
   "justification": "为什么需要这些权限（展示给用户与管理员）"
 }
 ```

@@ -229,7 +229,7 @@ func (s *Service) Me(userID string) (*dto.UserResponse, error) {
 }
 
 func (s *Service) generateAuthResponse(user *usermodel.User) (*dto.AuthResponse, error) {
-	accessToken, err := s.generateAccessToken(user.ID, user.PubID)
+	accessToken, err := s.generateAccessToken(user.ID, user.PubID, user.UserGroupID)
 	if err != nil {
 		return nil, err
 	}
@@ -252,10 +252,11 @@ func (s *Service) generateAuthResponse(user *usermodel.User) (*dto.AuthResponse,
 	}, nil
 }
 
-func (s *Service) generateAccessToken(userID, userPubID string) (string, error) {
+func (s *Service) generateAccessToken(userID, userPubID, userGroupID string) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":   userID,
 		"pubid": userPubID,
+		"grp":   userGroupID,
 		"exp":   time.Now().Add(AccessTokenDuration).Unix(),
 		"iat":   time.Now().Unix(),
 	}

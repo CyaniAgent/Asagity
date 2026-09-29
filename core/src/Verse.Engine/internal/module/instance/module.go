@@ -6,6 +6,7 @@ import (
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/instance/handler"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/instance/repository"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/instance/service"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/authz"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/database"
 )
@@ -20,7 +21,7 @@ func Register(r *chi.Mux, cfg config.Config, clients *database.Clients) {
 	r.Get("/api/meta/version", h.Version)
 	r.Get("/api/meta/instance", h.Meta)
 
-	r.Get("/api/admin/system/instance", h.AdminInstanceSettings)
-	r.Get("/api/admin/system/database", h.AdminDatabaseStats)
+	r.With(authz.RequireAdmin()).Get("/api/admin/system/instance", h.AdminInstanceSettings)
+	r.With(authz.RequireAdmin()).Get("/api/admin/system/database", h.AdminDatabaseStats)
 	r.Get("/api/system/environment", h.SystemEnvironment)
 }
