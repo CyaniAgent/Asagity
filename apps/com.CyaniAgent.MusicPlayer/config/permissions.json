@@ -1,0 +1,5 @@
+[
+  { "name": "audio.playback", "level": "normal", "reason": "本地音频播放与进度控制" },
+  { "name": "media.metadata.read", "level": "normal", "reason": "解析音频元数据、封面与歌词" },
+  { "name": "ui.widgets", "level": "normal", "reason": "在侧边栏/悬浮层挂载播放器与歌词窗口" }
+]

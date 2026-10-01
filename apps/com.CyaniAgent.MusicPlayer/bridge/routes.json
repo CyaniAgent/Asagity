@@ -1,0 +1,9 @@
+[
+  {
+    "path": "/api/music/quality-tags",
+    "target": "core:MusicModule",
+    "methods": ["GET"],
+    "auth": false,
+    "comment": "过渡期代理宿主现有模块；App 独立 sidecar 落地后改为直连 App 自身服务"
+  }
+]

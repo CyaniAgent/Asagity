@@ -1,0 +1,4 @@
+{
+  "subscribe": ["player.control@v1"],
+  "emit": ["player.track-changed@v1", "player.quality-detected@v1"]
+}

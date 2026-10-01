@@ -6,6 +6,7 @@ import (
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/follow/handler"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/follow/repository"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/follow/service"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/authz"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/database"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/event"
@@ -21,14 +22,14 @@ func Register(r *chi.Mux, cfg config.Config, clients *database.Clients, eventBus
 	svc := service.NewFollowServiceWithBus(repo, eventBus)
 	h := handler.NewHandler(svc)
 
-	r.Post("/api/users/{id}/follow", h.FollowUser)
-	r.Delete("/api/users/{id}/follow", h.UnfollowUser)
+	r.With(authz.Require("follow:write")).Post("/api/users/{id}/follow", h.FollowUser)
+	r.With(authz.Require("follow:write")).Delete("/api/users/{id}/follow", h.UnfollowUser)
 
 	r.Get("/api/users/{id}/followers", h.GetFollowers)
 	r.Get("/api/users/{id}/following", h.GetFollowing)
 	r.Get("/api/users/{id}/follow-count", h.GetFollowCount)
 
 	r.Get("/api/follow/requests/pending", h.GetPendingRequests)
-	r.Post("/api/follow/requests/{id}/accept", h.AcceptFollowRequest)
-	r.Post("/api/follow/requests/{id}/reject", h.RejectFollowRequest)
+	r.With(authz.Require("follow:write")).Post("/api/follow/requests/{id}/accept", h.AcceptFollowRequest)
+	r.With(authz.Require("follow:write")).Post("/api/follow/requests/{id}/reject", h.RejectFollowRequest)
 }

@@ -1,0 +1,4 @@
+{
+  "sidebar": { "widget": "player", "position": "bottom", "priority": 100 },
+  "floating": { "widgets": ["lyrics", "playlist"], "defaultOpen": false }
+}

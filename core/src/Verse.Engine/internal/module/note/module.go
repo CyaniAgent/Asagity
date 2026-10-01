@@ -7,6 +7,7 @@ import (
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/note/handler"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/note/repository"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/note/service"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/authz"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/database"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/event"
@@ -24,17 +25,17 @@ func Register(r *chi.Mux, cfg config.Config, clients *database.Clients, searchEn
 	svc := service.NewNoteServiceWithDeps(repo, followRepo, nil, searchEngine, clients.Cache, eventBus)
 	h := handler.NewNoteHandler(svc)
 
-	r.Post("/api/notes", h.CreateNote)
+	r.With(authz.Require("notes:write")).Post("/api/notes", h.CreateNote)
 	r.Get("/api/notes/{id}", h.GetNote)
-	r.Patch("/api/notes/{id}", h.UpdateNote)
-	r.Delete("/api/notes/{id}", h.DeleteNote)
+	r.With(authz.Require("notes:write")).Patch("/api/notes/{id}", h.UpdateNote)
+	r.With(authz.Require("notes:write")).Delete("/api/notes/{id}", h.DeleteNote)
 
 	r.Get("/api/timeline/{type}", h.ListTimeline)
 
-	r.Post("/api/notes/{id}/react", h.AddReaction)
-	r.Delete("/api/notes/{id}/react", h.RemoveReaction)
+	r.With(authz.Require("notes:write")).Post("/api/notes/{id}/react", h.AddReaction)
+	r.With(authz.Require("notes:write")).Delete("/api/notes/{id}/react", h.RemoveReaction)
 
-	r.Post("/api/notes/{id}/vote", h.VoteOnPoll)
+	r.With(authz.Require("notes:write")).Post("/api/notes/{id}/vote", h.VoteOnPoll)
 	r.Get("/api/notes/{id}/poll", h.GetPollResults)
 
 	r.Get("/api/notes/{id}/edits", h.GetNoteEdits)
