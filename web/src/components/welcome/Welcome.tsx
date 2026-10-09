@@ -1,6 +1,6 @@
 "use client";
 
-import { WelcomeBackground } from "./WelcomeBackground";
+import { WelcomeBackground, type FocalPoint, type WelcomeBackgroundFit } from "./WelcomeBackground";
 import { WelcomeStatusBar } from "./WelcomeStatusBar";
 import { WelcomeActionPanel } from "./WelcomeActionPanel";
 import type { StatusItem } from "./WelcomeStatusBar";
@@ -8,6 +8,10 @@ import type { StatusItem } from "./WelcomeStatusBar";
 export interface WelcomeProps {
   /** Override background image path */
   backgroundSrc?: string;
+  /** "cover" fills+crops, "contain" shows whole image with blur-fill bars */
+  backgroundFit?: WelcomeBackgroundFit;
+  /** Focal point 0–100, decides what survives a cover crop */
+  backgroundFocalPoint?: FocalPoint;
   /** Override status bar items */
   statusItems?: StatusItem[];
 }
@@ -27,10 +31,16 @@ export interface WelcomeProps {
  */
 export function Welcome({
   backgroundSrc,
+  backgroundFit,
+  backgroundFocalPoint,
   statusItems,
 }: WelcomeProps) {
   return (
-    <WelcomeBackground src={backgroundSrc}>
+    <WelcomeBackground
+      src={backgroundSrc}
+      fit={backgroundFit}
+      focalPoint={backgroundFocalPoint}
+    >
       {/* ── Top-right: Status Bar ── */}
       <div className="absolute top-5 right-6 z-20">
         <WelcomeStatusBar items={statusItems} />

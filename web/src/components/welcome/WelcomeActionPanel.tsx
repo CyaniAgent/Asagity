@@ -1,21 +1,27 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Fragment } from "react";
 import { useInstanceStore } from "@/stores/instance";
+import { useWelcomeStore } from "@/stores/welcome";
 import { useFreeWindowStore } from "@/stores/freeWindow";
 import { useThemeStore } from "@/stores/theme";
+import { useRouter } from "@/hooks/useRouter";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { Icon } from "@/components/ui/Icon";
+import { WelcomeMenuItem } from "./WelcomeMenuItem";
+import type { WelcomeMenuAction, WelcomeMenuItemConfig } from "./welcomeConfig";
 
 export interface WelcomeActionPanelProps {}
 
 export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
   const { t } = useI18n();
   const instanceStore = useInstanceStore();
+  const menuGroups = useWelcomeStore((s) => s.menuGroups);
   const isDark = useThemeStore(
     (s) => s.preference === "dark" || (s.preference === "system" && s.systemPreference === "dark")
   );
   const { openFromContext } = useFreeWindowStore();
+  const { push } = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [devOpen, setDevOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -36,8 +42,25 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
   const closeMenu = () => { setMenuOpen(false); setDevOpen(false); };
   const handleJoin = () => { openFromContext("register_window"); closeMenu(); };
   const handleLogin = () => { openFromContext("login_window"); closeMenu(); };
-  const handleOpenTimeline = () => { openFromContext("welcome_timeline"); closeMenu(); };
-  const handleOpenTermity = () => { useFreeWindowStore.getState().openTermity(); closeMenu(); };
+
+  /** Q4 dispatcher: window + link (termity keeps its auth-gated entry). */
+  const dispatch = (action: WelcomeMenuAction) => {
+    if (action.kind === "window") {
+      if (action.viewType === "termity") {
+        useFreeWindowStore.getState().openTermity();
+      } else {
+        openFromContext(action.viewType);
+      }
+      closeMenu();
+    } else if (action.kind === "link") {
+      closeMenu();
+      if (action.external) {
+        window.open(action.href, "_blank", "noopener,noreferrer");
+      } else {
+        push(action.href);
+      }
+    }
+  };
 
   const menuCls = isDark
     ? "bg-gray-900/95 border border-white/10 text-white shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
@@ -47,6 +70,49 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
   const panelBg = isDark
     ? "bg-gray-900 border border-white/10 text-white shadow-[0_8px_40px_rgba(0,0,0,0.4)]"
     : "bg-white border border-gray-200 text-gray-900 shadow-[0_8px_40px_rgba(0,0,0,0.1)]";
+
+  const renderItem = (item: WelcomeMenuItemConfig, smallDefault = false) => {
+    const small = item.small ?? smallDefault;
+    const cls = small ? devItemCls : itemCls;
+    if (item.children?.length) {
+      const open = item.id === "developer-group" ? devOpen : false;
+      return (
+        <div key={item.id}>
+          <button
+            onClick={() => item.id === "developer-group" && setDevOpen((v) => !v)}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium transition-colors
+              ${itemCls}`}
+          >
+            <Icon name={item.icon} fontSize={18} className={isDark ? "text-white/50" : "text-gray-400"} />
+            <span className="flex-1 text-left">{t(item.labelKey)}</span>
+            <Icon
+              name="chevron_right"
+              fontSize={14}
+              className={`transition-transform duration-200 ${open ? "rotate-90" : ""}`}
+            />
+          </button>
+          {open && (
+            <div className={`pl-4 pb-1 ${isDark ? "bg-white/[0.03]" : "bg-gray-50"}`}>
+              {item.children.map((child) => renderItem(child, true))}
+            </div>
+          )}
+        </div>
+      );
+    }
+    return (
+      <WelcomeMenuItem
+        key={item.id}
+        icon={item.icon}
+        label={t(item.labelKey)}
+        isDark={isDark}
+        itemCls={cls}
+        small={small}
+        comingSoon={item.comingSoon}
+        comingSoonLabel={item.badgeKey ? t(item.badgeKey) : undefined}
+        onClick={() => dispatch(item.action)}
+      />
+    );
+  };
 
   return (
     <div
@@ -95,120 +161,21 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
             <Icon name="more_horiz" fontSize={20} />
           </button>
 
-          {/* ── Dropdown ── */}
+          {/* ── Dropdown (data-driven) ── */}
           {menuOpen && (
             <div
               className={`absolute bottom-full right-0 mb-2 w-56 max-h-[70vh] overflow-y-auto
                 overscroll-contain rounded-2xl py-1.5 z-50 backdrop-blur-xl transition-all
                 ${menuCls}`}
             >
-              {/* ── Group: Quick Access ── */}
-              <MenuItem
-                icon="timeline_20_filled"
-                label={t("welcome.browseTimeline")}
-                isDark={isDark}
-                itemCls={itemCls}
-                onClick={handleOpenTimeline}
-              />
-              <MenuItem
-                icon="campaign"
-                label={t("announcement.announcements")}
-                isDark={isDark}
-                itemCls={itemCls}
-                comingSoon
-                comingSoonLabel={t("header.inDevelopment")}
-                onClick={() => {}}
-              />
-
-              {/* ── Divider ── */}
-              <div className={`my-1.5 mx-3 h-px ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
-
-              {/* ── Group: Instance ── */}
-              <MenuItem
-                icon="info"
-                label={t("welcome.aboutInstance")}
-                isDark={isDark}
-                itemCls={itemCls}
-                onClick={() => { handleOpenTimeline(); }}
-              />
-              <MenuItem
-                icon="globe"
-                label={t("welcome.federation")}
-                isDark={isDark}
-                itemCls={itemCls}
-                comingSoon
-                comingSoonLabel={t("header.inDevelopment")}
-                onClick={() => {}}
-              />
-              <MenuItem
-                icon="dashboard"
-                label={t("welcome.dataDashboard")}
-                isDark={isDark}
-                itemCls={itemCls}
-                comingSoon
-                comingSoonLabel={t("header.inDevelopment")}
-                onClick={() => {}}
-              />
-              <MenuItem
-                icon="campaign"
-                label={t("welcome.adPool")}
-                isDark={isDark}
-                itemCls={itemCls}
-                comingSoon
-                comingSoonLabel={t("header.inDevelopment")}
-                onClick={() => {}}
-              />
-              <MenuItem
-                icon="mail_inbox"
-                label={t("welcome.contactUs")}
-                isDark={isDark}
-                itemCls={itemCls}
-                comingSoon
-                comingSoonLabel={t("header.inDevelopment")}
-                onClick={() => {}}
-              />
-
-              {/* ── Divider ── */}
-              <div className={`my-1.5 mx-3 h-px ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
-
-              {/* ── Group: Developer (submenu) ── */}
-              <div>
-                <button
-                  onClick={() => setDevOpen((v) => !v)}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium transition-colors
-                    ${itemCls}`}
-                >
-                  <Icon name="terminal" fontSize={18} className={isDark ? "text-white/50" : "text-gray-400"} />
-                  <span className="flex-1 text-left">{t("welcome.developer")}</span>
-                  <Icon
-                    name="chevron_right"
-                    fontSize={14}
-                    className={`transition-transform duration-200 ${devOpen ? "rotate-90" : ""}`}
-                  />
-                </button>
-                {devOpen && (
-                  <div className={`pl-4 pb-1 ${isDark ? "bg-white/[0.03]" : "bg-gray-50"}`}>
-                    <MenuItem
-                      icon="terminal"
-                      label={t("welcome.termity")}
-                      isDark={isDark}
-                      itemCls={devItemCls}
-                      onClick={handleOpenTermity}
-                      small
-                    />
-                    <MenuItem
-                      icon="public"
-                      label={t("welcome.verseNET")}
-                      isDark={isDark}
-                      itemCls={devItemCls}
-                      comingSoon
-                      comingSoonLabel={t("header.inDevelopment")}
-                      onClick={() => {}}
-                      small
-                    />
-                  </div>
-                )}
-              </div>
+              {menuGroups.map((group, gi) => (
+                <Fragment key={group.id}>
+                  {gi > 0 && (
+                    <div className={`my-1.5 mx-3 h-px ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+                  )}
+                  {group.items.map((item) => renderItem(item))}
+                </Fragment>
+              ))}
             </div>
           )}
         </div>
@@ -247,50 +214,5 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
         </button>
       </div>
     </div>
-  );
-}
-
-/* ── Helper: Menu Item ── */
-function MenuItem({
-  icon,
-  label,
-  isDark,
-  itemCls,
-  onClick,
-  small,
-  comingSoon,
-  comingSoonLabel,
-}: {
-  icon: string;
-  label: string;
-  isDark: boolean;
-  itemCls: string;
-  onClick: () => void;
-  small?: boolean;
-  comingSoon?: boolean;
-  comingSoonLabel?: string;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={comingSoon}
-      className={`w-full flex items-center gap-3 px-4 ${small ? "py-2" : "py-2.5"} text-[13px] font-medium transition-colors
-        ${comingSoon ? "opacity-50 cursor-not-allowed" : ""} ${itemCls}`}
-    >
-      <Icon
-        name={icon}
-        fontSize={small ? 15 : 18}
-        className={isDark ? "text-white/50" : "text-gray-400"}
-      />
-      <span className="flex-1 text-left">{label}</span>
-      {comingSoon && comingSoonLabel && (
-        <span
-          className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium
-            ${isDark ? "bg-white/10 text-white/40" : "bg-gray-200 text-gray-500"}`}
-        >
-          {comingSoonLabel}
-        </span>
-      )}
-    </button>
   );
 }
