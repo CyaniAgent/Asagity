@@ -666,7 +666,18 @@
     "componentsFound": "個元件",
     "rescan": "重新掃描",
     "resetAll": "全部重置",
-    "scanning": "掃描中..."
+    "scanning": "掃描中...",
+    "protectedTitle": "受系統保護的核心組件",
+    "protectedDesc": "隱藏將導致白屏或視窗自殺，已鎖定不可操作",
+    "protectedEmpty": "暫無受保護組件",
+    "protectedReasonHtml": "HTML 根元素，隱藏將導致全站白屏",
+    "protectedReasonBody": "BODY 全站容器，隱藏將導致全站白屏",
+    "protectedReasonRoot": "React 全站掛載點，隱藏將導致全站白屏",
+    "protectedReasonPortal": "自由視窗/浮球外殼，隱藏將導致視窗自殺",
+    "smallScreenTitle": "螢幕有點小，除錯可能不太順手",
+    "smallScreenDesc": "目前螢幕為 {width}×{height}，除錯台按桌面端 1184×756 設計，在小螢幕上會被壓縮，雙欄操作可能不太順手。建議切換到平板或電腦使用，還要繼續嗎？",
+    "smallScreenClose": "關閉視窗",
+    "smallScreenContinue": "繼續進入"
   },
   "register": {
     "joinInstance": "加入實例！",

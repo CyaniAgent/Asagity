@@ -35,6 +35,8 @@ interface FreeWindowProps {
   type?: ViewType;
   initialWidth?: number;
   initialHeight?: number;
+  minWidth?: number;
+  minHeight?: number;
   resizable?: boolean;
   disableTransfer?: boolean;
   disableMaximize?: boolean;
@@ -53,6 +55,8 @@ export function FreeWindow({
   type,
   initialWidth = 450,
   initialHeight = 600,
+  minWidth = 300,
+  minHeight = 200,
   resizable = true,
   disableTransfer = false,
   disableMaximize = false,
@@ -87,14 +91,24 @@ export function FreeWindow({
     return id;
   }, []);
 
-  /* ── 初始化：居中 + 挂载标记 ──────────────────────────────── */
+  /* ── 初始化：按视口适配缩放 + 居中 + 挂载标记 ────────── */
   useEffect(() => {
     setMounted(true);
+    const MARGIN = 32;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    // 可用空间（兜底 200，避免极端小屏算出负数）
+    const availW = Math.max(200, vw - MARGIN);
+    const availH = Math.max(200, vh - MARGIN);
+    // 理想尺寸先满足 min，再钳进视口：大屏=初始值，小屏=按屏收缩
+    const w = Math.min(Math.max(initialWidth, minWidth), availW);
+    const h = Math.min(Math.max(initialHeight, minHeight), availH);
+    setSize({ width: Math.floor(w), height: Math.floor(h) });
     setPosition({
-      x: Math.max(0, (window.innerWidth - initialWidth) / 2),
-      y: Math.max(0, (window.innerHeight - initialHeight) / 2),
+      x: Math.max(0, (vw - w) / 2),
+      y: Math.max(0, (vh - h) / 2),
     });
-  }, [initialWidth, initialHeight]);
+  }, [initialWidth, initialHeight, minWidth, minHeight]);
 
   useEffect(() => {
     return () => {
@@ -262,8 +276,8 @@ export function FreeWindow({
             setPosition({ x, y });
           }
         }}
-        minWidth={300}
-        minHeight={200}
+        minWidth={minWidth}
+        minHeight={minHeight}
         enable={!resizable || isMaximized ? false : undefined}
         handleClasses={{
           top: "resize-top", bottom: "resize-bottom",

@@ -666,7 +666,18 @@
     "componentsFound": "components found",
     "rescan": "Rescan",
     "resetAll": "Reset all",
-    "scanning": "Scanning..."
+    "scanning": "Scanning...",
+    "protectedTitle": "Protected core components",
+    "protectedDesc": "Hiding them causes white screen or window suicide. Locked.",
+    "protectedEmpty": "No protected components",
+    "protectedReasonHtml": "HTML root element. Hiding it whites out the whole app.",
+    "protectedReasonBody": "BODY app container. Hiding it whites out the whole app.",
+    "protectedReasonRoot": "React app mount point. Hiding it whites out the whole app.",
+    "protectedReasonPortal": "Free window / entry shell. Hiding it kills the window itself.",
+    "smallScreenTitle": "Small screen — debugging may feel cramped",
+    "smallScreenDesc": "Your screen is {width}×{height}, but the debugger is designed for the 1184×756 desktop layout and will be squeezed, making the two-pane workflow awkward. A tablet or computer is recommended. Continue anyway?",
+    "smallScreenClose": "Close window",
+    "smallScreenContinue": "Continue anyway"
   },
   "register": {
     "joinInstance": "Join Instance!",

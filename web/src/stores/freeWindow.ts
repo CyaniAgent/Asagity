@@ -24,7 +24,7 @@ let nextId = 1;
 const uid = () => String(nextId++);
 
 /** Singleton types — only one instance allowed at a time. */
-const SINGLETONS: ViewType[] = ["termity", "auth", "lyrics_window", "playlist_window"];
+const SINGLETONS: ViewType[] = ["termity", "auth", "lyrics_window", "playlist_window", "portal_debugger"];
 
 function makeWindow(viewType: ViewType, extra?: Pick<Window, "browserUrl" | "errorData">): Window {
   return {

@@ -666,7 +666,18 @@
     "componentsFound": "个组件",
     "rescan": "重新扫描",
     "resetAll": "全部重置",
-    "scanning": "扫描中..."
+    "scanning": "扫描中...",
+    "protectedTitle": "受系统保护的核心组件",
+    "protectedDesc": "隐藏将导致白屏或窗口自杀，已锁定不可操作",
+    "protectedEmpty": "暂无受保护组件",
+    "protectedReasonHtml": "HTML 根元素，隐藏将导致整站白屏",
+    "protectedReasonBody": "BODY 整站容器，隐藏将导致整站白屏",
+    "protectedReasonRoot": "React 整站挂载点，隐藏将导致整站白屏",
+    "protectedReasonPortal": "自由窗口/浮球外壳，隐藏将导致窗口自杀",
+    "smallScreenTitle": "屏幕有点小，调试可能不太顺手",
+    "smallScreenDesc": "当前屏幕为 {width}×{height}，调试台按桌面端 1184×756 设计，在小屏上会被压缩，双栏操作可能不太顺手。建议切换到平板或电脑使用，还要继续吗？",
+    "smallScreenClose": "关闭窗口",
+    "smallScreenContinue": "继续进入"
   },
   "register": {
     "joinInstance": "加入实例！",

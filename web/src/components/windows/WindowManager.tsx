@@ -16,6 +16,11 @@ const LyricsWindow = lazy(() =>
 const PlaylistWindow = lazy(() =>
   import("@/components/music/PlaylistWindow").then((m) => ({ default: m.PlaylistWindow }))
 );
+const PortalDebuggerContent = lazy(() =>
+  import("@/components/portal-debugger/PortalDebuggerContent").then((m) => ({
+    default: m.PortalDebuggerContent,
+  }))
+);
 const AuthForm = lazy(() =>
   import("@/components/auth/AuthForm").then((m) => ({ default: m.AuthForm }))
 );
@@ -73,6 +78,8 @@ function getViewConfig(viewType: string | null) {
       return { title: "联邦实例", icon: "globe", width: 500, height: 600, disableMinimize: true };
     case "welcome_dashboard":
       return { title: "数据面板", icon: "dashboard", width: 500, height: 600, disableMinimize: true };
+    case "portal_debugger":
+      return { title: "Portal Debugger", icon: "terminal", width: 1184, height: 756, minWidth: 720, minHeight: 480 };
     default:
       return { title: "Free Window", icon: "tab_move", width: 450, height: 600 };
   }
@@ -114,6 +121,8 @@ function renderContent(viewType: string | null, refreshKey: number, browserUrl?:
       return <div className="flex items-center justify-center h-full text-gray-400 text-sm">联邦实例列表开发中</div>;
     case "welcome_dashboard":
       return <div className="flex items-center justify-center h-full text-gray-400 text-sm">数据面板开发中</div>;
+    case "portal_debugger":
+      return <Suspense fallback={<WindowManagerFallback />}><PortalDebuggerContent /></Suspense>;
     default:
       return <div className="p-4 text-gray-500">未知视图类型</div>;
   }
@@ -149,6 +158,8 @@ export function WindowManager() {
             type={win.viewType}
             initialWidth={config.width}
             initialHeight={config.height}
+            minWidth={(config as { minWidth?: number }).minWidth}
+            minHeight={(config as { minHeight?: number }).minHeight}
             disableMaximize={config.disableMaximize}
             disableMinimize={config.disableMinimize || isWelcomePage}
             disableTransfer={config.disableTransfer || isWelcomePage}

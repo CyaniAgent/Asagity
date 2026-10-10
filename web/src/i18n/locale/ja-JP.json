@@ -666,7 +666,18 @@
     "componentsFound": "個のコンポーネント",
     "rescan": "再スキャン",
     "resetAll": "すべてリセット",
-    "scanning": "スキャン中..."
+    "scanning": "スキャン中...",
+    "protectedTitle": "保護されたコアコンポーネント",
+    "protectedDesc": "非表示にすると白屏やウィンドウ自殺を招くためロック中",
+    "protectedEmpty": "保護されたコンポーネントはありません",
+    "protectedReasonHtml": "HTMLルート要素。非表示にすると全体が白屏になります",
+    "protectedReasonBody": "BODY全体コンテナ。非表示にすると全体が白屏になります",
+    "protectedReasonRoot": "Reactマウントポイント。非表示にすると全体が白屏になります",
+    "protectedReasonPortal": "自由ウィンドウ/フローティング外殻。非表示にすると自殺します",
+    "smallScreenTitle": "画面が小さめです",
+    "smallScreenDesc": "現在の画面は{width}×{height}ですが、デバッガは1184×756のデスクトップレイアウト向けに設計されており、圧縮表示で2ペイン操作がしづらくなります。タブレットまたはPCでのご利用をおすすめします。それでも続けますか？",
+    "smallScreenClose": "ウィンドウを閉じる",
+    "smallScreenContinue": "続けて開く"
   },
   "register": {
     "joinInstance": "インスタンスに参加！",

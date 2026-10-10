@@ -15,7 +15,8 @@ export type ViewType =
   | "register_window"
   | "welcome_timeline"
   | "welcome_federation"
-  | "welcome_dashboard";
+  | "welcome_dashboard"
+  | "portal_debugger";
 
 export type RightViewType =
   | "post"

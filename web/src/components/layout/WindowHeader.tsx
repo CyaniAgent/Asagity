@@ -24,6 +24,7 @@ interface WindowHeaderProps {
 function getIcon(type: ViewType | null | undefined, customIcon?: string) {
   if (customIcon) return customIcon;
   switch (type) {
+    case "portal_debugger": return "terminal";
     case "post": return "article";
     case "user": return "person";
     case "music": return "music_note";
@@ -49,6 +50,7 @@ function getTitle(type: ViewType | null | undefined, mode: string, customTitle?:
   if (customTitle) return customTitle;
   const t_ = t ?? ((key: string) => key);
   switch (type) {
+    case "portal_debugger": return t_("portalDebugger.title");
     case "post": return t_("window.postDetail");
     case "user": return t_("window.userProfile");
     case "music": return t_("window.musicPlayer");
