@@ -178,7 +178,7 @@ function parseArgs(fullArgs: string): Record<string, string> {
   return result;
 }
 
-export function Termity({ windowId }: { windowId: string }) {
+export function Termity({ windowId }: { windowId?: string }) {
   const { t } = useI18n();
   const systemStore = useSystemStore();
   const instanceStore = useInstanceStore();
@@ -571,6 +571,11 @@ export function Termity({ windowId }: { windowId: string }) {
 
         case "exit": {
           addLine({ type: "system", text: t("termity.closingSession") });
+          // 嵌入模式（调试器右栏）没有独立 windowId：不关窗，只给提示
+          if (!windowId) {
+            addLine({ type: "output", text: t("termity.exitEmbeddedHint") });
+            break;
+          }
           addTimer(() => {
             useFreeWindowStore.getState().close(windowId);
           }, 300);
@@ -694,7 +699,7 @@ export function Termity({ windowId }: { windowId: string }) {
 
       addLine({ type: "system", text: "" });
     },
-    [addLine, systemStore, instanceStore, userStore, t]
+    [addLine, systemStore, instanceStore, userStore, t, windowId]
   );
 
   const handleKeyDown = useCallback(

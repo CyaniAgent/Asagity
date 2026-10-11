@@ -76,6 +76,7 @@ export function FreeWindow({
   const [visible, setVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [restoreAnim, setRestoreAnim] = useState(false);
+  const [contentScrolled, setContentScrolled] = useState(false);
   const timersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
   const rafRef = useRef<number>(0);
 
@@ -297,7 +298,7 @@ export function FreeWindow({
         }}
       >
         <div
-          className="flex flex-col h-full rounded-[30px] border shadow-[0_10px_40px_rgba(0,0,0,0.15)] overflow-hidden bg-white/90 dark:bg-gray-900/90 backdrop-blur-3xl border-gray-200/50 dark:border-gray-800/80"
+          className="flex flex-col h-full rounded-2xl border shadow-[0_10px_40px_rgba(0,0,0,0.15)] overflow-hidden bg-white/90 dark:bg-gray-900/90 backdrop-blur-3xl border-gray-200/50 dark:border-gray-800/80"
         >
           {/* 拖拽手柄 / 标题栏 */}
           <div className={`shrink-0 w-full ${isMaximized ? "cursor-default" : "cursor-grab active:cursor-grabbing"}`}>
@@ -309,6 +310,7 @@ export function FreeWindow({
                 customIcon={icon}
                 isMaximized={isMaximized}
                 isMinimized={isMinimized}
+                scrolled={contentScrolled}
                 disableTransfer={disableTransfer}
                 disableMaximize={disableMaximize}
                 disableMinimize={disableMinimize}
@@ -322,7 +324,13 @@ export function FreeWindow({
           </div>
 
           {/* 内容区域 */}
-          <div className="flex-1 overflow-auto custom-scrollbar relative flex flex-col">
+          <div
+            className="flex-1 overflow-auto custom-scrollbar relative flex flex-col"
+            onScroll={(e) => {
+              const t = e.currentTarget.scrollTop > 4;
+              setContentScrolled((prev) => (prev === t ? prev : t));
+            }}
+          >
             {children}
           </div>
         </div>

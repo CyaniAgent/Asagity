@@ -645,12 +645,13 @@
     "vnetSubConfig": "查看当前网络配置",
     "vnetSubPing": "测试网络延迟",
     "vnetSubStatus": "查看 Verse NET 连接状态",
-    "vnetTitle": "Verse NET"
+    "vnetTitle": "Verse NET",
+    "exitEmbeddedHint": "嵌入模式下请使用调试器窗口按钮关闭"
   },
   "portalDebugger": {
     "title": "Portal Debugger",
     "tabProblems": "问题",
-    "tabDebug": "调试",
+    "tabDebug": "交互控制台",
     "tabHideComponent": "隐藏组件",
     "problemsEmpty": "暂无运行时错误",
     "allClean": "一切正常",
@@ -746,6 +747,7 @@
     "openAsTab": "作为标签页打开",
     "timelineWindow": "时间线",
     "loginWindow": "登录",
-    "registerWindow": "注册新账号"
+    "registerWindow": "注册新账号",
+    "termity": "Termity"
   }
 }

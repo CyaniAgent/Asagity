@@ -645,12 +645,13 @@
     "vnetSubConfig": "Show current network config",
     "vnetSubPing": "Test network latency",
     "vnetSubStatus": "Show Verse NET connection status",
-    "vnetTitle": "Verse NET"
+    "vnetTitle": "Verse NET",
+    "exitEmbeddedHint": "Embedded mode: close via the debugger window controls"
   },
   "portalDebugger": {
     "title": "Portal Debugger",
     "tabProblems": "Problems",
-    "tabDebug": "Debug",
+    "tabDebug": "Interactive Console",
     "tabHideComponent": "Hide Component",
     "problemsEmpty": "No runtime errors",
     "allClean": "All clean!",
@@ -746,6 +747,7 @@
     "openAsTab": "Open as Tab",
     "timelineWindow": "Timeline",
     "loginWindow": "Login",
-    "registerWindow": "Create Account"
+    "registerWindow": "Create Account",
+    "termity": "Termity"
   }
 }

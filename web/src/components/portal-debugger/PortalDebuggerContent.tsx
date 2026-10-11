@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useState, lazy, Suspense } from "react";
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from "react-resizable-panels";
 import { Icon } from "@/components/ui/Icon";
 import { usePortalDebuggerStore, type PortalDebuggerLeftTab } from "@/stores/portalDebugger";
@@ -10,6 +10,10 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { ProblemsTab } from "./tabs/ProblemsTab";
 import { DebugTab } from "./tabs/DebugTab";
 import { HideComponentTab } from "./tabs/HideComponentTab";
+
+const Termity = lazy(() =>
+  import("@/components/termity/Termity").then((m) => ({ default: m.Termity }))
+);
 
 type LeftTabDef = {
   id: PortalDebuggerLeftTab;
@@ -22,14 +26,31 @@ const leftTabs: LeftTabDef[] = [
   { id: "hide-component", labelKey: "portalDebugger.tabHideComponent", icon: "eye" },
 ];
 
+type RightTab = "console" | "termity";
+
+const rightTabs: { id: RightTab; labelKey: string; icon: string }[] = [
+  { id: "console", labelKey: "portalDebugger.tabDebug", icon: "terminal" },
+  { id: "termity", labelKey: "window.termity", icon: "terminal" },
+];
+
 /** 小于该宽度视为小屏设备（手机竖屏 / 窄窗），打开时弹提示 */
 const SMALL_SCREEN_THRESHOLD = 768;
+
+function RightPanelFallback() {
+  return (
+    <div className="flex items-center justify-center h-full">
+      <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 
 /**
  * PortalDebuggerContent — 桌面端双栏调试台
  * 自由窗口默认 1184×756（见 WindowManager getViewConfig，FreeWindow 按视口自动收缩）。
- * 左栏（默认 2/3）：问题 / 隐藏组件子 Tab；右栏（默认 1/3）：调试控制台常驻。
+ * 左栏（默认 2/3）：问题 / 隐藏组件子 Tab；右栏（默认 1/3）：交互控制台 / Termity 子 Tab。
  * 中间分隔条可拖拽调整比例，遵循 SplitView 的 PanelGroup 惯例。
+ * Termity 为嵌入模式：不走 openTermity 密码流程（数据库逻辑未就绪前免密直进），
+ * 无独立 windowId，exit 命令只提示不关窗。
  */
 export const PortalDebuggerContent = memo(function PortalDebuggerContent() {
   const { t } = useI18n();
@@ -42,6 +63,15 @@ export const PortalDebuggerContent = memo(function PortalDebuggerContent() {
 
   // 注册运行时错误捕获（窗口关闭后仍在后台收集，下次打开可见）
   useRuntimeErrors({ onError: addRuntimeError });
+
+  // ── 右栏子 Tab（本地状态；Termity 首次点开后常驻，避免切 Tab 丢历史） ──
+  const [rightTab, setRightTab] = useState<RightTab>("console");
+  const [termityTouched, setTermityTouched] = useState(false);
+
+  const handleRightTab = (tab: RightTab) => {
+    setRightTab(tab);
+    if (tab === "termity") setTermityTouched(true);
+  };
 
   // ── 小屏拦截：挂载时量一次视口 ──────────────────────────
   const [viewport, setViewport] = useState({ w: 0, h: 0 });
@@ -105,20 +135,43 @@ export const PortalDebuggerContent = memo(function PortalDebuggerContent() {
         {/* ── 分隔条 ─────────────────────────────────────── */}
         <PanelResizeHandle className="w-1.5 rounded-full mx-1.5 hover:bg-cyan-500/20 active:bg-cyan-500/40 transition-colors shrink-0" />
 
-        {/* ── 右栏：调试控制台（默认 1/3）────────────────── */}
+        {/* ── 右栏：交互控制台 / Termity（默认 1/3）──────── */}
         <Panel id="pdebug-right" defaultSize={33.3} minSize={22}>
           <div className="flex flex-col h-full min-h-0 min-w-0 border-l border-gray-200/20 dark:border-gray-700/20">
-            {/* 右栏标题（固定，非 Tab） */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-gray-200/20 dark:border-gray-700/20 shrink-0">
-              <span className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
-                <Icon name="terminal" fontSize={13} />
-                {t("portalDebugger.tabDebug")}
-              </span>
+            {/* 右栏子 Tab Bar */}
+            <div className="flex items-center gap-1 px-3 py-1.5 border-b border-gray-200/20 dark:border-gray-700/20 shrink-0">
+              {rightTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => handleRightTab(tab.id)}
+                  className={`
+                    flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium
+                    transition-all duration-150
+                    ${
+                      rightTab === tab.id
+                        ? "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
+                        : "text-gray-500 dark:text-gray-400 hover:bg-gray-200/40 dark:hover:bg-gray-700/40 hover:text-gray-700 dark:hover:text-gray-300"
+                    }
+                  `}
+                >
+                  <Icon name={tab.icon} fontSize={13} />
+                  {t(tab.labelKey)}
+                </button>
+              ))}
             </div>
 
-            {/* 右栏内容：调试控制台常驻 */}
-            <div className="flex-1 min-h-0 min-w-0 overflow-hidden">
-              <DebugTab />
+            {/* 右栏内容：双挂载保历史，Termity 延迟到首次点开 */}
+            <div className="flex-1 min-h-0 min-w-0 overflow-hidden relative">
+              <div className={`h-full min-h-0 ${rightTab === "console" ? "" : "hidden"}`}>
+                <DebugTab />
+              </div>
+              {termityTouched && (
+                <div className={`h-full min-h-0 ${rightTab === "termity" ? "" : "hidden"}`}>
+                  <Suspense fallback={<RightPanelFallback />}>
+                    <Termity />
+                  </Suspense>
+                </div>
+              )}
             </div>
           </div>
         </Panel>

@@ -645,12 +645,13 @@
     "vnetSubConfig": "現在のネットワーク設定を表示",
     "vnetSubPing": "ネットワーク遅延をテスト",
     "vnetSubStatus": "Verse NET接続状態を表示",
-    "vnetTitle": "Verse NET"
+    "vnetTitle": "Verse NET",
+    "exitEmbeddedHint": "埋め込みモード：デバッガのウィンドウボタンで閉じてください"
   },
   "portalDebugger": {
     "title": "Portal Debugger",
     "tabProblems": "問題",
-    "tabDebug": "デバッグ",
+    "tabDebug": "インタラクティブコンソール",
     "tabHideComponent": "コンポーネント非表示",
     "problemsEmpty": "ランタイムエラーなし",
     "allClean": "すべて正常",
@@ -746,6 +747,7 @@
     "openAsTab": "タブとして開く",
     "timelineWindow": "タイムライン",
     "loginWindow": "ログイン",
-    "registerWindow": "アカウント作成"
+    "registerWindow": "アカウント作成",
+    "termity": "Termity"
   }
 }
