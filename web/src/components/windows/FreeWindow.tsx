@@ -72,6 +72,8 @@ export function FreeWindow({
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [size, setSize] = useState({ width: initialWidth, height: initialHeight });
   const [mounted, setMounted] = useState(false);
+  // 缩放增量基准：onResize 逐帧用 ref 算 delta，避免 state 闭包过期
+  const sizeRef = useRef({ width: initialWidth, height: initialHeight });
 
   const [visible, setVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
@@ -105,6 +107,7 @@ export function FreeWindow({
     const w = Math.min(Math.max(initialWidth, minWidth), availW);
     const h = Math.min(Math.max(initialHeight, minHeight), availH);
     setSize({ width: Math.floor(w), height: Math.floor(h) });
+    sizeRef.current = { width: Math.floor(w), height: Math.floor(h) };
     setPosition({
       x: Math.max(0, (vw - w) / 2),
       y: Math.max(0, (vh - h) / 2),
@@ -262,11 +265,24 @@ export function FreeWindow({
     >
       <Resizable
         size={isMaximized ? { width: w, height: h } : { width: size.width, height: size.height }}
-        onResize={(_event, _direction, elementRef) => {
+        onResize={(_event, direction, elementRef) => {
           const newW = parseInt(elementRef.style.width, 10);
           const newH = parseInt(elementRef.style.height, 10);
-          if (!isNaN(newW) && !isNaN(newH)) {
-            setSize({ width: newW, height: newH });
+          if (isNaN(newW) || isNaN(newH)) return;
+          // 左/上柄缩放必须同步挪窗口位置，否则视觉上只有右/下在动
+          const dW = sizeRef.current.width - newW;
+          const dH = sizeRef.current.height - newH;
+          sizeRef.current = { width: newW, height: newH };
+          setSize({ width: newW, height: newH });
+          if (dW !== 0 || dH !== 0) {
+            setPosition((p) => ({
+              x: /left/i.test(direction)
+                ? Math.max(-newW + 80, Math.min(window.innerWidth - 80, p.x + dW))
+                : p.x,
+              y: /top/i.test(direction)
+                ? Math.max(0, Math.min(window.innerHeight - 40, p.y + dH))
+                : p.y,
+            }));
           }
         }}
         onResizeStop={(_event, _direction, elementRef) => {
@@ -274,7 +290,9 @@ export function FreeWindow({
           const newH = parseInt(elementRef.style.height, 10);
           if (!isNaN(newW) && !isNaN(newH)) {
             setSize({ width: newW, height: newH });
-            setPosition({ x, y });
+            sizeRef.current = { width: newW, height: newH };
+            // 注意：此处不再 setPosition——onResize 已逐帧补偿到位，
+            // 用渲染闭包的旧 x/y 会把窗口 snap 回错误位置。
           }
         }}
         minWidth={minWidth}

@@ -9,6 +9,7 @@ import { useLocaleStore, localeNames, type Locale } from "@/stores/locale";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { usePortalDebuggerStore } from "@/stores/portalDebugger";
 import { fetchBackend } from "@/lib/backend";
+import { executeDebugCommand, getDebugCommandNames } from "@/lib/debugCommands";
 
 interface TerminalLine {
   type: "input" | "output" | "system" | "error" | "warning";
@@ -45,13 +46,12 @@ function getCommands(t: (key: string) => string): Record<string, { name: string;
       name: "Function Switch",
       description: t("termity.cmdFunc"),
       subcommands: {
-        "lang switch {locale}": t("termity.funcSubLangSwitch"),
-        "lang current": t("termity.funcSubLangCurrent"),
-        "enable Develop": t("termity.funcSubDevEnable"),
-        "enable Develop time=meta": t("termity.funcSubDevEnablePersist"),
-        "disable Develop": t("termity.funcSubDevDisable"),
-        "pdebug show": t("termity.funcSubPdebugShow"),
-        "pdebug hide": t("termity.funcSubPdebugHide"),
+        "enable System.Develop [time=meta]": t("termity.funcSubDevEnable"),
+        "disable System.Develop": t("termity.funcSubDevDisable"),
+        "show System.PortalDebugger": t("termity.funcSubPdebugShow"),
+        "hide System.PortalDebugger": t("termity.funcSubPdebugHide"),
+        "switch System.Locale {locale}": t("termity.funcSubLangSwitch"),
+        "current System.Locale": t("termity.funcSubLangCurrent"),
       },
     },
     time: {
@@ -73,6 +73,21 @@ function getCommands(t: (key: string) => string): Record<string, { name: string;
     exit: {
       name: "Exit Termity",
       description: t("termity.cmdExit"),
+    },
+    webdbg: {
+      name: "Web Debugger",
+      description: t("termity.cmdWebdbg"),
+      subcommands: {
+        theme: t("termity.webdbgSubTheme"),
+        locale: t("termity.webdbgSubLocale"),
+        notify: t("termity.webdbgSubNotify"),
+        mock: t("termity.webdbgSubMock"),
+        inject: t("termity.webdbgSubInject"),
+        storage: t("termity.webdbgSubStorage"),
+        dispatch: t("termity.webdbgSubDispatch"),
+        eval: t("termity.webdbgSubEval"),
+        fedo: t("termity.webdbgSubFedo"),
+      },
     },
     remote: {
       name: "Remote Instance",
@@ -325,18 +340,51 @@ export function Termity({ windowId }: { windowId?: string }) {
             showSubcommandHelp(addLine, "Function Switch", COMMANDS.func.subcommands!, t);
             addLine({ type: "output", text: "" });
             addLine({ type: "output", text: `${t("termity.developAdvanced")}:` });
-            addLine({ type: "output", text: `  ${"latest commit".padEnd(35)} │ ${t("termity.devLatestCommit")}` });
-            addLine({ type: "output", text: `  ${"latest release".padEnd(35)} │ ${t("termity.devLatestRelease")}` });
-            addLine({ type: "output", text: `  ${"{ver} commit branch={br}".padEnd(35)} │ ${t("termity.devVerCommit")}` });
-            addLine({ type: "output", text: `  ${"{ver} release branch={br}".padEnd(35)} │ ${t("termity.devVerRelease")}` });
+            addLine({ type: "output", text: `  ${"System.Develop latest commit".padEnd(35)} │ ${t("termity.devLatestCommit")}` });
+            addLine({ type: "output", text: `  ${"System.Develop latest release".padEnd(35)} │ ${t("termity.devLatestRelease")}` });
+            addLine({ type: "output", text: `  ${"System.Develop {ver} commit".padEnd(35)} │ ${t("termity.devVerCommit")}` });
+            addLine({ type: "output", text: `  ${"System.Develop {ver} release".padEnd(35)} │ ${t("termity.devVerRelease")}` });
             break;
           }
-          if (args[0] === "lang") {
-            if (args[1] === "current") {
+          // —— 功能项点分式规范（Type.Name，类 .NET）——
+          // 规范形：func <verb> System.X [args]；查询形：func System.Develop <query>
+          // 旧写法（enable Develop / pdebug … / lang … / Develop …）为废弃别名：仍执行并提示规范形。
+          const FEATURES = ["System.Develop", "System.PortalDebugger", "System.Locale"];
+          let ft = [...args];
+          let legacyTo: string | null = null;
+          {
+            const h = (ft[0] || "").toLowerCase();
+            const s = (ft[1] || "").toLowerCase();
+            if ((h === "enable" || h === "disable") && s === "develop") {
+              ft = [ft[0], "System.Develop", ...ft.slice(2)];
+              legacyTo = `func ${ft[0]} System.Develop${ft.length > 2 ? ` ${ft.slice(2).join(" ")}` : ""}`;
+            } else if (h === "pdebug" && (s === "show" || s === "hide")) {
+              ft = [ft[1], "System.PortalDebugger", ...ft.slice(2)];
+              legacyTo = `func ${ft[0]} System.PortalDebugger`;
+            } else if (h === "lang" && (s === "switch" || s === "current")) {
+              ft = [ft[1], "System.Locale", ...ft.slice(2)];
+              legacyTo = s === "switch" ? "func switch System.Locale {locale}" : "func current System.Locale";
+            } else if (h === "develop") {
+              ft = ["System.Develop", ...ft.slice(1)];
+              legacyTo = `func System.Develop${ft.length > 1 ? ` ${ft.slice(1).join(" ")}` : ""}`;
+            }
+          }
+          const verb = (ft[0] || "").toLowerCase();
+          const feat = (ft[1] || "").toLowerCase();
+          const nudge = () => {
+            if (legacyTo) addLine({ type: "warning", text: t("termity.funcDeprecated", { canonical: legacyTo }) });
+          };
+          const unknownFeature = () => {
+            addLine({ type: "error", text: `${t("termity.unknownCmd")}: func ${args.join(" ")}` });
+            addLine({ type: "output", text: `Available features: ${FEATURES.join(", ")}` });
+          };
+          if (verb === "switch" || verb === "current") {
+            if (feat !== "system.locale") { unknownFeature(); break; }
+            if (verb === "current") {
               const current = useLocaleStore.getState().locale;
               addLine({ type: "output", text: `Current language: ${current} (${localeNames[current]})` });
-            } else if (args[1] === "switch" && args[2]) {
-              const target = args[2] as Locale;
+            } else if (ft[2]) {
+              const target = ft[2] as Locale;
               const supported = ["zh-CN", "zh-TW", "en-US", "ja-JP"];
               if (!supported.includes(target)) {
                 addLine({ type: "error", text: `Unsupported locale: ${target}` });
@@ -349,42 +397,48 @@ export function Termity({ windowId }: { windowId?: string }) {
                 addLine({ type: "output", text: `Language switched: ${prev} → ${target} (${localeNames[target]})` });
               }
             } else {
-              addLine({ type: "output", text: 'Usage: func lang switch {locale} | func lang current' });
+              addLine({ type: "output", text: "Usage: func switch System.Locale {locale} | func current System.Locale" });
               addLine({ type: "output", text: `Supported locales: ${Object.keys(localeNames).join(", ")}` });
             }
-          } else if (args[0] === "enable" && args[1] === "Develop") {
-            const subArgs = parseArgs(args.slice(2).join(" "));
-            if (subArgs["time"] === "meta") {
-              userStore.developerEnter();
-              localStorage.setItem("asagity_dev_persistent", "true");
-              addLine({ type: "output", text: "> Developer Entry ENABLED (Persistent)" });
-              addLine({ type: "output", text: `  ${t("termity.devEnabledPersist")}` });
+            nudge();
+          } else if (verb === "enable" || verb === "disable") {
+            if (feat !== "system.develop") { unknownFeature(); break; }
+            if (verb === "enable") {
+              const subArgs = parseArgs(ft.slice(2).join(" "));
+              if (subArgs["time"] === "meta") {
+                userStore.developerEnter();
+                localStorage.setItem("asagity_dev_persistent", "true");
+                addLine({ type: "output", text: "> Developer Entry ENABLED (Persistent)" });
+                addLine({ type: "output", text: `  ${t("termity.devEnabledPersist")}` });
+              } else {
+                userStore.developerEnter();
+                addLine({ type: "output", text: "> Developer Entry ENABLED (Session)" });
+                addLine({ type: "output", text: `  ${t("termity.devEnabledSession")}` });
+              }
             } else {
-              userStore.developerEnter();
-              addLine({ type: "output", text: "> Developer Entry ENABLED (Session)" });
-              addLine({ type: "output", text: `  ${t("termity.devEnabledSession")}` });
+              userStore.logout();
+              localStorage.removeItem("asagity_dev_persistent");
+              addLine({ type: "output", text: "> Developer Account LOGGED OUT" });
+              addLine({ type: "output", text: `  ${t("termity.devDisabled")}` });
             }
-          } else if (args[0] === "disable" && args[1] === "Develop") {
-            userStore.logout();
-            localStorage.removeItem("asagity_dev_persistent");
-            addLine({ type: "output", text: "> Developer Account LOGGED OUT" });
-            addLine({ type: "output", text: `  ${t("termity.devDisabled")}` });
-          } else if (args[0] === "pdebug") {
-            if (args[1] === "show") {
+            nudge();
+          } else if (verb === "show" || verb === "hide") {
+            if (feat !== "system.portaldebugger") { unknownFeature(); break; }
+            if (verb === "show") {
               usePortalDebuggerStore.getState().showEntry();
               addLine({ type: "output", text: `> Portal Debugger: ${t("termity.pdebugShown")}` });
-            } else if (args[1] === "hide") {
+            } else {
               usePortalDebuggerStore.getState().hideEntry();
               addLine({ type: "output", text: `> Portal Debugger: ${t("termity.pdebugHidden")}` });
-            } else {
-              addLine({ type: "output", text: t("termity.pdebugUsage") });
             }
-          } else if (args[0] === "Develop" || args[0] === "develop") {
-            const developCmd = args.slice(1);
+            nudge();
+          } else if (verb === "system.develop") {
+            const developCmd = ft.slice(1);
             const subArgs = parseArgs(developCmd.join(" "));
 
             if (developCmd.length === 0) {
               addLine({ type: "output", text: t("termity.devHelpHint") });
+              nudge();
               break;
             }
 
@@ -469,9 +523,20 @@ export function Termity({ windowId }: { windowId?: string }) {
                 });
               } else {
                 addLine({ type: "output", text: t("termity.devUsageVersion") });
-                addLine({ type: "output", text: '      func Develop {version} release branch={branch}' });
+                addLine({ type: "output", text: "      func System.Develop {version} release branch={branch}" });
               }
             }
+            nudge();
+          } else if (verb === "system.portaldebugger" || verb === "system.locale") {
+            // 特性前置但非查询型：指回动词优先写法
+            if (verb === "system.locale") {
+              addLine({ type: "output", text: "Usage: func switch System.Locale {locale} | func current System.Locale" });
+            } else {
+              addLine({ type: "output", text: t("termity.pdebugUsage") });
+            }
+          } else {
+            addLine({ type: "error", text: `${t("termity.unknownCmd")}: func ${args.join(" ")}` });
+            addLine({ type: "output", text: t("termity.helpHint") });
           }
           break;
         }
@@ -688,6 +753,41 @@ export function Termity({ windowId }: { windowId?: string }) {
         case "remote": {
           addLine({ type: "warning", text: t("termity.remoteInDev") });
           addLine({ type: "output", text: t("termity.remoteDesc") });
+          break;
+        }
+
+        case "webdbg": {
+          // Web Debugger: Portal Debugger 控制台指令的 Termity 入口，
+          // 隶属 Develop 功能项 —— 未启用开发者模式时不可用。
+          if (!userStore.isLoggedIn) {
+            addLine({ type: "warning", text: t("termity.loginRequired") });
+            break;
+          }
+          if (!userStore.isAdmin) {
+            addLine({ type: "error", text: t("termity.webdbgRequiresDevelop") });
+            addLine({ type: "output", text: t("termity.webdbgEnableHint") });
+            break;
+          }
+          if (args.length === 0 || args[0] === "--help") {
+            showSubcommandHelp(addLine, "Web Debugger", COMMANDS.webdbg.subcommands!, t);
+            break;
+          }
+          const sub = args[0].toLowerCase();
+          if (!getDebugCommandNames().includes(sub)) {
+            addLine({ type: "error", text: `${t("termity.unknownCmd")}: webdbg ${args[0]}` });
+            showSubcommandHelp(addLine, "Web Debugger", COMMANDS.webdbg.subcommands!, t);
+            break;
+          }
+          const { result } = executeDebugCommand(args.join(" "));
+          addLine({
+            type:
+              result.severity === "error"
+                ? "error"
+                : result.severity === "warning"
+                  ? "warning"
+                  : "output",
+            text: result.message,
+          });
           break;
         }
 
