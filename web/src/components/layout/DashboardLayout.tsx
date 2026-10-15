@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { TopBar } from "@/components/topbar/TopBar";
+import { WidgetsArea } from "@/components/widgets/WidgetsArea";
 
 /**
  * DashboardLayout - 登录后的主布局框架
@@ -40,10 +41,8 @@ export function DashboardLayout({ children }: { children?: ReactNode }) {
         </main>
 
         {/* 右侧区域：右侧小组件显示区域 */}
-        <aside className="w-72 shrink-0 flex items-center justify-center border-l border-dashed border-gray-300 dark:border-gray-700 bg-white/30 dark:bg-white/[0.02]">
-          <span className="text-sm text-gray-400 dark:text-gray-500 select-none">
-            右侧小组件显示区域
-          </span>
+        <aside className="w-72 shrink-0 min-h-0 bg-white/30 dark:bg-white/[0.02]">
+          <WidgetsArea />
         </aside>
       </div>
     </div>

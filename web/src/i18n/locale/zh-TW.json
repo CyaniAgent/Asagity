@@ -756,6 +756,17 @@
     "verseNETNormal": "正常",
     "verseNETDisconnected": "已斷開"
   },
+  "widgets": {
+    "addWidget": "新增元件",
+    "clock": "時鐘",
+    "delete": "刪除",
+    "editWidgets": "編輯元件",
+    "memo": "便籤",
+    "memoPlaceholder": "寫點什麼…",
+    "moveDown": "下移",
+    "moveUp": "上移",
+    "save": "儲存"
+  },
   "window": {
     "authWindow": "身份認證",
     "dashboardWindow": "資料面板",

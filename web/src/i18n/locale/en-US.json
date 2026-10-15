@@ -756,6 +756,17 @@
     "verseNETNormal": "Normal",
     "verseNETDisconnected": "Disconnected"
   },
+  "widgets": {
+    "addWidget": "Add widget",
+    "clock": "Clock",
+    "delete": "Delete",
+    "editWidgets": "Edit widgets",
+    "memo": "Memo",
+    "memoPlaceholder": "Jot something down…",
+    "moveDown": "Move down",
+    "moveUp": "Move up",
+    "save": "Save"
+  },
   "window": {
     "authWindow": "Authentication",
     "dashboardWindow": "Data Dashboard",
