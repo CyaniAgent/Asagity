@@ -206,6 +206,12 @@
     "empty": "通知はありません",
     "markAllRead": "すべて既読にする"
   },
+  "pageManager": {
+    "empty": "実行中の項目はありません",
+    "runManager": "タスクマネージャー",
+    "tabs": "タブ",
+    "windows": "ウィンドウ"
+  },
   "pages": {
     "achievements": "実績",
     "achievementsPlaceholder": "実績の説明",

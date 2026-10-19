@@ -1,20 +1,22 @@
 # Asagity Design System
 
-> 2D/3D 混合级视觉规范 — "A cyan-tinted decentralized social universe"
+> 2D/3D 混合级视觉规范 — "A glacier-tinted decentralized social universe"
+> 🧊 **2026.Q4 赛季「Yukinoshita Glacier」**：完整 token 规范见 [`design-tokens.md`](./design-tokens.md)；
+> 本文档的青绿数值段落为 Miku 时代存档，以 Glacier 语义 token 为准。
 
 ---
 
 ## 1. Color Palette
 
-### Brand Colors
+### Brand Colors（2026.Q4 换季 — 存档对照见 design-tokens.md §5）
 
-| Token | Hex | Tailwind | Usage |
+| Token | Hex | 语义 Token | Usage |
 |:---|:---|:---|:---|
-| Primary | `#39C5BB` | `cyan-500` | Core brand, buttons, links, glows |
-| Primary Light | `#7BE0DC` | `cyan-300` | Hover states, highlights |
-| Primary Dark | `#2B9F98` | `cyan-600` | Active states, pressed |
-| Accent | `#22D3EE` | `cyan-400` | Secondary glow, outer shadows |
-| Accent Bright | `#67E8F9` | `cyan-300` | Decorative sparkles |
+| Primary | `#2E76B8` | `accent` | Core brand, buttons, links, glows |
+| Primary Light | `#78B2EE` | accent (dark) | Hover states, highlights |
+| Primary Dark | `#1D6DB0` | — | Active states, pressed |
+| Accent | `#4187C8` | — | Secondary glow, outer shadows |
+| Accent Bright | `#B4D9FF` | — | Decorative sparkles |
 
 ### Semantic Colors
 

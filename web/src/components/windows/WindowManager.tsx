@@ -42,7 +42,7 @@ function WindowManagerFallback() {
   );
 }
 
-function getViewConfig(viewType: string | null) {
+export function getViewConfig(viewType: string | null) {
   switch (viewType) {
     case "error":
       return { title: "系统错误", icon: "error", width: 400, height: 480, disableMaximize: true, disableMinimize: true, disableTransfer: true };

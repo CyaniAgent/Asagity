@@ -1,4 +1,6 @@
 allowBuilds:
+  '@astryxdesign/cli': true
+  '@astryxdesign/core': true
   '@parcel/watcher': true
   '@swc/core': true
   sharp: true

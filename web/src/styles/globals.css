@@ -1,17 +1,54 @@
 @import "tailwindcss";
 
+/* ── Scale slot (Color scheme: Yukinoshita Glacier · 2026.Q4) ───────────────
+ * Tailwind category name stays unchanged (cyan-*), values fully taken over by the Glacier palette.
+ * Existing 544 cyan-* usages switch to Glacier with zero churn; new code should prioritize
+ * the semantic aliases below (bg-brand / text-fg / bg-plate …).
+ * Also look at src/theme/yukinoshita-glacier/palette.config.json
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
-  --color-cyan-50: #effcfb;
-  --color-cyan-100: #d6f7f5;
-  --color-cyan-200: #b0efeb;
-  --color-cyan-300: #7be0dc;
-  --color-cyan-400: #46c8c5;
-  --color-cyan-500: #39c5bb;
-  --color-cyan-600: #2b9f98;
-  --color-cyan-700: #25807b;
-  --color-cyan-800: #226764;
-  --color-cyan-900: #205553;
-  --color-cyan-950: #0f3635;
+  --color-cyan-50: #e6f2ff;
+  --color-cyan-100: #cde6ff;
+  --color-cyan-200: #b4d9ff;
+  --color-cyan-300: #78b2ee;
+  --color-cyan-400: #4187c8;
+  --color-cyan-500: #2e76b8;
+  --color-cyan-600: #1d6db0;
+  --color-cyan-700: #0063ac;
+  --color-cyan-800: #005ea2;
+  --color-cyan-900: #005493;
+  --color-cyan-950: #00325c;
+
+  /* ── Semantic aliases → Astryx frozen variables (seasonal theme tokens) ── */
+  --color-brand: var(--color-accent);
+  --color-onbrand: var(--color-on-accent);
+  --color-brandmuted: var(--color-accent-muted);
+  --color-plate: var(--color-background-body);
+  --color-sheet: var(--color-background-surface);
+  --color-card: var(--color-background-card);
+  --color-popover: var(--color-background-popover);
+  --color-invert: var(--color-background-inverted);
+  --color-fg: var(--color-text-primary);
+  --color-fgdim: var(--color-text-secondary);
+  --color-fgaccent: var(--color-text-accent);
+  --color-ok: var(--color-success);
+  --color-okmuted: var(--color-success-muted);
+  --color-bad: var(--color-error);
+  --color-badmuted: var(--color-error-muted);
+  --color-warn: var(--color-warning);
+  --color-warnmuted: var(--color-warning-muted);
+  --color-line: var(--color-border);
+  --color-linestrong: var(--color-border-emphasized);
+  --color-peri: var(--season-periwinkle);
+
+  /* Ice-like local shape tokens */
+  --radius-freewin: var(--radius-window);
+  --blur-glasslight: var(--blur-glass-light);
+  --blur-glassmedium: var(--blur-glass-medium);
+  --blur-glassheavy: var(--blur-glass-heavy);
+  --blur-glassimmersive: var(--blur-glass-immersive);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -20,9 +57,18 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
+/* color-scheme syncs with theme store → Astryx tokens' light-dark() auto-follows */
+html.light, html[data-theme="light"] { color-scheme: light; }
+html.dark,  html[data-theme="dark"]  { color-scheme: dark; }
+
 :root {
-  --background: #121212;
-  --foreground: #ededed;
+  --background: #edf1f6; /* frost.light[95] snowfield */
+  --foreground: #0e1115; /* frost.light[5] */
+}
+
+.dark {
+  --background: #001421; /* glacier.dark[5] deep under the ice */
+  --foreground: #dee3e9; /* frost.dark[90] */
 }
 
 /* Latin & Numbers: HarmonyOS Sans */
@@ -220,12 +266,12 @@ code, kbd, samp, pre {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(57, 197, 187, 0.3);
+  background: rgba(46, 118, 184, 0.35); /* glacier.light[60] */
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(57, 197, 187, 0.5);
+  background: rgba(46, 118, 184, 0.55);
 }
 
 /* ── Toast Animations ── */

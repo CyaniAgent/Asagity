@@ -206,6 +206,12 @@
     "empty": "No notifications",
     "markAllRead": "Mark all read"
   },
+  "pageManager": {
+    "empty": "Nothing running",
+    "runManager": "Task Manager",
+    "tabs": "Tabs",
+    "windows": "Windows"
+  },
   "pages": {
     "achievements": "Achievements",
     "achievementsPlaceholder": "Achievements Description",

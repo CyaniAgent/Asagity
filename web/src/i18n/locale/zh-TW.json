@@ -206,6 +206,12 @@
     "empty": "暫無通知",
     "markAllRead": "全部已讀"
   },
+  "pageManager": {
+    "empty": "暫無運行中的項目",
+    "runManager": "運行管理器",
+    "tabs": "標籤頁",
+    "windows": "視窗"
+  },
   "pages": {
     "achievements": "成就",
     "achievementsPlaceholder": "成就描述",

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { TopBar } from "@/components/topbar/TopBar";
 import { WidgetsArea } from "@/components/widgets/WidgetsArea";
+import { PageManager } from "@/components/pagemanager/PageManager";
 
 /**
  * DashboardLayout - 登录后的主布局框架
@@ -26,13 +27,9 @@ export function DashboardLayout({ children }: { children?: ReactNode }) {
 
       {/* ── 下方三栏区域 ── */}
       <div className="flex-1 flex min-h-0">
-        {/* 左侧区域：页面管理器 / 配置菜单 */}
-        <aside className="w-64 shrink-0 flex items-center justify-center border-r border-dashed border-gray-300 dark:border-gray-700 bg-white/30 dark:bg-white/[0.02]">
-          <span className="text-sm text-gray-400 dark:text-gray-500 select-none leading-relaxed text-center">
-            页面管理器
-            <br />
-            / 配置菜单
-          </span>
+        {/* 左侧区域：页面管理器 */}
+        <aside className="w-64 shrink-0 min-h-0 bg-white/30 dark:bg-white/[0.02]">
+          <PageManager />
         </aside>
 
         {/* 中央区域：内容区域 */}
