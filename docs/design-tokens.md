@@ -139,14 +139,28 @@
 | Standard | Frost 40 |
 | Low | Frost 25 |
 
-## 6. 明暗模式机制
+## 6. 明暗模式与 Astryx 运行时接线
+
+### 明暗机制
 
 - 全部语义值编译为 CSS `light-dark(lit, dark)` → **跟随 `color-scheme`**；
 - `globals.css` 已将 `html.light/.dark`（theme store 写入的 class）同步到 `color-scheme`；
 - `index.html` 默认 `data-theme="light"` + `data-astryx-theme="yukinoshita-glacier"`（明版主导）；
-- Tailwind `dark:` 变体改由 `.dark` class 驱动（`@custom-variant`，与 store 行为对齐）。
+- Tailwind `dark:` 变体改由 `.dark` class 驱动（`@custom-variant`，与 store 行为对齐）；
+- 主题偏好持久化修复：zustand v5 的 persist 为**异步 rehydrate**，store 改用
+  `skipHydration` + `init()` 内先 `rehydrate()` 再写，避免默认值把用户明暗偏好覆盖成 "system"。
 
-## 7. 季度架构（换季手册）
+### 运行时接线（组件要拿到令牌与样式，缺一不可）
+
+| 环节 | 实现 | 备注 |
+| --- | --- | --- |
+| 主题注入 | `SeasonThemeProvider` → `<Theme theme={yukinoshitaGlacierTheme} mode>` | 载入 built CSS 产物，`__built` 模式跳过运行时注入 |
+| 组件样式 | `main.tsx` 导入 `@astryxdesign/core/astryx.css` | 未载入则组件「裸奔」无样式 |
+| 路由链接 | `<LinkProvider component={ClientLink}>` | Astryx 的 Link/Button(href) 走自家 History API 路由 |
+| **层叠顺序** | `globals.css` 顶部声明 `@layer theme, base, reset, astryx-base, astryx-theme, components, utilities` | **关键**：Tailwind preflight 必须早于 `astryx-base`，否则 `button{background-color:transparent}` 会把按钮底色洗掉；utilities 永远最后，项目自有类仍能覆盖 |
+| 令牌作用域 | built CSS 以 `@scope ([data-astryx-theme="..."])` 划域 | `<html>` 挂 `data-astryx-theme` 即全局生效，无需 React wrapper 即可取变量 |
+
+## 6.1 季度架构（换季手册）
 
 ```
 web/src/theme/yukinoshita-glacier/
@@ -155,7 +169,8 @@ web/src/theme/yukinoshita-glacier/
 ├── glacier.palette.receipt.json ← 复现凭据
 ├── palette.preview.html         ← 人工审阅件
 ├── yukinoshita-glacier.ts       ← defineTheme（唯一手写件）
-└── yukinoshita-glacier.{css,js,d.ts}  ← build 产物（main.tsx 载入 css）
+└── dist/                       ← build 产物（yukinoshita-glacier.{css,js,d.ts}）
+    └── yukinoshita-glacier.css  ← main.tsx 载入
 ```
 
 换季 / 微调命令：
@@ -165,15 +180,17 @@ web/src/theme/yukinoshita-glacier/
 pnpm exec astryx theme palette generate src/theme/yukinoshita-glacier/palette.config.json \
   -o src/theme/yukinoshita-glacier/glacier.palette.ts \
   --preview src/theme/yukinoshita-glacier/palette.preview.html -f
-# 重编译主题
-pnpm exec astryx theme build src/theme/yukinoshita-glacier/yukinoshita-glacier.ts
+# 重编译主题（产物落在 dist/，main.tsx 与 SeasonThemeProvider 均从此处引用）
+pnpm exec astryx theme build src/theme/yukinoshita-glacier/yukinoshita-glacier.ts \
+  -o src/theme/yukinoshita-glacier/dist/yukinoshita-glacier.css
+# 等价 npm 脚本
+pnpm theme:palette && pnpm theme:build
 ```
 
 下季（2027.Q1）起 `src/theme/` 下并列新季目录即可；Q1 上线多季切换时再启用
 `astryx theme build --family` 键族产物。
 
 ## 8. 遗留规则继承
-
 - **Luminance 阈值公式**（旧 §动态亮度）：由 `--color-on-accent` 等标准面接替；少量自绘
   动态着色场景（歌词色提取）仍可沿用 `0.2126R + 0.7152G + 0.0722B > 140 → 黑字`。
 - **图标体系**：Fluent UI System Icons 不变（Astryx 主题 icon registry 换装另议）。

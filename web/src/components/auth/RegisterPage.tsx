@@ -7,6 +7,9 @@
  * 顶部：步骤指示器
  */
 import { useState, useRef, useCallback } from "react";
+import { Button } from "@astryxdesign/core/Button";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { Switch } from "@astryxdesign/core/Switch";
 import { useInstanceStore } from "@/stores/instance";
 import { useUserStore } from "@/stores/user";
 import { useThemeStore } from "@/stores/theme";
@@ -382,20 +385,13 @@ export function RegisterPage() {
                             )}
                           </div>
                           {isRead && doc.required && (
-                            <button
-                              onClick={() => toggleAgreement(doc.id)}
-                              className={`
-                                w-[42px] h-[24px] rounded-full relative transition-colors duration-200
-                                ${isAgreed ? "bg-cyan-500" : isDark ? "bg-white/15" : "bg-gray-300"}
-                              `}
-                            >
-                              <div
-                                className={`
-                                  absolute top-[2px] w-5 h-5 rounded-full bg-white shadow transition-transform duration-200
-                                  ${isAgreed ? "translate-x-[20px]" : "translate-x-[2px]"}
-                                `}
-                              />
-                            </button>
+                            <Switch
+                              size="md"
+                              value={isAgreed}
+                              label={t(doc.titleKey)}
+                              isLabelHidden
+                              onChange={() => toggleAgreement(doc.id)}
+                            />
                           )}
                           {isRead && !doc.required && (
                             <span className={`text-[10px] ${textTertiary}`}>
@@ -436,23 +432,15 @@ export function RegisterPage() {
 
                 {/* Bottom action */}
                 <div className={`shrink-0 px-6 py-4 border-t ${borderColor}`}>
-                  <button
-                    disabled={!allRequiredAgreed}
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    width="100%"
+                    label={allRequiredAgreed ? t("register.startButton") : t("register.readAllRequired")}
+                    isDisabled={!allRequiredAgreed}
                     onClick={() => goToStep(1)}
-                    className={`
-                      w-full py-3 rounded-full text-[14px] font-bold tracking-wide
-                      transition-all duration-200
-                      ${
-                        allRequiredAgreed
-                          ? "bg-cyan-500 text-white shadow-[0_0_20px_rgba(57,197,187,0.3)] hover:shadow-[0_0_30px_rgba(57,197,187,0.5)] hover:bg-cyan-400 active:scale-[0.98]"
-                          : `${isDark ? "bg-white/5 text-gray-600" : "bg-gray-100 text-gray-400"} cursor-not-allowed`
-                      }
-                    `}
-                  >
-                    {allRequiredAgreed
-                      ? t("register.startButton")
-                      : t("register.readAllRequired")}
-                  </button>
+                    className="glow-accent glow-accent-hover"
+                  />
                 </div>
               </div>
             )}
@@ -521,13 +509,14 @@ export function RegisterPage() {
                     minLength={8}
                     isDark={isDark}
                     suffix={
-                      <button
-                        type="button"
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        icon={<Icon name={showPassword ? "eye_off" : "eye"} fontSize={16} />}
+                        label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                        tooltip={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
                         onClick={() => setShowPassword(!showPassword)}
-                        className={`p-1 rounded-full ${textTertiary} hover:${textSecondary}`}
-                      >
-                        <Icon name={showPassword ? "eye_off" : "eye"} fontSize={16} />
-                      </button>
+                      />
                     }
                     error={
                       password.length > 0 && password.length < 8
@@ -547,16 +536,14 @@ export function RegisterPage() {
                     required
                     isDark={isDark}
                     suffix={
-                      <button
-                        type="button"
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        icon={<Icon name={showConfirmPassword ? "eye_off" : "eye"} fontSize={16} />}
+                        label={showConfirmPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                        tooltip={showConfirmPassword ? t("auth.hidePassword") : t("auth.showPassword")}
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className={`p-1 rounded-full ${textTertiary} hover:${textSecondary}`}
-                      >
-                        <Icon
-                          name={showConfirmPassword ? "eye_off" : "eye"}
-                          fontSize={16}
-                        />
-                      </button>
+                      />
                     }
                     error={
                       confirmPassword.length > 0 && password !== confirmPassword
@@ -568,37 +555,22 @@ export function RegisterPage() {
 
                 {/* Bottom actions */}
                 <div className={`shrink-0 px-6 py-4 border-t ${borderColor} flex gap-3`}>
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    label={t("common.back")}
                     onClick={() => goToStep(0)}
-                    className={`
-                      px-5 py-3 rounded-full text-[13px] font-medium border transition-all
-                      ${borderColor} ${textSecondary} hover:${isDark ? "bg-white/5" : "bg-gray-100"}
-                    `}
-                  >
-                    {t("common.back")}
-                  </button>
-                  <button
-                    disabled={!isFormValid || loading}
+                  />
+                  <Button
+                    variant="primary"
+                    size="md"
+                    width="100%"
+                    label={loading ? t("auth.verifying") : t("register.joinButton")}
+                    isLoading={loading}
+                    isDisabled={!isFormValid}
                     onClick={handleSubmitInfo}
-                    className={`
-                      flex-1 py-3 rounded-full text-[14px] font-bold tracking-wide
-                      transition-all duration-200 flex items-center justify-center gap-2
-                      ${
-                        isFormValid && !loading
-                          ? "bg-cyan-500 text-white shadow-[0_0_20px_rgba(57,197,187,0.3)] hover:shadow-[0_0_30px_rgba(57,197,187,0.5)] hover:bg-cyan-400 active:scale-[0.98]"
-                          : `${isDark ? "bg-white/5 text-gray-600" : "bg-gray-100 text-gray-400"} cursor-not-allowed`
-                      }
-                    `}
-                  >
-                    {loading ? (
-                      <>
-                        <Icon name="refresh" className="animate-spin" fontSize={16} />
-                        {t("auth.verifying")}
-                      </>
-                    ) : (
-                      t("register.joinButton")
-                    )}
-                  </button>
+                    className="glow-accent glow-accent-hover"
+                  />
                 </div>
               </div>
             )}
@@ -639,50 +611,33 @@ export function RegisterPage() {
                   />
 
                   {/* Resend */}
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    label={verifySent ? t("register.codeSent") : t("register.resendCode")}
+                    isDisabled={verifySent}
                     onClick={() => setVerifySent(true)}
-                    className={`text-[12px] font-medium ${verifySent ? textTertiary : "text-cyan-500 hover:text-cyan-400"}`}
-                    disabled={verifySent}
-                  >
-                    {verifySent
-                      ? t("register.codeSent")
-                      : t("register.resendCode")}
-                  </button>
+                  />
                 </div>
 
                 {/* Bottom actions */}
                 <div className={`shrink-0 px-6 py-4 border-t ${borderColor} flex gap-3`}>
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    label={t("common.back")}
                     onClick={() => goToStep(1)}
-                    className={`
-                      px-5 py-3 rounded-full text-[13px] font-medium border transition-all
-                      ${borderColor} ${textSecondary} hover:${isDark ? "bg-white/5" : "bg-gray-100"}
-                    `}
-                  >
-                    {t("common.back")}
-                  </button>
-                  <button
-                    disabled={verifyCode.length !== 8 || loading}
+                  />
+                  <Button
+                    variant="primary"
+                    size="md"
+                    width="100%"
+                    label={loading ? t("auth.verifying") : t("register.finishButton")}
+                    isLoading={loading}
+                    isDisabled={verifyCode.length !== 8}
                     onClick={handleVerify}
-                    className={`
-                      flex-1 py-3 rounded-full text-[14px] font-bold tracking-wide
-                      transition-all duration-200 flex items-center justify-center gap-2
-                      ${
-                        verifyCode.length === 8 && !loading
-                          ? "bg-cyan-500 text-white shadow-[0_0_20px_rgba(57,197,187,0.3)] hover:shadow-[0_0_30px_rgba(57,197,187,0.5)] hover:bg-cyan-400 active:scale-[0.98]"
-                          : `${isDark ? "bg-white/5 text-gray-600" : "bg-gray-100 text-gray-400"} cursor-not-allowed`
-                      }
-                    `}
-                  >
-                    {loading ? (
-                      <>
-                        <Icon name="refresh" className="animate-spin" fontSize={16} />
-                        {t("auth.verifying")}
-                      </>
-                    ) : (
-                      t("register.finishButton")
-                    )}
-                  </button>
+                    className="glow-accent glow-accent-hover"
+                  />
                 </div>
               </div>
             )}

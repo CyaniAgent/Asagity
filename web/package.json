@@ -11,7 +11,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "theme:palette": "astryx theme palette generate src/theme/yukinoshita-glacier/palette.config.json -o src/theme/yukinoshita-glacier/glacier.palette.ts --preview src/theme/yukinoshita-glacier/palette.preview.html -f",
+    "theme:build": "astryx theme build src/theme/yukinoshita-glacier/yukinoshita-glacier.ts -o src/theme/yukinoshita-glacier/dist/yukinoshita-glacier.css"
   },
   "dependencies": {
     "@astryxdesign/cli": "^0.7.1",

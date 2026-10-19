@@ -5,6 +5,8 @@
  * 右侧：登录表单（identifier + password）
  */
 import { useState } from "react";
+import { Button } from "@astryxdesign/core/Button";
+import { IconButton } from "@astryxdesign/core/IconButton";
 import { useInstanceStore } from "@/stores/instance";
 import { useUserStore } from "@/stores/user";
 import { useThemeStore } from "@/stores/theme";
@@ -170,56 +172,47 @@ export function LoginPage() {
               required
               isDark={isDark}
               suffix={
-                <button
-                  type="button"
+                <IconButton
+                  variant="ghost"
+                  size="sm"
+                  icon={<Icon name={showPassword ? "eye_off" : "eye"} fontSize={16} />}
+                  label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                  tooltip={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
                   onClick={() => setShowPassword(!showPassword)}
-                  className={`p-1 rounded-full ${textTertiary} hover:${textSecondary} transition-colors`}
-                >
-                  <Icon name={showPassword ? "eye_off" : "eye"} fontSize={16} />
-                </button>
+                />
               }
             />
 
             {/* Forgot password */}
             <div className="flex justify-end">
-              <button
-                type="button"
-                className={`text-[11px] font-medium text-cyan-500 hover:text-cyan-400 transition-colors`}
-              >
-                {t("auth.forgotKey")}
-              </button>
+              <Button
+                variant="ghost"
+                size="sm"
+                label={t("auth.forgotKey")}
+                onClick={() => {}}
+              />
             </div>
 
             {/* Submit */}
-            <button
+            <Button
+              variant="primary"
+              size="lg"
               type="submit"
-              disabled={loading || !identifier || !password}
-              className={`
-                w-full py-3.5 rounded-full text-[14px] font-bold tracking-wide
-                transition-all duration-200 flex items-center justify-center gap-2
-                ${
-                  !loading && identifier && password
-                    ? "bg-cyan-500 text-white shadow-[0_0_20px_rgba(57,197,187,0.3)] hover:shadow-[0_0_30px_rgba(57,197,187,0.5)] hover:bg-cyan-400 active:scale-[0.98]"
-                    : `${isDark ? "bg-white/5 text-gray-600" : "bg-gray-100 text-gray-400"} cursor-not-allowed`
-                }
-              `}
-            >
-              {loading ? (
-                <>
-                  <Icon name="refresh" className="animate-spin" fontSize={16} />
-                  {t("auth.verifying")}
-                </>
-              ) : (
-                t("auth.loginToInstance")
-              )}
-            </button>
+              width="100%"
+              label={loading ? t("auth.verifying") : t("auth.loginToInstance")}
+              isLoading={loading}
+              isDisabled={!identifier || !password}
+              className="glow-accent glow-accent-hover"
+            />
           </form>
 
           {/* Switch to register */}
           <div className={`mt-6 text-center text-[12px] ${textSecondary}`}>
             {t("auth.noCredentials")}
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
+              label={t("auth.initNewAccount")}
               onClick={() => {
                 // Close login window, then open register window
                 const win = freeWindowStore.windows.find((w) => w.viewType === "login_window");
@@ -228,29 +221,22 @@ export function LoginPage() {
                   freeWindowStore.openFromContext("register_window");
                 }, 100);
               }}
-              className="text-cyan-500 font-bold hover:text-cyan-400 ml-1 transition-colors"
-            >
-              {t("auth.initNewAccount")}
-            </button>
+            />
           </div>
 
           {/* Developer entry */}
           <div className="mt-4 text-center">
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
+              label={t("welcome.directEnter")}
+              icon={<Icon name="terminal" fontSize={14} />}
               onClick={() => {
                 userStore.developerEnter();
                 const win = freeWindowStore.windows.find((w) => w.viewType === "login_window");
                 if (win) freeWindowStore.close(win.id);
               }}
-              className={`
-                text-[11px] font-medium px-3 py-1.5 rounded-full transition-all
-                ${isDark ? "text-gray-500 hover:text-gray-400 hover:bg-white/5" : "text-gray-400 hover:text-gray-500 hover:bg-gray-100"}
-              `}
-            >
-              <Icon name="terminal" fontSize={14} className="inline mr-1.5 align-[-3px]" />
-              {t("welcome.directEnter")}
-            </button>
+            />
           </div>
         </div>
       </div>

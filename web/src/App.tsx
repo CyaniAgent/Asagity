@@ -6,12 +6,13 @@
  */
 import { ClientLayout } from "@/components/layout/ClientLayout";
 import { ServiceWorkerRegistration } from "@/components/providers/ServiceWorkerRegistration";
+import { SeasonThemeProvider } from "@/components/providers/SeasonThemeProvider";
 
 export function App() {
   return (
-    <>
+    <SeasonThemeProvider>
       <ServiceWorkerRegistration />
       <ClientLayout />
-    </>
+    </SeasonThemeProvider>
   );
 }

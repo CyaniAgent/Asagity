@@ -21,7 +21,12 @@ export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
       preference: "system",
-      systemPreference: "dark",
+      // 首帧即读取系统偏好：避免 Theme provider 初次渲染拿到过期的 "dark" 而闪一下暗色
+      systemPreference:
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light",
       _mediaQueryHandler: null,
 
       get isDark() {
@@ -57,18 +62,22 @@ export const useThemeStore = create<ThemeState>()(
       init: () => {
         if (typeof window === "undefined") return;
 
-        const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-        const systemPref = mediaQuery.matches ? "dark" : "light";
-        set({ systemPreference: systemPref });
+        // zustand v5 的 persist 是异步 rehydrate：必须等读取完成再写，
+        // 否则下面 set() 会把默认值写回 localStorage，把用户选好的明暗偏好覆盖掉。
+        void Promise.resolve(useThemeStore.persist.rehydrate()).then(() => {
+          const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+          const systemPref = mediaQuery.matches ? "dark" : "light";
+          set({ systemPreference: systemPref });
 
-        const handler = (e: MediaQueryListEvent) => {
-          set({ systemPreference: e.matches ? "dark" : "light" });
+          const handler = (e: MediaQueryListEvent) => {
+            set({ systemPreference: e.matches ? "dark" : "light" });
+            get().applyColorMode();
+          };
+          mediaQuery.addEventListener("change", handler);
+          set({ _mediaQueryHandler: handler });
+
           get().applyColorMode();
-        };
-        mediaQuery.addEventListener("change", handler);
-        set({ _mediaQueryHandler: handler });
-
-        get().applyColorMode();
+        });
       },
 
       destroy: () => {
@@ -117,6 +126,8 @@ export const useThemeStore = create<ThemeState>()(
     {
       name: "asagity-theme",
       partialize: (state) => ({ preference: state.preference }),
+      // 手动控制 rehydrate 时机（见 init()）：避免默认值先写回覆盖用户偏好
+      skipHydration: true,
     }
   )
 );

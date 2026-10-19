@@ -62,7 +62,7 @@ export const DebugTab = memo(function DebugTab() {
   const debugLogs = usePortalDebuggerStore((s) => s.debugLogs);
   const addDebugLog = usePortalDebuggerStore((s) => s.addDebugLog);
   const clearDebugLogs = usePortalDebuggerStore((s) => s.clearDebugLogs);
-  const { commands, executeCommand, getCommandNames } = useDebugCommands();
+  const { commands, executeCommand } = useDebugCommands();
 
   const [input, setInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);

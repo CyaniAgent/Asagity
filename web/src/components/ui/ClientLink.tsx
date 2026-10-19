@@ -9,6 +9,9 @@ interface ClientLinkProps {
   className?: string;
   /** 点击后额外执行的回调 */
   onClick?: (e: MouseEvent<HTMLAnchorElement>) => void;
+  /** 外链新窗口（Astryx Link / Button href 传入） */
+  target?: string;
+  rel?: string;
 }
 
 /**
@@ -21,7 +24,7 @@ interface ClientLinkProps {
  *   用户主页
  * </ClientLink>
  */
-export function ClientLink({ href, children, className, onClick }: ClientLinkProps) {
+export function ClientLink({ href, children, className, onClick, target, rel }: ClientLinkProps) {
   const push = useRouterStore((s) => s.push);
 
   const handleClick = useCallback(
@@ -37,7 +40,7 @@ export function ClientLink({ href, children, className, onClick }: ClientLinkPro
   );
 
   return (
-    <a href={href} className={className} onClick={handleClick}>
+    <a href={href} className={className} onClick={handleClick} target={target} rel={rel}>
       {children}
     </a>
   );

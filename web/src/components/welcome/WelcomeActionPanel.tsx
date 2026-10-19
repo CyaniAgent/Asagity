@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, Fragment } from "react";
+import { Button } from "@astryxdesign/core/Button";
+import { IconButton } from "@astryxdesign/core/IconButton";
 import { useInstanceStore } from "@/stores/instance";
 import { useWelcomeStore } from "@/stores/welcome";
 import { useFreeWindowStore } from "@/stores/freeWindow";
@@ -150,16 +152,14 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
 
         {/* ── Three-dot more menu ── */}
           <div className="relative shrink-0 mt-1">
-          <button
+          <IconButton
+            variant="ghost"
+            size="md"
+            icon={<Icon name="more_horiz" fontSize={20} />}
+            label={t("welcome.more")}
+            tooltip={t("welcome.more")}
             onClick={() => { setMenuOpen((v) => !v); setDevOpen(false); }}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200
-              ${isDark
-                ? "hover:bg-white/10 text-white/60 hover:text-white/90"
-                : "hover:bg-gray-100 text-gray-400 hover:text-gray-700"
-              } ${menuOpen ? (isDark ? "bg-white/10" : "bg-gray-100") : ""}`}
-          >
-            <Icon name="more_horiz" fontSize={20} />
-          </button>
+          />
 
           {/* ── Dropdown (data-driven) ── */}
           {menuOpen && (
@@ -184,34 +184,25 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
       {/* ── Action Buttons ── */}
       <div className="flex flex-col gap-2.5">
         {/* Primary: Join Instance */}
-        <button
+        <Button
+          variant="primary"
+          size="lg"
+          width="100%"
+          label={t("welcome.joinInstance")}
+          icon={<Icon name="arrow_right_16" fontSize={16} />}
           onClick={handleJoin}
-          className="w-full py-3 px-4 rounded-2xl text-sm font-bold text-white
-                     bg-gradient-to-r from-cyan-500 to-cyan-400
-                     shadow-[0_0_20px_rgba(57,197,187,0.3)]
-                     hover:shadow-[0_0_30px_rgba(57,197,187,0.5)]
-                     hover:from-cyan-400 hover:to-cyan-300
-                     active:scale-[0.98] transition-all duration-200
-                     flex items-center justify-center gap-2"
-        >
-          <Icon name="arrow_right_16" fontSize={16} />
-          {t("welcome.joinInstance")}
-        </button>
+          className="glow-accent glow-accent-hover"
+        />
 
         {/* Secondary: Existing Account Login */}
-        <button
+        <Button
+          variant="secondary"
+          size="md"
+          width="100%"
+          label={t("welcome.loginExisting")}
+          icon={<Icon name="arrow_enter_16" fontSize={16} />}
           onClick={handleLogin}
-          className={`w-full py-2.5 px-4 rounded-2xl text-[13px] font-medium
-                     active:scale-[0.98] transition-all duration-200
-                     flex items-center justify-center gap-2.5
-                     ${isDark
-                       ? "text-white/70 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/15"
-                       : "text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200 hover:border-gray-300"
-                     }`}
-        >
-          <Icon name="arrow_enter_16" fontSize={16} className="text-cyan-500" />
-          {t("welcome.loginExisting")}
-        </button>
+        />
       </div>
     </div>
   );

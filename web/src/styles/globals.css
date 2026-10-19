@@ -1,3 +1,10 @@
+/* ── Cascade layer order ────────────────────────────────────────────
+ * 顺序要点：Tailwind preflight(base) 必须早于 Astryx 组件样式(astryx-base)，
+ * 否则 preflight 的 button{background-color:transparent} 会把按钮底色洗掉；
+ * 而 Tailwind utilities 永远留在最后，保证项目自有类仍可覆盖 Astryx。
+ */
+@layer theme, base, reset, astryx-base, astryx-theme, components, utilities;
+
 @import "tailwindcss";
 
 /* ── Scale slot (Color scheme: Yukinoshita Glacier · 2026.Q4) ───────────────
@@ -253,6 +260,17 @@ body {
 
 code, kbd, samp, pre {
   font-family: var(--font-mono);
+}
+
+/* ── Season glow · Yukinoshita Glacier ────────────────────────────
+ * 取代旧版硬编码 rgba(57,197,187,*) 辉光；色值走 --color-accent 令牌。
+ */
+.glow-accent {
+  box-shadow: 0 0 20px color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+
+.glow-accent-hover:hover {
+  box-shadow: 0 0 30px color-mix(in srgb, var(--color-accent) 45%, transparent);
 }
 
 /* Custom Scrollbar - Glass Style */

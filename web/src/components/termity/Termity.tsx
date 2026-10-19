@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useSystemStore } from "@/stores/system";
 import { useInstanceStore } from "@/stores/instance";
 import { useUserStore } from "@/stores/user";
@@ -10,6 +10,8 @@ import { useI18n } from "@/components/providers/I18nProvider";
 import { usePortalDebuggerStore } from "@/stores/portalDebugger";
 import { fetchBackend } from "@/lib/backend";
 import { executeDebugCommand, getDebugCommandNames } from "@/lib/debugCommands";
+import { useTermityHistoryStore } from "@/stores/termityHistory";
+import { findHistorySuggestion, suggestionSuffix, acceptWord } from "@/lib/termitySuggest";
 
 interface TerminalLine {
   type: "input" | "output" | "system" | "error" | "warning";
@@ -140,7 +142,6 @@ function showSubcommandHelp(
 }
 
 const WEEKDAYS_ZH = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
-const WEEKDAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function parseGMTOffset(gmt: string): number {
   const m = gmt.match(/^(\+|-)?(\d{1,2})(?::(\d{2}))?$/);
@@ -204,13 +205,36 @@ export function Termity({ windowId }: { windowId?: string }) {
     { type: "system", text: "" },
   ]);
   const [input, setInput] = useState("");
-  const [commandHistory, setCommandHistory] = useState<string[]>([]);
+  // 命令历史：持久化到 localStorage（类 bash HISTFILE），两个挂载点共享同一份
+  const commandHistory = useTermityHistoryStore((s) => s.history);
+  const pushCommandHistory = useTermityHistoryStore((s) => s.push);
   const MAX_HISTORY_LINES = 500;
-  const MAX_COMMAND_HISTORY = 100;
   const [historyIndex, setHistoryIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const timersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+  // 浏览历史前正在输入的草稿：回退到最新一条时应原样还原（类 bash readline）
+  const draftRef = useRef<string>("");
+  // 指令预测（类 zsh-autosuggestions）：内联幽灵文本
+  const [suggestDismissed, setSuggestDismissed] = useState(false);
+  const moveCaretToEndRef = useRef(false);
+  const suggestion = useMemo(
+    () => (suggestDismissed ? null : findHistorySuggestion(commandHistory, input)),
+    [commandHistory, input, suggestDismissed]
+  );
+  const suggestSuffix = useMemo(
+    () => (suggestion ? suggestionSuffix(suggestion, input) : ""),
+    [suggestion, input]
+  );
+
+  // 接受建议后把光标移到行尾
+  useEffect(() => {
+    if (moveCaretToEndRef.current && inputRef.current) {
+      moveCaretToEndRef.current = false;
+      const end = inputRef.current.value.length;
+      inputRef.current.setSelectionRange(end, end);
+    }
+  }, [input]);
 
   const scrollToBottom = useCallback(() => {
     if (containerRef.current) {
@@ -256,11 +280,10 @@ export function Termity({ windowId }: { windowId?: string }) {
 
       addLine({ type: "input", text: trimmed });
 
-      setCommandHistory((prev) => {
-        const next = [...prev, trimmed];
-        return next.length > MAX_COMMAND_HISTORY ? next.slice(-MAX_COMMAND_HISTORY) : next;
-      });
+      // 立即落盘（每条命令即写，非登出时写）
+      pushCommandHistory(trimmed);
       setHistoryIndex(-1);
+      draftRef.current = "";
 
       const parts = trimmed.split(/\s+/);
       const root = parts[0].toLowerCase();
@@ -807,20 +830,28 @@ export function Termity({ windowId }: { windowId?: string }) {
       if (e.key === "Enter") {
         executeCommand(input);
         setInput("");
+        setHistoryIndex(-1);
+        draftRef.current = "";
       } else if (e.key === "ArrowUp") {
+        // ↑ 往更早的方向走；到最旧一条即停住（不循环），与 bash 一致
         e.preventDefault();
         if (commandHistory.length > 0) {
-          const newIndex = historyIndex === -1 ? commandHistory.length - 1 : Math.max(0, historyIndex - 1);
+          if (historyIndex === -1) draftRef.current = input;
+          const newIndex =
+            historyIndex === -1
+              ? commandHistory.length - 1
+              : Math.max(0, historyIndex - 1);
           setHistoryIndex(newIndex);
           setInput(commandHistory[newIndex]);
         }
       } else if (e.key === "ArrowDown") {
+        // ↓ 往更新的方向走；越过最新一条则回到草稿行
         e.preventDefault();
         if (historyIndex !== -1) {
           const newIndex = historyIndex + 1;
           if (newIndex >= commandHistory.length) {
             setHistoryIndex(-1);
-            setInput("");
+            setInput(draftRef.current);
           } else {
             setHistoryIndex(newIndex);
             setInput(commandHistory[newIndex]);
@@ -829,9 +860,46 @@ export function Termity({ windowId }: { windowId?: string }) {
       } else if (e.key === "l" && e.ctrlKey) {
         e.preventDefault();
         setHistory([]);
+      } else if (e.key === "Escape") {
+        // zsh autosuggest-clear：忽略当前建议（再次编辑输入即恢复）
+        if (suggestion) {
+          e.preventDefault();
+          setSuggestDismissed(true);
+        }
+      } else if (e.key === "ArrowRight" && !e.altKey && !e.ctrlKey && !e.metaKey) {
+        // zsh autosuggest-accept：光标在行尾时按 → 接受整条建议
+        const el = e.currentTarget as HTMLInputElement;
+        const atEnd = el.selectionStart === el.value.length && el.selectionEnd === el.value.length;
+        if (suggestion && atEnd) {
+          e.preventDefault();
+          setInput(suggestion);
+          setSuggestDismissed(true);
+          moveCaretToEndRef.current = true;
+        }
+      } else if ((e.key === "ArrowRight" && (e.altKey || e.ctrlKey)) || (e.key === "e" && e.ctrlKey)) {
+        // zsh autosuggest-accept-word：部分接受（补齐下一个词）
+        if (suggestion) {
+          e.preventDefault();
+          setInput(acceptWord(suggestion, input));
+          setSuggestDismissed(true);
+          moveCaretToEndRef.current = true;
+        }
+      } else if (e.key === "End" && suggestion) {
+        // zsh 默认绑定：end-of-line 接受建议
+        e.preventDefault();
+        setInput(suggestion);
+        setSuggestDismissed(true);
+        moveCaretToEndRef.current = true;
+      } else if (e.key === "Tab" && suggestion) {
+        // 作用域内接管 Tab（仅 Termity 输入框且存在建议时）；
+        // 无建议时不拦截，保留浏览器默认的焦点移动（无障碍要求）。
+        e.preventDefault();
+        setInput(suggestion);
+        setSuggestDismissed(true);
+        moveCaretToEndRef.current = true;
       }
     },
-    [input, executeCommand, commandHistory, historyIndex]
+    [input, executeCommand, commandHistory, historyIndex, suggestion]
   );
 
   return (
@@ -870,17 +938,32 @@ export function Termity({ windowId }: { windowId?: string }) {
 
         <div className="flex items-center mt-1">
           <span className="text-cyan-400 shrink-0">&gt; </span>
-          <input
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            type="text"
-            className="flex-1 bg-transparent border-none outline-none text-white ml-2 caret-green-500"
-            spellCheck={false}
-            autoComplete="off"
-            autoFocus
-          />
+          <div className="relative flex-1 min-w-0 ml-2">
+            {/* 指令预测幽灵文本层：与输入框同字体度量，仅显示未输入的后缀 */}
+            {suggestSuffix && (
+              <div
+                className="pointer-events-none absolute inset-0 flex items-center overflow-hidden whitespace-pre select-none"
+                aria-hidden="true"
+              >
+                <span className="invisible">{input}</span>
+                <span className="text-gray-600">{suggestSuffix}</span>
+              </div>
+            )}
+            <input
+              ref={inputRef}
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                setSuggestDismissed(false);
+              }}
+              onKeyDown={handleKeyDown}
+              type="text"
+              className="relative w-full bg-transparent border-none outline-none text-white caret-green-500"
+              spellCheck={false}
+              autoComplete="off"
+              autoFocus
+            />
+          </div>
         </div>
       </div>
 
