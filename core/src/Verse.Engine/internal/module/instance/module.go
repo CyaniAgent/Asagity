@@ -13,13 +13,16 @@ import (
 
 func Register(r *chi.Mux, cfg config.Config, clients *database.Clients) {
 	repo := repository.New(clients)
-	svc := service.New(repo, cfg)
+	svc := service.NewWithClients(repo, cfg, clients)
 	h := handler.New(svc)
 
 	r.Get("/", h.Root)
 	r.Get("/healthz", h.Health)
 	r.Get("/api/meta/version", h.Version)
 	r.Get("/api/meta/instance", h.Meta)
+
+	r.Get("/api/system/environment", h.SystemEnvironment)
+	r.Get("/api/system/developer-account", h.DeveloperAccount)
 
 	r.With(authz.RequireAdmin()).Get("/api/admin/system/instance", h.AdminInstanceSettings)
 	r.With(authz.RequireAdmin()).Get("/api/admin/system/database", h.AdminDatabaseStats)

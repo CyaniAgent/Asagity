@@ -56,6 +56,12 @@ core/
 │   │   ├── go.mod
 │   │   └── go.sum
 │   │
+│   ├── Verse.Data/                      # 🗄️ EF Core data layer (DbContext/mappings/provider switch/seeding)
+│   │   └── Verse.Data.csproj
+│   │
+│   ├── Verse.Tests/                     # 🧪 xUnit test project (36 cases)
+│   │   └── Verse.Tests.csproj
+│   │
 │   └── Verse.Cli/                        # 🛠️ Verse tool (Go-based CLI management tool)
 │       ├── cmd/verse/                    # `verse` CLI entrypoint (start, stop, status, module)
 │       ├── internal/

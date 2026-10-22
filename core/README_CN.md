@@ -56,6 +56,12 @@ core/
 │   │   ├── go.mod
 │   │   └── go.sum
 │   │
+│   ├── Verse.Data/                      # 🗄️ EF Core 数据层 (DbContext/实体映射/provider切换/种子)
+│   │   └── Verse.Data.csproj
+│   │
+│   ├── Verse.Tests/                     # 🧪 xUnit 测试工程 (36 个用例)
+│   │   └── Verse.Tests.csproj
+│   │
 │   └── Verse.Cli/                        # 🛠️ Verse tool (Go 编写的 CLI 管理工具)
 │       ├── cmd/verse/                    # `verse` 命令行入口 (start, stop, status, module)
 │       ├── internal/

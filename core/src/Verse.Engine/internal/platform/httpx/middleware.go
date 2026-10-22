@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
+
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/jwtx"
 )
 
 type contextKey string
@@ -47,7 +49,7 @@ func Auth(secret string) func(http.Handler) http.Handler {
 
 			tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 			token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-				return []byte(secret), nil
+				return jwtx.DeriveKey(secret), nil
 			})
 
 			if err == nil && token.Valid {

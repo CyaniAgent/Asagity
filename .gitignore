@@ -23,3 +23,6 @@ web/dist/
 # Verse engine runtime data (cwd-relative, recreated on boot)
 core/src/Verse.Engine/data/
 core/src/Verse.Engine/storage/
+
+# .NET runtime data (cwd-relative SQLite, recreated on boot)
+core/src/Verse.Api/data/

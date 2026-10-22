@@ -17,6 +17,7 @@ import (
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/event"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/id"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/jwtx"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/mail"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -262,7 +263,7 @@ func (s *Service) generateAccessToken(userID, userPubID, userGroupID string) (st
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(s.cfg.JwtSecret))
+	return token.SignedString(jwtx.DeriveKey(s.cfg.JwtSecret))
 }
 
 func (s *Service) generateRefreshToken(userID string) (string, error) {

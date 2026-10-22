@@ -6,12 +6,14 @@ import (
 	"testing"
 
 	"github.com/golang-jwt/jwt/v5"
+
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/jwtx"
 )
 
 func signTestToken(t *testing.T, claims jwt.MapClaims) string {
 	t.Helper()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signed, err := token.SignedString([]byte("test-secret"))
+	signed, err := token.SignedString(jwtx.DeriveKey("test-secret"))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -20,3 +20,17 @@ type SystemEnvironmentResponse struct {
 	Memory      string `json:"memory"`
 	IsContainer bool   `json:"is_container"`
 }
+
+// DeveloperAccountResponse describes the seeded administrator/developer
+// account of the current instance. The password is never exposed.
+type DeveloperAccountResponse struct {
+	Exists   bool   `json:"exists"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Name     string `json:"name"`
+	Group    string `json:"group"`
+	GroupID  string `json:"group_id"`
+	PubID    string `json:"pub_id"`
+	Mode     string `json:"mode"`
+	SeededBy string `json:"seeded_by"`
+}
