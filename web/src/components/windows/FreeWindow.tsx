@@ -45,6 +45,8 @@ interface FreeWindowProps {
   onFocus?: () => void;
   onRefresh?: () => void;
   onSwitchMode?: () => void;
+  /** 自定义标题渲染（用于 Termity 的 Session 选择器等） */
+  renderTitle?: () => React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -65,6 +67,7 @@ export function FreeWindow({
   onFocus,
   onRefresh,
   onSwitchMode,
+  renderTitle,
   children,
 }: FreeWindowProps) {
   const [isMaximized, setIsMaximized] = useState(false);
@@ -337,6 +340,7 @@ export function FreeWindow({
                 onToggleMinimize={handleToggleMinimize}
                 onRefresh={onRefresh}
                 onSwitchMode={onSwitchMode}
+                renderTitle={renderTitle}
               />
             </div>
           </div>

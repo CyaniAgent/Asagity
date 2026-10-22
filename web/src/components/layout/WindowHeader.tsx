@@ -21,6 +21,8 @@ interface WindowHeaderProps {
   onToggleMinimize?: () => void;
   onRefresh?: () => void;
   onSwitchMode?: () => void;
+  /** 自定义标题渲染（用于 Termity 的 Session 选择器等） */
+  renderTitle?: () => React.ReactNode;
 }
 
 function getIcon(type: ViewType | null | undefined, customIcon?: string) {
@@ -89,6 +91,7 @@ export function WindowHeader({
   onToggleMinimize,
   onRefresh,
   onSwitchMode,
+  renderTitle,
 }: WindowHeaderProps) {
   const { t } = useI18n();
 
@@ -101,10 +104,16 @@ export function WindowHeader({
     // 透明融合：无自有底色，透出窗口玻璃底；分割线仅滚动时出现
     <div className={`px-3 py-1.5 flex justify-between items-center shrink-0 cursor-grab active:cursor-grabbing rounded-t-2xl select-none border-b transition-colors duration-200 ${scrolled ? "border-gray-200/60 dark:border-white/10" : "border-transparent"}`}>
       <div className="flex items-center gap-2 overflow-hidden max-w-[50%]">
-        <Icon name={getIcon(type, customIcon)} className="text-cyan-600 dark:text-cyan-400 shrink-0" fontSize={16} />
-        <span className="text-[13px] font-normal text-gray-800 dark:text-white truncate tracking-wide">
-          {getTitle(type, mode, customTitle, t)}
-        </span>
+        {renderTitle ? (
+          renderTitle()
+        ) : (
+          <>
+            <Icon name={getIcon(type, customIcon)} className="text-cyan-600 dark:text-cyan-400 shrink-0" fontSize={16} />
+            <span className="text-[13px] font-normal text-gray-800 dark:text-white truncate tracking-wide">
+              {getTitle(type, mode, customTitle, t)}
+            </span>
+          </>
+        )}
       </div>
 
       <div className="flex items-center gap-1.5 shrink-0">

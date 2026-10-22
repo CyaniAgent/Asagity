@@ -12,11 +12,12 @@ import { fetchBackend } from "@/lib/backend";
 import { executeDebugCommand, getDebugCommandNames } from "@/lib/debugCommands";
 import { useTermityHistoryStore } from "@/stores/termityHistory";
 import { findHistorySuggestion, suggestionSuffix, acceptWord } from "@/lib/termitySuggest";
-
-interface TerminalLine {
-  type: "input" | "output" | "system" | "error" | "warning";
-  text: string;
-}
+import { useTermityBuffer } from "@/hooks/useTermityBuffer";
+import {
+  useTermitySessionsStore,
+  MAX_TERMITY_SESSIONS,
+} from "@/stores/termitySessions";
+import type { TerminalLine } from "@/types/termity";
 
 function getCommands(t: (key: string) => string): Record<string, { name: string; description: string; subcommands?: Record<string, string> }> {
   return {
@@ -194,27 +195,21 @@ function parseArgs(fullArgs: string): Record<string, string> {
   return result;
 }
 
-export function Termity({ windowId }: { windowId?: string }) {
+export function Termity({ windowId, sessionId }: { windowId?: string; sessionId?: string }) {
   const { t } = useI18n();
   const systemStore = useSystemStore();
   const instanceStore = useInstanceStore();
   const userStore = useUserStore();
-  const [history, setHistory] = useState<TerminalLine[]>([
-    { type: "system", text: "Termity [v2.0.0]" },
-    { type: "system", text: 'Type "help" to see available commands.' },
-    { type: "system", text: "" },
-  ]);
-  const [input, setInput] = useState("");
-  // 命令历史：持久化到 localStorage（类 bash HISTFILE），两个挂载点共享同一份
+  // 缓冲后端：传 sessionId → 会话模式（状态存于 termitySessions store）；否则本地模式
+  const buffer = useTermityBuffer(sessionId);
+  const { lines: history, input, historyIndex, setLines: setHistory, setInput, setHistoryIndex, setDraft } = buffer;
+  // 命令历史：持久化到 localStorage（类 bash HISTFILE），全局共享一份
   const commandHistory = useTermityHistoryStore((s) => s.history);
   const pushCommandHistory = useTermityHistoryStore((s) => s.push);
   const MAX_HISTORY_LINES = 500;
-  const [historyIndex, setHistoryIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const timersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
-  // 浏览历史前正在输入的草稿：回退到最新一条时应原样还原（类 bash readline）
-  const draftRef = useRef<string>("");
   // 指令预测（类 zsh-autosuggestions）：内联幽灵文本
   const [suggestDismissed, setSuggestDismissed] = useState(false);
   const moveCaretToEndRef = useRef(false);
@@ -283,7 +278,7 @@ export function Termity({ windowId }: { windowId?: string }) {
       // 立即落盘（每条命令即写，非登出时写）
       pushCommandHistory(trimmed);
       setHistoryIndex(-1);
-      draftRef.current = "";
+      setDraft("");
 
       const parts = trimmed.split(/\s+/);
       const root = parts[0].toLowerCase();
@@ -550,6 +545,58 @@ export function Termity({ windowId }: { windowId?: string }) {
               }
             }
             nudge();
+          } else if (verb === "system.session") {
+            // Session 管理（对齐 tmux：list-sessions / new-session / kill-session /
+            // rename-session / switch-client）
+            const sess = useTermitySessionsStore.getState();
+            const action = (ft[2] || "list").toLowerCase();
+            const targetId = ft[3];
+
+            if (action === "list") {
+              addLine({ type: "output", text: `${t("termity.sessionSelector")}:` });
+              sess.order.forEach((id) => {
+                const s = sess.sessions[id];
+                if (!s) return;
+                addLine({
+                  type: "output",
+                  text: `  ${id === sess.activeId ? "*" : " "} ${s.name} (${id})`,
+                });
+              });
+            } else if (action === "new") {
+              const created = sess.createSession(ft[3]);
+              if (!created) {
+                addLine({ type: "error", text: t("termity.sessionLimit", { max: MAX_TERMITY_SESSIONS }) });
+              } else {
+                addLine({ type: "output", text: `> ${t("termity.sessionNew")}: ${sess.sessions[created]?.name ?? created}` });
+              }
+            } else if (action === "close" || action === "kill") {
+              if (!targetId || !sess.sessions[targetId]) {
+                addLine({ type: "error", text: `Usage: func System.Session close {id}` });
+              } else if (sess.order.length <= 1) {
+                addLine({ type: "warning", text: t("termity.sessionKeepOne") });
+              } else {
+                const name = sess.sessions[targetId]?.name;
+                sess.closeSession(targetId);
+                addLine({ type: "output", text: `> ${t("termity.sessionClose")}: ${name ?? targetId}` });
+              }
+            } else if (action === "rename") {
+              const newName = ft.slice(4).join(" ");
+              if (!targetId || !newName) {
+                addLine({ type: "error", text: "Usage: func System.Session rename {id} {name}" });
+              } else {
+                sess.renameSession(targetId, newName);
+                addLine({ type: "output", text: `> ${t("termity.sessionRename")}: ${newName}` });
+              }
+            } else if (action === "switch") {
+              if (!targetId || !sess.sessions[targetId]) {
+                addLine({ type: "error", text: "Usage: func System.Session switch {id}" });
+              } else {
+                sess.switchSession(targetId);
+                addLine({ type: "output", text: `> ${sess.sessions[targetId]?.name ?? targetId}` });
+              }
+            } else {
+              addLine({ type: "error", text: "Usage: func System.Session list|new|close|rename|switch" });
+            }
           } else if (verb === "system.portaldebugger" || verb === "system.locale") {
             // 特性前置但非查询型：指回动词优先写法
             if (verb === "system.locale") {
@@ -671,7 +718,7 @@ export function Termity({ windowId }: { windowId?: string }) {
         }
 
         case "clear": {
-          setHistory([]);
+          setHistory(() => []);
           break;
         }
 
@@ -831,12 +878,12 @@ export function Termity({ windowId }: { windowId?: string }) {
         executeCommand(input);
         setInput("");
         setHistoryIndex(-1);
-        draftRef.current = "";
+        setDraft("");
       } else if (e.key === "ArrowUp") {
         // ↑ 往更早的方向走；到最旧一条即停住（不循环），与 bash 一致
         e.preventDefault();
         if (commandHistory.length > 0) {
-          if (historyIndex === -1) draftRef.current = input;
+          if (historyIndex === -1) setDraft(input);
           const newIndex =
             historyIndex === -1
               ? commandHistory.length - 1
@@ -851,7 +898,7 @@ export function Termity({ windowId }: { windowId?: string }) {
           const newIndex = historyIndex + 1;
           if (newIndex >= commandHistory.length) {
             setHistoryIndex(-1);
-            setInput(draftRef.current);
+            setInput(buffer.draft);
           } else {
             setHistoryIndex(newIndex);
             setInput(commandHistory[newIndex]);
@@ -859,7 +906,7 @@ export function Termity({ windowId }: { windowId?: string }) {
         }
       } else if (e.key === "l" && e.ctrlKey) {
         e.preventDefault();
-        setHistory([]);
+        setHistory(() => []);
       } else if (e.key === "Escape") {
         // zsh autosuggest-clear：忽略当前建议（再次编辑输入即恢复）
         if (suggestion) {
@@ -899,7 +946,7 @@ export function Termity({ windowId }: { windowId?: string }) {
         moveCaretToEndRef.current = true;
       }
     },
-    [input, executeCommand, commandHistory, historyIndex, suggestion]
+    [input, executeCommand, commandHistory, historyIndex, suggestion, buffer.draft, setDraft, setHistoryIndex, setInput]
   );
 
   return (

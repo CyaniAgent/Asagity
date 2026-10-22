@@ -6,9 +6,15 @@ import { useUserStore } from "@/stores/user";
 import { FreeWindow } from "@/components/windows/FreeWindow";
 import { startMemoryMonitor } from "@/lib/memoryManager";
 import { useEffect } from "react";
+import { useTermitySessionsStore } from "@/stores/termitySessions";
 
 const Termity = lazy(() =>
   import("@/components/termity/Termity").then((m) => ({ default: m.Termity }))
+);
+const TermitySessionSelector = lazy(() =>
+  import("@/components/termity/TermitySessionSelector").then((m) => ({
+    default: m.TermitySessionSelector,
+  }))
 );
 const LyricsWindow = lazy(() =>
   import("@/components/music/LyricsWindow").then((m) => ({ default: m.LyricsWindow }))
@@ -85,7 +91,7 @@ export function getViewConfig(viewType: string | null) {
   }
 }
 
-function renderContent(viewType: string | null, refreshKey: number, browserUrl?: string, windowId?: string) {
+function renderContent(viewType: string | null, refreshKey: number, browserUrl?: string, windowId?: string, sessionId?: string) {
   switch (viewType) {
     case "error":
       return <div className="p-4 text-red-500">系统错误内容</div>;
@@ -104,7 +110,11 @@ function renderContent(viewType: string | null, refreshKey: number, browserUrl?:
     case "browser":
       return <iframe src={browserUrl} className="w-full h-full border-0" title="Browser" />;
     case "termity":
-      return <Suspense fallback={<WindowManagerFallback />}><Termity windowId={windowId!} /></Suspense>;
+      return (
+        <Suspense fallback={<WindowManagerFallback />}>
+          <Termity windowId={windowId!} sessionId={sessionId} />
+        </Suspense>
+      );
     case "lyrics_window":
       return <Suspense fallback={<WindowManagerFallback />}><LyricsWindow /></Suspense>;
     case "playlist_window":
@@ -135,6 +145,8 @@ export function WindowManager() {
   const triggerRefresh = useFreeWindowStore((s) => s.triggerRefresh);
   const isLoggedIn = useUserStore((s) => s.isLoggedIn);
   const isWelcomePage = !isLoggedIn;
+  // Termity 当前激活的 Session（标题栏选择器与终端内容共用）
+  const activeSessionId = useTermitySessionsStore((s) => s.activeId);
 
   // Start memory monitor once
   useEffect(() => {
@@ -166,8 +178,23 @@ export function WindowManager() {
             onClose={() => close(win.id)}
             onFocus={() => focus(win.id)}
             onRefresh={() => triggerRefresh(win.id)}
+            renderTitle={
+              win.viewType === "termity"
+                ? () => (
+                    <Suspense fallback={<span className="text-[13px] text-gray-800 dark:text-white">Session</span>}>
+                      <TermitySessionSelector />
+                    </Suspense>
+                  )
+                : undefined
+            }
           >
-            {renderContent(win.viewType, win.refreshKey, win.browserUrl, win.id)}
+            {renderContent(
+              win.viewType,
+              win.refreshKey,
+              win.browserUrl,
+              win.id,
+              win.viewType === "termity" ? activeSessionId : undefined
+            )}
           </FreeWindow>
         );
       })}
