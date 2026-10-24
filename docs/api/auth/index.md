@@ -64,8 +64,8 @@ These two are intentionally kept together because the code is still in a bootstr
 - after 5 wrong codes, `username` and `email` login are blocked for 15 minutes
 - `pubid + password` remains available during the cooldown window
 - resending a code must create a new challenge and invalidate the previous one
-- temporary registration context is stored in Redis
-- monthly pubid quota uses the database as source of truth and Redis only as cache
+- temporary registration context is stored in Valkey
+- monthly pubid quota uses the database as source of truth and Valkey only as cache
 - the first administrator is created by Setup Wizard, not by normal registration
 
 ## Current Route Set
@@ -387,7 +387,7 @@ Suggested purpose values:
 - `login_new_device`
 - `register_with_email`
 
-## Redis Use
+## Valkey Use
 
 ### Registration context
 
@@ -409,7 +409,7 @@ Stored fields should include:
 
 Recommended TTL: `15m`
 
-### Additional Redis roles
+### Additional Valkey roles
 
 - resend cooldown state
 - monthly pubid quota cache
@@ -487,7 +487,7 @@ This flow is not fully implemented yet because refresh-token cookie logic is sti
 
 1. align register DTO with optional email
 2. add `pubid` lookup to login service
-3. implement Redis registration context
+3. implement Valkey registration context
 4. implement email challenge creation and verification
 5. implement refresh-token cookie flow
 6. replace placeholder auth endpoints with real logic
