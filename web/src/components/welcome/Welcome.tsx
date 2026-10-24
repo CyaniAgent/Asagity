@@ -1,9 +1,7 @@
 "use client";
 
 import { WelcomeBackground, type FocalPoint, type WelcomeBackgroundFit } from "./WelcomeBackground";
-import { WelcomeStatusBar } from "./WelcomeStatusBar";
 import { WelcomeActionPanel } from "./WelcomeActionPanel";
-import type { StatusItem } from "./WelcomeStatusBar";
 
 export interface WelcomeProps {
   /** Override background image path */
@@ -12,8 +10,6 @@ export interface WelcomeProps {
   backgroundFit?: WelcomeBackgroundFit;
   /** Focal point 0–100, decides what survives a cover crop */
   backgroundFocalPoint?: FocalPoint;
-  /** Override status bar items */
-  statusItems?: StatusItem[];
 }
 
 /**
@@ -21,11 +17,11 @@ export interface WelcomeProps {
  *
  * Architecture:
  *   - Fully decoupled from Next.js — uses no `next/image`, `next/link`, or App Router APIs.
- *   - Composed of three independent, swappable sub-components:
+ *   - Composed of two independent, swappable sub-components:
  *       1. WelcomeBackground  — configurable static background with image crop/zoom
- *       2. WelcomeStatusBar   — top-right status indicators (theme-aware)
- *       3. WelcomeActionPanel — bottom-right info + action buttons (themed container)
- *   - All sub-components accept override props for full customization.
+ *       2. WelcomeActionPanel — bottom-right instance card (identity + live status + CTA)
+ *   - Real-time status pills merged INTO the panel (Q4 redesign); the top-right
+ *     corner stays clear for the background art.
  *
  * Pure React + Zustand stores + Tailwind CSS.
  */
@@ -33,7 +29,6 @@ export function Welcome({
   backgroundSrc,
   backgroundFit,
   backgroundFocalPoint,
-  statusItems,
 }: WelcomeProps) {
   return (
     <WelcomeBackground
@@ -41,12 +36,7 @@ export function Welcome({
       fit={backgroundFit}
       focalPoint={backgroundFocalPoint}
     >
-      {/* ── Top-right: Status Bar ── */}
-      <div className="absolute top-5 right-6 z-20">
-        <WelcomeStatusBar items={statusItems} />
-      </div>
-
-      {/* ── Bottom-right: Action Panel ── */}
+      {/* ── Bottom-right: Action Panel (identity + status + CTA) ── */}
       <div className="absolute bottom-6 right-6 z-20">
         <WelcomeActionPanel />
       </div>

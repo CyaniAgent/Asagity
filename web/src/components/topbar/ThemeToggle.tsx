@@ -1,14 +1,14 @@
 "use client";
 
-import { useThemeStore } from "@/stores/theme";
+import { useThemeStore, resolveMode, resolveModeLabel } from "@/stores/theme";
 import { Icon } from "@/components/ui/Icon";
 import { useI18n } from "@/components/providers/I18nProvider";
 
 /** 主题切换钮（搬运自旧 MainLayout） */
 export function ThemeToggle() {
   const { t } = useI18n();
-  const isDark = useThemeStore((s) => s.isDark);
-  const modeLabel = useThemeStore((s) => s.modeLabel);
+  const isDark = useThemeStore((s) => resolveMode(s.preference, s.systemPreference) === "dark");
+  const modeLabel = useThemeStore((s) => resolveModeLabel(s.preference));
   const preference = useThemeStore((s) => s.preference);
   const toggleTheme = useThemeStore((s) => s.toggle);
 

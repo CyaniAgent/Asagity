@@ -18,6 +18,7 @@
     <ProjectReference Include="..\Verse.Data\Verse.Data.csproj" />
     <ProjectReference Include="..\Verse.Modules\Verse.Module.User\Verse.Module.User.csproj" />
     <ProjectReference Include="..\Verse.Modules\Verse.Module.Instance\Verse.Module.Instance.csproj" />
+    <ProjectReference Include="..\Verse.Modules\Verse.Module.Shell\Verse.Module.Shell.csproj" />
   </ItemGroup>
 
 </Project>

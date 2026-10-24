@@ -5,7 +5,7 @@ import { Theme } from "@astryxdesign/core";
 import { LinkProvider } from "@astryxdesign/core/Link";
 import { yukinoshitaGlacierTheme } from "@/theme/yukinoshita-glacier/dist/yukinoshita-glacier";
 import { ClientLink } from "@/components/ui/ClientLink";
-import { useThemeStore } from "@/stores/theme";
+import { useThemeStore, resolveMode } from "@/stores/theme";
 
 /**
  * SeasonThemeProvider — 赛季主题运行时接线
@@ -18,7 +18,8 @@ import { useThemeStore } from "@/stores/theme";
  * 主题代称随季度更换：换季时只需替换 yukinoshitaGlacierTheme 的导入。
  */
 export function SeasonThemeProvider({ children }: { children: ReactNode }) {
-  const mode = useThemeStore((s) => s.currentMode);
+  // 派生明暗（读明字段，不依赖 store getter — getter 会被 zustand 合并烘焙成陈旧快照）
+  const mode = useThemeStore((s) => resolveMode(s.preference, s.systemPreference));
   const applyColorMode = useThemeStore((s) => s.applyColorMode);
 
   // 模式变化时同步 <html> 的 light/dark class 与 data-theme（Astryx 令牌随之切换）

@@ -8,7 +8,7 @@ import { useFreeWindowStore } from "@/stores/freeWindow";
 import { useLocaleStore, localeNames, type Locale } from "@/stores/locale";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { usePortalDebuggerStore } from "@/stores/portalDebugger";
-import { fetchBackend } from "@/lib/backend";
+import { fetchBackend, fetchShell } from "@/lib/backend";
 import { executeDebugCommand, getDebugCommandNames } from "@/lib/debugCommands";
 import { useTermityHistoryStore } from "@/stores/termityHistory";
 import { findHistorySuggestion, suggestionSuffix, acceptWord } from "@/lib/termitySuggest";
@@ -105,9 +105,10 @@ function getCommands(t: (key: string) => string): Record<string, { name: string;
 
 async function shellFetch(path: string): Promise<{ ok: number; data: unknown }> {
   // Platform-shell gateway: Go engine (:2048) is primary, .NET Verse.Api
-  // (:2050) is the automatic fallback via fetchBackend. This replaces the
-  // previous direct browser -> api.github.com calls (CORS / rate-limit safe).
-  const res = await fetchBackend(path, {
+  // (:2050) is the fallback — on transport failure and on 404 (shell gateway
+  // endpoints such as meta/github/termity/* are .NET-owned per
+  // docs/architecture/tech-stack-audit.md; Go only serves ping/vnet).
+  const res = await fetchShell(path, {
     headers: { Accept: "application/json" },
     signal: AbortSignal.timeout(8000),
   });

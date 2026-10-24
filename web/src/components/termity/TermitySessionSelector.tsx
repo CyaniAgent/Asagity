@@ -119,7 +119,7 @@ export function TermitySessionSelector() {
               >
                 <Icon name="terminal" fontSize={13} className="shrink-0" />
                 <span className="truncate">{s.name}</span>
-                {isActive && <Icon name="check" fontSize={13} className="ml-auto shrink-0" />}
+                {isActive && <Icon name="check_circle" fontSize={13} className="ml-auto shrink-0" />}
               </button>
             )}
 
@@ -181,7 +181,7 @@ export function TermitySessionSelector() {
       >
         <Icon name="terminal" className="text-cyan-600 dark:text-cyan-400 shrink-0" fontSize={16} />
         <span className="truncate tracking-wide">{active?.name ?? t("termity.sessionSelector")}</span>
-        <Icon name="expand_more" fontSize={14} className="shrink-0 opacity-60" />
+        <Icon name="arrow_drop_down" fontSize={14} className="shrink-0 opacity-60" />
       </button>
 
       {open && typeof document !== "undefined" &&

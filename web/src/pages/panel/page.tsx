@@ -1,6 +1,6 @@
 "use client";
 
-import { useThemeStore } from "@/stores/theme";
+import { useThemeStore, resolveMode } from "@/stores/theme";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { Icon } from "@/components/ui/Icon";
 import {
@@ -18,7 +18,8 @@ import {
 } from "recharts";
 
 export default function PanelPage() {
-  const { isDark } = useThemeStore();
+  const { preference, systemPreference } = useThemeStore();
+  const isDark = resolveMode(preference, systemPreference) === "dark";
   const { t } = useI18n();
 
   const metrics = [

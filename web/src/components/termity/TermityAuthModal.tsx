@@ -1,65 +1,117 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import { Button } from "@astryxdesign/core/Button";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { useFreeWindowStore } from "@/stores/freeWindow";
 import { Icon } from "@/components/ui/Icon";
+import {
+  GUEST_CODE_LENGTH,
+  normalizeGuestCode,
+  issueGuestCode,
+  verifyGuestCode,
+  logGuestCodeToConsole,
+} from "@/lib/termityGuestAuth";
 
-const TERMITY_PASSWORD = "TermitybyAsagity2026";
-
+/**
+ * Termity 免登录进入验证弹窗（guest gate）。
+ *
+ * 验证机制：8 位验证码（0-9 + A-Z），由后端随机铸造并打印到运行日志，
+ * 前端取回后打进浏览器开发者工具控制台 —— 用户从控制台抄码输入。
+ * 旧的硬编码密码机制已废除。
+ *
+ * 输入 UI 采用 OTP 卡片：8 个独立格 + 一个透明单输入兜底
+ * （自动前进 / 退格回退 / 粘贴分发全部由原生输入承担）。
+ * 按钮为 Astryx 设计体系组件（见 docs/design-tokens.md）。
+ */
 export function TermityAuthModal() {
   const { t } = useI18n();
   const freeWindowStore = useFreeWindowStore();
   const isOpen = useFreeWindowStore((s) => s.isTermityAuthOpen);
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+
+  const [digits, setDigits] = useState("");
   const [error, setError] = useState("");
   const [shake, setShake] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [issuing, setIssuing] = useState(false);
+  const [focused, setFocused] = useState(false);
 
-  // Reset state when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setPassword("");
-      setShowPassword(false);
-      setError("");
-      setShake(false);
-      setTimeout(() => inputRef.current?.focus(), 100);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const shakeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 语言切换不应触发重新发码：effect 只依赖 isOpen，取码经 ref 转发
+  const requestCodeRef = useRef<() => Promise<void>>(async () => {});
+
+  const requestCode = useCallback(async () => {
+    setIssuing(true);
+    const res = await issueGuestCode();
+    setIssuing(false);
+    if (res.ok) {
+      logGuestCodeToConsole(res.code, t("termity.codeConsoleLabel"), t("termity.codeConsoleHint"));
+    } else {
+      setError(t("termity.codeIssueError"));
     }
+  }, [t]);
+  requestCodeRef.current = requestCode;
+
+  const fireShake = useCallback(() => {
+    setShake(true);
+    if (shakeTimer.current) clearTimeout(shakeTimer.current);
+    shakeTimer.current = setTimeout(() => setShake(false), 500);
+  }, []);
+
+  // 打开 → 重置状态 + 向后端申请新码 + 聚焦输入
+  useEffect(() => {
+    if (!isOpen) return;
+    setDigits("");
+    setError("");
+    setVerifying(false);
+    setShake(false);
+    void requestCodeRef.current();
+    const focusTimer = setTimeout(() => inputRef.current?.focus(), 100);
+    return () => {
+      clearTimeout(focusTimer);
+      if (shakeTimer.current) {
+        clearTimeout(shakeTimer.current);
+        shakeTimer.current = null;
+      }
+    };
   }, [isOpen]);
 
   const handleClose = useCallback(() => {
     freeWindowStore.closeTermityAuth();
   }, [freeWindowStore]);
 
-  const handleVerify = useCallback(() => {
-    if (password === TERMITY_PASSWORD) {
+  const handleVerify = useCallback(async () => {
+    if (verifying || digits.length !== GUEST_CODE_LENGTH) return;
+    setVerifying(true);
+    const status = await verifyGuestCode(digits);
+    setVerifying(false);
+    if (status === "valid") {
       freeWindowStore.confirmTermityAuth();
-    } else {
-      setError(t("termity.verificationFailed"));
-      setShake(true);
-      setPassword("");
-      setTimeout(() => setShake(false), 500);
+      return;
     }
-  }, [password, freeWindowStore, t]);
+    // 失败：清空格子 + 抖动反馈
+    setDigits("");
+    fireShake();
+    if (status === "mismatch") {
+      setError(t("termity.verificationFailed"));
+    } else if (status === "expired") {
+      // 码已过期/被打满失效 → 自动重新发一枚并再打一次控制台
+      setError(t("termity.codeExpired"));
+      void requestCodeRef.current();
+    } else {
+      setError(t("termity.codeVerifyError"));
+    }
+  }, [verifying, digits, freeWindowStore, fireShake, t]);
 
   const handleLogin = useCallback(() => {
     handleClose();
     freeWindowStore.openFromContext("auth");
   }, [handleClose, freeWindowStore]);
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter") {
-        handleVerify();
-      } else if (e.key === "Escape") {
-        handleClose();
-      }
-    },
-    [handleVerify, handleClose]
-  );
-
   if (!isOpen) return null;
+
+  const activeIndex = Math.min(digits.length, GUEST_CODE_LENGTH - 1);
 
   return (
     <div className="fixed inset-0 z-[100003] flex items-center justify-center">
@@ -93,68 +145,123 @@ export function TermityAuthModal() {
           {t("termity.authDescription")}
         </p>
 
-        {/* Password Input */}
-        <div className="relative mt-4">
+        {/* ── OTP card: 8 slots over one transparent input ─────────────── */}
+        <div
+          className="relative mt-4 cursor-text"
+          onClick={() => inputRef.current?.focus()}
+        >
           <input
             ref={inputRef}
-            type={showPassword ? "text" : "password"}
-            value={password}
+            value={digits}
             onChange={(e) => {
-              setPassword(e.target.value);
+              setDigits(normalizeGuestCode(e.target.value));
               setError("");
             }}
-            onKeyDown={handleKeyDown}
-            placeholder={t("termity.passwordPlaceholder")}
-            className="w-full px-4 py-3 pr-10 rounded-xl text-sm
-              bg-gray-100 dark:bg-gray-800
-              border border-gray-200 dark:border-gray-700
-              text-gray-900 dark:text-white
-              placeholder-gray-400 dark:placeholder-gray-500
-              outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30
-              transition-all"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                void handleVerify();
+              } else if (e.key === "Escape") {
+                e.preventDefault();
+                handleClose();
+              }
+            }}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            className="absolute inset-0 z-10 w-full h-full opacity-0"
+            inputMode="text"
+            autoComplete="one-time-code"
             spellCheck={false}
-            autoComplete="off"
+            aria-label={t("termity.authRequired")}
           />
+          <div
+            className="flex justify-center gap-1.5 pointer-events-none"
+            aria-hidden="true"
+          >
+            {Array.from({ length: GUEST_CODE_LENGTH }, (_, i) => {
+              const ch = digits[i];
+              const filled = Boolean(ch);
+              const isActive = focused && !filled && i === activeIndex;
+              return (
+                <div
+                  key={i}
+                  className={[
+                    "relative w-9 h-11 rounded-xl flex items-center justify-center",
+                    "text-lg font-mono font-semibold select-none",
+                    "border transition-all duration-150 ease-[cubic-bezier(.2,.8,.2,1)]",
+                    shake
+                      ? "border-bad bg-badmuted"
+                      : filled
+                        ? "border-cyan-500/60 bg-cyan-500/10 text-gray-900 dark:text-white"
+                        : isActive
+                          ? "border-cyan-500 bg-white dark:bg-gray-800 scale-105 shadow-sm"
+                          : "border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800",
+                  ].join(" ")}
+                >
+                  {ch ??
+                    (isActive ? (
+                      <span className="w-0.5 h-5 bg-cyan-500 rounded-full animate-[caretBlink_1s_linear_infinite]" />
+                    ) : null)}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Console hint + reissue */}
+        <div className="flex items-center justify-between gap-2 mt-2.5 min-h-[20px]">
+          <p className="text-[11px] text-gray-400 dark:text-gray-500 flex items-center gap-1 min-w-0">
+            <Icon name="info" fontSize={13} className="shrink-0" />
+            <span className="truncate">
+              {issuing ? t("termity.codeIssuing") : t("termity.codeHint")}
+            </span>
+          </p>
           <button
             type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            onClick={() => {
+              setError("");
+              void requestCodeRef.current();
+            }}
+            disabled={issuing}
+            className="shrink-0 text-[11px] text-cyan-600 dark:text-cyan-400
+              hover:underline disabled:opacity-50 flex items-center gap-1"
           >
-            <Icon name={showPassword ? "visibility_off" : "visibility"} fontSize={18} />
+            <Icon name="refresh" fontSize={13} />
+            {t("termity.codeResend")}
           </button>
         </div>
 
         {/* Error Message */}
         {error && (
-          <p className="mt-2 text-sm text-red-500 flex items-center gap-1.5">
+          <p className="mt-2 text-sm text-bad flex items-center gap-1.5">
             <Icon name="error" fontSize={16} />
             {error}
           </p>
         )}
 
-        {/* Action Buttons */}
+        {/* Action Buttons — Astryx design system */}
         <div className="flex gap-3 mt-5">
-          <button
-            onClick={handleLogin}
-            className="flex-1 py-2.5 rounded-xl text-sm font-medium
-              bg-gray-100 dark:bg-gray-800
-              text-gray-700 dark:text-gray-300
-              hover:bg-gray-200 dark:hover:bg-gray-700
-              border border-gray-200 dark:border-gray-700
-              transition-all"
-          >
-            {t("auth.login")}
-          </button>
-          <button
-            onClick={handleVerify}
-            className="flex-1 py-2.5 rounded-xl text-sm font-medium
-              bg-cyan-500 hover:bg-cyan-600
-              text-white
-              shadow-lg shadow-cyan-500/25
-              transition-all"
-          >
-            {t("termity.verify")}
-          </button>
+          <div className="flex-1">
+            <Button
+              variant="secondary"
+              size="lg"
+              width="100%"
+              label={t("auth.login")}
+              onClick={handleLogin}
+            />
+          </div>
+          <div className="flex-1">
+            <Button
+              variant="primary"
+              size="lg"
+              width="100%"
+              label={t("termity.verify")}
+              onClick={() => void handleVerify()}
+              isLoading={verifying}
+              isDisabled={digits.length !== GUEST_CODE_LENGTH}
+              className="glow-accent glow-accent-hover"
+            />
+          </div>
         </div>
       </div>
 
@@ -169,6 +276,10 @@ export function TermityAuthModal() {
           40% { transform: translateX(8px); }
           60% { transform: translateX(-4px); }
           80% { transform: translateX(4px); }
+        }
+        @keyframes caretBlink {
+          0%, 49% { opacity: 1; }
+          50%, 100% { opacity: 0; }
         }
       `}</style>
     </div>

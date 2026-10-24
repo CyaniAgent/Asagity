@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "@/hooks/useRouter";
-import { useThemeStore } from "@/stores/theme";
+import { useThemeStore, resolveMode } from "@/stores/theme";
 import { Icon } from "@/components/ui/Icon";
 import { useI18n } from "@/components/providers/I18nProvider";
 import {
@@ -35,7 +35,8 @@ const federationData = days.map((day, i) => ({
 
 export default function AboutChartsPage() {
   const router = useRouter();
-  const { isDark } = useThemeStore();
+  const { preference, systemPreference } = useThemeStore();
+  const isDark = resolveMode(preference, systemPreference) === "dark";
   const { t } = useI18n();
 
   const textColor = isDark ? "#9CA3AF" : "#6B7280";

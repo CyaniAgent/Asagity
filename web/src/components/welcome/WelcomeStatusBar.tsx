@@ -1,16 +1,17 @@
 "use client";
 
+import { useMemo } from "react";
 import { useSystemStore } from "@/stores/system";
 import { useWelcomeStore } from "@/stores/welcome";
 import { useThemeStore } from "@/stores/theme";
 import { useI18n } from "@/components/providers/I18nProvider";
-import { useOnlineCount } from "./useOnlineCount";
+import { useInstanceMeta } from "./useInstanceMeta";
 import type { WelcomeStatusItemConfig } from "./welcomeConfig";
 
 export interface StatusItem {
   label: string;
   value: string;
-  /** "green" = online pulse, "gray" = neutral, "red" = offline */
+  /** "green" = real live value, "gray" = unknown (backend field missing), "red" = offline */
   status?: "green" | "gray" | "red";
 }
 
@@ -19,33 +20,37 @@ export interface WelcomeStatusBarProps {
   items?: StatusItem[];
 }
 
-/**
- * Top-right status bar for the Welcome page.
- * Data-driven: layout comes from useWelcomeStore.statusItems,
- * live values resolve per-item (onlineCount polls backend,
- * backend pill reads the dual-backend heartbeat).
- */
+/** Top-right status bar for the Welcome page. Data-driven: layout from useWelcomeStore.statusItems. */
 export function WelcomeStatusBar({ items }: WelcomeStatusBarProps) {
-  const { t } = useI18n();
-  const storeItems = useWelcomeStore((s) => s.statusItems);
-  const isBackendOnline = useSystemStore((s) => s.isBackendOnline);
   const isDark = useThemeStore(
     (s) => s.preference === "dark" || (s.preference === "system" && s.systemPreference === "dark")
   );
-  const onlineCount = useOnlineCount();
+  const resolved = useWelcomeStatusItems();
+  return <StatusPills items={items ?? resolved} isDark={isDark} />;
+}
 
-  if (items) return <StatusPills items={items} isDark={isDark} />;
+/**
+ * Resolves the store's status config with live values.
+ * Shared by the floating status bar AND the welcome panel's internal status row.
+ */
+export function useWelcomeStatusItems(): StatusItem[] {
+  const { t } = useI18n();
+  const storeItems = useWelcomeStore((s) => s.statusItems);
+  const isBackendOnline = useSystemStore((s) => s.isBackendOnline);
+  const online = useInstanceMeta();
 
-  const resolved: StatusItem[] = storeItems.map((item) =>
-    resolveStatusItem(item, { t, onlineCount, isBackendOnline })
+  return useMemo(
+    () =>
+      storeItems.map((item) =>
+        resolveStatusItem(item, { t, online, isBackendOnline })
+      ),
+    [storeItems, online, isBackendOnline, t]
   );
-
-  return <StatusPills items={resolved} isDark={isDark} />;
 }
 
 function resolveStatusItem(
   item: WelcomeStatusItemConfig,
-  ctx: { t: (k: string) => string; onlineCount: string; isBackendOnline: boolean }
+  ctx: { t: (k: string) => string; online: string | null; isBackendOnline: boolean }
 ): StatusItem {
   // labelKey may itself be a literal (e.g. "Verse NET") — t() falls back to key.
   const label = ctx.t(item.labelKey);
@@ -53,7 +58,10 @@ function resolveStatusItem(
     case "static":
       return { label, value: item.source.value, status: item.source.status };
     case "onlineCount":
-      return { label, value: ctx.onlineCount, status: "green" };
+      // No backend field yet → "—" + gray; never fake a live number.
+      return ctx.online == null
+        ? { label, value: "—", status: "gray" }
+        : { label, value: ctx.online, status: "green" };
     case "backend":
       return {
         label,
@@ -63,7 +71,7 @@ function resolveStatusItem(
   }
 }
 
-function StatusPills({ items, isDark }: { items: StatusItem[]; isDark: boolean }) {
+export function StatusPills({ items, isDark }: { items: StatusItem[]; isDark: boolean }) {
   return (
     <div className="flex items-center gap-3">
       {items.map((item) => (

@@ -1,51 +1,41 @@
 "use client";
 
-import { useState, useRef, useEffect, Fragment } from "react";
 import { Button } from "@astryxdesign/core/Button";
 import { IconButton } from "@astryxdesign/core/IconButton";
+import { DropdownMenu } from "@astryxdesign/core/DropdownMenu";
+import type { DropdownMenuItemData } from "@astryxdesign/core/DropdownMenu";
 import { useInstanceStore } from "@/stores/instance";
 import { useWelcomeStore } from "@/stores/welcome";
 import { useFreeWindowStore } from "@/stores/freeWindow";
-import { useThemeStore } from "@/stores/theme";
 import { useRouter } from "@/hooks/useRouter";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { Icon } from "@/components/ui/Icon";
-import { WelcomeMenuItem } from "./WelcomeMenuItem";
-import type { WelcomeMenuAction, WelcomeMenuItemConfig } from "./welcomeConfig";
+import { useWelcomeStatusItems, type StatusItem } from "./WelcomeStatusBar";
+import { useInstanceMeta } from "./useInstanceMeta";
+import { DEFAULT_DEV_BADGE_KEY, type WelcomeMenuAction, type WelcomeMenuItemConfig } from "./welcomeConfig";
 
 export interface WelcomeActionPanelProps {}
 
+/**
+ * WelcomeActionPanel — 实例名片（四段式）
+ *
+ * Z1 身份区    logo + 实例名 + alias · 版本 + 右上更多菜单
+ * Z2 状态区    实时状态芯片并入面板（后端缺字段显示「—」+ 灰点，绝不假装在线）
+ * Z3 入口区    时间线（当前唯一真实可跳的窗口）提为显性入口行
+ * Z4 CTA 区    加入实例(primary) / 已有账户登录(secondary)
+ *
+ * 全部颜色走季节语义令牌（bg-sheet/text-fg/text-ok…），明暗由 light-dark() 自动跟随。
+ */
 export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
   const { t } = useI18n();
   const instanceStore = useInstanceStore();
   const menuGroups = useWelcomeStore((s) => s.menuGroups);
-  const isDark = useThemeStore(
-    (s) => s.preference === "dark" || (s.preference === "system" && s.systemPreference === "dark")
-  );
   const { openFromContext } = useFreeWindowStore();
   const { push } = useRouter();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [devOpen, setDevOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  /* ── Menu outside-click ── */
-  useEffect(() => {
-    if (!menuOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false); setDevOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [menuOpen]);
+  const statusItems = useWelcomeStatusItems();
+  useInstanceMeta(); // 身份 hydrate（一次性）+ 在线轮询（缺字段返回 null）
 
   /* ── Handlers ── */
-  const closeMenu = () => { setMenuOpen(false); setDevOpen(false); };
-  const handleJoin = () => { openFromContext("register_window"); closeMenu(); };
-  const handleLogin = () => { openFromContext("login_window"); closeMenu(); };
-
-  /** Q4 dispatcher: window + link (termity keeps its auth-gated entry). */
   const dispatch = (action: WelcomeMenuAction) => {
     if (action.kind === "window") {
       if (action.viewType === "termity") {
@@ -53,9 +43,7 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
       } else {
         openFromContext(action.viewType);
       }
-      closeMenu();
     } else if (action.kind === "link") {
-      closeMenu();
       if (action.external) {
         window.open(action.href, "_blank", "noopener,noreferrer");
       } else {
@@ -63,127 +51,146 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
       }
     }
   };
+  const handleJoin = () => dispatch({ kind: "window", viewType: "register_window" });
+  const handleLogin = () => dispatch({ kind: "window", viewType: "login_window" });
 
-  const menuCls = isDark
-    ? "bg-gray-900/95 border border-white/10 text-white shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
-    : "bg-white/95 border border-gray-200 text-gray-900 shadow-[0_8px_32px_rgba(0,0,0,0.12)]";
-  const itemCls = isDark ? "text-white/70 hover:bg-white/10" : "text-gray-700 hover:bg-gray-100";
-  const devItemCls = isDark ? "text-white/50 hover:bg-white/5" : "text-gray-500 hover:bg-gray-50";
-  const panelBg = isDark
-    ? "bg-gray-900 border border-white/10 text-white shadow-[0_8px_40px_rgba(0,0,0,0.4)]"
-    : "bg-white border border-gray-200 text-gray-900 shadow-[0_8px_40px_rgba(0,0,0,0.1)]";
+  /* ── 更多菜单：数据驱动 + Astryx DropdownMenu ── */
+  const toOption = (item: WelcomeMenuItemConfig): DropdownMenuItemData => ({
+    id: item.id,
+    label: t(item.labelKey),
+    icon: <Icon name={item.icon} fontSize={16} />,
+    isDisabled: item.comingSoon,
+    onClick: item.comingSoon ? undefined : () => dispatch(item.action),
+    // 占位项：拖尾「开发中」提示，状态诚实
+    ...(item.comingSoon
+      ? {
+          endContent: (
+            <span className="text-[10px] font-medium text-fgdim shrink-0">
+              {t(item.badgeKey ?? DEFAULT_DEV_BADGE_KEY)}
+            </span>
+          ),
+        }
+      : {}),
+  });
 
-  const renderItem = (item: WelcomeMenuItemConfig, smallDefault = false) => {
-    const small = item.small ?? smallDefault;
-    const cls = small ? devItemCls : itemCls;
-    if (item.children?.length) {
-      const open = item.id === "developer-group" ? devOpen : false;
-      return (
-        <div key={item.id}>
-          <button
-            onClick={() => item.id === "developer-group" && setDevOpen((v) => !v)}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium transition-colors
-              ${itemCls}`}
-          >
-            <Icon name={item.icon} fontSize={18} className={isDark ? "text-white/50" : "text-gray-400"} />
-            <span className="flex-1 text-left">{t(item.labelKey)}</span>
-            <Icon
-              name="chevron_right"
-              fontSize={14}
-              className={`transition-transform duration-200 ${open ? "rotate-90" : ""}`}
-            />
-          </button>
-          {open && (
-            <div className={`pl-4 pb-1 ${isDark ? "bg-white/[0.03]" : "bg-gray-50"}`}>
-              {item.children.map((child) => renderItem(child, true))}
-            </div>
-          )}
-        </div>
-      );
+  const menuItems = menuGroups.map((group) => ({
+    type: "section" as const,
+    id: group.id,
+    items: group.items.flatMap((item) => {
+      if (item.children?.length) return item.children.map(toOption); // 拍平开发者子组
+      return [toOption(item)];
+    }),
+  }));
+
+  /* ── 状态芯片：令牌驱动，明暗自动 ── */
+  const chipTone = (status: StatusItem["status"]) => {
+    switch (status) {
+      case "green":
+        return "border-ok/40 bg-ok/10";
+      case "red":
+        return "border-bad/40 bg-bad/10";
+      default:
+        return "border-line bg-fg/5";
     }
-    return (
-      <WelcomeMenuItem
-        key={item.id}
-        icon={item.icon}
-        label={t(item.labelKey)}
-        isDark={isDark}
-        itemCls={cls}
-        small={small}
-        comingSoon={item.comingSoon}
-        comingSoonLabel={item.badgeKey ? t(item.badgeKey) : undefined}
-        onClick={() => dispatch(item.action)}
-      />
-    );
   };
+  const dotTone = (status: StatusItem["status"]) =>
+    status === "green" ? "bg-ok" : status === "red" ? "bg-bad" : "bg-fgdim";
 
   return (
     <div
-      ref={menuRef}
-      className={`relative w-[360px] flex flex-col gap-4 rounded-[28px] p-5 backdrop-blur-2xl
-        ${panelBg}`}
+      className="relative w-[360px] max-w-[calc(100vw-3rem)] flex flex-col gap-3.5 rounded-3xl p-5
+        bg-sheet/95 border border-line backdrop-blur-glassheavy shadow-2xl"
     >
-        {/* ── Header: Instance Info + More Menu ── */}
-      <div className="flex items-start justify-between">
-        <div className="flex flex-col flex-1 min-w-0">
-          <div className="w-12 h-[2px] bg-gradient-to-r from-cyan-400 to-cyan-600 rounded-full mb-4 shadow-[0_0_12px_rgba(57,197,187,0.4)]" />
-          <div className="flex items-center gap-3 mb-3">
-            <div
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border
-                ${isDark ? "bg-white/10 border-white/10" : "bg-gray-100 border-gray-200"}`}
-            >
-              <img src={instanceStore.logoURL} alt={instanceStore.name} className="w-8 h-8 object-contain" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-bold truncate leading-tight text-inherit">
-                {instanceStore.name}
-              </h1>
-              <span className={`text-[11px] font-medium ${isDark ? "text-cyan-400" : "text-cyan-600"}`}>
+      {/* ── Z1 身份区 + 更多菜单 ── */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-11 h-11 rounded-xl bg-fg/5 border border-line p-1.5 shrink-0">
+            <img src={instanceStore.logoURL} alt={instanceStore.name} className="w-full h-full object-contain" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-base font-bold truncate leading-tight text-fg">
+              {instanceStore.name}
+            </h1>
+            <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
+              <span className="text-[11px] font-medium text-fgaccent truncate">
                 {instanceStore.alias}
+              </span>
+              <span aria-hidden className="text-fgdim shrink-0">·</span>
+              <span className="text-[10px] font-mono text-fgdim truncate">
+                {instanceStore.version}
               </span>
             </div>
           </div>
-          <p className={`text-[13px] leading-relaxed line-clamp-2 mb-1 ${isDark ? "text-white/60" : "text-gray-600"}`}>
-            {instanceStore.description}
-          </p>
-          <span className={`inline-block text-[10px] font-mono mt-1 ${isDark ? "text-white/30" : "text-gray-400"}`}>
-            {instanceStore.version}
-          </span>
         </div>
 
-        {/* ── Three-dot more menu ── */}
-          <div className="relative shrink-0 mt-1">
-          <IconButton
-            variant="ghost"
-            size="md"
-            icon={<Icon name="more_horiz" fontSize={20} />}
-            label={t("welcome.more")}
-            tooltip={t("welcome.more")}
-            onClick={() => { setMenuOpen((v) => !v); setDevOpen(false); }}
-          />
-
-          {/* ── Dropdown (data-driven) ── */}
-          {menuOpen && (
-            <div
-              className={`absolute bottom-full right-0 mb-2 w-56 max-h-[70vh] overflow-y-auto
-                overscroll-contain rounded-2xl py-1.5 z-50 backdrop-blur-xl transition-all
-                ${menuCls}`}
-            >
-              {menuGroups.map((group, gi) => (
-                <Fragment key={group.id}>
-                  {gi > 0 && (
-                    <div className={`my-1.5 mx-3 h-px ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
-                  )}
-                  {group.items.map((item) => renderItem(item))}
-                </Fragment>
-              ))}
-            </div>
+        <DropdownMenu
+          items={menuItems}
+          placement="above"
+          alignment="end"
+          presentation="adaptive"
+          menuWidth={232}
+          menuMaxHeight={340}
+          hasChevron={false}
+          renderTrigger={(tp) => (
+            <IconButton
+              {...tp}
+              variant="ghost"
+              size="sm"
+              icon={<Icon name="more_horiz" fontSize={18} />}
+              label={t("welcome.more")}
+              tooltip={t("welcome.more")}
+            />
           )}
-        </div>
+        />
       </div>
 
-      {/* ── Action Buttons ── */}
+      {/* ── 描述（后端 hydrate，随 meta 变更）── */}
+      <p className="text-[13px] leading-relaxed text-fgdim line-clamp-2">
+        {instanceStore.description}
+      </p>
+
+      {/* ── Z2 状态区（并入面板；在线缺字段=「—」灰点）── */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {statusItems.map((item) => (
+          <div
+            key={item.label}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 ${chipTone(item.status)}`}
+          >
+            <span className="relative flex h-1.5 w-1.5 shrink-0">
+              {item.status === "green" && (
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ok opacity-75" />
+              )}
+              <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${dotTone(item.status)}`} />
+            </span>
+            <span className="text-[10px] font-medium tracking-wide text-fgdim">{item.label}</span>
+            <span
+              className={`text-[11px] font-semibold tabular-nums ${item.status === "gray" ? "text-fgdim" : "text-fg"}`}
+            >
+              {item.value}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Z3 入口区：时间线（唯一真实可跳入口）── */}
+      <button
+        onClick={() => dispatch({ kind: "window", viewType: "welcome_timeline" })}
+        className="group flex items-center gap-3 w-full rounded-xl px-3 py-2.5 text-[13px] font-medium
+          text-fg hover:bg-fg/5 active:scale-[0.99] transition-all"
+      >
+        <span className="h-7 w-7 rounded-lg bg-brand/10 text-fgaccent flex items-center justify-center shrink-0">
+          <Icon name="timeline_20_filled" fontSize={16} />
+        </span>
+        <span className="flex-1 text-left">{t("welcome.browseTimeline")}</span>
+        <Icon
+          name="chevron_right"
+          fontSize={14}
+          className="text-fgdim transition-transform group-hover:translate-x-0.5"
+        />
+      </button>
+
+      {/* ── Z4 CTA ── */}
       <div className="flex flex-col gap-2.5">
-        {/* Primary: Join Instance */}
         <Button
           variant="primary"
           size="lg"
@@ -193,8 +200,6 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
           onClick={handleJoin}
           className="glow-accent glow-accent-hover"
         />
-
-        {/* Secondary: Existing Account Login */}
         <Button
           variant="secondary"
           size="md"

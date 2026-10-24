@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useThemeStore } from "@/stores/theme";
+import { useThemeStore, resolveMode, resolveModeLabel } from "@/stores/theme";
 import { Icon } from "@/components/ui/Icon";
 import { useI18n } from "@/components/providers/I18nProvider";
 
@@ -21,6 +21,8 @@ function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean
 export default function PersonalizationSettingsPage() {
   const { t } = useI18n();
   const themeStore = useThemeStore();
+  const isDark = resolveMode(themeStore.preference, themeStore.systemPreference) === "dark";
+  const modeLabel = resolveModeLabel(themeStore.preference);
   const [wallpaperIntensity, setWallpaperIntensity] = useState(50);
   const [pageTransitions, setPageTransitions] = useState(true);
   const [musicVisual, setMusicVisual] = useState(true);
@@ -92,14 +94,14 @@ export default function PersonalizationSettingsPage() {
 
         {/* Preview */}
         <div className="px-5 pb-5">
-          <div className={`rounded-2xl border border-gray-100 dark:border-gray-800 p-4 ${themeStore.isDark ? "bg-gray-800/50" : "bg-gray-50"}`}>
+          <div className={`rounded-2xl border border-gray-100 dark:border-gray-800 p-4 ${isDark ? "bg-gray-800/50" : "bg-gray-50"}`}>
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${themeStore.isDark ? "bg-gray-700" : "bg-white"}`}>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? "bg-gray-700" : "bg-white"}`}>
                 <Icon name="bolt" className="text-cyan-500" fontSize={20} />
               </div>
               <div>
-                <div className={`text-sm font-bold ${themeStore.isDark ? "text-white" : "text-gray-900"}`}>Asagity</div>
-                <div className={`text-xs ${themeStore.isDark ? "text-gray-400" : "text-gray-500"}`}>{themeStore.modeLabel} · {t("settings.previewEffect")}</div>
+                <div className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Asagity</div>
+                <div className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>{modeLabel} · {t("settings.previewEffect")}</div>
               </div>
             </div>
           </div>
