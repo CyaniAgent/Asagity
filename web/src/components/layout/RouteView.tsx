@@ -22,7 +22,7 @@ export interface RouteEntry {
 function RouteFallback() {
   return (
     <div className="flex-1 flex items-center justify-center">
-      <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+      <div className="w-6 h-6 border-2 border-brand border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }

@@ -7,31 +7,22 @@
 
 @import "tailwindcss";
 
-/* ── Scale slot (Color scheme: Yukinoshita Glacier · 2026.Q4) ───────────────
- * Tailwind category name stays unchanged (cyan-*), values fully taken over by the Glacier palette.
- * Existing 544 cyan-* usages switch to Glacier with zero churn; new code should prioritize
- * the semantic aliases below (bg-brand / text-fg / bg-plate …).
+/* ── Season tokens (Color scheme: Yukinoshita Glacier · 2026.Q4) ───────────────
+ * The transitional cyan-* scale slots have been RETIRED (P3 sweep complete):
+ * all usages now go through the semantic aliases below (bg-brand / text-fg /
+ * bg-plate …), per docs/design-tokens.md §5. branddeep = glacier stop 55
+ * (hover/pressed), brandlight = glacier stop 75 (highlight & gradient end).
  * Also look at src/theme/yukinoshita-glacier/palette.config.json
  */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --color-cyan-50: #e6f2ff;
-  --color-cyan-100: #cde6ff;
-  --color-cyan-200: #b4d9ff;
-  --color-cyan-300: #78b2ee;
-  --color-cyan-400: #4187c8;
-  --color-cyan-500: #2e76b8;
-  --color-cyan-600: #1d6db0;
-  --color-cyan-700: #0063ac;
-  --color-cyan-800: #005ea2;
-  --color-cyan-900: #005493;
-  --color-cyan-950: #00325c;
-
   /* ── Semantic aliases → Astryx frozen variables (seasonal theme tokens) ── */
   --color-brand: var(--color-accent);
   --color-onbrand: var(--color-on-accent);
   --color-brandmuted: var(--color-accent-muted);
+  --color-branddeep: light-dark(#1d6db0, #2a9ecc); /* glacier 55 · hover-deep */
+  --color-brandlight: light-dark(#78b2ee, #7fc9f0); /* glacier 75 · light anchor */
   --color-plate: var(--color-background-body);
   --color-sheet: var(--color-background-surface);
   --color-card: var(--color-background-card);
@@ -271,6 +262,21 @@ code, kbd, samp, pre {
 
 .glow-accent-hover:hover {
   box-shadow: 0 0 30px color-mix(in srgb, var(--color-accent) 45%, transparent);
+}
+
+/* ── Hand-menu pop motion（保形换血计划-D）──────────────────────────
+ * 时长取季节 fast motion 常量（150ms）+ --ease-standard；尊重系统减动效。
+ */
+@keyframes menu-pop-in {
+  from { opacity: 0; transform: scale(0.96) translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+.menu-pop {
+  transform-origin: top right;
+  animation: menu-pop-in 150ms var(--ease-standard, cubic-bezier(0.2, 0.8, 0.2, 1));
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu-pop { animation: none; }
 }
 
 /* Custom Scrollbar - Glass Style */

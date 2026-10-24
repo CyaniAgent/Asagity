@@ -5,7 +5,7 @@ import { useSystemStore } from "@/stores/system";
 import { useWelcomeStore } from "@/stores/welcome";
 import { useThemeStore } from "@/stores/theme";
 import { useI18n } from "@/components/providers/I18nProvider";
-import { useInstanceMeta } from "./useInstanceMeta";
+import { useInstanceMeta, type InstanceStats } from "./useInstanceMeta";
 import type { WelcomeStatusItemConfig } from "./welcomeConfig";
 
 export interface StatusItem {
@@ -13,6 +13,8 @@ export interface StatusItem {
   value: string;
   /** "green" = real live value, "gray" = unknown (backend field missing), "red" = offline */
   status?: "green" | "gray" | "red";
+  /** "count" = promoted to the big stat strip above the panel (hidden from chips) */
+  kind?: "count" | "status";
 }
 
 export interface WelcomeStatusBarProps {
@@ -25,26 +27,27 @@ export function WelcomeStatusBar({ items }: WelcomeStatusBarProps) {
   const isDark = useThemeStore(
     (s) => s.preference === "dark" || (s.preference === "system" && s.systemPreference === "dark")
   );
-  const resolved = useWelcomeStatusItems();
+  const stats = useInstanceMeta();
+  const resolved = useWelcomeStatusItems(stats);
   return <StatusPills items={items ?? resolved} isDark={isDark} />;
 }
 
 /**
  * Resolves the store's status config with live values.
- * Shared by the floating status bar AND the welcome panel's internal status row.
+ * Shared by the floating status bar AND the welcome panel's internal chips.
+ * `stats` is injected by the caller (the panel already polls via useInstanceMeta).
  */
-export function useWelcomeStatusItems(): StatusItem[] {
+export function useWelcomeStatusItems(stats: InstanceStats): StatusItem[] {
   const { t } = useI18n();
   const storeItems = useWelcomeStore((s) => s.statusItems);
   const isBackendOnline = useSystemStore((s) => s.isBackendOnline);
-  const online = useInstanceMeta();
 
   return useMemo(
     () =>
       storeItems.map((item) =>
-        resolveStatusItem(item, { t, online, isBackendOnline })
+        resolveStatusItem(item, { t, online: stats.online, isBackendOnline })
       ),
-    [storeItems, online, isBackendOnline, t]
+    [storeItems, stats.online, isBackendOnline, t]
   );
 }
 
@@ -56,17 +59,18 @@ function resolveStatusItem(
   const label = ctx.t(item.labelKey);
   switch (item.source.kind) {
     case "static":
-      return { label, value: item.source.value, status: item.source.status };
+      return { label, value: item.source.value, status: item.source.status, kind: "status" };
     case "onlineCount":
-      // No backend field yet → "—" + gray; never fake a live number.
+      // No backend field yet → "—" (rendered "—" in the big strip too, gray until live).
       return ctx.online == null
-        ? { label, value: "—", status: "gray" }
-        : { label, value: ctx.online, status: "green" };
+        ? { label, value: "—", status: "gray", kind: "count" }
+        : { label, value: ctx.online, status: "green", kind: "count" };
     case "backend":
       return {
         label,
         value: ctx.isBackendOnline ? ctx.t("welcome.verseNETNormal") : ctx.t("welcome.verseNETDisconnected"),
         status: ctx.isBackendOnline ? "green" : "red",
+        kind: "status",
       };
   }
 }

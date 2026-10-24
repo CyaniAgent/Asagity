@@ -117,7 +117,8 @@
 > `bg-brand` / `text-fg` / `bg-plate` / `bg-sheet` / `bg-popover` / `text-fgdim` /
 > `text-ok` / `text-bad` / `text-warn` / `border-line` / `text-peri` /
 > `rounded-freewin` / `blur-glasslight…glassimmersive`。
-> P3 清扫完成后 `cyan-*` 槽位退役。
+> P3 清扫已完成（2026-10-25）：`cyan-*` 槽位已从 `globals.css` 退役；hover 加深位走
+> `branddeep`（stop 55）、渐变亮端走 `brandlight`（stop 75），旧 `teal-*` 装饰位并入 `ok`（Aurora）。
 
 ### Migration map（Miku → Glacier）
 

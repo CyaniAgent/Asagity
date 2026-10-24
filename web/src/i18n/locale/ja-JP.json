@@ -752,6 +752,7 @@
   },
   "welcome": {
     "aboutInstance": "インスタンスについて",
+    "adPool": "広告プール",
     "authenticateMatrix": "認証マトリックス",
     "authLayer": "認証レイヤー",
     "back": "戻る",
@@ -765,17 +766,19 @@
     "federation": "連合",
     "joinInstance": "インスタンスに参加",
     "loginExisting": "アカウントでログイン",
-    "adPool": "広告プール",
     "more": "もっと...",
     "online": "オンライン",
+    "onlineCount": "オンライン",
     "posts": "投稿",
-    "termity": "Termity",
     "terminal": "ターミナルに入る",
     "terminalPassword": "ターミナルパスワードを入力してください",
+    "termity": "Termity",
+    "totalPosts": "投稿総数",
+    "totalUsers": "ユーザー総数",
     "users": "ユーザー",
     "verseNET": "Verse ネットワーク情報",
-    "verseNETNormal": "正常",
-    "verseNETDisconnected": "切断"
+    "verseNETDisconnected": "切断",
+    "verseNETNormal": "正常"
   },
   "widgets": {
     "addWidget": "ウィジェットを追加",

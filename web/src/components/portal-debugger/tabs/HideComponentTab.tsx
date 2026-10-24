@@ -47,7 +47,7 @@ function ComponentItem({
           ${
             isHidden
               ? "bg-amber-500/10 text-amber-500"
-              : "bg-gray-200/50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 hover:bg-cyan-500/10 hover:text-cyan-500"
+              : "bg-gray-200/50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 hover:bg-brand/10 hover:text-fgaccent"
           }
         `}
         title={isHidden ? "Click to show" : "Click to hide"}
@@ -213,11 +213,11 @@ export const HideComponentTab = memo(function HideComponentTab() {
             <Icon name="arrow_left" fontSize={14} />
           </button>
           <div className="flex items-center gap-1.5 min-w-0">
-            <Icon name="shield" fontSize={14} className="text-cyan-500 shrink-0" />
+            <Icon name="shield" fontSize={14} className="text-fgaccent shrink-0" />
             <span className="text-[12px] font-semibold text-gray-800 dark:text-gray-200 truncate">
               {t("portalDebugger.protectedTitle")}
             </span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 shrink-0">
+            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-brand/10 text-branddeep dark:text-fgaccent shrink-0">
               {protectedNodes.length}
             </span>
           </div>
@@ -302,7 +302,7 @@ export const HideComponentTab = memo(function HideComponentTab() {
       <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1.5 custom-scrollbar">
         {isScanning && nodes.length === 0 && (
           <div className="flex flex-col items-center justify-center py-8 gap-3">
-            <div className="w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-brand border-t-transparent rounded-full animate-spin" />
             <span className="text-[12px] text-gray-400 dark:text-gray-500">
               {t("portalDebugger.scanning")}
             </span>
@@ -332,15 +332,15 @@ export const HideComponentTab = memo(function HideComponentTab() {
       <div className="shrink-0 border-t border-gray-200/30 dark:border-gray-700/30 px-2 py-2">
         <button
           onClick={() => setView("protected")}
-          className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl border border-dashed border-gray-300/60 dark:border-gray-600/60 text-left hover:border-cyan-500/40 hover:bg-cyan-500/5 transition-colors group"
+          className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl border border-dashed border-gray-300/60 dark:border-gray-600/60 text-left hover:border-brand/40 hover:bg-brand/5 transition-colors group"
         >
           <Icon
             name="shield"
             fontSize={15}
-            className="text-gray-400 dark:text-gray-500 group-hover:text-cyan-500 shrink-0 transition-colors"
+            className="text-gray-400 dark:text-gray-500 group-hover:text-fgaccent shrink-0 transition-colors"
           />
           <span className="flex-1 min-w-0">
-            <span className="block text-[12px] font-medium text-gray-600 dark:text-gray-300 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 truncate transition-colors">
+            <span className="block text-[12px] font-medium text-gray-600 dark:text-gray-300 group-hover:text-branddeep dark:group-hover:text-fgaccent truncate transition-colors">
               {t("portalDebugger.protectedTitle")}
             </span>
             <span className="block text-[10px] text-gray-400 dark:text-gray-500 truncate">

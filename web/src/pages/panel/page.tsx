@@ -23,9 +23,9 @@ export default function PanelPage() {
   const { t } = useI18n();
 
   const metrics = [
-    { label: t("panel.totalUsers"), value: "12,482", diff: "+124 (24h)", icon: "group", color: "text-cyan-500", bg: "bg-cyan-500/10" },
+    { label: t("panel.totalUsers"), value: "12,482", diff: "+124 (24h)", icon: "group", color: "text-fgaccent", bg: "bg-brand/10" },
     { label: t("panel.activeSessions"), value: "1,208", diff: t("panel.peakUsers"), icon: "sync", color: "text-amber-500", bg: "bg-amber-500/10" },
-    { label: t("panel.storageUsed"), value: "42.5 TB", diff: t("panel.remainingStorage"), icon: "cloud", color: "text-cyan-600", bg: "bg-cyan-600/10" },
+    { label: t("panel.storageUsed"), value: "42.5 TB", diff: t("panel.remainingStorage"), icon: "cloud", color: "text-branddeep", bg: "bg-branddeep/10" },
     { label: t("panel.uptime"), value: t("panel.uptimeDays"), diff: t("panel.systemHealthy"), icon: "server", color: "text-emerald-500", bg: "bg-emerald-500/10" },
   ];
 
@@ -37,7 +37,7 @@ export default function PanelPage() {
   }));
 
   const storageData = [
-    { name: t("panel.media"), value: 1048, color: "#39C5BB" },
+    { name: t("panel.media"), value: 1048, color: "#2E76B8" },
     { name: t("panel.drive"), value: 735, color: "#0ea5e9" },
     { name: t("panel.database"), value: 580, color: "#8b5cf6" },
     { name: t("panel.cache"), value: 300, color: "#f59e0b" },
@@ -61,8 +61,8 @@ export default function PanelPage() {
       {/* Header */}
       <div className="flex items-center justify-between mt-2 mb-2">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-            <Icon name="dashboard" className="text-cyan-500" fontSize={24} />
+          <div className="w-12 h-12 rounded-full bg-brand/10 flex items-center justify-center border border-brand/20">
+            <Icon name="dashboard" className="text-fgaccent" fontSize={24} />
           </div>
           <div className="flex flex-col">
             <h1 className="text-2xl font-black text-gray-900 dark:text-white tracking-wide">
@@ -78,7 +78,7 @@ export default function PanelPage() {
             <Icon name="download" fontSize={16} />
             <span className="hidden md:inline">{t("panel.exportLogs")}</span>
           </button>
-          <button className="w-10 h-10 rounded-full bg-cyan-500 text-white shadow-md shadow-cyan-500/20 flex items-center justify-center hover:bg-cyan-600 transition-colors">
+          <button className="w-10 h-10 rounded-full bg-brand text-onbrand shadow-md shadow-brand/20 flex items-center justify-center hover:bg-branddeep transition-colors">
             <Icon name="refresh" fontSize={18} />
           </button>
         </div>
@@ -120,7 +120,7 @@ export default function PanelPage() {
               </h3>
               <span className="text-xs font-bold text-gray-500">{t("panel.sevenDayAggregation")}</span>
             </div>
-            <select className="text-sm font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 border-0 rounded-xl px-3 py-1.5 focus:ring-2 focus:ring-cyan-500">
+            <select className="text-sm font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 border-0 rounded-xl px-3 py-1.5 focus:ring-2 focus:ring-brand">
               <option>{t("panel.last7Days")}</option>
               <option>{t("panel.last30Days")}</option>
               <option>{t("panel.thisYear")}</option>
@@ -131,8 +131,8 @@ export default function PanelPage() {
               <AreaChart data={trafficData}>
                 <defs>
                   <linearGradient id="gradientLocal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#39C5BB" stopOpacity={0.6} />
-                    <stop offset="95%" stopColor="#39C5BB" stopOpacity={0.05} />
+                    <stop offset="5%" stopColor="#2E76B8" stopOpacity={0.6} />
+                    <stop offset="95%" stopColor="#2E76B8" stopOpacity={0.05} />
                   </linearGradient>
                   <linearGradient id="gradientFed" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
@@ -162,10 +162,10 @@ export default function PanelPage() {
                   type="monotone"
                   dataKey="local"
                   name={t("panel.localRequests")}
-                  stroke="#39C5BB"
+                  stroke="#2E76B8"
                   strokeWidth={3}
                   fill="url(#gradientLocal)"
-                  dot={{ r: 5, fill: "#39C5BB", strokeWidth: 2, stroke: "#fff" }}
+                  dot={{ r: 5, fill: "#2E76B8", strokeWidth: 2, stroke: "#fff" }}
                 />
                 <Area
                   type="monotone"
@@ -183,7 +183,7 @@ export default function PanelPage() {
 
         {/* Storage Pie Chart */}
         <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl rounded-[32px] border border-white/40 dark:border-gray-700/50 p-6 shadow-sm flex flex-col relative overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-32 h-32 bg-cyan-500/5 rounded-full blur-2xl" />
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-brand/5 rounded-full blur-2xl" />
           <h3 className="font-black text-lg text-gray-900 dark:text-white mb-1">
             {t("panel.storageDistribution")}
           </h3>
@@ -235,7 +235,7 @@ export default function PanelPage() {
               <Icon name="history" className="text-indigo-500" fontSize={20} />
               {t("panel.systemLogs")}
             </h3>
-            <span className="text-xs font-bold text-cyan-600 dark:text-cyan-400 cursor-pointer hover:underline">{t("panel.viewAll")}</span>
+            <span className="text-xs font-bold text-branddeep dark:text-fgaccent cursor-pointer hover:underline">{t("panel.viewAll")}</span>
           </div>
           <div className="flex flex-col gap-4 relative">
             <div className="absolute left-4 top-2 bottom-2 w-px bg-gray-200 dark:bg-gray-700" />
@@ -243,14 +243,14 @@ export default function PanelPage() {
               <div key={i} className="flex gap-4 relative z-10 w-full">
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-[3px] border-white dark:border-gray-900 ${
-                    log.type === "info" ? "bg-cyan-100 text-cyan-500" :
+                    log.type === "info" ? "bg-brand/15 text-fgaccent" :
                     log.type === "warn" ? "bg-amber-100 text-amber-500" :
                     "bg-green-100 text-green-500"
                   }`}
                 >
                   <span
                     className={`w-2.5 h-2.5 rounded-full ${
-                      log.type === "info" ? "bg-cyan-500" :
+                      log.type === "info" ? "bg-brand" :
                       log.type === "warn" ? "bg-amber-500" :
                       "bg-green-500"
                     }`}
@@ -276,10 +276,10 @@ export default function PanelPage() {
             <div className="flex flex-col gap-2">
               <div className="flex justify-between items-end">
                 <span className="text-sm font-bold text-gray-700 dark:text-gray-300">CPU Load (16 Cores)</span>
-                <span className="text-xs font-black text-cyan-600 dark:text-cyan-400">12%</span>
+                <span className="text-xs font-black text-branddeep dark:text-fgaccent">12%</span>
               </div>
               <div className="h-3 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden shadow-inner">
-                <div className="h-full bg-gradient-to-r from-cyan-400 to-cyan-500 rounded-full w-[12%] animate-pulse" />
+                <div className="h-full bg-gradient-to-r from-brandlight to-brand rounded-full w-[12%] animate-pulse" />
               </div>
             </div>
             {/* RAM */}

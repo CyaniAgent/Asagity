@@ -83,7 +83,7 @@ function MfmNodeRenderer({ node }: { node: MfmNode }) {
 
     case "mention":
       return (
-        <span className="text-cyan-500 cursor-pointer hover:underline">
+        <span className="text-fgaccent cursor-pointer hover:underline">
           @{node.props.username}
           {node.props.host ? `@${node.props.host}` : ""}
         </span>
@@ -91,7 +91,7 @@ function MfmNodeRenderer({ node }: { node: MfmNode }) {
 
     case "hashtag":
       return (
-        <span className="text-cyan-500 cursor-pointer hover:underline">
+        <span className="text-fgaccent cursor-pointer hover:underline">
           #{node.props.hashtag}
         </span>
       );

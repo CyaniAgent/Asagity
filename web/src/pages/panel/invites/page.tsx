@@ -32,15 +32,15 @@ export default function PanelInvitesPage() {
     <div className="flex flex-col gap-6 animate-[fadeIn_0.4s_ease-out]">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-            <Icon name="key" className="text-cyan-500" fontSize={20} />
+          <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center border border-brand/20">
+            <Icon name="key" className="text-fgaccent" fontSize={20} />
           </div>
           <div>
             <h1 className="text-xl font-black text-gray-900 dark:text-white">{t("panel.inviteCodes")}</h1>
             <p className="text-xs font-bold text-gray-500">{mockInvites.filter((i) => i.status === "active").length} active</p>
           </div>
         </div>
-        <button className="px-4 py-2 rounded-full text-sm font-bold text-white bg-cyan-500 hover:bg-cyan-600 transition-colors flex items-center gap-2 shadow-md shadow-cyan-500/20">
+        <button className="px-4 py-2 rounded-full text-sm font-bold text-onbrand bg-brand hover:bg-branddeep transition-colors flex items-center gap-2 shadow-md shadow-brand/20">
           <Icon name="add" fontSize={16} />
           {t("panel.generateInviteCode")}
         </button>
@@ -63,7 +63,7 @@ export default function PanelInvitesPage() {
             <div className="flex items-center gap-4 text-xs text-gray-500">
               {invite.usedBy && <span>{t("panel.used")} {invite.usedBy}</span>}
               <span>{t("panel.expires")} {invite.expiresAt}</span>
-              <button className="text-gray-400 hover:text-cyan-500 transition-colors">
+              <button className="text-gray-400 hover:text-fgaccent transition-colors">
                 <Icon name="copy" fontSize={14} />
               </button>
             </div>

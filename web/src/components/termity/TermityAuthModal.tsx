@@ -132,8 +132,8 @@ export function TermityAuthModal() {
       >
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-            <Icon name="terminal" className="text-cyan-500" fontSize={22} />
+          <div className="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center">
+            <Icon name="terminal" className="text-fgaccent" fontSize={22} />
           </div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
             {t("termity.authRequired")}
@@ -192,15 +192,15 @@ export function TermityAuthModal() {
                     shake
                       ? "border-bad bg-badmuted"
                       : filled
-                        ? "border-cyan-500/60 bg-cyan-500/10 text-gray-900 dark:text-white"
+                        ? "border-brand/60 bg-brand/10 text-gray-900 dark:text-white"
                         : isActive
-                          ? "border-cyan-500 bg-white dark:bg-gray-800 scale-105 shadow-sm"
+                          ? "border-brand bg-white dark:bg-gray-800 scale-105 shadow-sm"
                           : "border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800",
                   ].join(" ")}
                 >
                   {ch ??
                     (isActive ? (
-                      <span className="w-0.5 h-5 bg-cyan-500 rounded-full animate-[caretBlink_1s_linear_infinite]" />
+                      <span className="w-0.5 h-5 bg-brand rounded-full animate-[caretBlink_1s_linear_infinite]" />
                     ) : null)}
                 </div>
               );
@@ -223,7 +223,7 @@ export function TermityAuthModal() {
               void requestCodeRef.current();
             }}
             disabled={issuing}
-            className="shrink-0 text-[11px] text-cyan-600 dark:text-cyan-400
+            className="shrink-0 text-[11px] text-branddeep dark:text-fgaccent
               hover:underline disabled:opacity-50 flex items-center gap-1"
           >
             <Icon name="refresh" fontSize={13} />

@@ -101,7 +101,7 @@ export function TermitySessionSelector() {
                 }}
                 onBlur={commitRename}
                 className="flex-1 min-w-0 px-2 py-1.5 rounded-lg text-[12px]
-                  bg-gray-100 dark:bg-gray-800 border border-cyan-500/50
+                  bg-gray-100 dark:bg-gray-800 border border-brand/50
                   text-gray-900 dark:text-white outline-none"
               />
             ) : (
@@ -112,7 +112,7 @@ export function TermitySessionSelector() {
                 }}
                 className={`flex-1 min-w-0 flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-[12px] transition-colors ${
                   isActive
-                    ? "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400"
+                    ? "bg-brand/15 text-branddeep dark:text-fgaccent"
                     : "text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5"
                 }`}
                 role="menuitem"
@@ -179,7 +179,7 @@ export function TermitySessionSelector() {
           text-[13px] text-gray-800 dark:text-white
           hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
       >
-        <Icon name="terminal" className="text-cyan-600 dark:text-cyan-400 shrink-0" fontSize={16} />
+        <Icon name="terminal" className="text-branddeep dark:text-fgaccent shrink-0" fontSize={16} />
         <span className="truncate tracking-wide">{active?.name ?? t("termity.sessionSelector")}</span>
         <Icon name="arrow_drop_down" fontSize={14} className="shrink-0 opacity-60" />
       </button>

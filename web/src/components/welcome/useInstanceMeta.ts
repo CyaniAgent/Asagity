@@ -7,6 +7,15 @@ import { useInstanceStore } from "@/stores/instance";
 const POLL_MS = 30000;
 const TIMEOUT_MS = 5000;
 
+export interface InstanceStats {
+  /** 在线人数 — backend field not shipped yet → null (UI renders "—") */
+  online: string | null;
+  /** 用户总数 */
+  users: string | null;
+  /** 帖子总数 */
+  posts: string | null;
+}
+
 /** Meta response shapes — kept compatible with Termity `info` command parsing. */
 type InstanceMetaBody = {
   ok?: boolean;
@@ -14,37 +23,42 @@ type InstanceMetaBody = {
 };
 type VersionBody = { data?: { version?: string }; version?: string };
 
-/** Field names the backend may use for the online count — first hit wins. */
-function pickOnlineCount(data: unknown): string | null {
+/* Field names the future backend may use — first hit wins. */
+const ONLINE_KEYS = ["online_count", "onlineCount", "online", "onlineUsers", "online_users"];
+const USER_KEYS = ["user_count", "userCount", "users", "total_users", "totalUsers", "accounts", "accounts_count", "user_total"];
+const POST_KEYS = ["post_count", "postCount", "posts", "total_posts", "totalPosts", "statuses_count", "statuses", "post_total"];
+
+/** Digs a numeric/string field out of meta response layers (root / data / stats / statistics). */
+function pickNumberString(data: unknown, keys: string[]): string | null {
   if (typeof data !== "object" || data === null) return null;
   const root = data as Record<string, unknown>;
-  const candidates = [
-    root.online_count,
-    root.onlineCount,
-    root.online,
-    root.onlineUsers,
-    root.online_users,
-    (root.data as Record<string, unknown> | undefined)?.online_count,
-    (root.data as Record<string, unknown> | undefined)?.onlineCount,
-  ];
-  for (const c of candidates) {
-    if (typeof c === "number" && Number.isFinite(c)) return String(c);
-    if (typeof c === "string" && c !== "") return c;
+  const layers: Array<Record<string, unknown>> = [root];
+  for (const nested of ["data", "stats", "statistics"]) {
+    if (root[nested] && typeof root[nested] === "object") {
+      layers.push(root[nested] as Record<string, unknown>);
+    }
+  }
+  for (const key of keys) {
+    for (const layer of layers) {
+      const v = layer[key];
+      if (typeof v === "number" && Number.isFinite(v)) return String(v);
+      if (typeof v === "string" && v !== "") return v;
+    }
   }
   return null;
 }
 
 /**
- * Instance identity hydrator + live online count.
+ * Instance identity hydrator + live stats poller.
  *
  * Identity — one-shot from /api/meta/instance + /api/meta/version:
  *   hydrates the instance store so the welcome panel (and Termity) show
  *   backend-controlled values instead of developer fallback defaults.
- * Online — polled; stays `null` until the backend ships an online field,
- *   so the UI renders "—" with a gray dot instead of a fake number.
+ * Stats — polled every 30s; any missing field stays `null` so the UI can
+ *   render "—" instead of fake numbers (online turns green once known).
  */
-export function useInstanceMeta(): string | null {
-  const [online, setOnline] = useState<string | null>(null);
+export function useInstanceMeta(): InstanceStats {
+  const [stats, setStats] = useState<InstanceStats>({ online: null, users: null, posts: null });
 
   useEffect(() => {
     let alive = true;
@@ -67,17 +81,24 @@ export function useInstanceMeta(): string | null {
       if (version) useInstanceStore.getState().setVersion(version);
     });
 
-    /* ── Online count: polled, honest null ── */
+    /* ── Live stats: polled, honest nulls ── */
     const load = async () => {
       try {
         const res = await fetchBackend("/api/meta/instance", {
           signal: AbortSignal.timeout(TIMEOUT_MS),
         });
         if (!res.ok) return;
-        const hit = pickOnlineCount(await res.json().catch(() => null));
-        if (alive) setOnline(hit);
+        const body = await res.json().catch(() => null);
+        const next: InstanceStats = {
+          online: pickNumberString(body, ONLINE_KEYS),
+          users: pickNumberString(body, USER_KEYS),
+          posts: pickNumberString(body, POST_KEYS),
+        };
+        if (alive && (next.online ?? next.users ?? next.posts) !== null) {
+          setStats(next);
+        }
       } catch {
-        if (alive) setOnline(null); // offline — surface "—" instead of a stale value
+        if (alive) setStats({ online: null, users: null, posts: null });
       }
     };
     load();
@@ -88,5 +109,5 @@ export function useInstanceMeta(): string | null {
     };
   }, []);
 
-  return online;
+  return stats;
 }

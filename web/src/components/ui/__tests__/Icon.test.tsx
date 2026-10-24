@@ -10,9 +10,9 @@ describe("Icon", () => {
   });
 
   it("applies className", () => {
-    render(<Icon name="home" className="text-cyan-500" />);
+    render(<Icon name="home" className="text-fgaccent" />);
     const svg = document.querySelector("svg");
-    expect(svg).toHaveClass("text-cyan-500");
+    expect(svg).toHaveClass("text-fgaccent");
   });
 
   it("applies fontSize style", () => {

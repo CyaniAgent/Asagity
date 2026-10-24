@@ -118,8 +118,8 @@ export function MoreMenuPopover({ open, onClose, triggerRef }: MoreMenuPopoverPr
                     }}
                     className="flex flex-col items-center gap-1.5 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-colors group"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center group-hover:bg-cyan-500/10 group-hover:scale-110 transition-all">
-                      <Icon name={item.icon} className="text-gray-500 group-hover:text-cyan-500 transition-colors" fontSize={20} />
+                    <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center group-hover:bg-brand/10 group-hover:scale-110 transition-all">
+                      <Icon name={item.icon} className="text-gray-500 group-hover:text-fgaccent transition-colors" fontSize={20} />
                     </div>
                     <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
                       {item.label}

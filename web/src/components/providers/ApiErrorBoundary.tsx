@@ -32,7 +32,7 @@ function ApiErrorFallback({ error, onRetry }: ApiErrorFallbackProps) {
       </p>
       <button
         onClick={onRetry}
-        className="px-4 py-2 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-xl text-sm font-medium hover:bg-cyan-500/20 transition-colors"
+        className="px-4 py-2 bg-brand/10 text-branddeep dark:text-fgaccent rounded-xl text-sm font-medium hover:bg-brand/20 transition-colors"
       >
         Retry
       </button>

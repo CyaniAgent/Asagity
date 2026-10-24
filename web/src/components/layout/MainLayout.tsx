@@ -177,7 +177,7 @@ export function MainLayout({ children, notFound }: { children: React.ReactNode; 
                     key={tab.slot}
                     className={`flex items-center gap-1.5 whitespace-nowrap py-1.5 px-3 text-sm transition-all border-b-2 ${
                       splitViewStore.profileTab === tab.slot
-                        ? "border-cyan-500 text-cyan-600 dark:text-cyan-400 font-semibold"
+                        ? "border-brand text-branddeep dark:text-fgaccent font-semibold"
                         : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400"
                     }`}
                     onClick={() => splitViewStore.setProfileTab(tab.slot as typeof splitViewStore.profileTab)}
@@ -194,7 +194,7 @@ export function MainLayout({ children, notFound }: { children: React.ReactNode; 
                   const isBack = tab.to === "__back__";
                   const className = `flex items-center gap-1.5 whitespace-nowrap py-2 px-3 rounded-xl text-sm transition-all ${
                     active
-                      ? "text-cyan-600 dark:text-cyan-400 font-semibold"
+                      ? "text-branddeep dark:text-fgaccent font-semibold"
                       : "text-gray-500 hover:text-gray-700 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5"
                   }`;
 
@@ -238,8 +238,8 @@ export function MainLayout({ children, notFound }: { children: React.ReactNode; 
               {isDevMode && (
                 <>
                   <div className="w-px h-3 bg-gray-300 dark:bg-gray-600 mx-0.5" />
-                  <Icon name="terminal" className="text-cyan-500" fontSize={14} />
-                  <span className="text-[10px] font-normal text-cyan-500">{t("header.inDevelopment")}</span>
+                  <Icon name="terminal" className="text-fgaccent" fontSize={14} />
+                  <span className="text-[10px] font-normal text-fgaccent">{t("header.inDevelopment")}</span>
                 </>
               )}
             </div>
@@ -254,7 +254,7 @@ export function MainLayout({ children, notFound }: { children: React.ReactNode; 
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); togglePlay(); }}
-                className="rounded-full hover:bg-cyan-500/20 p-1 transition-colors"
+                className="rounded-full hover:bg-brand/20 p-1 transition-colors"
               >
                 <Icon name={isPlaying ? "pause" : "play_arrow"} fontSize={16} />
               </button>
@@ -266,7 +266,7 @@ export function MainLayout({ children, notFound }: { children: React.ReactNode; 
               className="flex items-center h-8 px-2 rounded-full bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm hover:scale-105 transition-transform"
               title={`${t("header.current")}${modeLabel}`}
             >
-              <span className={isDark ? "text-cyan-400" : "text-yellow-500"}>
+              <span className={isDark ? "text-fgaccent" : "text-yellow-500"}>
                 <Icon name={preference === "dark" ? "dark_mode" : preference === "light" ? "light_mode" : "settings_brightness"} fontSize={16} />
               </span>
             </button>
@@ -275,7 +275,7 @@ export function MainLayout({ children, notFound }: { children: React.ReactNode; 
             <button
               onClick={() => setIsWidgetsOpen(!isWidgetsOpen)}
               className={`flex items-center justify-center p-2 rounded-xl transition-colors ${
-                isWidgetsOpen ? "text-cyan-500" : "text-gray-500 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5"
+                isWidgetsOpen ? "text-fgaccent" : "text-gray-500 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5"
               }`}
             >
               <Icon name="widgets" fontSize={20} />
@@ -297,13 +297,13 @@ export function MainLayout({ children, notFound }: { children: React.ReactNode; 
             <div className="relative">
               <button
                 onClick={() => username ? router.push(`/user/${username}`) : setUserPopoverOpen(!userPopoverOpen)}
-                className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-cyan-500/50 hover:ring-cyan-500 transition-all cursor-pointer"
+                className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-brand/50 hover:ring-brand transition-all cursor-pointer"
               >
                 {userAvatar ? (
                   <img src={userAvatar} width={32} height={32} className="w-full h-full object-cover" alt="Avatar" />
                 ) : (
-                  <div className="w-full h-full bg-cyan-500/20 flex items-center justify-center">
-                    <Icon name="person" className="text-cyan-500" fontSize={16} />
+                  <div className="w-full h-full bg-brand/20 flex items-center justify-center">
+                    <Icon name="person" className="text-fgaccent" fontSize={16} />
                   </div>
                 )}
               </button>
@@ -324,7 +324,7 @@ export function MainLayout({ children, notFound }: { children: React.ReactNode; 
                     </div>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <Link href="/settings/profile" onClick={() => setUserPopoverOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-cyan-50 dark:hover:bg-cyan-500/10 transition-colors">
+                    <Link href="/settings/profile" onClick={() => setUserPopoverOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-brand/10 transition-colors">
                       <Icon name="settings" fontSize={16} />
                       {t("header.settings")}
                     </Link>

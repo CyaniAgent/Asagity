@@ -20,7 +20,7 @@ export function WidgetShell({ item, isFirst, isLast }: { item: WidgetItem; isFir
     <section className="rounded-2xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 shadow-sm overflow-hidden">
       {/* 标题行 */}
       <div className="flex items-center gap-2 px-3.5 py-2.5">
-        <Icon name={icon} fontSize={16} className="text-cyan-500 shrink-0" />
+        <Icon name={icon} fontSize={16} className="text-fgaccent shrink-0" />
         <span className="flex-1 text-[13px] font-semibold text-gray-800 dark:text-gray-100 truncate">
           {title}
         </span>

@@ -59,7 +59,7 @@ export const Sidebar = memo(forwardRef<HTMLDivElement, SidebarProps>(function Si
         </div>
         <div className="absolute left-20 opacity-0 group-hover/logo:opacity-100 translate-x-[-10px] group-hover/logo:translate-x-0 transition-all duration-300 pointer-events-none z-50">
           <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl px-4 py-2.5 rounded-2xl border border-white/20 dark:border-gray-800 shadow-2xl flex flex-col min-w-[140px]">
-            <span className="text-[10px] font-normal text-cyan-500 mb-1">{t("sidebar.thisInstance")}</span>
+            <span className="text-[10px] font-normal text-fgaccent mb-1">{t("sidebar.thisInstance")}</span>
             <span className="text-sm font-normal text-gray-900 dark:text-white leading-tight">{instanceStore.name}</span>
           </div>
         </div>
@@ -98,7 +98,7 @@ export const Sidebar = memo(forwardRef<HTMLDivElement, SidebarProps>(function Si
                   href={item.to}
                   className={`flex items-center gap-4 px-4 py-2.5 rounded-2xl transition-colors font-normal group/nav ${
                     isActive
-                      ? "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
+                      ? "bg-brand/10 text-branddeep dark:text-fgaccent"
                       : "hover:bg-black/5 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300"
                   }`}
                 >
@@ -122,13 +122,13 @@ export const Sidebar = memo(forwardRef<HTMLDivElement, SidebarProps>(function Si
       {splitViewStore.isOpen && (
         <div className="px-4 pb-2 shrink-0 animate-[fadeIn_0.3s_ease-out]">
           <div className="text-[10px] font-normal text-gray-400 dark:text-gray-500 mb-2 px-1 flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
             {t("sidebar.activeDisplay")}
           </div>
           <div className="bg-gray-100 dark:bg-gray-800/80 rounded-[20px] p-3 border border-gray-200 dark:border-white/5 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between group cursor-pointer backdrop-blur-md">
             <div className="flex items-center gap-3 overflow-hidden">
               <div className="w-8 h-8 rounded-full bg-white dark:bg-white/10 flex items-center justify-center shrink-0 shadow-sm">
-                <Icon name="arrow_left" className="text-cyan-600 dark:text-cyan-400" fontSize={16} />
+                <Icon name="arrow_left" className="text-branddeep dark:text-fgaccent" fontSize={16} />
               </div>
               <span className="text-sm font-normal text-gray-900 dark:text-white truncate">{t("sidebar.splitView")}</span>
             </div>
@@ -144,7 +144,7 @@ export const Sidebar = memo(forwardRef<HTMLDivElement, SidebarProps>(function Si
 
       {/* Compose Button */}
       <div className="p-4 shrink-0">
-        <button className="w-full justify-center rounded-full shadow-[0_0_15px_rgba(57,197,187,0.5)] transition-all hover:scale-105 hover:shadow-[0_0_25px_rgba(57,197,187,0.8)] font-normal text-base bg-gradient-to-r from-cyan-500 to-cyan-600 text-white py-3 px-4 flex items-center gap-2">
+        <button className="w-full justify-center rounded-full shadow-[0_0_15px_rgba(46,118,184,0.5)] transition-all hover:scale-105 hover:shadow-[0_0_25px_rgba(46,118,184,0.8)] font-normal text-base bg-gradient-to-r from-brand to-branddeep text-white py-3 px-4 flex items-center gap-2">
           <Icon name="send" className="text-white" fontSize={18} />
           {t("sidebar.publish")}
         </button>

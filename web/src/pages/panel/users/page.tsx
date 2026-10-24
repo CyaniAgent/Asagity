@@ -58,15 +58,15 @@ export default function PanelUsersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-            <Icon name="group" className="text-cyan-500" fontSize={20} />
+          <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center border border-brand/20">
+            <Icon name="group" className="text-fgaccent" fontSize={20} />
           </div>
           <div>
             <h1 className="text-xl font-black text-gray-900 dark:text-white">{t("panel.userManagement")}</h1>
             <p className="text-xs font-bold text-gray-500">{filteredUsers.length} users found</p>
           </div>
         </div>
-        <button className="px-4 py-2 rounded-full text-sm font-bold text-white bg-cyan-500 hover:bg-cyan-600 transition-colors flex items-center gap-2 shadow-md shadow-cyan-500/20">
+        <button className="px-4 py-2 rounded-full text-sm font-bold text-onbrand bg-brand hover:bg-branddeep transition-colors flex items-center gap-2 shadow-md shadow-brand/20">
           <Icon name="add" fontSize={16} />
           {t("panel.addUser")}
         </button>
@@ -81,13 +81,13 @@ export default function PanelUsersPage() {
             placeholder={t("panel.searchUserPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white/60 dark:bg-gray-800/60 border border-white/40 dark:border-gray-700/50 text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+            className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white/60 dark:bg-gray-800/60 border border-white/40 dark:border-gray-700/50 text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/50"
           />
         </div>
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="px-4 py-2.5 rounded-2xl bg-white/60 dark:bg-gray-800/60 border border-white/40 dark:border-gray-700/50 text-sm font-bold text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-cyan-500/50"
+          className="px-4 py-2.5 rounded-2xl bg-white/60 dark:bg-gray-800/60 border border-white/40 dark:border-gray-700/50 text-sm font-bold text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-brand/50"
         >
           <option value="all">{t("panel.allRoles")}</option>
           <option value="admin">{t("panel.admin")}</option>
@@ -97,7 +97,7 @@ export default function PanelUsersPage() {
         <select
           value={originFilter}
           onChange={(e) => setOriginFilter(e.target.value)}
-          className="px-4 py-2.5 rounded-2xl bg-white/60 dark:bg-gray-800/60 border border-white/40 dark:border-gray-700/50 text-sm font-bold text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-cyan-500/50"
+          className="px-4 py-2.5 rounded-2xl bg-white/60 dark:bg-gray-800/60 border border-white/40 dark:border-gray-700/50 text-sm font-bold text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-brand/50"
         >
           <option value="all">{t("panel.allOrigins")}</option>
           <option value="local">{t("panel.local")}</option>
@@ -122,8 +122,8 @@ export default function PanelUsersPage() {
             className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 px-6 py-4 border-b border-gray-100/50 dark:border-gray-800/50 last:border-b-0 hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors cursor-pointer items-center"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center shrink-0">
-                <Icon name="person" className="text-cyan-500" fontSize={18} />
+              <div className="w-10 h-10 rounded-full bg-brand/20 flex items-center justify-center shrink-0">
+                <Icon name="person" className="text-fgaccent" fontSize={18} />
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user.displayName}</p>

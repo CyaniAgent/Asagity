@@ -21,7 +21,7 @@ export default function DriveSettingsPage() {
     <div className="max-w-[700px] mx-auto p-6 space-y-8 animate-[fadeIn_0.3s_ease-out]">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-400 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand to-ok flex items-center justify-center shadow-lg shadow-brand/20">
           <Icon name="cloud" className="text-white" fontSize={24} />
         </div>
         <div>
@@ -34,18 +34,18 @@ export default function DriveSettingsPage() {
       <section className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Icon name="pie_chart" className="text-cyan-500" fontSize={18} />
+            <Icon name="pie_chart" className="text-fgaccent" fontSize={18} />
             {t("settings.storageSpace")}
           </h2>
         </div>
         <div className="p-4 space-y-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-500 dark:text-gray-400">{formatSize(usedBytes)} {t("settings.used")}</span>
-            <span className="font-bold text-cyan-500">{formatSize(maxBytes)} {t("settings.total")}</span>
+            <span className="font-bold text-fgaccent">{formatSize(maxBytes)} {t("settings.total")}</span>
           </div>
           <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-cyan-500 to-teal-400 rounded-full transition-all"
+              className="h-full bg-gradient-to-r from-brand to-ok rounded-full transition-all"
               style={{ width: `${usedPercent}%` }}
             />
           </div>
@@ -56,7 +56,7 @@ export default function DriveSettingsPage() {
       <section className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Icon name="folder" className="text-cyan-500" fontSize={18} />
+            <Icon name="folder" className="text-fgaccent" fontSize={18} />
             {t("settings.fileManagement")}
           </h2>
         </div>
@@ -73,7 +73,7 @@ export default function DriveSettingsPage() {
       <section className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Icon name="settings" className="text-cyan-500" fontSize={18} />
+            <Icon name="settings" className="text-fgaccent" fontSize={18} />
             {t("settings.uploadSettings")}
           </h2>
         </div>
@@ -83,7 +83,7 @@ export default function DriveSettingsPage() {
               <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t("settings.autoCompress")}</div>
               <div className="text-xs text-gray-500 dark:text-gray-400">{t("settings.autoCompressDesc")}</div>
             </div>
-            <div className="w-11 h-6 bg-cyan-500 rounded-full relative">
+            <div className="w-11 h-6 bg-brand rounded-full relative">
               <span className="absolute top-0.5 left-5.5 w-5 h-5 bg-white rounded-full shadow translate-x-5" />
             </div>
           </div>

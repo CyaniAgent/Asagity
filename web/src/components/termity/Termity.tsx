@@ -965,7 +965,7 @@ export function Termity({ windowId, sessionId }: { windowId?: string; sessionId?
       <div ref={containerRef} className="flex-1 overflow-y-auto flex flex-col gap-0.5 pb-4 scrollbar-termity">
         {history.map((line, idx) => (
           <div key={idx} className="whitespace-pre-wrap break-all">
-            {line.type === "input" && <span className="text-cyan-400">&gt; </span>}
+            {line.type === "input" && <span className="text-fgaccent">&gt; </span>}
             <span
               className={
                 line.type === "error"
@@ -985,7 +985,7 @@ export function Termity({ windowId, sessionId }: { windowId?: string; sessionId?
         ))}
 
         <div className="flex items-center mt-1">
-          <span className="text-cyan-400 shrink-0">&gt; </span>
+          <span className="text-fgaccent shrink-0">&gt; </span>
           <div className="relative flex-1 min-w-0 ml-2">
             {/* 指令预测幽灵文本层：与输入框同字体度量，仅显示未输入的后缀 */}
             {suggestSuffix && (

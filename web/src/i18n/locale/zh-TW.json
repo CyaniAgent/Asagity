@@ -752,6 +752,7 @@
   },
   "welcome": {
     "aboutInstance": "關於實例",
+    "adPool": "廣告池",
     "authenticateMatrix": "身份驗證矩陣",
     "authLayer": "認證層",
     "back": "返回",
@@ -765,17 +766,19 @@
     "federation": "聯邦",
     "joinInstance": "加入實例",
     "loginExisting": "已有帳戶登入",
-    "adPool": "廣告池",
     "more": "更多...",
     "online": "線上",
+    "onlineCount": "線上人數",
     "posts": "貼文",
-    "termity": "Termity",
     "terminal": "進入終端",
     "terminalPassword": "請輸入終端密碼",
+    "termity": "Termity",
+    "totalPosts": "貼文總數",
+    "totalUsers": "使用者總數",
     "users": "使用者",
     "verseNET": "Verse 網路資訊",
-    "verseNETNormal": "正常",
-    "verseNETDisconnected": "已斷開"
+    "verseNETDisconnected": "已斷開",
+    "verseNETNormal": "正常"
   },
   "widgets": {
     "addWidget": "新增元件",

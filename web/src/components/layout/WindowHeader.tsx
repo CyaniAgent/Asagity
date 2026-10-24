@@ -108,7 +108,7 @@ export function WindowHeader({
           renderTitle()
         ) : (
           <>
-            <Icon name={getIcon(type, customIcon)} className="text-cyan-600 dark:text-cyan-400 shrink-0" fontSize={16} />
+            <Icon name={getIcon(type, customIcon)} className="text-branddeep dark:text-fgaccent shrink-0" fontSize={16} />
             <span className="text-[13px] font-normal text-gray-800 dark:text-white truncate tracking-wide">
               {getTitle(type, mode, customTitle, t)}
             </span>
@@ -121,7 +121,7 @@ export function WindowHeader({
         {!disableTransfer && (
           <button
             onClick={onRefresh}
-            className={`${BTN} text-gray-500 hover:text-cyan-600 dark:text-gray-400 dark:hover:text-cyan-400 hover:bg-black/5 dark:hover:bg-white/10`}
+            className={`${BTN} text-gray-500 hover:text-branddeep dark:text-gray-400 dark:hover:text-fgaccent hover:bg-black/5 dark:hover:bg-white/10`}
             title={t("common.refresh")}
           >
             <Icon name="refresh" fontSize={14} />

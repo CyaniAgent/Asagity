@@ -82,7 +82,7 @@ export function MusicPlayer() {
         {isLoading && (
           <div className="absolute inset-0 bg-white/60 dark:bg-black/60 backdrop-blur-md z-40 flex items-center justify-center rounded-[28px]">
             <div className="flex flex-col items-center gap-3">
-              <Icon name="refresh" className="w-8 h-8 text-cyan-500 animate-spin" fontSize={32} />
+              <Icon name="refresh" className="w-8 h-8 text-fgaccent animate-spin" fontSize={32} />
               <p className="text-[10px] font-normal tracking-widest text-gray-900/50 dark:text-white/70 uppercase">
                 {t("music.loading")}
               </p>
@@ -140,7 +140,7 @@ export function MusicPlayer() {
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
             />
             <div
-              className="absolute top-0 left-0 h-full rounded-full transition-all duration-300 shadow-[0_0_10px_rgba(57,197,187,0.6)]"
+              className="absolute top-0 left-0 h-full rounded-full transition-all duration-300 shadow-[0_0_10px_rgba(46,118,184,0.6)]"
               style={{
                 width: `${progressPercentage}%`,
                 backgroundColor: themeColor,
@@ -162,7 +162,7 @@ export function MusicPlayer() {
           {/* Shuffle */}
           <button
             className={`w-7 h-7 inline-flex items-center justify-center rounded-full transition-all duration-200 ${
-              shuffle ? "bg-cyan-500/22 shadow-[0_0_8px_rgba(57,197,187,0.2)]" : ""
+              shuffle ? "bg-brand/22 shadow-[0_0_8px_rgba(46,118,184,0.2)]" : ""
             }`}
             style={{ color: shuffle ? textColor : `${textColor}99` }}
             title={t("music.shuffle")}
@@ -228,7 +228,7 @@ export function MusicPlayer() {
           {/* Loop Mode */}
           <button
             className={`w-7 h-7 inline-flex items-center justify-center rounded-full transition-all duration-200 ${
-              loopMode !== "none" ? "bg-cyan-500/22 shadow-[0_0_8px_rgba(57,197,187,0.2)]" : ""
+              loopMode !== "none" ? "bg-brand/22 shadow-[0_0_8px_rgba(46,118,184,0.2)]" : ""
             }`}
             style={{ color: loopMode !== "none" ? textColor : `${textColor}99` }}
             title={loopMode === "one" ? t("music.loopOne") : loopMode === "all" ? t("music.loopAll") : t("music.noLoop")}
@@ -240,7 +240,7 @@ export function MusicPlayer() {
           {/* Lyrics Window Toggle */}
           <button
             className={`w-7 h-7 inline-flex items-center justify-center rounded-full transition-all duration-200 ${
-              isLyricsWindowOpen ? "bg-cyan-500/22 shadow-[0_0_8px_rgba(57,197,187,0.2)]" : ""
+              isLyricsWindowOpen ? "bg-brand/22 shadow-[0_0_8px_rgba(46,118,184,0.2)]" : ""
             }`}
             style={{ color: isLyricsWindowOpen ? textColor : `${textColor}99` }}
             title={t("music.desktopLyrics")}
@@ -252,7 +252,7 @@ export function MusicPlayer() {
           {/* Playlist Toggle */}
           <button
             className={`w-7 h-7 inline-flex items-center justify-center rounded-full transition-all duration-200 ${
-              isPlaylistWindowOpen ? "bg-cyan-500/22 shadow-[0_0_8px_rgba(57,197,187,0.2)]" : ""
+              isPlaylistWindowOpen ? "bg-brand/22 shadow-[0_0_8px_rgba(46,118,184,0.2)]" : ""
             }`}
             style={{ color: isPlaylistWindowOpen ? textColor : `${textColor}99` }}
             title={t("music.playlistQueue")}

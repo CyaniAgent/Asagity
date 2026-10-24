@@ -18,7 +18,7 @@ export function ThemeToggle() {
       className="flex items-center h-8 px-2 rounded-full bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20 dark:border-gray-700/50 shadow-sm hover:scale-105 transition-transform"
       title={`${t("header.current")}${modeLabel}`}
     >
-      <span className={isDark ? "text-cyan-400" : "text-yellow-500"}>
+      <span className={isDark ? "text-fgaccent" : "text-yellow-500"}>
         <Icon name={preference === "dark" ? "dark_mode" : preference === "light" ? "light_mode" : "settings_brightness"} fontSize={16} />
       </span>
     </button>

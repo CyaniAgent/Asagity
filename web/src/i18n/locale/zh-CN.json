@@ -752,6 +752,7 @@
   },
   "welcome": {
     "aboutInstance": "关于实例",
+    "adPool": "广告池",
     "authenticateMatrix": "身份验证矩阵",
     "authLayer": "认证层",
     "back": "返回",
@@ -765,17 +766,19 @@
     "federation": "联邦",
     "joinInstance": "加入实例",
     "loginExisting": "已有账户登录",
-    "adPool": "广告池",
     "more": "更多...",
     "online": "在线",
+    "onlineCount": "在线人数",
     "posts": "帖子",
-    "termity": "Termity",
     "terminal": "进入终端",
     "terminalPassword": "请输入终端密码",
+    "termity": "Termity",
+    "totalPosts": "帖子总数",
+    "totalUsers": "用户总数",
     "users": "用户",
     "verseNET": "Verse 网络信息",
-    "verseNETNormal": "正常",
-    "verseNETDisconnected": "已断开"
+    "verseNETDisconnected": "已断开",
+    "verseNETNormal": "正常"
   },
   "widgets": {
     "addWidget": "添加组件",

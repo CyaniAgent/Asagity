@@ -752,6 +752,7 @@
   },
   "welcome": {
     "aboutInstance": "About Instance",
+    "adPool": "Ad Pool",
     "authenticateMatrix": "Authentication Matrix",
     "authLayer": "Authentication Layer",
     "back": "Back",
@@ -765,17 +766,19 @@
     "federation": "Federation",
     "joinInstance": "Join Instance",
     "loginExisting": "Login with Account",
-    "adPool": "Ad Pool",
     "more": "More...",
     "online": "Online",
+    "onlineCount": "Online",
     "posts": "Posts",
-    "termity": "Termity",
     "terminal": "Enter Terminal",
     "terminalPassword": "Enter terminal password",
+    "termity": "Termity",
+    "totalPosts": "Total Posts",
+    "totalUsers": "Total Users",
     "users": "Users",
     "verseNET": "Verse Network Info",
-    "verseNETNormal": "Normal",
-    "verseNETDisconnected": "Disconnected"
+    "verseNETDisconnected": "Disconnected",
+    "verseNETNormal": "Normal"
   },
   "widgets": {
     "addWidget": "Add widget",
