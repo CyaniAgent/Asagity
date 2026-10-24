@@ -38,8 +38,8 @@ export default function PanelAbusesPage() {
   return (
     <div className="flex flex-col gap-6 animate-[fadeIn_0.4s_ease-out]">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-          <Icon name="flag" className="text-cyan-500" fontSize={20} />
+        <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center border border-brand/20">
+          <Icon name="flag" className="text-fgaccent" fontSize={20} />
         </div>
         <div>
           <h1 className="text-xl font-black text-gray-900 dark:text-white">{t("panel.reportHandling")}</h1>

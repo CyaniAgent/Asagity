@@ -24,7 +24,7 @@ let nextId = 1;
 const uid = () => String(nextId++);
 
 /** Singleton types — only one instance allowed at a time. */
-const SINGLETONS: ViewType[] = ["termity", "auth", "lyrics_window", "playlist_window"];
+const SINGLETONS: ViewType[] = ["termity", "auth", "lyrics_window", "playlist_window", "portal_debugger"];
 
 function makeWindow(viewType: ViewType, extra?: Pick<Window, "browserUrl" | "errorData">): Window {
   return {
@@ -63,6 +63,8 @@ interface FreeWindowState {
   close: (id: string) => void;
   focus: (id: string) => void;
   minimizeOldest: (ids: string[]) => void;
+  /** 单窗最小化 / 恢复（运行管理器用；恢复与 focus 等价） */
+  setMinimized: (id: string, v: boolean) => void;
   triggerRefresh: (id: string) => void;
 }
 
@@ -145,6 +147,17 @@ export const useFreeWindowStore = create<FreeWindowState>()((set, get) => ({
       windows: state.windows.map((w) =>
         ids.includes(w.id) ? { ...w, isMinimized: true } : w,
       ),
+    })),
+
+  /* ── Single-window minimize / restore ──────────────────────────── */
+  setMinimized: (id, v) =>
+    set((state) => ({
+      windows: state.windows.map((w) =>
+        w.id === id
+          ? { ...w, isMinimized: v, lastFocusedAt: v ? w.lastFocusedAt : Date.now() }
+          : w,
+      ),
+      focusedId: v ? state.focusedId : id,
     })),
 
   /* ── Refresh ───────────────────────────────────────────────────── */

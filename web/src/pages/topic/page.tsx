@@ -116,13 +116,13 @@ function MiniSparkline({ data }: { data: number[] }) {
     <svg width={width} height={height} className="overflow-visible">
       <defs>
         <linearGradient id="sparkline-grad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#39C5BB" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#39C5BB" stopOpacity="0" />
+          <stop offset="0%" stopColor="#2E76B8" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#2E76B8" stopOpacity="0" />
         </linearGradient>
       </defs>
       <polyline
         fill="none"
-        stroke="#39C5BB"
+        stroke="#2E76B8"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -174,7 +174,7 @@ export default function TopicPage() {
       <div className="flex items-center justify-between px-4 py-3 shrink-0">
         <div>
           <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Icon name="tag" className="text-cyan-500" fontSize={20} />
+            <Icon name="tag" className="text-fgaccent" fontSize={20} />
             {t("topic.topics")}
           </h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
@@ -192,7 +192,7 @@ export default function TopicPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t("topic.searchTopics")}
-            className="w-full pl-10 pr-4 py-2.5 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md rounded-2xl border border-gray-200/50 dark:border-gray-800/50 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md rounded-2xl border border-gray-200/50 dark:border-gray-800/50 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand/50 transition-all"
           />
         </div>
         <div className="flex items-center gap-1 p-1 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md rounded-2xl border border-gray-200/50 dark:border-gray-800/50">
@@ -202,7 +202,7 @@ export default function TopicPage() {
               onClick={() => setSelectedFilter(f.value)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                 selectedFilter === f.value
-                  ? "bg-cyan-500 text-white shadow-md shadow-cyan-500/25"
+                  ? "bg-brand text-onbrand shadow-md shadow-brand/25"
                   : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
               }`}
             >
@@ -231,18 +231,18 @@ export default function TopicPage() {
                   onClick={() => setExpandedTopicId(isExpanded ? null : topic.id)}
                   className={`relative bg-white/60 dark:bg-gray-800/40 backdrop-blur-sm rounded-3xl border p-5 cursor-pointer transition-all shadow-sm hover:shadow-md group overflow-hidden ${
                     isExpanded
-                      ? "border-cyan-500 shadow-cyan-500/10 ring-1 ring-cyan-500/20"
-                      : "border-gray-100 dark:border-gray-700/50 hover:border-cyan-300 dark:hover:border-cyan-500/50"
+                      ? "border-brand shadow-brand/10 ring-1 ring-brand/20"
+                      : "border-gray-100 dark:border-gray-700/50 hover:border-brandlight dark:hover:border-brand/50"
                   }`}
                 >
                   {/* Top Row */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <span className="text-[11px] font-bold text-gray-400">#</span>
-                      <h3 className="text-[16px] font-bold text-gray-900 dark:text-white group-hover:text-cyan-500 transition-colors">
+                      <h3 className="text-[16px] font-bold text-gray-900 dark:text-white group-hover:text-fgaccent transition-colors">
                         {topic.displayName || topic.name}
                       </h3>
-                      <span className="px-2 py-0.5 bg-cyan-100 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 text-[10px] font-bold rounded-full">
+                      <span className="px-2 py-0.5 bg-brand/15 text-branddeep dark:text-fgaccent text-[10px] font-bold rounded-full">
                         {topic.postsCount}
                       </span>
                     </div>
@@ -255,8 +255,8 @@ export default function TopicPage() {
                   {/* Bottom Row */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full overflow-hidden bg-cyan-500/20 flex items-center justify-center">
-                        <Icon name="person" className="text-cyan-500" fontSize={14} />
+                      <div className="w-7 h-7 rounded-full overflow-hidden bg-brand/20 flex items-center justify-center">
+                        <Icon name="person" className="text-fgaccent" fontSize={14} />
                       </div>
                       <div className="flex flex-col">
                         <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300 truncate max-w-[100px]">
@@ -275,8 +275,8 @@ export default function TopicPage() {
                     <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 space-y-3 max-h-[300px] overflow-y-auto">
                       {topic.posts.map((post) => (
                         <div key={post.id} className="flex gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
-                          <div className="w-8 h-8 rounded-full overflow-hidden bg-cyan-500/20 flex items-center justify-center shrink-0">
-                            <Icon name="person" className="text-cyan-500" fontSize={14} />
+                          <div className="w-8 h-8 rounded-full overflow-hidden bg-brand/20 flex items-center justify-center shrink-0">
+                            <Icon name="person" className="text-fgaccent" fontSize={14} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 mb-1">
@@ -296,7 +296,7 @@ export default function TopicPage() {
                   )}
 
                   {/* Hover Glow */}
-                  <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-gradient-to-br from-cyan-500/5 to-transparent" />
+                  <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-gradient-to-br from-brand/5 to-transparent" />
                 </div>
               );
             })}

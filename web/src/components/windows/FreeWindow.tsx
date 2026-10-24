@@ -18,14 +18,14 @@ const HANDLE_STYLE_BASE: React.CSSProperties = {
   transition: "background-color 150ms",
 };
 const RESIZE_HANDLE_STYLES: Record<string, React.CSSProperties & { className: string }> = {
-  top:          { ...HANDLE_STYLE_BASE, top: 0, left: 4, right: 4, height: 4, cursor: "n-resize",  className: "hover:bg-cyan-500/15" },
-  bottom:       { ...HANDLE_STYLE_BASE, bottom: 0, left: 4, right: 4, height: 4, cursor: "s-resize",  className: "hover:bg-cyan-500/15" },
-  left:         { ...HANDLE_STYLE_BASE, left: 0, top: 4, bottom: 4, width: 4, cursor: "w-resize",   className: "hover:bg-cyan-500/15" },
-  right:        { ...HANDLE_STYLE_BASE, right: 0, top: 4, bottom: 4, width: 4, cursor: "e-resize",   className: "hover:bg-cyan-500/15" },
-  topRight:     { ...HANDLE_STYLE_BASE, top: 0, right: 0, width: 14, height: 14, cursor: "ne-resize", className: "hover:bg-cyan-500/15 rounded-bl" },
-  bottomRight:  { ...HANDLE_STYLE_BASE, bottom: 0, right: 0, width: 14, height: 14, cursor: "se-resize", className: "hover:bg-cyan-500/15 rounded-tl" },
-  bottomLeft:   { ...HANDLE_STYLE_BASE, bottom: 0, left: 0, width: 14, height: 14, cursor: "sw-resize", className: "hover:bg-cyan-500/15 rounded-tr" },
-  topLeft:      { ...HANDLE_STYLE_BASE, top: 0, left: 0, width: 14, height: 14, cursor: "nw-resize", className: "hover:bg-cyan-500/15 rounded-br" },
+  top:          { ...HANDLE_STYLE_BASE, top: 0, left: 4, right: 4, height: 4, cursor: "n-resize",  className: "hover:bg-brand/15" },
+  bottom:       { ...HANDLE_STYLE_BASE, bottom: 0, left: 4, right: 4, height: 4, cursor: "s-resize",  className: "hover:bg-brand/15" },
+  left:         { ...HANDLE_STYLE_BASE, left: 0, top: 4, bottom: 4, width: 4, cursor: "w-resize",   className: "hover:bg-brand/15" },
+  right:        { ...HANDLE_STYLE_BASE, right: 0, top: 4, bottom: 4, width: 4, cursor: "e-resize",   className: "hover:bg-brand/15" },
+  topRight:     { ...HANDLE_STYLE_BASE, top: 0, right: 0, width: 14, height: 14, cursor: "ne-resize", className: "hover:bg-brand/15 rounded-bl" },
+  bottomRight:  { ...HANDLE_STYLE_BASE, bottom: 0, right: 0, width: 14, height: 14, cursor: "se-resize", className: "hover:bg-brand/15 rounded-tl" },
+  bottomLeft:   { ...HANDLE_STYLE_BASE, bottom: 0, left: 0, width: 14, height: 14, cursor: "sw-resize", className: "hover:bg-brand/15 rounded-tr" },
+  topLeft:      { ...HANDLE_STYLE_BASE, top: 0, left: 0, width: 14, height: 14, cursor: "nw-resize", className: "hover:bg-brand/15 rounded-br" },
 };
 
 interface FreeWindowProps {
@@ -35,6 +35,8 @@ interface FreeWindowProps {
   type?: ViewType;
   initialWidth?: number;
   initialHeight?: number;
+  minWidth?: number;
+  minHeight?: number;
   resizable?: boolean;
   disableTransfer?: boolean;
   disableMaximize?: boolean;
@@ -43,6 +45,8 @@ interface FreeWindowProps {
   onFocus?: () => void;
   onRefresh?: () => void;
   onSwitchMode?: () => void;
+  /** 自定义标题渲染（用于 Termity 的 Session 选择器等） */
+  renderTitle?: () => React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -53,6 +57,8 @@ export function FreeWindow({
   type,
   initialWidth = 450,
   initialHeight = 600,
+  minWidth = 300,
+  minHeight = 200,
   resizable = true,
   disableTransfer = false,
   disableMaximize = false,
@@ -61,6 +67,7 @@ export function FreeWindow({
   onFocus,
   onRefresh,
   onSwitchMode,
+  renderTitle,
   children,
 }: FreeWindowProps) {
   const [isMaximized, setIsMaximized] = useState(false);
@@ -68,10 +75,13 @@ export function FreeWindow({
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [size, setSize] = useState({ width: initialWidth, height: initialHeight });
   const [mounted, setMounted] = useState(false);
+  // 缩放增量基准：onResize 逐帧用 ref 算 delta，避免 state 闭包过期
+  const sizeRef = useRef({ width: initialWidth, height: initialHeight });
 
   const [visible, setVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [restoreAnim, setRestoreAnim] = useState(false);
+  const [contentScrolled, setContentScrolled] = useState(false);
   const timersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
   const rafRef = useRef<number>(0);
 
@@ -87,14 +97,25 @@ export function FreeWindow({
     return id;
   }, []);
 
-  /* ── 初始化：居中 + 挂载标记 ──────────────────────────────── */
+  /* ── 初始化：按视口适配缩放 + 居中 + 挂载标记 ────────── */
   useEffect(() => {
     setMounted(true);
+    const MARGIN = 32;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    // 可用空间（兜底 200，避免极端小屏算出负数）
+    const availW = Math.max(200, vw - MARGIN);
+    const availH = Math.max(200, vh - MARGIN);
+    // 理想尺寸先满足 min，再钳进视口：大屏=初始值，小屏=按屏收缩
+    const w = Math.min(Math.max(initialWidth, minWidth), availW);
+    const h = Math.min(Math.max(initialHeight, minHeight), availH);
+    setSize({ width: Math.floor(w), height: Math.floor(h) });
+    sizeRef.current = { width: Math.floor(w), height: Math.floor(h) };
     setPosition({
-      x: Math.max(0, (window.innerWidth - initialWidth) / 2),
-      y: Math.max(0, (window.innerHeight - initialHeight) / 2),
+      x: Math.max(0, (vw - w) / 2),
+      y: Math.max(0, (vh - h) / 2),
     });
-  }, [initialWidth, initialHeight]);
+  }, [initialWidth, initialHeight, minWidth, minHeight]);
 
   useEffect(() => {
     return () => {
@@ -247,11 +268,24 @@ export function FreeWindow({
     >
       <Resizable
         size={isMaximized ? { width: w, height: h } : { width: size.width, height: size.height }}
-        onResize={(_event, _direction, elementRef) => {
+        onResize={(_event, direction, elementRef) => {
           const newW = parseInt(elementRef.style.width, 10);
           const newH = parseInt(elementRef.style.height, 10);
-          if (!isNaN(newW) && !isNaN(newH)) {
-            setSize({ width: newW, height: newH });
+          if (isNaN(newW) || isNaN(newH)) return;
+          // 左/上柄缩放必须同步挪窗口位置，否则视觉上只有右/下在动
+          const dW = sizeRef.current.width - newW;
+          const dH = sizeRef.current.height - newH;
+          sizeRef.current = { width: newW, height: newH };
+          setSize({ width: newW, height: newH });
+          if (dW !== 0 || dH !== 0) {
+            setPosition((p) => ({
+              x: /left/i.test(direction)
+                ? Math.max(-newW + 80, Math.min(window.innerWidth - 80, p.x + dW))
+                : p.x,
+              y: /top/i.test(direction)
+                ? Math.max(0, Math.min(window.innerHeight - 40, p.y + dH))
+                : p.y,
+            }));
           }
         }}
         onResizeStop={(_event, _direction, elementRef) => {
@@ -259,11 +293,13 @@ export function FreeWindow({
           const newH = parseInt(elementRef.style.height, 10);
           if (!isNaN(newW) && !isNaN(newH)) {
             setSize({ width: newW, height: newH });
-            setPosition({ x, y });
+            sizeRef.current = { width: newW, height: newH };
+            // 注意：此处不再 setPosition——onResize 已逐帧补偿到位，
+            // 用渲染闭包的旧 x/y 会把窗口 snap 回错误位置。
           }
         }}
-        minWidth={300}
-        minHeight={200}
+        minWidth={minWidth}
+        minHeight={minHeight}
         enable={!resizable || isMaximized ? false : undefined}
         handleClasses={{
           top: "resize-top", bottom: "resize-bottom",
@@ -283,7 +319,7 @@ export function FreeWindow({
         }}
       >
         <div
-          className="flex flex-col h-full rounded-[30px] border shadow-[0_10px_40px_rgba(0,0,0,0.15)] overflow-hidden bg-white/90 dark:bg-gray-900/90 backdrop-blur-3xl border-gray-200/50 dark:border-gray-800/80"
+          className="flex flex-col h-full rounded-2xl border shadow-[0_10px_40px_rgba(0,0,0,0.15)] overflow-hidden bg-white/90 dark:bg-gray-900/90 backdrop-blur-3xl border-gray-200/50 dark:border-gray-800/80"
         >
           {/* 拖拽手柄 / 标题栏 */}
           <div className={`shrink-0 w-full ${isMaximized ? "cursor-default" : "cursor-grab active:cursor-grabbing"}`}>
@@ -295,6 +331,7 @@ export function FreeWindow({
                 customIcon={icon}
                 isMaximized={isMaximized}
                 isMinimized={isMinimized}
+                scrolled={contentScrolled}
                 disableTransfer={disableTransfer}
                 disableMaximize={disableMaximize}
                 disableMinimize={disableMinimize}
@@ -303,12 +340,19 @@ export function FreeWindow({
                 onToggleMinimize={handleToggleMinimize}
                 onRefresh={onRefresh}
                 onSwitchMode={onSwitchMode}
+                renderTitle={renderTitle}
               />
             </div>
           </div>
 
           {/* 内容区域 */}
-          <div className="flex-1 overflow-auto custom-scrollbar relative flex flex-col">
+          <div
+            className="flex-1 overflow-auto custom-scrollbar relative flex flex-col"
+            onScroll={(e) => {
+              const t = e.currentTarget.scrollTop > 4;
+              setContentScrolled((prev) => (prev === t ? prev : t));
+            }}
+          >
             {children}
           </div>
         </div>

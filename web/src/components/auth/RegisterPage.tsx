@@ -7,6 +7,9 @@
  * 顶部：步骤指示器
  */
 import { useState, useRef, useCallback } from "react";
+import { Button } from "@astryxdesign/core/Button";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { Switch } from "@astryxdesign/core/Switch";
 import { useInstanceStore } from "@/stores/instance";
 import { useUserStore } from "@/stores/user";
 import { useThemeStore } from "@/stores/theme";
@@ -291,9 +294,9 @@ export function RegisterPage() {
                         transition-all duration-300
                         ${
                           isActive
-                            ? "bg-cyan-500 text-white shadow-[0_0_16px_rgba(57,197,187,0.4)]"
+                            ? "bg-brand text-onbrand shadow-[0_0_16px_rgba(46,118,184,0.4)]"
                             : isCompleted
-                              ? "bg-cyan-500/20 text-cyan-400"
+                              ? "bg-brand/20 text-fgaccent"
                               : `${isDark ? "bg-white/5 text-gray-500" : "bg-gray-100 text-gray-400"}`
                         }
                       `}
@@ -307,7 +310,7 @@ export function RegisterPage() {
                     <span
                       className={`
                         mt-2 text-[11px] font-medium whitespace-nowrap
-                        ${isActive ? "text-cyan-400" : isCompleted ? "text-cyan-500/60" : textTertiary}
+                        ${isActive ? "text-fgaccent" : isCompleted ? "text-fgaccent/60" : textTertiary}
                       `}
                     >
                       {s.label}
@@ -319,7 +322,7 @@ export function RegisterPage() {
                     <div
                       className={`
                         w-16 h-[2px] mx-3 mb-6 rounded-full transition-colors duration-300
-                        ${i < step ? "bg-cyan-500/40" : isDark ? "bg-white/10" : "bg-gray-200"}
+                        ${i < step ? "bg-brand/40" : isDark ? "bg-white/10" : "bg-gray-200"}
                       `}
                     />
                   )}
@@ -359,7 +362,7 @@ export function RegisterPage() {
                         key={doc.id}
                         className={`
                           rounded-2xl border overflow-hidden
-                          ${isAgreed ? "border-cyan-500/30 bg-cyan-500/5" : borderColor}
+                          ${isAgreed ? "border-brand/30 bg-brand/5" : borderColor}
                         `}
                       >
                         {/* Doc header */}
@@ -370,32 +373,25 @@ export function RegisterPage() {
                             <Icon
                               name="description"
                               fontSize={16}
-                              className="text-cyan-500"
+                              className="text-fgaccent"
                             />
                             <span className={`text-[13px] font-semibold ${textPrimary}`}>
                               {t(doc.titleKey)}
                             </span>
                             {doc.required && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-500 font-medium">
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-brand/15 text-fgaccent font-medium">
                                 {t("register.required")}
                               </span>
                             )}
                           </div>
                           {isRead && doc.required && (
-                            <button
-                              onClick={() => toggleAgreement(doc.id)}
-                              className={`
-                                w-[42px] h-[24px] rounded-full relative transition-colors duration-200
-                                ${isAgreed ? "bg-cyan-500" : isDark ? "bg-white/15" : "bg-gray-300"}
-                              `}
-                            >
-                              <div
-                                className={`
-                                  absolute top-[2px] w-5 h-5 rounded-full bg-white shadow transition-transform duration-200
-                                  ${isAgreed ? "translate-x-[20px]" : "translate-x-[2px]"}
-                                `}
-                              />
-                            </button>
+                            <Switch
+                              size="md"
+                              value={isAgreed}
+                              label={t(doc.titleKey)}
+                              isLabelHidden
+                              onChange={() => toggleAgreement(doc.id)}
+                            />
                           )}
                           {isRead && !doc.required && (
                             <span className={`text-[10px] ${textTertiary}`}>
@@ -436,23 +432,15 @@ export function RegisterPage() {
 
                 {/* Bottom action */}
                 <div className={`shrink-0 px-6 py-4 border-t ${borderColor}`}>
-                  <button
-                    disabled={!allRequiredAgreed}
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    width="100%"
+                    label={allRequiredAgreed ? t("register.startButton") : t("register.readAllRequired")}
+                    isDisabled={!allRequiredAgreed}
                     onClick={() => goToStep(1)}
-                    className={`
-                      w-full py-3 rounded-full text-[14px] font-bold tracking-wide
-                      transition-all duration-200
-                      ${
-                        allRequiredAgreed
-                          ? "bg-cyan-500 text-white shadow-[0_0_20px_rgba(57,197,187,0.3)] hover:shadow-[0_0_30px_rgba(57,197,187,0.5)] hover:bg-cyan-400 active:scale-[0.98]"
-                          : `${isDark ? "bg-white/5 text-gray-600" : "bg-gray-100 text-gray-400"} cursor-not-allowed`
-                      }
-                    `}
-                  >
-                    {allRequiredAgreed
-                      ? t("register.startButton")
-                      : t("register.readAllRequired")}
-                  </button>
+                    className="glow-accent glow-accent-hover"
+                  />
                 </div>
               </div>
             )}
@@ -521,13 +509,14 @@ export function RegisterPage() {
                     minLength={8}
                     isDark={isDark}
                     suffix={
-                      <button
-                        type="button"
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        icon={<Icon name={showPassword ? "eye_off" : "eye"} fontSize={16} />}
+                        label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                        tooltip={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
                         onClick={() => setShowPassword(!showPassword)}
-                        className={`p-1 rounded-full ${textTertiary} hover:${textSecondary}`}
-                      >
-                        <Icon name={showPassword ? "eye_off" : "eye"} fontSize={16} />
-                      </button>
+                      />
                     }
                     error={
                       password.length > 0 && password.length < 8
@@ -547,16 +536,14 @@ export function RegisterPage() {
                     required
                     isDark={isDark}
                     suffix={
-                      <button
-                        type="button"
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        icon={<Icon name={showConfirmPassword ? "eye_off" : "eye"} fontSize={16} />}
+                        label={showConfirmPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                        tooltip={showConfirmPassword ? t("auth.hidePassword") : t("auth.showPassword")}
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className={`p-1 rounded-full ${textTertiary} hover:${textSecondary}`}
-                      >
-                        <Icon
-                          name={showConfirmPassword ? "eye_off" : "eye"}
-                          fontSize={16}
-                        />
-                      </button>
+                      />
                     }
                     error={
                       confirmPassword.length > 0 && password !== confirmPassword
@@ -568,37 +555,22 @@ export function RegisterPage() {
 
                 {/* Bottom actions */}
                 <div className={`shrink-0 px-6 py-4 border-t ${borderColor} flex gap-3`}>
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    label={t("common.back")}
                     onClick={() => goToStep(0)}
-                    className={`
-                      px-5 py-3 rounded-full text-[13px] font-medium border transition-all
-                      ${borderColor} ${textSecondary} hover:${isDark ? "bg-white/5" : "bg-gray-100"}
-                    `}
-                  >
-                    {t("common.back")}
-                  </button>
-                  <button
-                    disabled={!isFormValid || loading}
+                  />
+                  <Button
+                    variant="primary"
+                    size="md"
+                    width="100%"
+                    label={loading ? t("auth.verifying") : t("register.joinButton")}
+                    isLoading={loading}
+                    isDisabled={!isFormValid}
                     onClick={handleSubmitInfo}
-                    className={`
-                      flex-1 py-3 rounded-full text-[14px] font-bold tracking-wide
-                      transition-all duration-200 flex items-center justify-center gap-2
-                      ${
-                        isFormValid && !loading
-                          ? "bg-cyan-500 text-white shadow-[0_0_20px_rgba(57,197,187,0.3)] hover:shadow-[0_0_30px_rgba(57,197,187,0.5)] hover:bg-cyan-400 active:scale-[0.98]"
-                          : `${isDark ? "bg-white/5 text-gray-600" : "bg-gray-100 text-gray-400"} cursor-not-allowed`
-                      }
-                    `}
-                  >
-                    {loading ? (
-                      <>
-                        <Icon name="refresh" className="animate-spin" fontSize={16} />
-                        {t("auth.verifying")}
-                      </>
-                    ) : (
-                      t("register.joinButton")
-                    )}
-                  </button>
+                    className="glow-accent glow-accent-hover"
+                  />
                 </div>
               </div>
             )}
@@ -607,8 +579,8 @@ export function RegisterPage() {
             {step === 2 && (
               <div className="h-full flex flex-col">
                 <div className="px-6 pt-6 pb-4 text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-cyan-500/15 flex items-center justify-center">
-                    <Icon name="mail" fontSize={28} className="text-cyan-500" />
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-brand/15 flex items-center justify-center">
+                    <Icon name="mail" fontSize={28} className="text-fgaccent" />
                   </div>
                   <h3 className={`text-[15px] font-bold ${textPrimary} mb-1.5`}>
                     {t("register.verifyTitle")}
@@ -639,50 +611,33 @@ export function RegisterPage() {
                   />
 
                   {/* Resend */}
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    label={verifySent ? t("register.codeSent") : t("register.resendCode")}
+                    isDisabled={verifySent}
                     onClick={() => setVerifySent(true)}
-                    className={`text-[12px] font-medium ${verifySent ? textTertiary : "text-cyan-500 hover:text-cyan-400"}`}
-                    disabled={verifySent}
-                  >
-                    {verifySent
-                      ? t("register.codeSent")
-                      : t("register.resendCode")}
-                  </button>
+                  />
                 </div>
 
                 {/* Bottom actions */}
                 <div className={`shrink-0 px-6 py-4 border-t ${borderColor} flex gap-3`}>
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    label={t("common.back")}
                     onClick={() => goToStep(1)}
-                    className={`
-                      px-5 py-3 rounded-full text-[13px] font-medium border transition-all
-                      ${borderColor} ${textSecondary} hover:${isDark ? "bg-white/5" : "bg-gray-100"}
-                    `}
-                  >
-                    {t("common.back")}
-                  </button>
-                  <button
-                    disabled={verifyCode.length !== 8 || loading}
+                  />
+                  <Button
+                    variant="primary"
+                    size="md"
+                    width="100%"
+                    label={loading ? t("auth.verifying") : t("register.finishButton")}
+                    isLoading={loading}
+                    isDisabled={verifyCode.length !== 8}
                     onClick={handleVerify}
-                    className={`
-                      flex-1 py-3 rounded-full text-[14px] font-bold tracking-wide
-                      transition-all duration-200 flex items-center justify-center gap-2
-                      ${
-                        verifyCode.length === 8 && !loading
-                          ? "bg-cyan-500 text-white shadow-[0_0_20px_rgba(57,197,187,0.3)] hover:shadow-[0_0_30px_rgba(57,197,187,0.5)] hover:bg-cyan-400 active:scale-[0.98]"
-                          : `${isDark ? "bg-white/5 text-gray-600" : "bg-gray-100 text-gray-400"} cursor-not-allowed`
-                      }
-                    `}
-                  >
-                    {loading ? (
-                      <>
-                        <Icon name="refresh" className="animate-spin" fontSize={16} />
-                        {t("auth.verifying")}
-                      </>
-                    ) : (
-                      t("register.finishButton")
-                    )}
-                  </button>
+                    className="glow-accent glow-accent-hover"
+                  />
                 </div>
               </div>
             )}
@@ -738,7 +693,7 @@ function M3TextField({
             error
               ? "border-red-500/50"
               : focused
-                ? "border-cyan-500/50 shadow-[0_0_12px_rgba(57,197,187,0.15)]"
+                ? "border-brand/50 shadow-[0_0_12px_rgba(46,118,184,0.15)]"
                 : isDark
                   ? "border-white/10 hover:border-white/20"
                   : "border-gray-200 hover:border-gray-300"
@@ -750,7 +705,7 @@ function M3TextField({
           className={`
             absolute left-11 transition-all duration-200 pointer-events-none z-10
             ${isFloating ? "top-2 text-[10px] font-bold" : "top-1/2 -translate-y-1/2 text-[13px]"}
-            ${error ? "text-red-400" : focused ? "text-cyan-400" : isDark ? "text-gray-500" : "text-gray-400"}
+            ${error ? "text-red-400" : focused ? "text-fgaccent" : isDark ? "text-gray-500" : "text-gray-400"}
           `}
         >
           {label}
@@ -763,7 +718,7 @@ function M3TextField({
             <Icon
               name={icon}
               fontSize={18}
-              className={error ? "text-red-400" : focused ? "text-cyan-500" : isDark ? "text-gray-500" : "text-gray-400"}
+              className={error ? "text-red-400" : focused ? "text-fgaccent" : isDark ? "text-gray-500" : "text-gray-400"}
             />
           </div>
           <input

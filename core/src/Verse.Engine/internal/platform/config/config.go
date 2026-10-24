@@ -101,8 +101,11 @@ func loadEnv() {
 	for _, path := range candidates {
 		absPath, _ := filepath.Abs(path)
 		if _, err := os.Stat(absPath); err == nil {
+			// godotenv.Load does not override real environment variables, so
+			// per-run injections (the Verse tool sets SERVER_PORT and
+			// LITE_SQLITE_PATH) keep priority over the .env file.
 			fmt.Printf("[config] Loading .env from: %s\n", absPath)
-			_ = godotenv.Overload(absPath)
+			_ = godotenv.Load(absPath)
 			return
 		}
 	}

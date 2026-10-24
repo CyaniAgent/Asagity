@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -53,8 +54,19 @@ func OpenLite(cfg config.Config) (*Clients, error) {
 		return nil, fmt.Errorf("lite automigrate: %w", err)
 	}
 
-	if err := seedInitialData(db); err != nil {
-		return nil, fmt.Errorf("lite seed: %w", err)
+	if err := SeedUserGroups(db); err != nil {
+		return nil, fmt.Errorf("lite seed groups: %w", err)
+	}
+
+	created, err := SeedAdministrator(db, LiteDeveloper)
+	if err != nil {
+		return nil, fmt.Errorf("lite seed developer: %w", err)
+	}
+	if created {
+		log.Printf("[db] lite mode: developer account ready — username: %s | email: %s | group: %s | password: %s",
+			LiteDeveloper.Username, LiteDeveloper.Email, AdministratorGroupName, LiteDeveloper.Password)
+	} else {
+		log.Printf("[db] lite mode: administrator account already present, skipping developer seed")
 	}
 
 	return &Clients{

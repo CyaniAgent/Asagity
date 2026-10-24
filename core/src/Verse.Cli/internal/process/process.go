@@ -149,6 +149,29 @@ func mergeEnv(base []string, extra map[string]string) []string {
 	return out
 }
 
+// RSS returns the resident set size of a process in kilobytes (0 when unknown).
+func RSS(pid int) int {
+	if pid <= 0 {
+		return 0
+	}
+	data, err := os.ReadFile(fmt.Sprintf("/proc/%d/status", pid))
+	if err != nil {
+		return 0
+	}
+	for _, line := range strings.Split(string(data), "\n") {
+		if strings.HasPrefix(line, "VmRSS:") {
+			fields := strings.Fields(line)
+			if len(fields) >= 2 {
+				var kb int
+				if _, err := fmt.Sscanf(fields[1], "%d", &kb); err == nil {
+					return kb
+				}
+			}
+		}
+	}
+	return 0
+}
+
 // PortOpen dials host:port within timeout.
 func PortOpen(host, port string, timeout time.Duration) bool {
 	conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), timeout)

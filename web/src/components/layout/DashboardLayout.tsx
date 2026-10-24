@@ -1,4 +1,7 @@
 import type { ReactNode } from "react";
+import { TopBar } from "@/components/topbar/TopBar";
+import { WidgetsArea } from "@/components/widgets/WidgetsArea";
+import { PageManager } from "@/components/pagemanager/PageManager";
 
 /**
  * DashboardLayout - 登录后的主布局框架
@@ -19,22 +22,14 @@ import type { ReactNode } from "react";
 export function DashboardLayout({ children }: { children?: ReactNode }) {
   return (
     <div className="h-screen w-screen flex flex-col bg-gray-100 dark:bg-[#121212] overflow-hidden font-sans">
-      {/* ── 顶部区域：信息与状态栏 / 上侧小组件显示区域 ── */}
-      <header className="h-14 shrink-0 flex items-center justify-center border-b border-dashed border-gray-300 dark:border-gray-700 bg-white/50 dark:bg-white/[0.03]">
-        <span className="text-sm text-gray-400 dark:text-gray-500 select-none">
-          信息与状态栏，上侧小组件显示区域
-        </span>
-      </header>
+      {/* ── 顶部区域：信息与状态栏 ── */}
+      <TopBar />
 
       {/* ── 下方三栏区域 ── */}
       <div className="flex-1 flex min-h-0">
-        {/* 左侧区域：页面管理器 / 配置菜单 */}
-        <aside className="w-64 shrink-0 flex items-center justify-center border-r border-dashed border-gray-300 dark:border-gray-700 bg-white/30 dark:bg-white/[0.02]">
-          <span className="text-sm text-gray-400 dark:text-gray-500 select-none leading-relaxed text-center">
-            页面管理器
-            <br />
-            / 配置菜单
-          </span>
+        {/* 左侧区域：页面管理器 */}
+        <aside className="w-64 shrink-0 min-h-0 bg-white/30 dark:bg-white/[0.02]">
+          <PageManager />
         </aside>
 
         {/* 中央区域：内容区域 */}
@@ -43,10 +38,8 @@ export function DashboardLayout({ children }: { children?: ReactNode }) {
         </main>
 
         {/* 右侧区域：右侧小组件显示区域 */}
-        <aside className="w-72 shrink-0 flex items-center justify-center border-l border-dashed border-gray-300 dark:border-gray-700 bg-white/30 dark:bg-white/[0.02]">
-          <span className="text-sm text-gray-400 dark:text-gray-500 select-none">
-            右侧小组件显示区域
-          </span>
+        <aside className="w-72 shrink-0 min-h-0 bg-white/30 dark:bg-white/[0.02]">
+          <WidgetsArea />
         </aside>
       </div>
     </div>

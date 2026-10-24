@@ -54,8 +54,8 @@ const mockClips: Clip[] = [
 ];
 
 const colorMap: Record<string, { bg: string; text: string; ring: string }> = {
-  cyan: { bg: "bg-cyan-50 dark:bg-cyan-500/10", text: "text-cyan-500", ring: "ring-cyan-500/20" },
-  teal: { bg: "bg-teal-50 dark:bg-teal-500/10", text: "text-teal-500", ring: "ring-teal-500/20" },
+  cyan: { bg: "bg-brand/10", text: "text-fgaccent", ring: "ring-brand/20" },
+  teal: { bg: "bg-ok/10", text: "text-ok", ring: "ring-ok/20" },
   pink: { bg: "bg-pink-50 dark:bg-pink-500/10", text: "text-pink-500", ring: "ring-pink-500/20" },
   amber: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-500", ring: "ring-amber-500/20" },
 };
@@ -98,14 +98,14 @@ export default function BookmarksPage() {
       <div className="flex items-center justify-between px-4 py-3 shrink-0">
         <div>
           <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Icon name="bookmark" className="text-cyan-500" fontSize={20} />
+            <Icon name="bookmark" className="text-fgaccent" fontSize={20} />
             {t("bookmarks.bookmarks")}
           </h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t("bookmarks.description")}</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-teal-400 text-white rounded-full text-sm font-bold shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-105 transition-all"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand to-ok text-onbrand rounded-full text-sm font-bold shadow-lg shadow-brand/25 hover:shadow-brand/40 hover:scale-105 transition-all"
         >
           <Icon name="add" fontSize={16} />
           {t("bookmarks.newBookmark")}
@@ -131,8 +131,8 @@ export default function BookmarksPage() {
                   onClick={() => setSelectedClip(isSelected ? null : clip.id)}
                   className={`relative bg-white/60 dark:bg-gray-800/40 backdrop-blur-sm rounded-3xl border-2 p-5 cursor-pointer transition-all shadow-sm hover:shadow-md group ${
                     isSelected
-                      ? "border-cyan-500 shadow-cyan-500/10"
-                      : "border-gray-100 dark:border-gray-700/50 hover:border-cyan-300 dark:hover:border-cyan-500/50"
+                      ? "border-brand shadow-brand/10"
+                      : "border-gray-100 dark:border-gray-700/50 hover:border-brandlight dark:hover:border-brand/50"
                   }`}
                 >
                   {/* Color Indicator */}
@@ -142,7 +142,7 @@ export default function BookmarksPage() {
 
                   {/* Name + Count */}
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-[16px] font-bold text-gray-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                    <h3 className="text-[16px] font-bold text-gray-900 dark:text-white group-hover:text-branddeep dark:group-hover:text-fgaccent transition-colors">
                       {clip.name}
                     </h3>
                     <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${colors.bg} ${colors.text}`}>
@@ -194,7 +194,7 @@ export default function BookmarksPage() {
                 value={newClipName}
                 onChange={(e) => setNewClipName(e.target.value)}
                 placeholder={t("bookmarks.enterName")}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all"
               />
             </div>
 
@@ -205,7 +205,7 @@ export default function BookmarksPage() {
                 onChange={(e) => setNewClipDesc(e.target.value)}
                 placeholder={t("bookmarks.describePurpose")}
                 rows={3}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all"
               />
             </div>
 
@@ -216,22 +216,22 @@ export default function BookmarksPage() {
                   onClick={() => setNewClipPublic(true)}
                   className={`flex-1 flex items-center gap-2 p-3 rounded-2xl border-2 transition-all ${
                     newClipPublic
-                      ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-500/10"
+                      ? "border-brand bg-brand/10"
                       : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                   }`}
                 >
-                  <Icon name="public" className={newClipPublic ? "text-cyan-500" : "text-gray-400"} fontSize={18} />
+                  <Icon name="public" className={newClipPublic ? "text-fgaccent" : "text-gray-400"} fontSize={18} />
                   <span className="text-sm font-semibold text-gray-900 dark:text-white">{t("bookmarks.public")}</span>
                 </button>
                 <button
                   onClick={() => setNewClipPublic(false)}
                   className={`flex-1 flex items-center gap-2 p-3 rounded-2xl border-2 transition-all ${
                     !newClipPublic
-                      ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-500/10"
+                      ? "border-brand bg-brand/10"
                       : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                   }`}
                 >
-                  <Icon name="lock" className={!newClipPublic ? "text-cyan-500" : "text-gray-400"} fontSize={18} />
+                  <Icon name="lock" className={!newClipPublic ? "text-fgaccent" : "text-gray-400"} fontSize={18} />
                   <span className="text-sm font-semibold text-gray-900 dark:text-white">{t("bookmarks.private")}</span>
                 </button>
               </div>
@@ -247,7 +247,7 @@ export default function BookmarksPage() {
               <button
                 onClick={handleCreate}
                 disabled={!newClipName.trim()}
-                className="flex-1 py-3 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-cyan-500 to-teal-400 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="flex-1 py-3 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-brand to-ok shadow-lg shadow-brand/25 hover:shadow-brand/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 {t("bookmarks.create")}
               </button>

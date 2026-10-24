@@ -1,100 +1,139 @@
+%% Asagity Verse backend architecture — updated 2026-10-25 (Dev).
+%% Reflects the Go→.NET migration mid-state (docs/architecture/tech-stack-audit.md, S1–S4 done).
+%% Layering red line: public API + business modules in .NET; core services (event bus,
+%% websocket push, search, federation) stay in Go. Legend at the bottom marks
+%% live / 501-stub / placeholder-planned components.
+
 flowchart TD
-    subgraph Management [Management Tooling - Verse.Cli]
-        VerseTool["Verse tool\n(Go-based CLI Manager)\nCommands: verse start | stop | restart | status\nApps: verse app list | enable | disable (.aap)"]
-        Runner["runner\n(Dual-process API + Engine\nscheduling & supervision)"]
-        Doctor["doctor\n(Environment & DB\nself-healing diagnostics)"]
-        AppMgr["appmgr\n(AAP application management)"]
+    %% ============ External ============
+    subgraph External["External Layer"]
+        Web["Web Client (React SPA :2000)\n/api/* → Go engine :2048 (primary)\n/api-net/* → .NET API :2050 (mirror + fallback)\n/ws/* → Go engine :2048"]
+        Fediverse["Fediverse Peers\n(Mastodon / Misskey / Pleroma)"]
+    end
+
+    %% ============ Management tooling ============
+    subgraph Management["Verse.Cli — versetool (Go)"]
+        VerseTool["verse CLI\n--mode=databaseless | lite | production\nstart · stop · restart · status · logs\nhealth · doctor · db · app · interactive menu"]
+        Runner["internal/runner\ndual-process supervision:\ngo build verse-engine · dotnet build Verse.Api\ninjects SERVER_PORT + VERSE_API_PORT"]
+        Doctor["internal/doctor\nenvironment + DB self-healing"]
+        ModuleMgr["internal/modulemgr\n.aap app registry (list / enable / disable)"]
+        EngineApi["internal/engineapi + process + mode + config\nCLI ↔ engine client · lifecycle · runtime mode"]
         VerseTool --> Runner
         VerseTool --> Doctor
-        VerseTool --> AppMgr
+        VerseTool --> ModuleMgr
+        VerseTool --> EngineApi
     end
 
-    subgraph External [External Layer]
-        Client["Web Client / Mobile"]
-        Fediverse["Fediverse Peers (Mastodon / Misskey / Pleroma)"]
+    %% ============ .NET side ============
+    subgraph DotNetSide[".NET Side — public API + business modules (src/Verse.slnx)"]
+        Api["Verse.Api (ASP.NET Core :2050, VERSE_API_PORT)\nstatic composition of 9 modules in Program.cs\nDotEnv → JwtMiddleware → ScopeGuardMiddleware\nseeds admin/developer account on boot"]
+        Shared["Verse.Shared\nApiEnvelope · CurrentUser · Scopes\nRequireScope guards (single scope truth: docs/api/permissions.md)"]
+
+        subgraph DotNetModules["Verse.Modules — 9 domains, migration S1–S8"]
+            direction LR
+            InstanceDotNet["Instance — live\nmeta · healthz · admin"]
+            UserDotNet["User — live\nprofile · pubid change + monthly quota"]
+            ShellDotNet["Shell — live\nping · meta · github\ntermity guest-code / guest-verify"]
+            MusicDotNet["Music — live (AAP sample)\nquality-tags"]
+            AuthStub["Auth — 501 stub\nlogin · register · OTP (S5)"]
+            NoteStub["Note — 501 stub\nposts · timeline · search (S6)"]
+            DriveStub["Drive — 501 stub\nSkyline Drive (S6)"]
+            FollowStub["Follow — 501 stub (S6)"]
+            AssetStub["Asset — 501 stub (S6)"]
+        end
+
+        Data["Verse.Data (EF Core)\nprovider follows runtime mode:\nSQLite in-memory (databaseless) · SQLite file (lite) · Npgsql (production)\ncolumn-aligned with GORM, same DB as Go side"]
+        Tests["Verse.Tests (xUnit)\nScope · DataLayer · Seeder · User · GuestCodeBook · CurrentUser"]
+
+        Api --> Shared
+        Api --> DotNetModules
+        DotNetModules --> Data
+        Tests -.-> Data
+        Tests -.-> Shared
     end
 
-    subgraph ApiLayer ["API Layer (src/Verse.Api)"]
-        Api["Verse.Api\n(ASP.NET Core Server :2048)\nProgram.cs dynamically scans & loads Modules"]
-        Middlewares["Middlewares\n(JWT Auth, CORS, VSQL route-resolving)"]
-        Api --> Middlewares
+    %% ============ Go side ============
+    subgraph GoSide["Go Side — Verse.Engine core services (SERVER_PORT :2048)"]
+        EngineMain["cmd/verse-engine → internal/runtime\nsingle daemon entry\n(cmd/api = compat shim, cmd/worker = stub)"]
+        AppPkg["internal/app\nrouter assembly + middleware chain\n/ws/timeline · /ws/notifications · /ws/global\nconnections: activitypub + neolinkage (placeholders)"]
+        Mock["internal/mock\ndatabaseless mock routes"]
+
+        subgraph GoModules["internal/module — 8 live Go modules (source of truth until S5–S8 port)"]
+            direction LR
+            GoAuth["auth"]
+            GoUser["user"]
+            GoInstance["instance"]
+            GoNote["note + search"]
+            GoDrive["drive"]
+            GoFollow["follow"]
+            GoAsset["asset"]
+            GoShell["shell"]
+        end
+
+        Platform["internal/platform\nauthz · jwtx · httpx · config · mode\ndatabase (GORM) · cache · queue · mail · id"]
+        Event["platform/event\nEventBus (16 workers, 100k idempotency)\n+ Valkey EventBridge (cross-node broadcast)"]
+        WSPkg["platform/ws\nchannel subscriptions + push"]
+        Search["platform/search\nBleve (CJK + pinyin) → VSQL (target)"]
+        PkgPlaceholders["pkg/eventbus · vsql · activitypub · websocket\n(doc.go only — reserved for target layering)"]
+
+        EngineMain --> AppPkg
+        AppPkg --> GoModules
+        AppPkg --> Mock
+        GoModules --> Platform
+        Platform --> Event
+        Event --> WSPkg
+        GoNote --> Search
     end
 
-    subgraph Modules ["Modular Domains (src/Verse.Modules)"]
-        AuthMod["Verse.Module.Auth\n(Login, Register, OTP, Device Trust)"]
-        UserMod["Verse.Module.User\n(Profile, pubid, Groups)"]
-        NoteMod["Verse.Module.Note\n(Posts, Repost, Reactions, Trees, VSQL)"]
-        DriveMod["Verse.Module.Drive\n(Skyline Drive, Chunked Upload, Local/S3/WebDAV)"]
-        FollowMod["Verse.Module.Follow\n(Follow, Block, Mute)"]
-        InstanceMod["Verse.Module.Instance\n(Meta, Healthz, Federation Health)"]
-        MusicMod["Verse.Module.Music\n(Player, LRC Lyrics, Quality Tags)"]
+    %% ============ Infrastructure ============
+    subgraph Infra["Persistence + Infrastructure (shared by both sides during migration)"]
+        PG[("PostgreSQL (production mode)\nJSONB federated data\nschema via GORM / EF EnsureCreated\n(storage/migrations currently empty)")]
+        SQLite[("SQLite file (lite mode)")]
+        Valkey[("Valkey (Redis-compatible protocol)\ncache · token rotation\nEventBridge pub/sub · queue")]
+        SearchIdx[("Bleve index\nengine data/search")]
     end
 
-    subgraph ModuleArch ["Module Internal Pattern (Self-developed)"]
-        MRoute["Routes + Handler\n(Thin HTTP Parser)"]
-        MService["Service\n(Thick Business Logic)"]
-        MRepo["Repository + Model\n(Persistence & DTO)"]
-        MEvent["Event Subscription\n(note.created, etc.)"]
-        MRoute --> MService --> MRepo
-        MService -.-> MEvent
-    end
-
-    subgraph Engine ["Go Core Engine (src/Verse.Engine)"]
-        EngineDaemon["cmd/verse-engine\n(Go engine daemon)"]
-        EventBus["pkg/eventbus\n(Async EventBus: 16 Workers, 100k Idempotency)"]
-        EventBridge["pkg/eventbus (Bridge)\n(Redis Pub/Sub Cluster Broadcast)"]
-        VSQL["pkg/vsql\n(VSQL Interpreter + In-House Search)"]
-        ActivityPub["pkg/activitypub\n(ActivityPub & NeoLinkage Adapters)"]
-        WS["pkg/websocket\n(/ws/timeline, /ws/notifications, /ws/global)"]
-        EngineDaemon --> EventBus
-        EngineDaemon --> VSQL
-        EngineDaemon --> ActivityPub
-        EngineDaemon --> WS
-    end
-
-    subgraph Storage ["Persistence & Infrastructures (storage/)"]
-        PG[(PostgreSQL Database\nJSONB Federated Data\nstorage/migrations)]
-        RedisCache[(Redis\nCache, Tokens, Pub/Sub, Queue)]
-        VSQLIndex[(Verse Search Data & Query Index)]
-    end
-
-    %% Management Control
-    Runner -->|"Manages Lifecycle"| Api
-    Runner -->|"Manages Lifecycle"| EngineDaemon
-
-    %% External Connections
-    Client <-->|"HTTP / REST API & WebSocket"| Middlewares
-    Fediverse <-->|"ActivityPub / Verse Protocol"| ActivityPub
-
-    %% Api & Modules
-    Middlewares --> Modules
-
-    %% Modules & Engine
-    AuthMod -.->|"Publish Auth Events"| EventBus
-    UserMod -.->|"Publish User Events"| EventBus
-    NoteMod -.->|"Query & Index"| VSQL
-    NoteMod -.->|"Publish note.created"| EventBus
-    DriveMod -.->|"Storage Backends"| Storage
-    FollowMod -.->|"Publish Follow Events"| EventBus
-    MusicMod -.->|"AAP App Sample"| EventBus
-
-    %% App Environment wiring (third-party Apps are never called "modules")
-    Middlewares -.->|"UI injection (navbar/sidebar/timeline)"| AppSandbox
-    AppSandbox -.->|"Subscribe events only"| EventBus
-    AppMgr -.->|"Install / enable .aap"| ThirdApp
-
-    subgraph AppEnv ["App Environment (Third-party AAP)"]
-        ThirdApp["Third-party App (.aap)\nAsagity Application Package\n(manifest.json + frontend/backend + assets)"]
-        AppSandbox["Sandboxed runtime\n(UI injection + gated APIs)\n(EventBus subscribe only, no direct DB)"]
+    %% ============ AAP (planned) ============
+    subgraph AppEnv["App Environment — third-party AAP (planned, docs/aabp + spike-wazero)"]
+        ThirdApp["Third-party App (.aap)\nmanifest + frontend/backend + assets"]
+        AppSandbox["Sandboxed runtime\ngated APIs + EventBus subscribe-only\nno direct DB access"]
         ThirdApp --> AppSandbox
     end
 
-    %% Engine Inter-connections
-    EventBus <--> EventBridge
-    EventBridge <--> RedisCache
-    EventBus --> WS
+    %% ============ Management control ============
+    Runner -->|"build + supervise"| Api
+    Runner -->|"build + supervise"| EngineMain
+    EngineApi -.->|"engine HTTP client"| EngineMain
 
-    %% Storage Binding
-    MRepo --> PG
-    EventBridge --> RedisCache
-    VSQL --> VSQLIndex
+    %% ============ External traffic ============
+    Web -->|"REST /api (primary)"| AppPkg
+    Web -.->|"/api-net mirror + .NET fallback"| Api
+    Web -->|"WebSocket /ws/*"| AppPkg
+    AppPkg <-->|"ActivityPub (adapter placeholder)"| Fediverse
+
+    %% ============ Data flow ============
+    Platform -->|"GORM"| PG
+    Platform -->|"GORM"| SQLite
+    Data -->|"EF Core · shared DB, single writer per module"| PG
+    Data -->|"EF Core · shared DB"| SQLite
+    Event <-->|"bridge"| Valkey
+    Search --> SearchIdx
+
+    %% ============ AAP wiring (planned) ============
+    ModuleMgr -.->|"install / enable .aap"| ThirdApp
+    AppSandbox -.->|"subscribe-only"| Event
+
+    %% ============ Legend ============
+    subgraph Legend["Legend"]
+        L1["live — running implementation"]
+        L2["501 stub — pending Go→.NET port"]
+        L3["placeholder — target design only"]
+    end
+
+    classDef live fill:#dcfaf7,stroke:#39C5BB,color:#064e3b
+    classDef stub fill:#fff7e0,stroke:#c9a227,stroke-dasharray:5 4,color:#5c4400
+    classDef planned fill:#f1e9ff,stroke:#8b5cf6,stroke-dasharray:3 3,color:#3b2d5f
+
+    class L1,Api,Shared,InstanceDotNet,UserDotNet,ShellDotNet,MusicDotNet,Data,Tests,EngineMain,AppPkg,Mock,GoAuth,GoUser,GoInstance,GoNote,GoDrive,GoFollow,GoAsset,GoShell,Platform,Event,WSPkg,Search live
+    class L2,AuthStub,NoteStub,DriveStub,FollowStub,AssetStub stub
+    class L3,ThirdApp,AppSandbox,PkgPlaceholders,Fediverse planned

@@ -34,8 +34,8 @@ Built on the self-developed **Verse for Asagity** backend engine, leveraging the
 Asagity is built as a symmetric Monorepo, separating the client layer from the server core.
 
 *   **Client (`/web`)**: React 19, Tailwind CSS v4, Zustand.
-*   **Server (`/core`)**: Go + ASP.NET Core, GORM, Asynq (Redis-based task queue).
-*   **Infrastructure**: PostgreSQL (Main database with JSONB), Redis (Cache & Queue).
+*   **Server (`/core`)**: Go + ASP.NET Core, GORM, Asynq (Valkey-based task queue).
+*   **Infrastructure**: PostgreSQL (Main database with JSONB), Valkey (Cache & Queue).
 *   **Container Runtime**: Docker & Podman support with separate container configs.
 
 ## Getting Started
@@ -47,7 +47,7 @@ Asagity is built as a symmetric Monorepo, separating the client layer from the s
 
 ### 1. Setup Infrastructure
 
-Clone the repository and spin up the database and Redis using Docker or Podman:
+Clone the repository and spin up the database and Valkey using Docker or Podman:
 
 ```bash
 git clone https://github.com/CyaniAgent/Asagity.git

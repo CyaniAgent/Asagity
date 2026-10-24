@@ -52,7 +52,7 @@ export default function TopicCreatePage() {
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                 {t("topic.topicName")} <span className="text-red-400">*</span>
               </label>
-              <div className="flex items-center bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 focus-within:ring-2 focus-within:ring-cyan-500/50 focus-within:border-cyan-500 transition-all overflow-hidden">
+              <div className="flex items-center bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 focus-within:ring-2 focus-within:ring-brand/50 focus-within:border-brand transition-all overflow-hidden">
                 <span className="pl-4 pr-2 py-3 text-gray-400 font-bold select-none">#</span>
                 <input
                   type="text"
@@ -75,7 +75,7 @@ export default function TopicCreatePage() {
                 onChange={(e) => setTopicDescription(e.target.value)}
                 rows={4}
                 placeholder={t("topic.describeTopic")}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm resize-none placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm resize-none placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all"
               />
             </div>
 
@@ -87,11 +87,11 @@ export default function TopicCreatePage() {
                   onClick={() => setIsPublic(true)}
                   className={`flex-1 flex items-center gap-3 p-4 rounded-2xl border-2 transition-all ${
                     isPublic
-                      ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-500/10"
+                      ? "border-brand bg-brand/10"
                       : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                   }`}
                 >
-                  <Icon name="public" className={isPublic ? "text-cyan-500" : "text-gray-400"} fontSize={20} />
+                  <Icon name="public" className={isPublic ? "text-fgaccent" : "text-gray-400"} fontSize={20} />
                   <div className="text-left">
                     <span className="block font-bold text-sm text-gray-900 dark:text-white">{t("topic.public")}</span>
                     <span className="block text-xs text-gray-500">{t("topic.visibleToAll")}</span>
@@ -101,11 +101,11 @@ export default function TopicCreatePage() {
                   onClick={() => setIsPublic(false)}
                   className={`flex-1 flex items-center gap-3 p-4 rounded-2xl border-2 transition-all ${
                     !isPublic
-                      ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-500/10"
+                      ? "border-brand bg-brand/10"
                       : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                   }`}
                 >
-                  <Icon name="lock" className={!isPublic ? "text-cyan-500" : "text-gray-400"} fontSize={20} />
+                  <Icon name="lock" className={!isPublic ? "text-fgaccent" : "text-gray-400"} fontSize={20} />
                   <div className="text-left">
                     <span className="block font-bold text-sm text-gray-900 dark:text-white">{t("topic.private")}</span>
                     <span className="block text-xs text-gray-500">{t("topic.onlyVisibleToYou")}</span>
@@ -120,7 +120,7 @@ export default function TopicCreatePage() {
             <button
               onClick={handleSubmit}
               disabled={!topicName.trim() || isSubmitting}
-              className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-teal-400 text-white rounded-full text-sm font-bold shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-brand to-ok text-onbrand rounded-full text-sm font-bold shadow-lg shadow-brand/25 hover:shadow-brand/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {isSubmitting ? (
                 <Icon name="refresh" className="animate-spin" fontSize={16} />

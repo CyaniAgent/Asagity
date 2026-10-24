@@ -6,15 +6,26 @@ import { useUserStore } from "@/stores/user";
 import { FreeWindow } from "@/components/windows/FreeWindow";
 import { startMemoryMonitor } from "@/lib/memoryManager";
 import { useEffect } from "react";
+import { useTermitySessionsStore } from "@/stores/termitySessions";
 
 const Termity = lazy(() =>
   import("@/components/termity/Termity").then((m) => ({ default: m.Termity }))
+);
+const TermitySessionSelector = lazy(() =>
+  import("@/components/termity/TermitySessionSelector").then((m) => ({
+    default: m.TermitySessionSelector,
+  }))
 );
 const LyricsWindow = lazy(() =>
   import("@/components/music/LyricsWindow").then((m) => ({ default: m.LyricsWindow }))
 );
 const PlaylistWindow = lazy(() =>
   import("@/components/music/PlaylistWindow").then((m) => ({ default: m.PlaylistWindow }))
+);
+const PortalDebuggerContent = lazy(() =>
+  import("@/components/portal-debugger/PortalDebuggerContent").then((m) => ({
+    default: m.PortalDebuggerContent,
+  }))
 );
 const AuthForm = lazy(() =>
   import("@/components/auth/AuthForm").then((m) => ({ default: m.AuthForm }))
@@ -32,12 +43,12 @@ const TimelineFeed = lazy(() =>
 function WindowManagerFallback() {
   return (
     <div className="flex items-center justify-center h-full">
-      <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+      <div className="w-6 h-6 border-2 border-brand border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }
 
-function getViewConfig(viewType: string | null) {
+export function getViewConfig(viewType: string | null) {
   switch (viewType) {
     case "error":
       return { title: "系统错误", icon: "error", width: 400, height: 480, disableMaximize: true, disableMinimize: true, disableTransfer: true };
@@ -73,12 +84,14 @@ function getViewConfig(viewType: string | null) {
       return { title: "联邦实例", icon: "globe", width: 500, height: 600, disableMinimize: true };
     case "welcome_dashboard":
       return { title: "数据面板", icon: "dashboard", width: 500, height: 600, disableMinimize: true };
+    case "portal_debugger":
+      return { title: "Portal Debugger", icon: "terminal", width: 1184, height: 756, minWidth: 720, minHeight: 480 };
     default:
       return { title: "Free Window", icon: "tab_move", width: 450, height: 600 };
   }
 }
 
-function renderContent(viewType: string | null, refreshKey: number, browserUrl?: string, windowId?: string) {
+function renderContent(viewType: string | null, refreshKey: number, browserUrl?: string, windowId?: string, sessionId?: string) {
   switch (viewType) {
     case "error":
       return <div className="p-4 text-red-500">系统错误内容</div>;
@@ -97,7 +110,11 @@ function renderContent(viewType: string | null, refreshKey: number, browserUrl?:
     case "browser":
       return <iframe src={browserUrl} className="w-full h-full border-0" title="Browser" />;
     case "termity":
-      return <Suspense fallback={<WindowManagerFallback />}><Termity windowId={windowId!} /></Suspense>;
+      return (
+        <Suspense fallback={<WindowManagerFallback />}>
+          <Termity windowId={windowId!} sessionId={sessionId} />
+        </Suspense>
+      );
     case "lyrics_window":
       return <Suspense fallback={<WindowManagerFallback />}><LyricsWindow /></Suspense>;
     case "playlist_window":
@@ -114,6 +131,8 @@ function renderContent(viewType: string | null, refreshKey: number, browserUrl?:
       return <div className="flex items-center justify-center h-full text-gray-400 text-sm">联邦实例列表开发中</div>;
     case "welcome_dashboard":
       return <div className="flex items-center justify-center h-full text-gray-400 text-sm">数据面板开发中</div>;
+    case "portal_debugger":
+      return <Suspense fallback={<WindowManagerFallback />}><PortalDebuggerContent /></Suspense>;
     default:
       return <div className="p-4 text-gray-500">未知视图类型</div>;
   }
@@ -126,6 +145,8 @@ export function WindowManager() {
   const triggerRefresh = useFreeWindowStore((s) => s.triggerRefresh);
   const isLoggedIn = useUserStore((s) => s.isLoggedIn);
   const isWelcomePage = !isLoggedIn;
+  // Termity 当前激活的 Session（标题栏选择器与终端内容共用）
+  const activeSessionId = useTermitySessionsStore((s) => s.activeId);
 
   // Start memory monitor once
   useEffect(() => {
@@ -149,14 +170,31 @@ export function WindowManager() {
             type={win.viewType}
             initialWidth={config.width}
             initialHeight={config.height}
+            minWidth={(config as { minWidth?: number }).minWidth}
+            minHeight={(config as { minHeight?: number }).minHeight}
             disableMaximize={config.disableMaximize}
             disableMinimize={config.disableMinimize || isWelcomePage}
             disableTransfer={config.disableTransfer || isWelcomePage}
             onClose={() => close(win.id)}
             onFocus={() => focus(win.id)}
             onRefresh={() => triggerRefresh(win.id)}
+            renderTitle={
+              win.viewType === "termity"
+                ? () => (
+                    <Suspense fallback={<span className="text-[13px] text-gray-800 dark:text-white">Session</span>}>
+                      <TermitySessionSelector />
+                    </Suspense>
+                  )
+                : undefined
+            }
           >
-            {renderContent(win.viewType, win.refreshKey, win.browserUrl, win.id)}
+            {renderContent(
+              win.viewType,
+              win.refreshKey,
+              win.browserUrl,
+              win.id,
+              win.viewType === "termity" ? activeSessionId : undefined
+            )}
           </FreeWindow>
         );
       })}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useSystemStore } from "@/stores/system";
 import { useInstanceStore } from "@/stores/instance";
 import { useUserStore } from "@/stores/user";
@@ -8,12 +8,16 @@ import { useFreeWindowStore } from "@/stores/freeWindow";
 import { useLocaleStore, localeNames, type Locale } from "@/stores/locale";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { usePortalDebuggerStore } from "@/stores/portalDebugger";
-import { fetchBackend } from "@/lib/backend";
-
-interface TerminalLine {
-  type: "input" | "output" | "system" | "error" | "warning";
-  text: string;
-}
+import { fetchBackend, fetchShell } from "@/lib/backend";
+import { executeDebugCommand, getDebugCommandNames } from "@/lib/debugCommands";
+import { useTermityHistoryStore } from "@/stores/termityHistory";
+import { findHistorySuggestion, suggestionSuffix, acceptWord } from "@/lib/termitySuggest";
+import { useTermityBuffer } from "@/hooks/useTermityBuffer";
+import {
+  useTermitySessionsStore,
+  MAX_TERMITY_SESSIONS,
+} from "@/stores/termitySessions";
+import type { TerminalLine } from "@/types/termity";
 
 function getCommands(t: (key: string) => string): Record<string, { name: string; description: string; subcommands?: Record<string, string> }> {
   return {
@@ -45,13 +49,12 @@ function getCommands(t: (key: string) => string): Record<string, { name: string;
       name: "Function Switch",
       description: t("termity.cmdFunc"),
       subcommands: {
-        "lang switch {locale}": t("termity.funcSubLangSwitch"),
-        "lang current": t("termity.funcSubLangCurrent"),
-        "enable Develop": t("termity.funcSubDevEnable"),
-        "enable Develop time=meta": t("termity.funcSubDevEnablePersist"),
-        "disable Develop": t("termity.funcSubDevDisable"),
-        "pdebug show": t("termity.funcSubPdebugShow"),
-        "pdebug hide": t("termity.funcSubPdebugHide"),
+        "enable System.Develop [time=meta]": t("termity.funcSubDevEnable"),
+        "disable System.Develop": t("termity.funcSubDevDisable"),
+        "show System.PortalDebugger": t("termity.funcSubPdebugShow"),
+        "hide System.PortalDebugger": t("termity.funcSubPdebugHide"),
+        "switch System.Locale {locale}": t("termity.funcSubLangSwitch"),
+        "current System.Locale": t("termity.funcSubLangCurrent"),
       },
     },
     time: {
@@ -74,6 +77,21 @@ function getCommands(t: (key: string) => string): Record<string, { name: string;
       name: "Exit Termity",
       description: t("termity.cmdExit"),
     },
+    webdbg: {
+      name: "Web Debugger",
+      description: t("termity.cmdWebdbg"),
+      subcommands: {
+        theme: t("termity.webdbgSubTheme"),
+        locale: t("termity.webdbgSubLocale"),
+        notify: t("termity.webdbgSubNotify"),
+        mock: t("termity.webdbgSubMock"),
+        inject: t("termity.webdbgSubInject"),
+        storage: t("termity.webdbgSubStorage"),
+        dispatch: t("termity.webdbgSubDispatch"),
+        eval: t("termity.webdbgSubEval"),
+        fedo: t("termity.webdbgSubFedo"),
+      },
+    },
     remote: {
       name: "Remote Instance",
       description: t("termity.cmdRemote"),
@@ -87,9 +105,10 @@ function getCommands(t: (key: string) => string): Record<string, { name: string;
 
 async function shellFetch(path: string): Promise<{ ok: number; data: unknown }> {
   // Platform-shell gateway: Go engine (:2048) is primary, .NET Verse.Api
-  // (:2050) is the automatic fallback via fetchBackend. This replaces the
-  // previous direct browser -> api.github.com calls (CORS / rate-limit safe).
-  const res = await fetchBackend(path, {
+  // (:2050) is the fallback — on transport failure and on 404 (shell gateway
+  // endpoints such as meta/github/termity/* are .NET-owned per
+  // docs/architecture/tech-stack-audit.md; Go only serves ping/vnet).
+  const res = await fetchShell(path, {
     headers: { Accept: "application/json" },
     signal: AbortSignal.timeout(8000),
   });
@@ -125,7 +144,6 @@ function showSubcommandHelp(
 }
 
 const WEEKDAYS_ZH = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
-const WEEKDAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function parseGMTOffset(gmt: string): number {
   const m = gmt.match(/^(\+|-)?(\d{1,2})(?::(\d{2}))?$/);
@@ -178,24 +196,41 @@ function parseArgs(fullArgs: string): Record<string, string> {
   return result;
 }
 
-export function Termity({ windowId }: { windowId: string }) {
+export function Termity({ windowId, sessionId }: { windowId?: string; sessionId?: string }) {
   const { t } = useI18n();
   const systemStore = useSystemStore();
   const instanceStore = useInstanceStore();
   const userStore = useUserStore();
-  const [history, setHistory] = useState<TerminalLine[]>([
-    { type: "system", text: "Termity [v2.0.0]" },
-    { type: "system", text: 'Type "help" to see available commands.' },
-    { type: "system", text: "" },
-  ]);
-  const [input, setInput] = useState("");
-  const [commandHistory, setCommandHistory] = useState<string[]>([]);
+  // 缓冲后端：传 sessionId → 会话模式（状态存于 termitySessions store）；否则本地模式
+  const buffer = useTermityBuffer(sessionId);
+  const { lines: history, input, historyIndex, setLines: setHistory, setInput, setHistoryIndex, setDraft } = buffer;
+  // 命令历史：持久化到 localStorage（类 bash HISTFILE），全局共享一份
+  const commandHistory = useTermityHistoryStore((s) => s.history);
+  const pushCommandHistory = useTermityHistoryStore((s) => s.push);
   const MAX_HISTORY_LINES = 500;
-  const MAX_COMMAND_HISTORY = 100;
-  const [historyIndex, setHistoryIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const timersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+  // 指令预测（类 zsh-autosuggestions）：内联幽灵文本
+  const [suggestDismissed, setSuggestDismissed] = useState(false);
+  const moveCaretToEndRef = useRef(false);
+  const suggestion = useMemo(
+    () => (suggestDismissed ? null : findHistorySuggestion(commandHistory, input)),
+    [commandHistory, input, suggestDismissed]
+  );
+  const suggestSuffix = useMemo(
+    () => (suggestion ? suggestionSuffix(suggestion, input) : ""),
+    [suggestion, input]
+  );
+
+  // 接受建议后把光标移到行尾
+  useEffect(() => {
+    if (moveCaretToEndRef.current && inputRef.current) {
+      moveCaretToEndRef.current = false;
+      const end = inputRef.current.value.length;
+      inputRef.current.setSelectionRange(end, end);
+    }
+  }, [input]);
 
   const scrollToBottom = useCallback(() => {
     if (containerRef.current) {
@@ -241,11 +276,10 @@ export function Termity({ windowId }: { windowId: string }) {
 
       addLine({ type: "input", text: trimmed });
 
-      setCommandHistory((prev) => {
-        const next = [...prev, trimmed];
-        return next.length > MAX_COMMAND_HISTORY ? next.slice(-MAX_COMMAND_HISTORY) : next;
-      });
+      // 立即落盘（每条命令即写，非登出时写）
+      pushCommandHistory(trimmed);
       setHistoryIndex(-1);
+      setDraft("");
 
       const parts = trimmed.split(/\s+/);
       const root = parts[0].toLowerCase();
@@ -325,18 +359,51 @@ export function Termity({ windowId }: { windowId: string }) {
             showSubcommandHelp(addLine, "Function Switch", COMMANDS.func.subcommands!, t);
             addLine({ type: "output", text: "" });
             addLine({ type: "output", text: `${t("termity.developAdvanced")}:` });
-            addLine({ type: "output", text: `  ${"latest commit".padEnd(35)} │ ${t("termity.devLatestCommit")}` });
-            addLine({ type: "output", text: `  ${"latest release".padEnd(35)} │ ${t("termity.devLatestRelease")}` });
-            addLine({ type: "output", text: `  ${"{ver} commit branch={br}".padEnd(35)} │ ${t("termity.devVerCommit")}` });
-            addLine({ type: "output", text: `  ${"{ver} release branch={br}".padEnd(35)} │ ${t("termity.devVerRelease")}` });
+            addLine({ type: "output", text: `  ${"System.Develop latest commit".padEnd(35)} │ ${t("termity.devLatestCommit")}` });
+            addLine({ type: "output", text: `  ${"System.Develop latest release".padEnd(35)} │ ${t("termity.devLatestRelease")}` });
+            addLine({ type: "output", text: `  ${"System.Develop {ver} commit".padEnd(35)} │ ${t("termity.devVerCommit")}` });
+            addLine({ type: "output", text: `  ${"System.Develop {ver} release".padEnd(35)} │ ${t("termity.devVerRelease")}` });
             break;
           }
-          if (args[0] === "lang") {
-            if (args[1] === "current") {
+          // —— 功能项点分式规范（Type.Name，类 .NET）——
+          // 规范形：func <verb> System.X [args]；查询形：func System.Develop <query>
+          // 旧写法（enable Develop / pdebug … / lang … / Develop …）为废弃别名：仍执行并提示规范形。
+          const FEATURES = ["System.Develop", "System.PortalDebugger", "System.Locale"];
+          let ft = [...args];
+          let legacyTo: string | null = null;
+          {
+            const h = (ft[0] || "").toLowerCase();
+            const s = (ft[1] || "").toLowerCase();
+            if ((h === "enable" || h === "disable") && s === "develop") {
+              ft = [ft[0], "System.Develop", ...ft.slice(2)];
+              legacyTo = `func ${ft[0]} System.Develop${ft.length > 2 ? ` ${ft.slice(2).join(" ")}` : ""}`;
+            } else if (h === "pdebug" && (s === "show" || s === "hide")) {
+              ft = [ft[1], "System.PortalDebugger", ...ft.slice(2)];
+              legacyTo = `func ${ft[0]} System.PortalDebugger`;
+            } else if (h === "lang" && (s === "switch" || s === "current")) {
+              ft = [ft[1], "System.Locale", ...ft.slice(2)];
+              legacyTo = s === "switch" ? "func switch System.Locale {locale}" : "func current System.Locale";
+            } else if (h === "develop") {
+              ft = ["System.Develop", ...ft.slice(1)];
+              legacyTo = `func System.Develop${ft.length > 1 ? ` ${ft.slice(1).join(" ")}` : ""}`;
+            }
+          }
+          const verb = (ft[0] || "").toLowerCase();
+          const feat = (ft[1] || "").toLowerCase();
+          const nudge = () => {
+            if (legacyTo) addLine({ type: "warning", text: t("termity.funcDeprecated", { canonical: legacyTo }) });
+          };
+          const unknownFeature = () => {
+            addLine({ type: "error", text: `${t("termity.unknownCmd")}: func ${args.join(" ")}` });
+            addLine({ type: "output", text: `Available features: ${FEATURES.join(", ")}` });
+          };
+          if (verb === "switch" || verb === "current") {
+            if (feat !== "system.locale") { unknownFeature(); break; }
+            if (verb === "current") {
               const current = useLocaleStore.getState().locale;
               addLine({ type: "output", text: `Current language: ${current} (${localeNames[current]})` });
-            } else if (args[1] === "switch" && args[2]) {
-              const target = args[2] as Locale;
+            } else if (ft[2]) {
+              const target = ft[2] as Locale;
               const supported = ["zh-CN", "zh-TW", "en-US", "ja-JP"];
               if (!supported.includes(target)) {
                 addLine({ type: "error", text: `Unsupported locale: ${target}` });
@@ -349,42 +416,48 @@ export function Termity({ windowId }: { windowId: string }) {
                 addLine({ type: "output", text: `Language switched: ${prev} → ${target} (${localeNames[target]})` });
               }
             } else {
-              addLine({ type: "output", text: 'Usage: func lang switch {locale} | func lang current' });
+              addLine({ type: "output", text: "Usage: func switch System.Locale {locale} | func current System.Locale" });
               addLine({ type: "output", text: `Supported locales: ${Object.keys(localeNames).join(", ")}` });
             }
-          } else if (args[0] === "enable" && args[1] === "Develop") {
-            const subArgs = parseArgs(args.slice(2).join(" "));
-            if (subArgs["time"] === "meta") {
-              userStore.developerEnter();
-              localStorage.setItem("asagity_dev_persistent", "true");
-              addLine({ type: "output", text: "> Developer Entry ENABLED (Persistent)" });
-              addLine({ type: "output", text: `  ${t("termity.devEnabledPersist")}` });
+            nudge();
+          } else if (verb === "enable" || verb === "disable") {
+            if (feat !== "system.develop") { unknownFeature(); break; }
+            if (verb === "enable") {
+              const subArgs = parseArgs(ft.slice(2).join(" "));
+              if (subArgs["time"] === "meta") {
+                userStore.developerEnter();
+                localStorage.setItem("asagity_dev_persistent", "true");
+                addLine({ type: "output", text: "> Developer Entry ENABLED (Persistent)" });
+                addLine({ type: "output", text: `  ${t("termity.devEnabledPersist")}` });
+              } else {
+                userStore.developerEnter();
+                addLine({ type: "output", text: "> Developer Entry ENABLED (Session)" });
+                addLine({ type: "output", text: `  ${t("termity.devEnabledSession")}` });
+              }
             } else {
-              userStore.developerEnter();
-              addLine({ type: "output", text: "> Developer Entry ENABLED (Session)" });
-              addLine({ type: "output", text: `  ${t("termity.devEnabledSession")}` });
+              userStore.logout();
+              localStorage.removeItem("asagity_dev_persistent");
+              addLine({ type: "output", text: "> Developer Account LOGGED OUT" });
+              addLine({ type: "output", text: `  ${t("termity.devDisabled")}` });
             }
-          } else if (args[0] === "disable" && args[1] === "Develop") {
-            userStore.logout();
-            localStorage.removeItem("asagity_dev_persistent");
-            addLine({ type: "output", text: "> Developer Account LOGGED OUT" });
-            addLine({ type: "output", text: `  ${t("termity.devDisabled")}` });
-          } else if (args[0] === "pdebug") {
-            if (args[1] === "show") {
+            nudge();
+          } else if (verb === "show" || verb === "hide") {
+            if (feat !== "system.portaldebugger") { unknownFeature(); break; }
+            if (verb === "show") {
               usePortalDebuggerStore.getState().showEntry();
               addLine({ type: "output", text: `> Portal Debugger: ${t("termity.pdebugShown")}` });
-            } else if (args[1] === "hide") {
+            } else {
               usePortalDebuggerStore.getState().hideEntry();
               addLine({ type: "output", text: `> Portal Debugger: ${t("termity.pdebugHidden")}` });
-            } else {
-              addLine({ type: "output", text: t("termity.pdebugUsage") });
             }
-          } else if (args[0] === "Develop" || args[0] === "develop") {
-            const developCmd = args.slice(1);
+            nudge();
+          } else if (verb === "system.develop") {
+            const developCmd = ft.slice(1);
             const subArgs = parseArgs(developCmd.join(" "));
 
             if (developCmd.length === 0) {
               addLine({ type: "output", text: t("termity.devHelpHint") });
+              nudge();
               break;
             }
 
@@ -469,9 +542,72 @@ export function Termity({ windowId }: { windowId: string }) {
                 });
               } else {
                 addLine({ type: "output", text: t("termity.devUsageVersion") });
-                addLine({ type: "output", text: '      func Develop {version} release branch={branch}' });
+                addLine({ type: "output", text: "      func System.Develop {version} release branch={branch}" });
               }
             }
+            nudge();
+          } else if (verb === "system.session") {
+            // Session 管理（对齐 tmux：list-sessions / new-session / kill-session /
+            // rename-session / switch-client）
+            const sess = useTermitySessionsStore.getState();
+            const action = (ft[2] || "list").toLowerCase();
+            const targetId = ft[3];
+
+            if (action === "list") {
+              addLine({ type: "output", text: `${t("termity.sessionSelector")}:` });
+              sess.order.forEach((id) => {
+                const s = sess.sessions[id];
+                if (!s) return;
+                addLine({
+                  type: "output",
+                  text: `  ${id === sess.activeId ? "*" : " "} ${s.name} (${id})`,
+                });
+              });
+            } else if (action === "new") {
+              const created = sess.createSession(ft[3]);
+              if (!created) {
+                addLine({ type: "error", text: t("termity.sessionLimit", { max: MAX_TERMITY_SESSIONS }) });
+              } else {
+                addLine({ type: "output", text: `> ${t("termity.sessionNew")}: ${sess.sessions[created]?.name ?? created}` });
+              }
+            } else if (action === "close" || action === "kill") {
+              if (!targetId || !sess.sessions[targetId]) {
+                addLine({ type: "error", text: `Usage: func System.Session close {id}` });
+              } else if (sess.order.length <= 1) {
+                addLine({ type: "warning", text: t("termity.sessionKeepOne") });
+              } else {
+                const name = sess.sessions[targetId]?.name;
+                sess.closeSession(targetId);
+                addLine({ type: "output", text: `> ${t("termity.sessionClose")}: ${name ?? targetId}` });
+              }
+            } else if (action === "rename") {
+              const newName = ft.slice(4).join(" ");
+              if (!targetId || !newName) {
+                addLine({ type: "error", text: "Usage: func System.Session rename {id} {name}" });
+              } else {
+                sess.renameSession(targetId, newName);
+                addLine({ type: "output", text: `> ${t("termity.sessionRename")}: ${newName}` });
+              }
+            } else if (action === "switch") {
+              if (!targetId || !sess.sessions[targetId]) {
+                addLine({ type: "error", text: "Usage: func System.Session switch {id}" });
+              } else {
+                sess.switchSession(targetId);
+                addLine({ type: "output", text: `> ${sess.sessions[targetId]?.name ?? targetId}` });
+              }
+            } else {
+              addLine({ type: "error", text: "Usage: func System.Session list|new|close|rename|switch" });
+            }
+          } else if (verb === "system.portaldebugger" || verb === "system.locale") {
+            // 特性前置但非查询型：指回动词优先写法
+            if (verb === "system.locale") {
+              addLine({ type: "output", text: "Usage: func switch System.Locale {locale} | func current System.Locale" });
+            } else {
+              addLine({ type: "output", text: t("termity.pdebugUsage") });
+            }
+          } else {
+            addLine({ type: "error", text: `${t("termity.unknownCmd")}: func ${args.join(" ")}` });
+            addLine({ type: "output", text: t("termity.helpHint") });
           }
           break;
         }
@@ -571,6 +707,11 @@ export function Termity({ windowId }: { windowId: string }) {
 
         case "exit": {
           addLine({ type: "system", text: t("termity.closingSession") });
+          // 嵌入模式（调试器右栏）没有独立 windowId：不关窗，只给提示
+          if (!windowId) {
+            addLine({ type: "output", text: t("termity.exitEmbeddedHint") });
+            break;
+          }
           addTimer(() => {
             useFreeWindowStore.getState().close(windowId);
           }, 300);
@@ -578,7 +719,7 @@ export function Termity({ windowId }: { windowId: string }) {
         }
 
         case "clear": {
-          setHistory([]);
+          setHistory(() => []);
           break;
         }
 
@@ -686,6 +827,41 @@ export function Termity({ windowId }: { windowId: string }) {
           break;
         }
 
+        case "webdbg": {
+          // Web Debugger: Portal Debugger 控制台指令的 Termity 入口，
+          // 隶属 Develop 功能项 —— 未启用开发者模式时不可用。
+          if (!userStore.isLoggedIn) {
+            addLine({ type: "warning", text: t("termity.loginRequired") });
+            break;
+          }
+          if (!userStore.isAdmin) {
+            addLine({ type: "error", text: t("termity.webdbgRequiresDevelop") });
+            addLine({ type: "output", text: t("termity.webdbgEnableHint") });
+            break;
+          }
+          if (args.length === 0 || args[0] === "--help") {
+            showSubcommandHelp(addLine, "Web Debugger", COMMANDS.webdbg.subcommands!, t);
+            break;
+          }
+          const sub = args[0].toLowerCase();
+          if (!getDebugCommandNames().includes(sub)) {
+            addLine({ type: "error", text: `${t("termity.unknownCmd")}: webdbg ${args[0]}` });
+            showSubcommandHelp(addLine, "Web Debugger", COMMANDS.webdbg.subcommands!, t);
+            break;
+          }
+          const { result } = executeDebugCommand(args.join(" "));
+          addLine({
+            type:
+              result.severity === "error"
+                ? "error"
+                : result.severity === "warning"
+                  ? "warning"
+                  : "output",
+            text: result.message,
+          });
+          break;
+        }
+
         default: {
           addLine({ type: "error", text: `${t("termity.unknownCmd")}: ${root}` });
           addLine({ type: "output", text: t("termity.helpHint") });
@@ -694,7 +870,7 @@ export function Termity({ windowId }: { windowId: string }) {
 
       addLine({ type: "system", text: "" });
     },
-    [addLine, systemStore, instanceStore, userStore, t]
+    [addLine, systemStore, instanceStore, userStore, t, windowId]
   );
 
   const handleKeyDown = useCallback(
@@ -702,20 +878,28 @@ export function Termity({ windowId }: { windowId: string }) {
       if (e.key === "Enter") {
         executeCommand(input);
         setInput("");
+        setHistoryIndex(-1);
+        setDraft("");
       } else if (e.key === "ArrowUp") {
+        // ↑ 往更早的方向走；到最旧一条即停住（不循环），与 bash 一致
         e.preventDefault();
         if (commandHistory.length > 0) {
-          const newIndex = historyIndex === -1 ? commandHistory.length - 1 : Math.max(0, historyIndex - 1);
+          if (historyIndex === -1) setDraft(input);
+          const newIndex =
+            historyIndex === -1
+              ? commandHistory.length - 1
+              : Math.max(0, historyIndex - 1);
           setHistoryIndex(newIndex);
           setInput(commandHistory[newIndex]);
         }
       } else if (e.key === "ArrowDown") {
+        // ↓ 往更新的方向走；越过最新一条则回到草稿行
         e.preventDefault();
         if (historyIndex !== -1) {
           const newIndex = historyIndex + 1;
           if (newIndex >= commandHistory.length) {
             setHistoryIndex(-1);
-            setInput("");
+            setInput(buffer.draft);
           } else {
             setHistoryIndex(newIndex);
             setInput(commandHistory[newIndex]);
@@ -723,10 +907,47 @@ export function Termity({ windowId }: { windowId: string }) {
         }
       } else if (e.key === "l" && e.ctrlKey) {
         e.preventDefault();
-        setHistory([]);
+        setHistory(() => []);
+      } else if (e.key === "Escape") {
+        // zsh autosuggest-clear：忽略当前建议（再次编辑输入即恢复）
+        if (suggestion) {
+          e.preventDefault();
+          setSuggestDismissed(true);
+        }
+      } else if (e.key === "ArrowRight" && !e.altKey && !e.ctrlKey && !e.metaKey) {
+        // zsh autosuggest-accept：光标在行尾时按 → 接受整条建议
+        const el = e.currentTarget as HTMLInputElement;
+        const atEnd = el.selectionStart === el.value.length && el.selectionEnd === el.value.length;
+        if (suggestion && atEnd) {
+          e.preventDefault();
+          setInput(suggestion);
+          setSuggestDismissed(true);
+          moveCaretToEndRef.current = true;
+        }
+      } else if ((e.key === "ArrowRight" && (e.altKey || e.ctrlKey)) || (e.key === "e" && e.ctrlKey)) {
+        // zsh autosuggest-accept-word：部分接受（补齐下一个词）
+        if (suggestion) {
+          e.preventDefault();
+          setInput(acceptWord(suggestion, input));
+          setSuggestDismissed(true);
+          moveCaretToEndRef.current = true;
+        }
+      } else if (e.key === "End" && suggestion) {
+        // zsh 默认绑定：end-of-line 接受建议
+        e.preventDefault();
+        setInput(suggestion);
+        setSuggestDismissed(true);
+        moveCaretToEndRef.current = true;
+      } else if (e.key === "Tab" && suggestion) {
+        // 作用域内接管 Tab（仅 Termity 输入框且存在建议时）；
+        // 无建议时不拦截，保留浏览器默认的焦点移动（无障碍要求）。
+        e.preventDefault();
+        setInput(suggestion);
+        setSuggestDismissed(true);
+        moveCaretToEndRef.current = true;
       }
     },
-    [input, executeCommand, commandHistory, historyIndex]
+    [input, executeCommand, commandHistory, historyIndex, suggestion, buffer.draft, setDraft, setHistoryIndex, setInput]
   );
 
   return (
@@ -744,7 +965,7 @@ export function Termity({ windowId }: { windowId: string }) {
       <div ref={containerRef} className="flex-1 overflow-y-auto flex flex-col gap-0.5 pb-4 scrollbar-termity">
         {history.map((line, idx) => (
           <div key={idx} className="whitespace-pre-wrap break-all">
-            {line.type === "input" && <span className="text-cyan-400">&gt; </span>}
+            {line.type === "input" && <span className="text-fgaccent">&gt; </span>}
             <span
               className={
                 line.type === "error"
@@ -764,18 +985,33 @@ export function Termity({ windowId }: { windowId: string }) {
         ))}
 
         <div className="flex items-center mt-1">
-          <span className="text-cyan-400 shrink-0">&gt; </span>
-          <input
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            type="text"
-            className="flex-1 bg-transparent border-none outline-none text-white ml-2 caret-green-500"
-            spellCheck={false}
-            autoComplete="off"
-            autoFocus
-          />
+          <span className="text-fgaccent shrink-0">&gt; </span>
+          <div className="relative flex-1 min-w-0 ml-2">
+            {/* 指令预测幽灵文本层：与输入框同字体度量，仅显示未输入的后缀 */}
+            {suggestSuffix && (
+              <div
+                className="pointer-events-none absolute inset-0 flex items-center overflow-hidden whitespace-pre select-none"
+                aria-hidden="true"
+              >
+                <span className="invisible">{input}</span>
+                <span className="text-gray-600">{suggestSuffix}</span>
+              </div>
+            )}
+            <input
+              ref={inputRef}
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                setSuggestDismissed(false);
+              }}
+              onKeyDown={handleKeyDown}
+              type="text"
+              className="relative w-full bg-transparent border-none outline-none text-white caret-green-500"
+              spellCheck={false}
+              autoComplete="off"
+              autoFocus
+            />
+          </div>
         </div>
       </div>
 

@@ -12,7 +12,7 @@ It records what already exists, what is partially in place, and what should be b
 
 - `core/cmd/api` and `core/cmd/worker` entrypoints exist
 - `core/internal/app` assembles module registration
-- PostgreSQL and Redis are initialized through `internal/platform/database`
+- PostgreSQL and Valkey are initialized through `internal/platform/database`
 - database auto-migration already includes:
   - `instance_settings`
   - `users`
@@ -159,7 +159,7 @@ Partially complete.
 
 - startup split into `cmd/api` and `cmd/worker`
 - shared config loader
-- database and Redis bootstrap
+- database and Valkey bootstrap
 - JSON envelope helpers
 - auth middleware skeleton
 - health check endpoint
@@ -195,7 +195,7 @@ Partially complete.
 - register, login, and me handlers
 - refresh-token rotation with 30min access / 30day refresh
 - logout and logout-all handlers
-- Redis-backed refresh token storage
+- Valkey-backed refresh token storage
 - initial user seeding (username: `instance`, password: `Asagity1234`)
 - host system info endpoint via `/api/system/environment`
 - **register with optional email (two-step verification)**
@@ -411,7 +411,7 @@ GET    /api/search/notes      # Search notes (Bleve)
 
 #### Preview Cards (Open Graph)
 - Synchronous fetch on note creation
-- 30-day cache in Redis
+- 30-day cache in Valkey
 - No card shown on fetch failure
 - Queue job for background refresh
 

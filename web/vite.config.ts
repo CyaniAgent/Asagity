@@ -63,26 +63,30 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
+      // ⚠️ 顺序敏感：Vite 按定义顺序做前缀匹配（first match wins）。
+      // "/api-net"、"/healthz-api" 是 "/api"、"/healthz" 的字符串前缀超集
+      // （"/api-net/..." 以 "/api" 开头），必须先注册；否则镜像路径会被
+      // "/api" 规则劫持到 Go 引擎，fetchBackend/fetchShell 的 .NET 回退全灭。
       // Go verse-engine (:2048) — primary API + health + WebSocket.
       // .NET Verse.Api (:2050) exposes the same /api/* surface,
       // mirrored here under /api-net/* + /healthz-api for dual listening.
-      "/api": {
-        target: "http://localhost:2048",
-        changeOrigin: true,
-      },
       "/api-net": {
         target: "http://localhost:2050",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api-net/, "/api"),
       },
-      "/healthz": {
-        target: "http://localhost:2048",
-        changeOrigin: true,
-      },
       "/healthz-api": {
         target: "http://localhost:2050",
         changeOrigin: true,
         rewrite: () => "/healthz",
+      },
+      "/api": {
+        target: "http://localhost:2048",
+        changeOrigin: true,
+      },
+      "/healthz": {
+        target: "http://localhost:2048",
+        changeOrigin: true,
       },
       // WebSocket 代理
       "/ws": {

@@ -16,7 +16,7 @@ Asagity Verse is the backend server engine for the Asagity platform, powered by 
    - **ASP.NET Core (API & Modules layer)**: Responsible for RESTful APIs, middleware routing, type-safe model binding, dependency injection, and business-domain isolation.
    - **Go (Core Engine)**: Powers the high-performance EventBus, persistent-connection push, ActivityPub federation adapters, and the VSQL semantic interpreter.
 3. **Event-Driven & Hook Mechanism**:
-   - Hard-coded strong dependencies between modules are forbidden. Modules decouple via the Go Core EventBus & Redis EventBridge (e.g. publishing a post fires a `note.created` event that other modules freely subscribe to).
+   - Hard-coded strong dependencies between modules are forbidden. Modules decouple via the Go Core EventBus & Valkey EventBridge (e.g. publishing a post fires a `note.created` event that other modules freely subscribe to).
 4. **In-House Search & VSQL Interpreter**: Drops third-party search dependencies in favor of an in-house search mechanism integrated with the **Verse Search Query Language (VSQL)** semantic interpreter, supporting multi-language CJK tokenization, Pinyin retrieval, and complex conditional expression parsing.
 5. **Unified CLI Management (Verse tool)**: The lifecycle of Asagity Verse (start, stop, module/app loading, environment self-healing) is managed via **Verse tool** — a lightweight CLI ops tool written in Go.
 
@@ -49,12 +49,18 @@ core/
 │   ├── Verse.Engine/                     # ⚙️ Go core engine (events/connections/VSQL/federation)
 │   │   ├── cmd/verse-engine/             # Go engine daemon entrypoint
 │   │   ├── pkg/
-│   │   │   ├── eventbus/                 # High-performance EventBus & Redis Bridge
+│   │   │   ├── eventbus/                 # High-performance EventBus & Valkey Bridge
 │   │   │   ├── vsql/                     # Verse Search Query Language semantic interpreter
 │   │   │   ├── activitypub/              # ActivityPub & NeoLinkage federation adapters
 │   │   │   └── websocket/                # Persistent-connection push service (/ws/timeline, /ws/global)
 │   │   ├── go.mod
 │   │   └── go.sum
+│   │
+│   ├── Verse.Data/                      # 🗄️ EF Core data layer (DbContext/mappings/provider switch/seeding)
+│   │   └── Verse.Data.csproj
+│   │
+│   ├── Verse.Tests/                     # 🧪 xUnit test project (36 cases)
+│   │   └── Verse.Tests.csproj
 │   │
 │   └── Verse.Cli/                        # 🛠️ Verse tool (Go-based CLI management tool)
 │       ├── cmd/verse/                    # `verse` CLI entrypoint (start, stop, status, module)
@@ -104,10 +110,10 @@ The Asagity backend adopts a **"Module + App Environment"** two-tier extension s
 ## 🛠️ Infrastructure & Core Engine (`Verse.Engine`)
 
 - **PostgreSQL + ORM (`storage/migrations`)**: PostgreSQL is the primary database, deeply leveraging its `JSONB` features to parse and store heterogeneous ActivityPub federation data.
-- **Redis (Cache / Queue / Bridge)**: Handles hot caches, token-refresh blacklist/rotation storage, EventBridge message pipelines, and task queues.
-- **Go In-Memory EventBus & Redis Bridge (`Verse.Engine/pkg/eventbus`)**:
+- **Valkey (Cache / Queue / Bridge)**: Handles hot caches, token-refresh blacklist/rotation storage, EventBridge message pipelines, and task queues. Valkey is the Linux Foundation BSD fork of Redis chosen after Redis's license change — a lightweight, powerful cache database speaking the same protocol.
+- **Go In-Memory EventBus & Valkey Bridge (`Verse.Engine/pkg/eventbus`)**:
   - **In-Memory EventBus**: Configured with 16 worker goroutines and **idempotency dedup over 100k records**.
-  - **Redis EventBridge**: Syncs events across server nodes via Redis Pub/Sub, building cluster-wide broadcast capability.
+  - **Valkey EventBridge**: Syncs events across server nodes via Valkey Pub/Sub, building cluster-wide broadcast capability.
 - **WebSocket Push Server (`Verse.Engine/pkg/websocket`)**: Multi-channel subscriptions (`/ws/timeline` timeline, `/ws/notifications` notifications, `/ws/global` global events).
 - **In-House Search Engine & VSQL Interpreter (`Verse.Engine/pkg/vsql`)**:
   - **In-House Search**: Paired with the **Verse Search Query Language (VSQL)** semantic interpreter to parse rich text, conditional syntax expressions, and logical matching.
@@ -120,7 +126,7 @@ The Asagity backend adopts a **"Module + App Environment"** two-tier extension s
 The Asagity Verse server lifecycle is uniformly managed by **Verse tool** (a Go-based CLI management tool):
 - **Service Control**: `verse start` / `verse stop` / `verse restart` / `verse status`
 - **App Management**: `verse app list` / `verse app enable` / `verse app disable` (manage third-party `.aap` apps)
-- **Environment Checks**: Diagnoses PostgreSQL, Redis, network ports, and environment connectivity.
+- **Environment Checks**: Diagnoses PostgreSQL, Valkey, network ports, and environment connectivity.
 
 ---
 
@@ -138,9 +144,9 @@ flowchart TD
         Handler["Module Routes + Handler"] --> Service["Service (Business Logic)"] --> Repository["Repository + Model"]
     end
 
-    Modules --> EventBus["Verse.Engine EventBus & Redis Bridge"]
+    Modules --> EventBus["Verse.Engine EventBus & Valkey Bridge"]
     Modules --> VSQL["Verse Search (VSQL Interpreter)"]
-    Modules --> DB[(PostgreSQL + Redis)]
+    Modules --> DB[(PostgreSQL + Valkey)]
     EventBus --> WS["WebSocket Server (/ws/*)"]
 ```
 

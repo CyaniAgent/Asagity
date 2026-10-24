@@ -34,8 +34,8 @@
 Asagity 采用清晰的 Monorepo（单体仓库）架构，客户端与服务端分离但协同开发：
 
 *   **客户端 (`/web`)**: React 19, Tailwind CSS v4, Zustand.
-*   **服务端 (`/core`)**: Go + ASP.NET Core, GORM, Asynq (基于 Redis 的强力异步任务队列).
-*   **底层基建**: PostgreSQL (极其依赖 JSONB 处理联邦数据), Redis (缓存与消息队列).
+*   **服务端 (`/core`)**: Go + ASP.NET Core, GORM, Asynq (基于 Valkey 的强力异步任务队列).
+*   **底层基建**: PostgreSQL (极其依赖 JSONB 处理联邦数据), Valkey (缓存与消息队列).
 *   **容器运行时**: 支持 Docker 与 Podman，配置分离管理。
 
 ## 🚀 快速开始
@@ -46,7 +46,7 @@ Asagity 采用清晰的 Monorepo（单体仓库）架构，客户端与服务端
 - Docker 或 Podman
 
 ### 1. 启动底层基建
-克隆仓库，使用 Docker 或 Podman 一键启动数据库与 Redis：
+克隆仓库，使用 Docker 或 Podman 一键启动数据库与 Valkey：
 
 ```bash
 git clone https://github.com/CyaniAgent/Asagity.git

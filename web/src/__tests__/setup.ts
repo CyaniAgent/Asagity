@@ -58,3 +58,22 @@ Object.defineProperty(globalThis, "sessionStorage", {
   writable: true,
   configurable: true,
 });
+
+// jsdom 未实现 matchMedia：theme store 在模块初始化时就会调用它，
+// 这里补一个最小可用实现（供 stores/theme.ts 等使用）。
+if (typeof window !== "undefined" && typeof window.matchMedia !== "function") {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    configurable: true,
+    value: (query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }),
+  });
+}

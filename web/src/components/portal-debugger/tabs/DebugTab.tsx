@@ -7,7 +7,7 @@ import { useDebugCommands, type DebugCommand } from "@/hooks/useDebugCommands";
 import { useI18n } from "@/components/providers/I18nProvider";
 
 const severityStyles: Record<string, { color: string; bg: string }> = {
-  info: { color: "text-cyan-500", bg: "bg-cyan-500/10" },
+  info: { color: "text-fgaccent", bg: "bg-brand/10" },
   success: { color: "text-emerald-500", bg: "bg-emerald-500/10" },
   warning: { color: "text-amber-500", bg: "bg-amber-500/10" },
   error: { color: "text-red-500", bg: "bg-red-500/10" },
@@ -47,7 +47,7 @@ function CommandSuggestion({
       onClick={() => onSelect(cmd.name)}
       className="flex items-start gap-2 px-3 py-1.5 w-full text-left hover:bg-gray-200/30 dark:hover:bg-gray-700/30 rounded-lg transition-colors"
     >
-      <span className="text-[11px] font-mono text-cyan-600 dark:text-cyan-400 shrink-0">
+      <span className="text-[11px] font-mono text-branddeep dark:text-fgaccent shrink-0">
         {cmd.name}
       </span>
       <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">
@@ -62,7 +62,7 @@ export const DebugTab = memo(function DebugTab() {
   const debugLogs = usePortalDebuggerStore((s) => s.debugLogs);
   const addDebugLog = usePortalDebuggerStore((s) => s.addDebugLog);
   const clearDebugLogs = usePortalDebuggerStore((s) => s.clearDebugLogs);
-  const { commands, executeCommand, getCommandNames } = useDebugCommands();
+  const { commands, executeCommand } = useDebugCommands();
 
   const [input, setInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -150,7 +150,7 @@ export const DebugTab = memo(function DebugTab() {
       <div ref={scrollRef} className="flex-1 overflow-y-auto py-1 custom-scrollbar">
         {debugLogs.length === 0 && (
           <div className="flex flex-col items-center justify-center py-8 gap-3">
-            <Icon name="terminal" fontSize={28} className="text-cyan-500/40" />
+            <Icon name="terminal" fontSize={28} className="text-fgaccent/40" />
             <div className="text-center">
               <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
                 {t("portalDebugger.debugEmpty")}
@@ -184,7 +184,7 @@ export const DebugTab = memo(function DebugTab() {
 
       {/* Input bar */}
       <div className="flex items-center gap-2 px-3 py-2 border-t border-gray-200/30 dark:border-gray-700/30">
-        <Icon name="terminal" fontSize={13} className="text-cyan-500 shrink-0" />
+        <Icon name="terminal" fontSize={13} className="text-fgaccent shrink-0" />
         <input
           ref={inputRef}
           value={input}
@@ -200,7 +200,7 @@ export const DebugTab = memo(function DebugTab() {
         <button
           onClick={() => handleSubmit()}
           disabled={!input.trim()}
-          className="p-1.5 rounded-lg text-gray-400 hover:text-cyan-500 hover:bg-cyan-500/10 transition-colors disabled:opacity-50"
+          className="p-1.5 rounded-lg text-gray-400 hover:text-fgaccent hover:bg-brand/10 transition-colors disabled:opacity-50"
         >
           <Icon name="send" fontSize={13} />
         </button>
