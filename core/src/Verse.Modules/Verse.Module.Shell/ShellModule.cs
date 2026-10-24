@@ -20,6 +20,9 @@ public static class ShellModule
 
     private const string GithubRepo = "CyaniAgent/Asagity";
 
+    /// <summary>Guest-entry verification codes (Termity, not-logged-in gate).</summary>
+    private static readonly GuestCodeBook GuestCodes = new();
+
     static ShellModule()
     {
         GithubHttp.DefaultRequestHeaders.UserAgent.ParseAdd("Asagity-Shell/1.0");
@@ -120,6 +123,53 @@ public static class ShellModule
             catch (TaskCanceledException)
             {
                 return ApiResults.Fail(StatusCodes.Status504GatewayTimeout, "GITHUB_UPSTREAM_TIMEOUT", "GitHub request timed out");
+            }
+        });
+
+        // ── Termity guest entry (not-logged-in gate) ──────────────────────
+        // Replaces the old frontend-hardcoded password: the 8-char code is
+        // minted server-side, printed to runtime logs here, shown by the
+        // frontend in the browser devtools console, then verified back here
+        // (single-use, TTL-bound, attempt-capped).
+
+        group.MapPost("/termity/guest-code", () =>
+        {
+            var code = GuestCodes.Issue(DateTimeOffset.UtcNow);
+            app.Logger.LogInformation(
+                "[Termity] guest verification code issued: {Code} (8 chars 0-9A-Z, ttl {TtlMinutes}m)",
+                code,
+                (int)GuestCodeBook.Ttl.TotalMinutes);
+            return ApiResults.Ok(new ShellGuestCodeResponse(code, (int)GuestCodeBook.Ttl.TotalSeconds));
+        });
+
+        group.MapPost("/termity/guest-verify", (ShellGuestVerifyRequest? req) =>
+        {
+            if (req is null)
+                return ApiResults.Fail(StatusCodes.Status400BadRequest, "INVALID_REQUEST", "Invalid request body");
+
+            var result = GuestCodes.Verify(req.Code, DateTimeOffset.UtcNow);
+            switch (result)
+            {
+                case GuestCodeBook.VerifyResult.Valid:
+                    app.Logger.LogInformation("[Termity] guest verification succeeded");
+                    return ApiResults.Ok(new { valid = true });
+
+                case GuestCodeBook.VerifyResult.Mismatch:
+                    app.Logger.LogWarning(
+                        "[Termity] guest verification failed: mismatch (attempt {Attempt}/{MaxAttempts})",
+                        GuestCodes.Attempts,
+                        GuestCodeBook.MaxAttempts);
+                    return ApiResults.Fail(StatusCodes.Status401Unauthorized, "GUEST_CODE_MISMATCH", "Verification code is incorrect");
+
+                case GuestCodeBook.VerifyResult.Exhausted:
+                    app.Logger.LogWarning(
+                        "[Termity] guest code invalidated after {MaxAttempts} failed attempts",
+                        GuestCodeBook.MaxAttempts);
+                    return ApiResults.Fail(StatusCodes.Status410Gone, "GUEST_CODE_EXPIRED", "Verification code expired; request a new one");
+
+                default: // Expired
+                    app.Logger.LogInformation("[Termity] guest verification attempted with an expired code");
+                    return ApiResults.Fail(StatusCodes.Status410Gone, "GUEST_CODE_EXPIRED", "Verification code expired; request a new one");
             }
         });
     }

@@ -34,8 +34,8 @@ export default function PanelModlogPage() {
   return (
     <div className="flex flex-col gap-6 animate-[fadeIn_0.4s_ease-out]">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-          <Icon name="history" className="text-cyan-500" fontSize={20} />
+        <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center border border-brand/20">
+          <Icon name="history" className="text-fgaccent" fontSize={20} />
         </div>
         <div>
           <h1 className="text-xl font-black text-gray-900 dark:text-white">{t("panel.adminLog")}</h1>
@@ -54,8 +54,8 @@ export default function PanelModlogPage() {
         {mockLogs.map((log) => (
           <div key={log.id} className="grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-4 px-6 py-4 border-b border-gray-100/50 dark:border-gray-800/50 last:border-b-0 hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors items-center">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center">
-                <Icon name="person" className="text-cyan-500" fontSize={14} />
+              <div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center">
+                <Icon name="person" className="text-fgaccent" fontSize={14} />
               </div>
               <span className="text-sm font-bold text-gray-900 dark:text-white">{log.admin}</span>
             </div>

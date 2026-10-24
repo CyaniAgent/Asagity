@@ -5,6 +5,8 @@
  * 右侧：登录表单（identifier + password）
  */
 import { useState } from "react";
+import { Button } from "@astryxdesign/core/Button";
+import { IconButton } from "@astryxdesign/core/IconButton";
 import { useInstanceStore } from "@/stores/instance";
 import { useUserStore } from "@/stores/user";
 import { useThemeStore } from "@/stores/theme";
@@ -128,7 +130,7 @@ export function LoginPage() {
             </div>
 
             {/* Accent line */}
-            <div className="w-10 h-[2px] mx-auto mb-5 bg-gradient-to-r from-cyan-400 to-cyan-600 rounded-full shadow-[0_0_10px_rgba(57,197,187,0.3)]" />
+            <div className="w-10 h-[2px] mx-auto mb-5 bg-gradient-to-r from-brandlight to-branddeep rounded-full shadow-[0_0_10px_rgba(46,118,184,0.3)]" />
 
             <h1 className={`text-xl font-bold ${textPrimary} mb-1`}>
               {t("auth.loginToInstance")}
@@ -170,56 +172,47 @@ export function LoginPage() {
               required
               isDark={isDark}
               suffix={
-                <button
-                  type="button"
+                <IconButton
+                  variant="ghost"
+                  size="sm"
+                  icon={<Icon name={showPassword ? "eye_off" : "eye"} fontSize={16} />}
+                  label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                  tooltip={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
                   onClick={() => setShowPassword(!showPassword)}
-                  className={`p-1 rounded-full ${textTertiary} hover:${textSecondary} transition-colors`}
-                >
-                  <Icon name={showPassword ? "eye_off" : "eye"} fontSize={16} />
-                </button>
+                />
               }
             />
 
             {/* Forgot password */}
             <div className="flex justify-end">
-              <button
-                type="button"
-                className={`text-[11px] font-medium text-cyan-500 hover:text-cyan-400 transition-colors`}
-              >
-                {t("auth.forgotKey")}
-              </button>
+              <Button
+                variant="ghost"
+                size="sm"
+                label={t("auth.forgotKey")}
+                onClick={() => {}}
+              />
             </div>
 
             {/* Submit */}
-            <button
+            <Button
+              variant="primary"
+              size="lg"
               type="submit"
-              disabled={loading || !identifier || !password}
-              className={`
-                w-full py-3.5 rounded-full text-[14px] font-bold tracking-wide
-                transition-all duration-200 flex items-center justify-center gap-2
-                ${
-                  !loading && identifier && password
-                    ? "bg-cyan-500 text-white shadow-[0_0_20px_rgba(57,197,187,0.3)] hover:shadow-[0_0_30px_rgba(57,197,187,0.5)] hover:bg-cyan-400 active:scale-[0.98]"
-                    : `${isDark ? "bg-white/5 text-gray-600" : "bg-gray-100 text-gray-400"} cursor-not-allowed`
-                }
-              `}
-            >
-              {loading ? (
-                <>
-                  <Icon name="refresh" className="animate-spin" fontSize={16} />
-                  {t("auth.verifying")}
-                </>
-              ) : (
-                t("auth.loginToInstance")
-              )}
-            </button>
+              width="100%"
+              label={loading ? t("auth.verifying") : t("auth.loginToInstance")}
+              isLoading={loading}
+              isDisabled={!identifier || !password}
+              className="glow-accent glow-accent-hover"
+            />
           </form>
 
           {/* Switch to register */}
           <div className={`mt-6 text-center text-[12px] ${textSecondary}`}>
             {t("auth.noCredentials")}
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
+              label={t("auth.initNewAccount")}
               onClick={() => {
                 // Close login window, then open register window
                 const win = freeWindowStore.windows.find((w) => w.viewType === "login_window");
@@ -228,29 +221,22 @@ export function LoginPage() {
                   freeWindowStore.openFromContext("register_window");
                 }, 100);
               }}
-              className="text-cyan-500 font-bold hover:text-cyan-400 ml-1 transition-colors"
-            >
-              {t("auth.initNewAccount")}
-            </button>
+            />
           </div>
 
           {/* Developer entry */}
           <div className="mt-4 text-center">
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
+              label={t("welcome.directEnter")}
+              icon={<Icon name="terminal" fontSize={14} />}
               onClick={() => {
                 userStore.developerEnter();
                 const win = freeWindowStore.windows.find((w) => w.viewType === "login_window");
                 if (win) freeWindowStore.close(win.id);
               }}
-              className={`
-                text-[11px] font-medium px-3 py-1.5 rounded-full transition-all
-                ${isDark ? "text-gray-500 hover:text-gray-400 hover:bg-white/5" : "text-gray-400 hover:text-gray-500 hover:bg-gray-100"}
-              `}
-            >
-              <Icon name="terminal" fontSize={14} className="inline mr-1.5 align-[-3px]" />
-              {t("welcome.directEnter")}
-            </button>
+            />
           </div>
         </div>
       </div>
@@ -290,7 +276,7 @@ function M3LoginField({
         relative rounded-2xl border transition-all duration-200
         ${
           focused
-            ? "border-cyan-500/50 shadow-[0_0_12px_rgba(57,197,187,0.15)]"
+            ? "border-brand/50 shadow-[0_0_12px_rgba(46,118,184,0.15)]"
             : isDark
               ? "border-white/10 hover:border-white/20"
               : "border-gray-200 hover:border-gray-300"
@@ -302,7 +288,7 @@ function M3LoginField({
         className={`
           absolute left-11 transition-all duration-200 pointer-events-none z-10
           ${isFloating ? "top-2 text-[10px] font-bold" : "top-1/2 -translate-y-1/2 text-[13px]"}
-          ${focused ? "text-cyan-400" : isDark ? "text-gray-500" : "text-gray-400"}
+          ${focused ? "text-fgaccent" : isDark ? "text-gray-500" : "text-gray-400"}
         `}
       >
         {label}
@@ -315,7 +301,7 @@ function M3LoginField({
           <Icon
             name={icon}
             fontSize={18}
-            className={focused ? "text-cyan-500" : isDark ? "text-gray-500" : "text-gray-400"}
+            className={focused ? "text-fgaccent" : isDark ? "text-gray-500" : "text-gray-400"}
           />
         </div>
         <input

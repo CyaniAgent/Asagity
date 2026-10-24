@@ -14,7 +14,7 @@ export function SplashScreen() {
   return (
     <div className="fixed inset-0 z-[100000] flex flex-col items-center justify-center bg-gray-50 dark:bg-[#0f0f0f] overflow-hidden transition-opacity duration-500">
       <div className="absolute inset-0 pointer-events-none opacity-40 dark:opacity-20 flex items-center justify-center">
-        <div className="w-[80vw] h-[80vw] max-w-[800px] max-h-[800px] bg-cyan-400/30 rounded-full blur-[120px] animate-pulse" />
+        <div className="w-[80vw] h-[80vw] max-w-[800px] max-h-[800px] bg-brandlight/30 rounded-full blur-[120px] animate-pulse" />
       </div>
 
       <div className="relative z-10 flex flex-col items-center animate-[fadeInUp_0.8s_cubic-bezier(0.2,0.8,0.2,1)_forwards]">
@@ -27,7 +27,7 @@ export function SplashScreen() {
             <div className="flex flex-col items-center w-full">
               <div className="w-full h-[3px] bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden relative">
                 <div
-                  className="h-full bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.6)] transition-all duration-700 ease-out absolute left-0"
+                  className="h-full bg-brand shadow-[0_0_8px_rgba(6,182,212,0.6)] transition-all duration-700 ease-out absolute left-0"
                   style={{ width: `${initProgress}%` }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_1.5s_infinite_linear]" />

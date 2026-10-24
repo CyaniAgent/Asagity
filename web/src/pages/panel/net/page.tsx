@@ -16,8 +16,8 @@ export default function PanelNetPage() {
   return (
     <div className="flex flex-col gap-6 animate-[fadeIn_0.4s_ease-out]">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-          <Icon name="globe" className="text-cyan-500" fontSize={20} />
+        <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center border border-brand/20">
+          <Icon name="globe" className="text-fgaccent" fontSize={20} />
         </div>
         <div>
           <h1 className="text-xl font-black text-gray-900 dark:text-white">Asagity NET</h1>
@@ -28,7 +28,7 @@ export default function PanelNetPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {mockNodes.map((node) => (
           <div key={node.id} className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl rounded-[24px] border border-white/40 dark:border-gray-700/50 p-5 shadow-sm hover:shadow-md transition-all text-center">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center mx-auto mb-3 text-white font-black text-xl shadow-lg shadow-cyan-500/20">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-brand to-blue-500 flex items-center justify-center mx-auto mb-3 text-white font-black text-xl shadow-lg shadow-brand/20">
               {node.name.charAt(0).toUpperCase()}
             </div>
             <h3 className="text-sm font-black text-gray-900 dark:text-white truncate">{node.name}</h3>
@@ -47,7 +47,7 @@ export default function PanelNetPage() {
         <h3 className="font-black text-lg text-gray-900 dark:text-white mb-4">{t("panel.networkStatistics")}</h3>
         <div className="grid grid-cols-4 gap-4">
           <div className="text-center p-4 bg-gray-50 dark:bg-white/5 rounded-xl">
-            <p className="text-2xl font-black text-cyan-500">4</p>
+            <p className="text-2xl font-black text-fgaccent">4</p>
             <p className="text-xs font-bold text-gray-500">{t("panel.connectedInstances")}</p>
           </div>
           <div className="text-center p-4 bg-gray-50 dark:bg-white/5 rounded-xl">

@@ -1,22 +1,31 @@
 using Verse.Shared;
+using Verse.Data;
 
 namespace Verse.Module.Instance;
 
 /// <summary>Route registration ported from Go <c>instance/module.go</c>.</summary>
 public static class InstanceModule
 {
-    public static void AddServices(IServiceCollection services) =>
-        services.AddSingleton<IInstanceService, NotImplementedInstanceService>();
+    public static void AddServices(IServiceCollection services)
+    {
+        services.AddScoped<IInstanceRepository, InstanceRepository>();
+        services.AddScoped<IInstanceService, InstanceService>();
+    }
 
     public static void Register(WebApplication app)
     {
-        app.MapGet("/", () => ApiResults.Ok(new RootResponse("Asagity Core", "bootstrap")));
-        app.MapGet("/healthz", () => ApiResults.Ok(new HealthResponse("ok")));
+        app.MapGet("/", (IInstanceService svc) => ApiResults.Ok(svc.Root()));
+        app.MapGet("/healthz", (IInstanceService svc) => ApiResults.Ok(svc.Health()));
         app.MapGet("/api/meta/version", (IInstanceService svc) => Guard(() => svc.Version()));
         app.MapGet("/api/meta/instance", (IInstanceService svc) => Guard(() => svc.Meta()));
-        app.MapGet("/api/admin/system/instance", (IInstanceService svc) => Guard(() => svc.GetAllSettings()));
-        app.MapGet("/api/admin/system/database", (IInstanceService svc) => Guard(() => svc.GetDatabaseStats()));
         app.MapGet("/api/system/environment", (IInstanceService svc) => Guard(() => svc.SystemEnvironment()));
+        app.MapGet("/api/system/developer-account", (IInstanceService svc) => Guard(() => svc.DeveloperAccount()));
+
+        // Administrative surfaces require administrator privileges.
+        app.MapGet("/api/admin/system/instance", (IInstanceService svc) => Guard(() => svc.GetAllSettings()))
+            .RequireAdministrator();
+        app.MapGet("/api/admin/system/database", (IInstanceService svc) => Guard(() => svc.GetDatabaseStats()))
+            .RequireAdministrator();
     }
 
     private static IResult Guard<T>(Func<T> call)

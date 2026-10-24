@@ -16,7 +16,7 @@ Asagity Verse 是 Asagity 平台的后端服务端引擎项目，采用 **Go（�
    - **ASP.NET Core (API & Modules 层)**：负责 RESTful API、中间件路由、类型安全模型绑定、依赖注入及业务域模块隔离。
    - **Go (核心底层 Engine)**：承载高性能事件总线（EventBus）、长连接推送、ActivityPub 联邦协议适配与 VSQL 语义解释器。
 3. **事件驱动与 Hook 机制 (Event-Driven)**：
-   - 模块间禁止直接硬编码强依赖，通过 Go Core EventBus & Redis EventBridge 进行解耦订阅（例如：发布动态触发 `note.created` 事件，其他模块自由订阅处理）。
+   - 模块间禁止直接硬编码强依赖，通过 Go Core EventBus & Valkey EventBridge 进行解耦订阅（例如：发布动态触发 `note.created` 事件，其他模块自由订阅处理）。
 4. **自研搜索机制与 VSQL 解释器**：弃用第三方搜索引擎依赖，采用自研搜索机制并整合 **Verse Search Query Language (VSQL)** 语义解释器，支持多语言 CJK 分词、拼音检索与复杂条件表达式解析。
 5. **统一 CLI 工具管理 (Verse tool)**：通过 **Verse tool**（基于 Go 编写的轻量化 CLI 运维管理工具）管理 Asagity Verse 的生命周期（启动、停止、模块/应用加载、环境自愈）。
 
@@ -49,12 +49,18 @@ core/
 │   ├── Verse.Engine/                     # ⚙️ Go 核心底层引擎 (事件/长连接/VSQL/联邦)
 │   │   ├── cmd/verse-engine/             # Go 引擎守护进程入口
 │   │   ├── pkg/
-│   │   │   ├── eventbus/                 # 高性能 EventBus & Redis Bridge
+│   │   │   ├── eventbus/                 # 高性能 EventBus & Valkey Bridge
 │   │   │   ├── vsql/                     # Verse Search Query Language 语义解释器
 │   │   │   ├── activitypub/              # ActivityPub & NeoLinkage 联邦协议适配器
 │   │   │   └── websocket/                # 长连接推送服务 (/ws/timeline, /ws/global)
 │   │   ├── go.mod
 │   │   └── go.sum
+│   │
+│   ├── Verse.Data/                      # 🗄️ EF Core 数据层 (DbContext/实体映射/provider切换/种子)
+│   │   └── Verse.Data.csproj
+│   │
+│   ├── Verse.Tests/                     # 🧪 xUnit 测试工程 (36 个用例)
+│   │   └── Verse.Tests.csproj
 │   │
 │   └── Verse.Cli/                        # 🛠️ Verse tool (Go 编写的 CLI 管理工具)
 │       ├── cmd/verse/                    # `verse` 命令行入口 (start, stop, status, module)
@@ -104,10 +110,10 @@ Asagity 后端采用 **“模块 + App 环境”** 双层扩展体系，请注�
 ## 🛠️ 基础设施与核心引擎 (`Verse.Engine`)
 
 - **PostgreSQL + ORM (`storage/migrations`)**：以 PostgreSQL 作为主数据库，深度利用其 `JSONB` 特性解析和存储 ActivityPub 联邦协议异构数据。
-- **Redis (缓存 / 队列 / Bridge)**：承担热点缓存、Token 刷新黑名单/轮换存储、EventBridge 消息管道及任务队列。
-- **Go 内存 EventBus & Redis Bridge (`Verse.Engine/pkg/eventbus`)**：
+- **Valkey (缓存 / 队列 / Bridge)**：承担热点缓存、Token 刷新黑名单/轮换存储、EventBridge 消息管道及任务队列。Valkey 是 Redis 许可证变更后选定的 Linux 基金会 BSD 分支——轻量而强大的缓存数据库，协议兼容。
+- **Go 内存 EventBus & Valkey Bridge (`Verse.Engine/pkg/eventbus`)**：
   - **内存 EventBus**：配置 16 个 Worker 协程，支持 10 万条记录的**幂等性去重**。
-  - **Redis EventBridge**：跨 Server 节点通过 Redis Pub/Sub 同步事件，构建集群广播能力。
+  - **Valkey EventBridge**：跨 Server 节点通过 Valkey Pub/Sub 同步事件，构建集群广播能力。
 - **WebSocket 推送服务器 (`Verse.Engine/pkg/websocket`)**：提供多频道订阅（`/ws/timeline` 时间线、`/ws/notifications` 通知、`/ws/global` 全局事件）。
 - **自研搜索引擎与 VSQL 解释器 (`Verse.Engine/pkg/vsql`)**：
   - **自研搜索机制**：搭配 **Verse Search Query Language (VSQL)** 语义解释器，解析富文本、语法条件表达式与逻辑匹配。
@@ -120,7 +126,7 @@ Asagity 后端采用 **“模块 + App 环境”** 双层扩展体系，请注�
 Asagity Verse 服务端生命周期由 **Verse tool**（Go 编写的 CLI 管理工具）统一管理：
 - **服务管控**：`verse start` / `verse stop` / `verse restart` / `verse status`
 - **应用管理**：`verse app list` / `verse app enable` / `verse app disable`（管理第三方 `.aap` 应用）
-- **环境检查**：诊断 PostgreSQL、Redis、网络端口及环境连通性。
+- **环境检查**：诊断 PostgreSQL、Valkey、网络端口及环境连通性。
 
 ---
 

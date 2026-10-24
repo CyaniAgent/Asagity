@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/config"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/engineapi"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/mode"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/process"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/runner"
@@ -60,7 +61,7 @@ func Run(cfg *config.Config, r *runner.Runner, md mode.Mode) []Check {
 	if md == mode.Lite {
 		// Mirror the runner: LITE_SQLITE_PATH under .verse wins when set for
 		// the child; otherwise resolve the engine default relative to its cwd.
-		candidates := []string{filepath.Join(cfg.VerseDir, "lite", "asagity.db")}
+		candidates := []string{cfg.LiteDBPath()}
 		litePath := firstNonEmpty(cfg.Env["LITE_SQLITE_PATH"], "./data/lite/asagity.db")
 		if !filepath.IsAbs(litePath) {
 			litePath = filepath.Join(engineSrc, litePath)
@@ -77,6 +78,15 @@ func Run(cfg *config.Config, r *runner.Runner, md mode.Mode) []Check {
 			add("lite-sqlite", true, found)
 		} else {
 			add("lite-sqlite", false, "not created yet ("+candidates[0]+"); starts on first `versetool start`")
+		}
+
+		// The developer account is seeded by the engine on first boot.
+		if acc, err := engineapi.FetchDeveloperAccount(r.EngineURL(), 3*time.Second); err != nil {
+			add("dev-account", false, "engine unreachable ("+r.EngineURL()+"); start it with `versetool start dev`")
+		} else if !acc.Exists {
+			add("dev-account", false, "no administrator account yet; run `versetool start dev` to seed it")
+		} else {
+			add("dev-account", true, acc.Username+" <"+acc.Email+"> ["+acc.Group+"]")
 		}
 	}
 

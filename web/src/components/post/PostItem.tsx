@@ -84,13 +84,13 @@ export const PostItem = memo(function PostItem({ post, isDetailView }: PostItemP
       <div className="shrink-0 pt-1">
         <button
           onClick={handleUserClick}
-          className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-cyan-400 transition-all cursor-pointer shadow-sm block"
+          className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-brandlight transition-all cursor-pointer shadow-sm block"
         >
           {post.author.avatar ? (
             <img src={post.author.avatar} width={40} height={40} className="w-full h-full object-cover" alt={post.author.displayName} />
           ) : (
-            <div className="w-full h-full bg-cyan-500/20 flex items-center justify-center">
-              <Icon name="person" className="text-cyan-500" fontSize={20} />
+            <div className="w-full h-full bg-brand/20 flex items-center justify-center">
+              <Icon name="person" className="text-fgaccent" fontSize={20} />
             </div>
           )}
         </button>
@@ -103,12 +103,12 @@ export const PostItem = memo(function PostItem({ post, isDetailView }: PostItemP
           <div className="flex items-start flex-col gap-0.5 min-w-0">
             <div className="flex items-center gap-1.5 truncate w-full">
               <span
-                className="font-bold text-[15px] truncate cursor-pointer hover:underline text-gray-900 dark:text-gray-100 decoration-cyan-400"
+                className="font-bold text-[15px] truncate cursor-pointer hover:underline text-gray-900 dark:text-gray-100 decoration-brandlight"
                 onClick={handleUserClick}
               >
                 {post.author.displayName}
               </span>
-              <span className="text-sm text-gray-500 truncate cursor-pointer hover:text-cyan-600 transition-colors">
+              <span className="text-sm text-gray-500 truncate cursor-pointer hover:text-branddeep transition-colors">
                 {fullUsername}
               </span>
             </div>
@@ -116,7 +116,7 @@ export const PostItem = memo(function PostItem({ post, isDetailView }: PostItemP
             {/* Instance Badge */}
             {post.author.instance && (
               <div className="flex items-center">
-                <span className="text-[11px] font-medium bg-cyan-50 dark:bg-cyan-950/30 text-cyan-600 dark:text-cyan-400 px-1.5 py-0.5 rounded border border-cyan-100 dark:border-cyan-800/50 flex items-center gap-1">
+                <span className="text-[11px] font-medium bg-brand/10 text-branddeep dark:text-fgaccent px-1.5 py-0.5 rounded border border-line flex items-center gap-1">
                   <Icon name="public" fontSize={12} />
                   {post.author.instance}
                 </span>
@@ -137,10 +137,10 @@ export const PostItem = memo(function PostItem({ post, isDetailView }: PostItemP
         {/* Reply Context */}
         {post.replyTo && (
           <div className="flex items-center gap-1 text-[13px] text-gray-500 mb-0.5 mt-0.5">
-            <Icon name="subdirectory_arrow_right" className="text-cyan-500 bg-cyan-50 dark:bg-cyan-900/40 rounded p-0.5" fontSize={16} />
+            <Icon name="subdirectory_arrow_right" className="text-fgaccent bg-brand/10 rounded p-0.5" fontSize={16} />
             <span className="flex items-center gap-1">
               {t("post.repliedTo")}
-              <span className="font-medium text-cyan-600 dark:text-cyan-400 cursor-pointer hover:underline flex items-center gap-1">
+              <span className="font-medium text-branddeep dark:text-fgaccent cursor-pointer hover:underline flex items-center gap-1">
                 {post.replyTo.author.avatar && (
                   <img src={post.replyTo.author.avatar} width={16} height={16} className="w-4 h-4 rounded-full object-cover" alt="" />
                 )}
@@ -158,7 +158,7 @@ export const PostItem = memo(function PostItem({ post, isDetailView }: PostItemP
 
         {/* Action Bar */}
         <div className="flex items-center gap-4 mt-2 -ml-2 text-gray-500">
-          <button className="flex items-center gap-1.5 hover:text-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-950/50 transition-all rounded-full px-2.5 py-1 text-sm">
+          <button className="flex items-center gap-1.5 hover:text-fgaccent hover:bg-brand/10 transition-all rounded-full px-2.5 py-1 text-sm">
             <Icon name="chat_bubble" fontSize={18} />
             {post.metrics.replies ? <span>{post.metrics.replies}</span> : null}
           </button>
@@ -170,7 +170,7 @@ export const PostItem = memo(function PostItem({ post, isDetailView }: PostItemP
             <Icon name="add" fontSize={18} />
             {post.metrics.reactions ? <span>{post.metrics.reactions}</span> : null}
           </button>
-          <button className="flex items-center gap-1.5 hover:text-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-950/50 transition-all rounded-full px-2.5 py-1 text-sm ml-auto">
+          <button className="flex items-center gap-1.5 hover:text-fgaccent hover:bg-brand/10 transition-all rounded-full px-2.5 py-1 text-sm ml-auto">
             <Icon name="more_horiz" fontSize={18} />
           </button>
         </div>

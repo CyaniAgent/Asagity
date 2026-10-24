@@ -56,7 +56,7 @@ export default function ProfileSettingsPage() {
     <div className="max-w-[700px] mx-auto p-6 space-y-8 animate-[fadeIn_0.3s_ease-out]">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-400 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand to-ok flex items-center justify-center shadow-lg shadow-brand/20">
           <Icon name="person" className="text-white" fontSize={24} />
         </div>
         <div>
@@ -73,12 +73,12 @@ export default function ProfileSettingsPage() {
             {userStore.avatar ? (
               <img src={userStore.avatar} width={96} height={96} className="w-full h-full object-cover" alt="Avatar" />
             ) : (
-              <div className="w-full h-full bg-cyan-500/20 flex items-center justify-center">
-                <Icon name="person" className="text-cyan-500" fontSize={36} />
+              <div className="w-full h-full bg-brand/20 flex items-center justify-center">
+                <Icon name="person" className="text-fgaccent" fontSize={36} />
               </div>
             )}
           </div>
-          <button className="mt-3 flex items-center gap-1.5 px-3 py-1.5 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-full text-xs font-semibold hover:bg-cyan-500/20 transition-colors">
+          <button className="mt-3 flex items-center gap-1.5 px-3 py-1.5 bg-brand/10 text-branddeep dark:text-fgaccent rounded-full text-xs font-semibold hover:bg-brand/20 transition-colors">
             <Icon name="photo_camera" fontSize={14} />
             {t("settings.changeAvatar")}
           </button>
@@ -86,7 +86,7 @@ export default function ProfileSettingsPage() {
 
         {/* Banner */}
         <div className="flex-1 relative bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden min-h-[140px] group cursor-pointer">
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/20 to-teal-400/20" />
+          <div className="absolute inset-0 bg-gradient-to-br from-brandlight/20 to-ok/20" />
           <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-all">
             <span className="opacity-0 group-hover:opacity-100 flex items-center gap-2 px-4 py-2 bg-white/90 dark:bg-gray-900/90 rounded-full text-sm font-semibold text-gray-700 dark:text-gray-300 transition-all shadow-lg">
               <Icon name="image" fontSize={16} />
@@ -108,7 +108,7 @@ export default function ProfileSettingsPage() {
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
             placeholder={t("settings.enterNickname")}
-            className="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+            className="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all"
           />
         </div>
 
@@ -122,7 +122,7 @@ export default function ProfileSettingsPage() {
             onChange={(e) => setBio(e.target.value)}
             placeholder={t("settings.bioPlaceholder")}
             rows={4}
-            className="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl text-gray-900 dark:text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+            className="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl text-gray-900 dark:text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all"
           />
           <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1 px-1">
             {t("settings.bioHint")}
@@ -141,7 +141,7 @@ export default function ProfileSettingsPage() {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder={t("settings.yourLocation")}
-              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all"
             />
           </div>
         </div>
@@ -157,7 +157,7 @@ export default function ProfileSettingsPage() {
               type="date"
               value={birthday}
               onChange={(e) => setBirthday(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all"
             />
           </div>
         </div>
@@ -170,7 +170,7 @@ export default function ProfileSettingsPage() {
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all appearance-none"
+            className="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition-all appearance-none"
           >
             <option>{t("settings.autoFollowBrowser")}</option>
             <option>简体中文</option>
@@ -186,7 +186,7 @@ export default function ProfileSettingsPage() {
         className={`w-full py-3 rounded-2xl font-bold text-sm transition-all ${
           saved
             ? "bg-green-500 text-white"
-            : "bg-gradient-to-r from-cyan-500 to-teal-400 text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-[1.01]"
+            : "bg-gradient-to-r from-brand to-ok text-onbrand shadow-lg shadow-brand/25 hover:shadow-brand/40 hover:scale-[1.01]"
         }`}
       >
         {saved ? t("settings.saved") : t("settings.saveChanges")}

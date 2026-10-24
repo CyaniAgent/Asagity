@@ -20,6 +20,7 @@ import (
 
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/config"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/doctor"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/engineapi"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/mode"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/modulemgr"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/process"
@@ -42,6 +43,7 @@ Commands:
   app list                            list installed .aap applications
   app enable <name>                   enable an application
   app disable <name>                  disable an application
+  db status                           show database mode, path and seeded account
   help                                show this help
 
 Start shorthands (service defaults to all):
@@ -108,6 +110,8 @@ func run(argv []string) error {
 		return nil
 	case "app":
 		return cmdApp(cfg, rest[1:])
+	case "db":
+		return cmdDB(cfg, r, md)
 	case "help", "-h", "--help":
 		fmt.Print(usage)
 		return nil
@@ -170,13 +174,22 @@ func svcArg(rest []string) string {
 
 func cmdStatus(r *runner.Runner) error {
 	st := r.Status()
-	fmt.Printf("%-8s %-9s %-7s %-7s\n", "SERVICE", "PROCESS", "PORT", "HEALTH")
-	fmt.Println(strings.Repeat("-", 40))
+	fmt.Printf("%-8s %-9s %-7s %-7s %-10s\n", "SERVICE", "PROCESS", "PORT", "HEALTH", "RSS")
+	fmt.Println(strings.Repeat("-", 48))
 	for _, svc := range runner.All {
 		lv := st[svc]
-		fmt.Printf("%-8s %-9s %-7s %-7s\n", svc, yesNo(lv.Process), yesNo(lv.Port), healthCell(svc, lv.Health))
+		fmt.Printf("%-8s %-9s %-7s %-7s %-10s\n",
+			svc, yesNo(lv.Process), yesNo(lv.Port), healthCell(svc, lv.Health), rssCell(lv.RSSKB))
 	}
 	return nil
+}
+
+// rssCell renders the resident memory of a process.
+func rssCell(kb int) string {
+	if kb <= 0 {
+		return "-"
+	}
+	return fmt.Sprintf("%.1f MB", float64(kb)/1024.0)
 }
 
 func healthCell(svc string, ok bool) string {
@@ -260,6 +273,45 @@ func cmdApp(cfg *config.Config, args []string) error {
 	}
 }
 
+// cmdDB reports the storage state of the instance: effective mode, database
+// location and the seeded administrator/developer account. The CLI owns no
+// database driver, so every fact comes from the engine's own endpoints.
+func cmdDB(cfg *config.Config, r *runner.Runner, md mode.Mode) error {
+	fmt.Printf("DATABASE STATUS (mode: %s)\n", md)
+	fmt.Println(strings.Repeat("-", 52))
+
+	switch md {
+	case mode.Lite:
+		fmt.Printf("  engine      : %s\n", r.EngineURL())
+		fmt.Printf("  sqlite path : %s\n", cfg.LiteDBPath())
+		fmt.Printf("  cache       : in-process memory (no external service)\n")
+	case mode.Databaseless:
+		fmt.Printf("  engine      : %s\n", r.EngineURL())
+		fmt.Println("  storage     : none (databaseless mock mode)")
+	default:
+		fmt.Printf("  engine      : %s\n", r.EngineURL())
+		fmt.Printf("  postgres    : %s:%s/%s\n", cfg.Env["DB_HOST"], cfg.Env["DB_PORT"], cfg.Env["DB_NAME"])
+		fmt.Printf("  redis       : %s\n", cfg.Env["REDIS_ADDR"])
+	}
+
+	acc, err := engineapi.FetchDeveloperAccount(r.EngineURL(), 3*time.Second)
+	switch {
+	case err != nil:
+		fmt.Println("  account     : engine unreachable (start it with `versetool start`)")
+		return nil
+	case !acc.Exists:
+		fmt.Println("  account     : none seeded yet")
+		return nil
+	default:
+		fmt.Printf("  account     : %s <%s>\n", acc.Username, acc.Email)
+		fmt.Printf("  group       : %s (%s)\n", acc.Group, acc.GroupID)
+		if md == mode.Lite {
+			fmt.Printf("  password    : %s (fixed dev credential)\n", runner.LiteDeveloperPassword)
+		}
+	}
+	return nil
+}
+
 // interactive runs the numbered menu when no command is given.
 func interactive(modeFlag string) error {
 	cfg, err := config.Load()
@@ -279,7 +331,7 @@ func interactive(modeFlag string) error {
 		fmt.Println("  1) start all    2) stop all      3) restart all")
 		fmt.Println("  4) status       5) health        6) doctor")
 		fmt.Println("  7) logs engine  8) logs api      9) app list")
-		fmt.Println("  m) switch mode (prod/dev/dbless)")
+		fmt.Println("  m) switch mode (prod/dev/dbless)  d) db status")
 		fmt.Println("  0) exit")
 		fmt.Print("select> ")
 
@@ -304,6 +356,8 @@ func interactive(modeFlag string) error {
 			_ = cmdLogs(r, runner.API)
 		case "9":
 			_ = cmdApp(cfg, []string{"list"})
+		case "d":
+			_ = cmdDB(cfg, r, md)
 		case "m":
 			fmt.Print("mode [prod|dev|dbless]> ")
 			mline, _ := in.ReadString('\n')

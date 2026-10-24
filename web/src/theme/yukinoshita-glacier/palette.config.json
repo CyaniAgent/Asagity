@@ -1,0 +1,53 @@
+{
+  "stops": [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100],
+  "families": [
+    {
+      "id": "glacier",
+      "seed": "#2E76B8",
+      "anchors": [
+        { "mode": "light", "stop": 60, "color": "#2E76B8", "policy": "exact" },
+        { "mode": "dark", "stop": 75, "color": "#7FC9F0", "policy": "exact" }
+      ]
+    },
+    {
+      "id": "frost",
+      "seed": "#4E6273",
+      "kind": "neutral",
+      "name": "frost"
+    },
+    {
+      "id": "aurora",
+      "seed": "#33A87D",
+      "anchors": [
+        { "mode": "light", "stop": 65, "color": "#19795A", "policy": "flexible" },
+        { "mode": "dark", "stop": 70, "color": "#52D2A4", "policy": "exact" }
+      ]
+    },
+    {
+      "id": "berry",
+      "seed": "#C73E5F",
+      "anchors": [
+        { "mode": "light", "stop": 60, "color": "#C73E5F", "policy": "exact" },
+        { "mode": "dark", "stop": 80, "color": "#F58CA5", "policy": "exact" }
+      ]
+    },
+    {
+      "id": "melt",
+      "seed": "#C0731A",
+      "anchors": [
+        { "mode": "light", "stop": 65, "color": "#B26018", "policy": "exact" },
+        { "mode": "dark", "stop": 75, "color": "#F2BE5A", "policy": "exact" }
+      ]
+    },
+    {
+      "id": "periwinkle",
+      "seed": "#5A63C7",
+      "anchors": [
+        { "mode": "light", "stop": 60, "color": "#5A63C7", "policy": "exact" },
+        { "mode": "dark", "stop": 80, "color": "#ACB2F2", "policy": "exact" }
+      ]
+    }
+  ],
+  "vibrancy": 45,
+  "neutralProfile": "cool-v1"
+}

@@ -15,7 +15,7 @@ export default function PanelSettingsInstancePage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3 mb-2">
-        <Icon name="info" className="text-cyan-500" fontSize={24} />
+        <Icon name="info" className="text-fgaccent" fontSize={24} />
         <h2 className="text-xl font-black text-gray-900 dark:text-white">实例信息</h2>
       </div>
 
@@ -32,7 +32,7 @@ export default function PanelSettingsInstancePage() {
               <span className="text-sm text-gray-900 dark:text-gray-200 font-medium">{item.description}</span>
             </div>
             <div className="max-w-[200px] text-right">
-              <span className="text-sm font-mono text-cyan-600 dark:text-cyan-400 break-all">{item.value}</span>
+              <span className="text-sm font-mono text-branddeep dark:text-fgaccent break-all">{item.value}</span>
             </div>
           </div>
         ))}

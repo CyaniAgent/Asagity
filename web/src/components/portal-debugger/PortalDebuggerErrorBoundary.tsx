@@ -55,7 +55,7 @@ export class PortalDebuggerErrorBoundary extends Component<
           </p>
           <button
             onClick={this.handleRetry}
-            className="mt-3 px-3 py-1.5 text-[12px] rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/20 transition-colors"
+            className="mt-3 px-3 py-1.5 text-[12px] rounded-lg bg-brand/10 text-branddeep dark:text-fgaccent hover:bg-brand/20 transition-colors"
           >
             Retry
           </button>

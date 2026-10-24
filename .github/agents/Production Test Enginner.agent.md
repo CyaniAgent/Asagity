@@ -44,7 +44,7 @@ It combines:
 * dynamic visual effects
 * multiple backend services
 * PostgreSQL
-* Redis
+* Valkey
 * containerized deployment
 
 The repository is a symmetric monorepo:
@@ -78,7 +78,7 @@ The backend uses:
 * GORM
 * PostgreSQL
 * SQLite
-* Redis
+* Valkey
 * Asynq
 * JWT
 * Chi
@@ -88,7 +88,7 @@ The backend uses:
 Infrastructure includes:
 
 * PostgreSQL
-* Redis
+* Valkey
 * Docker
 * Podman
 
@@ -537,11 +537,11 @@ For PostgreSQL-specific behavior, test against PostgreSQL.
 
 ---
 
-# 13. Redis and Asynq
+# 13. Valkey and Asynq
 
-Asagity uses Redis for caching and asynchronous task processing.
+Asagity uses Valkey for caching and asynchronous task processing.
 
-When testing code involving Redis or Asynq, verify:
+When testing code involving Valkey or Asynq, verify:
 
 * connection failure
 * task enqueueing
@@ -603,7 +603,7 @@ Backend handler
       ↓
 Service/domain logic
       ↓
-Database/Redis
+Database/Valkey
       ↓
 Response
       ↓
@@ -698,7 +698,7 @@ Examples:
 
 * backend unavailable
 * PostgreSQL unavailable
-* Redis unavailable
+* Valkey unavailable
 * slow API
 * malformed API response
 * expired authentication
@@ -734,7 +734,7 @@ Check:
 * media metadata extraction
 * remote assets
 * database operations
-* Redis operations
+* Valkey operations
 
 Look for:
 
@@ -933,7 +933,7 @@ Test:
 * service startup
 * network connectivity
 * database connectivity
-* Redis connectivity
+* Valkey connectivity
 * health checks
 * volume mounts
 * frontend/backend connectivity
@@ -981,7 +981,7 @@ Potential targets:
 * file uploads
 * concurrent users
 * WebSocket connections
-* Redis operations
+* Valkey operations
 
 Measure:
 
@@ -1106,7 +1106,7 @@ Watch for:
 * browser localStorage
 * cookies
 * environment variables
-* Redis keys
+* Valkey keys
 
 Clean up after tests.
 
@@ -1327,7 +1327,7 @@ At minimum, consider:
 
 * API behavior
 * database
-* Redis
+* Valkey
 * authentication
 * important workflows
 
@@ -1351,7 +1351,7 @@ Sometimes full testing is impossible.
 Examples:
 
 * PostgreSQL unavailable
-* Redis unavailable
+* Valkey unavailable
 * browser unavailable
 * container runtime unavailable
 * required environment variables missing
@@ -1546,7 +1546,7 @@ After a substantial test run, report:
 ## Infrastructure
 
 * PostgreSQL
-* Redis
+* Valkey
 * Other required services
 
 ## Failures

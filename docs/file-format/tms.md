@@ -25,8 +25,8 @@
 | 档 | 含义 | 命令 |
 |---|---|---|
 | T0 | 免登录可跑 | `help`、`time [--GMT=]`、`date [--GMT=] [--format=iso]`、`echo`、`set`、`exit [code]`（脚本内仅退脚本） |
-| T1 | 需登录（`userStore.isLoggedIn`，否则 `E0003`） | `whoami`、`info`（后端优先 `/api/meta/instance` + `/api/meta/version`，离线回退本地）、`auth info`（后端优先 `/api/auth/me`）、`auth devices`、`auth tokens`、`auth linked`、`vnet status`、`vnet ping`（后端实测 `/api/shell/ping`）、`vnet config`（+ `/api/shell/meta`）、`func lang current`、`func Develop latest commit`、`func Develop latest release`、`func Develop {ver} commit|release`（走 C# 代理 `/api/shell/github/*`，不再直连 `api.github.com`） |
-| T2 | 需 `@permissions confirm` + 执行前用户确认，否则 `E0002` | `func lang switch {locale}`、`func pdebug show|hide`、`func enable Develop [time=meta]`、`func disable Develop`、`auth logout [all]`、`run`（嵌套脚本继承调用方权限，不可提权） |
+| T1 | 需登录（`userStore.isLoggedIn`，否则 `E0003`） | `whoami`、`info`（后端优先 `/api/meta/instance` + `/api/meta/version`，离线回退本地）、`auth info`（后端优先 `/api/auth/me`）、`auth devices`、`auth tokens`、`auth linked`、`vnet status`、`vnet ping`（后端实测 `/api/shell/ping`）、`vnet config`（+ `/api/shell/meta`）、`func current System.Locale`、`func System.Develop latest commit`、`func System.Develop latest release`、`func System.Develop {ver} commit|release`（走 C# 代理 `/api/shell/github/*`，不再直连 `api.github.com`） |
+| T2 | 需 `@permissions confirm` + 执行前用户确认，否则 `E0002` | `func switch System.Locale {locale}`、`func show|hide System.PortalDebugger`、`func enable System.Develop [time=meta]`、`func disable System.Develop`、`auth logout [all]`、`webdbg <sub>`（需开发者模式即 `isAdmin`，否则先 `E0003` 未登录 / `E0002` 无权限）、`run`（嵌套脚本继承调用方权限，不可提权） |
 
 ### 2.1 脚本内禁用（直接 `E0004`）
 
@@ -47,16 +47,16 @@
 |---|---|---|
 | `E0001` | No Such Command | 白名单外 root（`executeCommand default` / `unknownCmd`） |
 | `E0002` | Permission Denied | T2 命令缺 `@permissions confirm` 或用户拒绝确认 |
-| `E0003` | Login Required | T1 命令而 `isLoggedIn=false`（`loginRequired` 分支：`whoami:520`、`auth:591`、`func lang switch:344`） |
+| `E0003` | Login Required | T1 命令而 `isLoggedIn=false`（`loginRequired` 分支：`whoami`、`auth`、`func switch System.Locale`） |
 | `E0004` | Command Not Allowed In Script | 脚本内 `clear` / 关窗 `exit` / `remote` |
 | `E0005` | Script Aborted | `set -e` 下某步非零即停，或用户取消确认 |
 | `E0006` | Unsupported Operation | 交互式占位能力（如 `remote` 的 `remoteInDev`），脚本内请用 `E0004` |
 | `E1001` | Invalid Header | 未知 `@key`、重复 `@permissions`、非法 `@termity` 范围 |
 | `E1002` | Invalid Syntax | 行解析失败（空 root、非法引用、行尾反斜杠续行） |
-| `E1003` | Invalid Argument | 缺参/多参/未知 flag（`func lang` 用法、`github/release` 缺 `tag` 对应后端 `INVALID_REQUEST`） |
+| `E1003` | Invalid Argument | 缺参/多参/未知 flag（`func switch System.Locale` 用法、`github/release` 缺 `tag` 对应后端 `INVALID_REQUEST`） |
 | `E1004` | Invalid GMT Offset | `--GMT=` 解析失败（`parseGMTOffset:130` throw → `timeInvalidGMT`） |
 | `E1005` | Invalid Date Format | `--format=` 非 `iso/iso8601`（`dateInvalidFormat:506`） |
-| `E1006` | Invalid Locale | `func lang switch` 非 `zh-CN/zh-TW/en-US/ja-JP`（`Termity.tsx:340`） |
+| `E1006` | Invalid Locale | `func switch System.Locale` 非 `zh-CN/zh-TW/en-US/ja-JP` |
 | `E1007` | Undefined Variable | `$VAR` 未 `set` 即展开 |
 | `E1008` | File Too Large | 超 64KB / 200 行 / 单行 1024 字符 |
 | `E1009` | Nesting Too Deep | `run` 嵌套超 4 层或自引用循环 |
@@ -111,10 +111,10 @@ exit 0
 @termity >=2.0
 @permissions login
 set -e
-# 对齐 func Develop 分支：经 /api/shell/github/* 代理，不直连 api.github.com
+# 对齐 func System.Develop 查询分支：经 /api/shell/github/* 代理，不直连 api.github.com
 whoami
-func Develop latest commit
-func Develop latest release
+func System.Develop latest commit
+func System.Develop latest release
 auth info
 echo release check done
 exit 0

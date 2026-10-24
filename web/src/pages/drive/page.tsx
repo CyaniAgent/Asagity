@@ -73,7 +73,7 @@ export default function DrivePage() {
           </div>
           <div className="h-2.5 w-full bg-gray-200 dark:bg-gray-700/50 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-cyan-400 to-cyan-600 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(57,197,187,0.5)]"
+              className="h-full bg-gradient-to-r from-brandlight to-branddeep rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(46,118,184,0.5)]"
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
@@ -81,10 +81,10 @@ export default function DrivePage() {
 
         {/* Actions */}
         <div className="flex items-center gap-2 shrink-0">
-          <button className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-cyan-500 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+          <button className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-fgaccent hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
             <Icon name="refresh" fontSize={18} />
           </button>
-          <button className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-cyan-500 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+          <button className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-fgaccent hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
             <Icon name="create_new_folder" fontSize={18} />
           </button>
           <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
@@ -92,13 +92,13 @@ export default function DrivePage() {
             onClick={() => setIsGridView(!isGridView)}
             className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
               isGridView
-                ? "text-gray-400 hover:text-cyan-500 hover:bg-black/5 dark:hover:bg-white/5"
-                : "text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-500/10"
+                ? "text-gray-400 hover:text-fgaccent hover:bg-black/5 dark:hover:bg-white/5"
+                : "text-branddeep dark:text-fgaccent bg-brand/10"
             }`}
           >
             <Icon name={isGridView ? "grid_view" : "view_list"} fontSize={18} />
           </button>
-          <button className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-cyan-500 to-teal-400 text-white rounded-full text-sm font-bold shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-105 transition-all ml-1">
+          <button className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-brand to-ok text-onbrand rounded-full text-sm font-bold shadow-lg shadow-brand/25 hover:shadow-brand/40 hover:scale-105 transition-all ml-1">
             <Icon name="upload" fontSize={16} />
             {t("drive.uploadFiles")}
           </button>
@@ -113,11 +113,11 @@ export default function DrivePage() {
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[13px] font-bold transition-colors ${
                 index === breadcrumbs.length - 1
                   ? "text-gray-900 dark:text-white"
-                  : "text-gray-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-500/10"
+                  : "text-gray-400 hover:text-branddeep dark:hover:text-fgaccent hover:bg-brand/10"
               }`}
             >
-              {index === 0 && <Icon name="cloud" fontSize={14} className={index === breadcrumbs.length - 1 ? "text-cyan-500" : "text-gray-400"} />}
-              {index > 0 && <Icon name="folder" fontSize={14} className={index === breadcrumbs.length - 1 ? "text-cyan-500" : "text-gray-400"} />}
+              {index === 0 && <Icon name="cloud" fontSize={14} className={index === breadcrumbs.length - 1 ? "text-fgaccent" : "text-gray-400"} />}
+              {index > 0 && <Icon name="folder" fontSize={14} className={index === breadcrumbs.length - 1 ? "text-fgaccent" : "text-gray-400"} />}
               {crumb.name}
             </button>
             {index < breadcrumbs.length - 1 && (
@@ -154,8 +154,8 @@ export default function DrivePage() {
                     <div
                       className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
                         item.type === "folder"
-                          ? "bg-cyan-50 dark:bg-cyan-500/10"
-                          : "bg-gray-100 dark:bg-gray-700/50 group-hover:bg-cyan-50 dark:group-hover:bg-cyan-500/10"
+                          ? "bg-brand/10"
+                          : "bg-gray-100 dark:bg-gray-700/50 group-hover:bg-brand/10"
                       }`}
                     >
                       <Icon
@@ -163,12 +163,12 @@ export default function DrivePage() {
                         fontSize={20}
                         className={`transition-colors ${
                           item.type === "folder"
-                            ? "text-cyan-500 dark:text-cyan-400"
-                            : "text-gray-400 dark:text-gray-500 group-hover:text-cyan-500"
+                            ? "text-fgaccent dark:text-fgaccent"
+                            : "text-gray-400 dark:text-gray-500 group-hover:text-fgaccent"
                         }`}
                       />
                     </div>
-                    <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                    <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-branddeep dark:group-hover:text-fgaccent transition-colors">
                       {item.name}
                     </span>
                   </div>
@@ -179,7 +179,7 @@ export default function DrivePage() {
                     {formatBytes(item.sizeMB, "MB")}
                   </div>
                   <div className="col-span-1 hidden md:flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-500/10 transition-colors">
+                    <button className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-fgaccent hover:bg-brand/10 transition-colors">
                       <Icon name="more_vert" fontSize={18} />
                     </button>
                   </div>
@@ -193,13 +193,13 @@ export default function DrivePage() {
             {sortedItems.map((item) => (
               <div
                 key={item.id}
-                className="flex flex-col bg-white/60 dark:bg-gray-800/40 backdrop-blur-sm rounded-3xl border border-gray-100 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:border-cyan-300 dark:hover:border-cyan-500/50 transition-all shadow-sm hover:shadow-md cursor-pointer group overflow-hidden"
+                className="flex flex-col bg-white/60 dark:bg-gray-800/40 backdrop-blur-sm rounded-3xl border border-gray-100 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-800 hover:border-brandlight dark:hover:border-brand/50 transition-all shadow-sm hover:shadow-md cursor-pointer group overflow-hidden"
               >
                 <div
                   className={`h-28 flex items-center justify-center border-b border-gray-100/80 dark:border-gray-700/50 transition-colors ${
                     item.type === "folder"
-                      ? "bg-cyan-50/30 dark:bg-gray-900/40 group-hover:bg-cyan-50 dark:group-hover:bg-cyan-500/10"
-                      : "bg-gray-50 dark:bg-gray-900/40 group-hover:bg-cyan-50 dark:group-hover:bg-cyan-500/10"
+                      ? "bg-brand/5 dark:bg-gray-900/40 group-hover:bg-brand/10"
+                      : "bg-gray-50 dark:bg-gray-900/40 group-hover:bg-brand/10"
                   }`}
                 >
                   <Icon
@@ -207,13 +207,13 @@ export default function DrivePage() {
                     fontSize={40}
                     className={`transition-all group-hover:scale-110 duration-500 ${
                       item.type === "folder"
-                        ? "text-cyan-400"
-                        : "text-gray-300 dark:text-gray-600 group-hover:text-cyan-500"
+                        ? "text-fgaccent"
+                        : "text-gray-300 dark:text-gray-600 group-hover:text-fgaccent"
                     }`}
                   />
                 </div>
                 <div className="p-4 flex flex-col gap-1">
-                  <span className="text-[13px] font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                  <span className="text-[13px] font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-branddeep dark:group-hover:text-fgaccent transition-colors">
                     {item.name}
                   </span>
                   <div className="flex items-center justify-between mt-1 text-[10px] font-bold tracking-wider text-gray-400 dark:text-gray-500 uppercase">

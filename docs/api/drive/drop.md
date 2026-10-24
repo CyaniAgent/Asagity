@@ -131,7 +131,7 @@ Server should:
 Given the current backend stack in `core`:
 
 - PostgreSQL can store durable upload session state
-- Redis can track hot upload progress and expiration
+- Valkey can track hot upload progress and expiration
 - Asynq can run finalize, hash verify, thumbnail, transcode, and cleanup jobs
 
 ## Current Decision Placeholder

@@ -22,11 +22,13 @@ export interface ScannedComponent {
 
 /* ── Tab ───────────────────────────────────────────────────── */
 export type PortalDebuggerTab = "problems" | "debug" | "hide-component";
+/** 桌面双栏布局下左栏的子 Tab（右栏固定为 Debug） */
+export type PortalDebuggerLeftTab = "problems" | "hide-component";
 
 /* ── State ─────────────────────────────────────────────────── */
 interface PortalDebuggerState {
-  isOpen: boolean;
   activeTab: PortalDebuggerTab;
+  leftTab: PortalDebuggerLeftTab;
   isEntryVisible: boolean;
 
   // Problems
@@ -46,17 +48,15 @@ interface PortalDebuggerState {
   resetHiddenComponents: () => void;
 
   // Panel controls
-  toggle: () => void;
-  open: () => void;
-  close: () => void;
   setActiveTab: (tab: PortalDebuggerTab) => void;
+  setLeftTab: (tab: PortalDebuggerLeftTab) => void;
   showEntry: () => void;
   hideEntry: () => void;
 }
 
 export const usePortalDebuggerStore = create<PortalDebuggerState>()((set) => ({
-  isOpen: false,
   activeTab: "problems",
+  leftTab: "problems",
   isEntryVisible: process.env.NODE_ENV === "development",
 
   // ── Problems ──
@@ -87,6 +87,18 @@ export const usePortalDebuggerStore = create<PortalDebuggerState>()((set) => ({
   hiddenSelectors: [],
   toggleComponentHide: (selector) =>
     set((s) => {
+      // 熔断：永不允许隐藏 body/html（旧存档 body.min-h-full.flex 等）
+      const lowered = selector.trim().toLowerCase();
+      const isProtected =
+        lowered === "body" ||
+        lowered === "html" ||
+        lowered.startsWith("body.") ||
+        lowered.startsWith("body:") ||
+        lowered.startsWith("body[") ||
+        lowered.startsWith("html.") ||
+        lowered.startsWith("html:") ||
+        lowered.startsWith("html[");
+      if (isProtected) return s;
       const exists = s.hiddenSelectors.includes(selector);
       return {
         hiddenSelectors: exists
@@ -97,10 +109,13 @@ export const usePortalDebuggerStore = create<PortalDebuggerState>()((set) => ({
   resetHiddenComponents: () => set({ hiddenSelectors: [] }),
 
   // ── Panel ──
-  toggle: () => set((s) => ({ isOpen: !s.isOpen })),
-  open: () => set({ isOpen: true }),
-  close: () => set({ isOpen: false }),
-  setActiveTab: (tab) => set({ activeTab: tab }),
+  // activeTab 保留做兼容：切到 problems/hide-component 时同步 leftTab
+  setActiveTab: (tab) =>
+    set((s) => ({
+      activeTab: tab,
+      leftTab: tab === "debug" ? s.leftTab : tab,
+    })),
+  setLeftTab: (tab) => set({ leftTab: tab, activeTab: tab }),
   showEntry: () => set({ isEntryVisible: true }),
-  hideEntry: () => set({ isEntryVisible: false, isOpen: false }),
+  hideEntry: () => set({ isEntryVisible: false }),
 }));

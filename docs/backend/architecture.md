@@ -258,13 +258,13 @@ The authentication design currently assumes:
 - refresh token lifetime is `30d`
 - `/api/auth/me` only relies on access token
 - `/api/auth/refresh` is the only refresh endpoint
-- temporary registration context between register and email verification is stored in Redis
+- temporary registration context between register and email verification is stored in Valkey
 - email verification code lifetime is `15m`
 - 5 failed email verification attempts disable email-based login for `15m`
 - during email-login cooldown, the account can still log in by `pubid + password`
 - during email-login cooldown, `username + password` and `email + password` are both blocked
 - failed email verification attempts are counted at the account level
-- pubid monthly change quota should use the database as source of truth, with Redis only as a cache
+- pubid monthly change quota should use the database as source of truth, with Valkey only as a cache
 
 This means the user domain should distinguish between:
 
@@ -572,7 +572,7 @@ Responsibilities:
 
 Responsibilities:
 
-- Redis client
+- Valkey client
 - cache key helpers if useful
 
 ## `queue`
@@ -681,7 +681,7 @@ The queue runtime is shared, but job semantics belong to the module that owns th
 To move from the current codebase to this structure, the first refactor should be:
 
 1. create `cmd/api` and move current startup there
-2. move database and Redis setup into `internal/platform`
+2. move database and Valkey setup into `internal/platform`
 3. convert current settings model into an `instance` module
 4. move protocol integration code into `internal/app/connections/activitypub` and `internal/app/connections/neolinkage`
 5. introduce shared HTTP response and error helpers
