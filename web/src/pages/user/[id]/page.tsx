@@ -81,7 +81,7 @@ export default function UserPage() {
         <div className="flex-1 overflow-y-auto">
           {loading && (
             <div className="flex items-center justify-center py-24">
-              <Icon name="refresh" className="animate-spin text-cyan-500" fontSize={32} />
+              <Icon name="refresh" className="animate-spin text-fgaccent" fontSize={32} />
             </div>
           )}
 
@@ -92,7 +92,7 @@ export default function UserPage() {
               <p className="text-sm text-gray-500 dark:text-gray-400">{error}</p>
               <Link
                 href="/"
-                className="mt-6 px-4 py-2 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-xl text-sm font-medium hover:bg-cyan-500/20 transition-colors"
+                className="mt-6 px-4 py-2 bg-brand/10 text-branddeep dark:text-fgaccent rounded-xl text-sm font-medium hover:bg-brand/20 transition-colors"
               >
                 {t("common.backToTimeline")}
               </Link>
@@ -106,7 +106,7 @@ export default function UserPage() {
                 {user.banner ? (
                   <img src={user.banner} className="absolute inset-0 w-full h-full object-cover" alt="Banner" />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-cyan-400/80 via-teal-400 to-cyan-600" />
+                  <div className="w-full h-full bg-gradient-to-br from-brandlight/80 via-ok to-branddeep" />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
               </div>
@@ -120,14 +120,14 @@ export default function UserPage() {
                       {user.avatar ? (
                         <img src={user.avatar} width={96} height={96} className="w-full h-full object-cover" alt={user.displayName} />
                       ) : (
-                        <div className="w-full h-full bg-cyan-500/20 flex items-center justify-center">
-                          <Icon name="person" className="text-cyan-500" fontSize={36} />
+                        <div className="w-full h-full bg-brand/20 flex items-center justify-center">
+                          <Icon name="person" className="text-fgaccent" fontSize={36} />
                         </div>
                       )}
                     </div>
                     {user.isVerified && (
-                      <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 bg-white dark:bg-gray-950 rounded-full flex items-center justify-center border-2 border-cyan-500">
-                        <Icon name="check" className="text-cyan-500" fontSize={12} />
+                      <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 bg-white dark:bg-gray-950 rounded-full flex items-center justify-center border-2 border-brand">
+                        <Icon name="check" className="text-fgaccent" fontSize={12} />
                       </div>
                     )}
                   </div>
@@ -142,7 +142,7 @@ export default function UserPage() {
                       className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-semibold transition-all ${
                         isFollowing
                           ? "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-500"
-                          : "bg-gradient-to-r from-cyan-500 to-teal-400 text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-105"
+                          : "bg-gradient-to-r from-brand to-ok text-onbrand shadow-lg shadow-brand/25 hover:shadow-brand/40 hover:scale-105"
                       }`}
                     >
                       {followLoading ? (
@@ -177,7 +177,7 @@ export default function UserPage() {
                 <div className="flex flex-wrap gap-x-5 gap-y-2 mb-4">
                   {user.location && (
                     <span className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
-                      <Icon name="location_on" className="text-cyan-500" fontSize={16} />
+                      <Icon name="location_on" className="text-fgaccent" fontSize={16} />
                       {user.location}
                     </span>
                   )}
@@ -189,7 +189,7 @@ export default function UserPage() {
                   )}
                   {user.joinedAt && (
                     <span className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
-                      <Icon name="event" className="text-cyan-500" fontSize={16} />
+                      <Icon name="event" className="text-fgaccent" fontSize={16} />
                       {user.joinedAt}
                     </span>
                   )}
@@ -221,7 +221,7 @@ export default function UserPage() {
                       key={tab.value}
                       className={`whitespace-nowrap py-3 px-1 font-medium text-sm transition-colors duration-200 border-b-2 ${
                         activeTab === tab.value
-                          ? "border-cyan-500 text-cyan-600 dark:text-cyan-400"
+                          ? "border-brand text-branddeep dark:text-fgaccent"
                           : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:border-gray-300"
                       }`}
                       onClick={() => setActiveTab(tab.value)}

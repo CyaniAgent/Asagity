@@ -16,7 +16,7 @@ export default function PanelSettingsModerationPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3 mb-2">
-        <Icon name="shield" className="text-cyan-500" fontSize={24} />
+        <Icon name="shield" className="text-fgaccent" fontSize={24} />
         <h2 className="text-xl font-black text-gray-900 dark:text-white">审核设置</h2>
       </div>
 
@@ -33,7 +33,7 @@ export default function PanelSettingsModerationPage() {
               <span className="text-sm font-bold text-gray-900 dark:text-white">{item.label}</span>
               <span className="text-xs text-gray-500">{item.description}</span>
             </div>
-            <div className={`w-11 h-6 rounded-full cursor-pointer transition-colors relative ${item.enabled ? "bg-cyan-500" : "bg-gray-300 dark:bg-gray-600"}`}>
+            <div className={`w-11 h-6 rounded-full cursor-pointer transition-colors relative ${item.enabled ? "bg-brand" : "bg-gray-300 dark:bg-gray-600"}`}>
               <div className={`w-5 h-5 bg-white rounded-full shadow-md absolute top-0.5 transition-transform ${item.enabled ? "translate-x-5.5" : "translate-x-0.5"}`} />
             </div>
           </div>
@@ -44,7 +44,7 @@ export default function PanelSettingsModerationPage() {
       <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl rounded-[24px] border border-white/40 dark:border-gray-700/50 shadow-sm p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-black text-lg text-gray-900 dark:text-white">封禁主机</h3>
-          <button className="px-3 py-1.5 rounded-xl text-xs font-bold bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-200 dark:hover:bg-cyan-900/50 transition-colors flex items-center gap-1">
+          <button className="px-3 py-1.5 rounded-xl text-xs font-bold bg-brandmuted text-branddeep dark:text-fgaccent hover:bg-brand/20 transition-colors flex items-center gap-1">
             <Icon name="add" fontSize={14} />
             添加
           </button>

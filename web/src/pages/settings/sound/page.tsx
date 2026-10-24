@@ -9,7 +9,7 @@ function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean
   return (
     <button
       onClick={() => onChange(!enabled)}
-      className={`relative w-11 h-6 rounded-full transition-colors ${enabled ? "bg-cyan-500" : "bg-gray-300 dark:bg-gray-600"}`}
+      className={`relative w-11 h-6 rounded-full transition-colors ${enabled ? "bg-brand" : "bg-gray-300 dark:bg-gray-600"}`}
     >
       <span
         className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${enabled ? "translate-x-5" : ""}`}
@@ -29,7 +29,7 @@ export default function SoundSettingsPage() {
     <div className="max-w-[700px] mx-auto p-6 space-y-8 animate-[fadeIn_0.3s_ease-out]">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-400 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand to-ok flex items-center justify-center shadow-lg shadow-brand/20">
           <Icon name="volume_up" className="text-white" fontSize={24} />
         </div>
         <div>
@@ -42,7 +42,7 @@ export default function SoundSettingsPage() {
       <section className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Icon name="tune" className="text-cyan-500" fontSize={18} />
+            <Icon name="tune" className="text-fgaccent" fontSize={18} />
             {t("settings.masterVolume")}
           </h2>
         </div>
@@ -55,11 +55,11 @@ export default function SoundSettingsPage() {
               max={100}
               value={volume}
               onChange={(e) => setVolume(Number(e.target.value))}
-              className="flex-1 accent-cyan-500"
+              className="flex-1 accent-brand"
             />
             <Icon name="volume_up" className="text-gray-400" fontSize={20} />
           </div>
-          <div className="text-center text-sm font-bold text-cyan-500">{volume}%</div>
+          <div className="text-center text-sm font-bold text-fgaccent">{volume}%</div>
         </div>
       </section>
 
@@ -67,7 +67,7 @@ export default function SoundSettingsPage() {
       <section className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Icon name="music_note" className="text-cyan-500" fontSize={18} />
+            <Icon name="music_note" className="text-fgaccent" fontSize={18} />
             {t("settings.soundEffects")}
           </h2>
         </div>
@@ -93,7 +93,7 @@ export default function SoundSettingsPage() {
       <section className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Icon name="equalizer" className="text-cyan-500" fontSize={18} />
+            <Icon name="equalizer" className="text-fgaccent" fontSize={18} />
             {t("settings.nowPlaying")}
           </h2>
         </div>
@@ -114,7 +114,7 @@ export default function SoundSettingsPage() {
             </div>
             <button
               onClick={() => musicStore.togglePlay()}
-              className="w-10 h-10 rounded-full bg-cyan-500 flex items-center justify-center text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all"
+              className="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-onbrand shadow-lg shadow-brand/30 hover:shadow-brand/50 transition-all"
             >
               <Icon name={musicStore.isPlaying ? "pause" : "play_arrow"} fontSize={20} />
             </button>

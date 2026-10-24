@@ -33,7 +33,7 @@ export default function NotFound() {
             <div className="flex items-center gap-3 mt-2">
               <button
                 onClick={() => router.back()}
-                className="px-4 py-2 text-sm font-medium text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20 rounded-xl transition-colors"
+                className="px-4 py-2 text-sm font-medium text-branddeep dark:text-fgaccent bg-brand/10 hover:bg-brand/20 rounded-xl transition-colors"
               >
                 {t("notFound.back")}
               </button>

@@ -92,17 +92,17 @@ export default function ChatDetailPage() {
         >
           <Icon name="arrow_left" fontSize={18} />
         </button>
-        <div className="w-9 h-9 rounded-full overflow-hidden bg-cyan-500/20 flex items-center justify-center">
-          <Icon name="person" className="text-cyan-500" fontSize={18} />
+        <div className="w-9 h-9 rounded-full overflow-hidden bg-brand/20 flex items-center justify-center">
+          <Icon name="person" className="text-fgaccent" fontSize={18} />
         </div>
         <div className="flex-1 min-w-0">
           <h2 className="text-sm font-bold text-gray-900 dark:text-white truncate">{chatData.name}</h2>
           <p className="text-[10px] text-green-500 font-semibold">{t("chat.online")}</p>
         </div>
-        <button className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-cyan-500 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+        <button className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-fgaccent hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
           <Icon name="call" fontSize={18} />
         </button>
-        <button className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-cyan-500 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+        <button className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-fgaccent hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
           <Icon name="videocam" fontSize={18} />
         </button>
       </div>
@@ -110,18 +110,18 @@ export default function ChatDetailPage() {
       {/* Contact Info Card */}
       <div className="px-6 pt-6 pb-4 flex flex-col items-center text-center">
         <div className="relative mb-3">
-          <div className="w-16 h-16 rounded-full overflow-hidden ring-4 ring-cyan-500/20 shadow-2xl">
-            <div className="w-full h-full bg-cyan-500/20 flex items-center justify-center">
-              <Icon name="person" className="text-cyan-500" fontSize={28} />
+          <div className="w-16 h-16 rounded-full overflow-hidden ring-4 ring-brand/20 shadow-2xl">
+            <div className="w-full h-full bg-brand/20 flex items-center justify-center">
+              <Icon name="person" className="text-fgaccent" fontSize={28} />
             </div>
           </div>
           <div className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-green-500 border-2 border-white dark:border-gray-900 shadow-sm" />
         </div>
         <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
           {chatData.name}
-          <Icon name="verified" className="text-cyan-500" fontSize={18} />
+          <Icon name="verified" className="text-fgaccent" fontSize={18} />
         </h3>
-        <span className="text-[10px] uppercase font-bold tracking-widest text-cyan-600 dark:text-cyan-400 mt-1">
+        <span className="text-[10px] uppercase font-bold tracking-widest text-branddeep dark:text-fgaccent mt-1">
           {t("chat.e2eEncrypted")}
         </span>
         <div className="h-px w-20 bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-800 to-transparent mt-4" />
@@ -133,8 +133,8 @@ export default function ChatDetailPage() {
           <div key={msg.id} className="flex items-start gap-3 max-w-[85%] group">
             <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 mt-1 ring-1 ring-gray-200 dark:ring-gray-800">
               {msg.isMe ? (
-                <div className="w-full h-full bg-cyan-500/20 flex items-center justify-center ring-2 ring-cyan-500/50">
-                  <Icon name="person" className="text-cyan-500" fontSize={14} />
+                <div className="w-full h-full bg-brand/20 flex items-center justify-center ring-2 ring-brand/50">
+                  <Icon name="person" className="text-fgaccent" fontSize={14} />
                 </div>
               ) : (
                 <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
@@ -144,7 +144,7 @@ export default function ChatDetailPage() {
             </div>
             <div className="flex flex-col gap-1 min-w-0">
               <div className="flex items-center gap-2 px-1">
-                <span className={`text-xs font-bold ${msg.isMe ? "text-cyan-500" : "text-gray-700 dark:text-gray-300"}`}>
+                <span className={`text-xs font-bold ${msg.isMe ? "text-fgaccent" : "text-gray-700 dark:text-gray-300"}`}>
                   {msg.isMe ? "Me" : chatData.name}
                 </span>
                 <span className="text-[10px] text-gray-400 font-medium">{msg.time}</span>
@@ -152,7 +152,7 @@ export default function ChatDetailPage() {
               <div
                 className={`px-4 py-3 rounded-[20px] rounded-tl-sm text-[15px] leading-relaxed shadow-sm transition-transform group-hover:-translate-y-0.5 ${
                   msg.isMe
-                    ? "bg-cyan-500 text-white shadow-cyan-500/20"
+                    ? "bg-brand text-onbrand shadow-brand/20"
                     : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-black/5"
                 }`}
               >
@@ -160,7 +160,7 @@ export default function ChatDetailPage() {
               </div>
               {msg.isMe && (
                 <div className="px-2 text-[10px] font-bold tracking-wider uppercase h-3">
-                  <span className={msg.read ? "text-cyan-500/70" : "text-gray-300 dark:text-gray-600"}>
+                  <span className={msg.read ? "text-fgaccent/70" : "text-gray-300 dark:text-gray-600"}>
                     {msg.read ? "Read" : "Sent"}
                   </span>
                 </div>
@@ -187,7 +187,7 @@ export default function ChatDetailPage() {
               onClick={sendMessage}
               className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center transition-all shadow-md active:scale-95 mb-0.5 ${
                 newMessage.trim()
-                  ? "bg-cyan-500 text-white shadow-cyan-500/30"
+                  ? "bg-brand text-onbrand shadow-brand/30"
                   : "bg-gray-100 dark:bg-gray-800 text-gray-400"
               }`}
             >
@@ -195,17 +195,17 @@ export default function ChatDetailPage() {
             </button>
           </div>
           <div className="flex items-center gap-1.5 px-2 pb-1">
-            <button className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-cyan-500 transition-colors">
+            <button className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-fgaccent transition-colors">
               <Icon name="add_circle" fontSize={20} />
             </button>
-            <button className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-cyan-500 transition-colors">
+            <button className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-fgaccent transition-colors">
               <Icon name="image" fontSize={20} />
             </button>
             <div className="flex-1" />
-            <button className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-cyan-500 transition-colors">
+            <button className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-fgaccent transition-colors">
               <Icon name="call" fontSize={20} />
             </button>
-            <button className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-cyan-500 transition-colors">
+            <button className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-fgaccent transition-colors">
               <Icon name="videocam" fontSize={20} />
             </button>
           </div>

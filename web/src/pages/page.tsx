@@ -10,7 +10,9 @@ export default function HomePage() {
   const { isLoggedIn } = useUserStore();
 
   if (!isLoggedIn) {
-    return <Welcome />;
+    // cover + 焦点保主体：雪山峰/冰川带居中左、标题焊在左下，
+    // 焦点偏左下，宽屏裁掉多余天空、保住底部文字。
+    return <Welcome backgroundFocalPoint={{ x: 35, y: 85 }} />;
   }
 
   return <DashboardLayout />;

@@ -11,10 +11,16 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "theme:palette": "astryx theme palette generate src/theme/yukinoshita-glacier/palette.config.json -o src/theme/yukinoshita-glacier/glacier.palette.ts --preview src/theme/yukinoshita-glacier/palette.preview.html -f",
+    "theme:build": "astryx theme build src/theme/yukinoshita-glacier/yukinoshita-glacier.ts -o src/theme/yukinoshita-glacier/dist/yukinoshita-glacier.css"
   },
   "dependencies": {
+    "@astryxdesign/cli": "^0.7.1",
+    "@astryxdesign/core": "^0.7.1",
+    "@astryxdesign/theme-neutral": "^0.7.1",
     "@fluentui/react-icons": "^2.0.316",
+    "@stylexjs/stylex": "^0.19.1",
     "@tanstack/react-query": "^5.101.2",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",

@@ -17,6 +17,7 @@ import (
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/event"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/id"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/jwtx"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/mail"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -229,7 +230,7 @@ func (s *Service) Me(userID string) (*dto.UserResponse, error) {
 }
 
 func (s *Service) generateAuthResponse(user *usermodel.User) (*dto.AuthResponse, error) {
-	accessToken, err := s.generateAccessToken(user.ID, user.PubID)
+	accessToken, err := s.generateAccessToken(user.ID, user.PubID, user.UserGroupID)
 	if err != nil {
 		return nil, err
 	}
@@ -252,16 +253,17 @@ func (s *Service) generateAuthResponse(user *usermodel.User) (*dto.AuthResponse,
 	}, nil
 }
 
-func (s *Service) generateAccessToken(userID, userPubID string) (string, error) {
+func (s *Service) generateAccessToken(userID, userPubID, userGroupID string) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":   userID,
 		"pubid": userPubID,
+		"grp":   userGroupID,
 		"exp":   time.Now().Add(AccessTokenDuration).Unix(),
 		"iat":   time.Now().Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(s.cfg.JwtSecret))
+	return token.SignedString(jwtx.DeriveKey(s.cfg.JwtSecret))
 }
 
 func (s *Service) generateRefreshToken(userID string) (string, error) {

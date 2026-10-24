@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Verse.Data.Entities;
 
 namespace Verse.Module.Instance;
 
@@ -30,9 +31,18 @@ public sealed record SystemEnvironmentResponse(
     [property: JsonPropertyName("memory")] string Memory,
     [property: JsonPropertyName("is_container")] bool IsContainer);
 
-/// <summary>Ported from Go <c>instance/repository.DatabaseStat</c>.</summary>
-public sealed record DatabaseStat(
-    [property: JsonPropertyName("table")] string Table,
-    [property: JsonPropertyName("size_pretty")] string SizePretty,
-    [property: JsonPropertyName("size_bytes")] long SizeBytes,
-    [property: JsonPropertyName("rows")] long Rows);
+/// <summary>
+/// The seeded administrator/developer account. The password is never exposed.
+/// </summary>
+public sealed record DeveloperAccountResponse
+{
+    [JsonPropertyName("exists")] public bool Exists { get; set; }
+    [JsonPropertyName("username")] public string Username { get; set; } = string.Empty;
+    [JsonPropertyName("email")] public string Email { get; set; } = string.Empty;
+    [JsonPropertyName("name")] public string Name { get; set; } = string.Empty;
+    [JsonPropertyName("group")] public string Group { get; set; } = string.Empty;
+    [JsonPropertyName("group_id")] public string GroupId { get; set; } = string.Empty;
+    [JsonPropertyName("pub_id")] public string PubId { get; set; } = string.Empty;
+    [JsonPropertyName("mode")] public string Mode { get; set; } = string.Empty;
+    [JsonPropertyName("seeded_by")] public string SeededBy { get; set; } = string.Empty;
+}

@@ -55,3 +55,9 @@ func (h *Handler) AdminDatabaseStats(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) SystemEnvironment(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, h.service.SystemEnvironment())
 }
+
+// DeveloperAccount - GET /api/system/developer-account
+// Reports the seeded administrator/developer account (no password).
+func (h *Handler) DeveloperAccount(w http.ResponseWriter, r *http.Request) {
+	httpx.WriteJSON(w, http.StatusOK, h.service.DeveloperAccount())
+}

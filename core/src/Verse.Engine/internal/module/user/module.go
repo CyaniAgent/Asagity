@@ -6,6 +6,7 @@ import (
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/user/handler"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/user/repository"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/user/service"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/authz"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/database"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/event"
@@ -21,7 +22,7 @@ func Register(r *chi.Mux, cfg config.Config, clients *database.Clients, eventBus
 	svc := service.NewWithEventBus(repo, cfg, eventBus)
 	h := handler.New(svc)
 
-	r.Get("/api/users/me", h.Me)
-	r.Post("/api/users/me/pubid", h.ChangePubID)
-	r.Get("/api/users/me/pubid/history", h.GetPubIDChangeHistory)
+	r.With(authz.Require("account:read")).Get("/api/users/me", h.Me)
+	r.With(authz.Require("account:write")).Post("/api/users/me/pubid", h.ChangePubID)
+	r.With(authz.Require("account:read")).Get("/api/users/me/pubid/history", h.GetPubIDChangeHistory)
 }
