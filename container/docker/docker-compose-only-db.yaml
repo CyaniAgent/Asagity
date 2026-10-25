@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:18.3-alpine3.23
+    image: postgres:alpine
     container_name: asagity_postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-asagity}
@@ -25,26 +25,26 @@ services:
       service: postgres
 
   redis:
-    image: redis:8.6.2-alpine
-    container_name: asagity_redis
+    image: valkey:alpine
+    container_name: asagity_valkey
     command: >
-      sh -c 'redis-server --appendonly yes $$([ -z "$$REDIS_PASSWORD" ] || echo "--requirepass $$REDIS_PASSWORD")'
+      sh -c 'valkey-server --appendonly yes $$([ -z "$$REDIS_PASSWORD" ] || echo "--requirepass $$REDIS_PASSWORD")'
     ports:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
-      - redis_data:/data
+      - valkey_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-}", "ping"]
+      test: ["CMD", "valkey-cli", "-a", "${REDIS_PASSWORD:-}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
     labels:
       app: asagity
-      service: redis
+      service: valkey
 
 volumes:
   postgres_data:
     name: asagity_postgres_data
-  redis_data:
-    name: asagity_redis_data
+  valkey_data:
+    name: asagity_valkey_data
