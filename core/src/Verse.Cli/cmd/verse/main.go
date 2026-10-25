@@ -14,6 +14,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -35,6 +36,7 @@ Usage:
 Commands:
   start [prod|dev|dbless] [service]   start services (default: prod, all)
   stop [all|engine|api|db|redis]      stop services (default: all)
+  destroy [-y] [all|engine|api|db|redis]  force-kill, asks y/N; -y for scripts
   restart [prod|dev|dbless] [service] restart services (default: prod, all)
   status                              three-level status: process, port, /healthz
   logs <service>                      print last 50 log lines (engine|api)
@@ -88,6 +90,24 @@ func run(argv []string) error {
 		return r.Start(svc, md)
 	case "stop":
 		r.Stop(svcArg(rest))
+		return nil
+	case "destroy":
+		// -y/--yes skips the prompt so automation can recover a wedged
+		// stack without a TTY; interactive use always asks.
+		svc, skipPrompt := "all", false
+		for _, a := range rest[1:] {
+			switch a {
+			case "-y", "--yes":
+				skipPrompt = true
+			default:
+				svc = a
+			}
+		}
+		if !skipPrompt && !confirmed(os.Stdin, fmt.Sprintf("force-kill %s (no graceful shutdown)", svc)) {
+			fmt.Println("aborted")
+			return nil
+		}
+		r.Destroy(svc)
 		return nil
 	case "restart":
 		svc, md := resolveStart(rest[1:], modeFlag)
@@ -163,6 +183,19 @@ func splitModeFlag(argv []string) (string, []string) {
 		rest = append(rest, a)
 	}
 	return flagVal, rest
+}
+
+// confirmed asks for an explicit y/N before an irreversible action.
+// -y/--yes in args skips the prompt for scripted use.
+func confirmed(in io.Reader, what string) bool {
+	fmt.Printf("%s — continue? [y/N] ", what)
+	line, _ := bufio.NewReader(in).ReadString('\n')
+	switch strings.ToLower(strings.TrimSpace(line)) {
+	case "y", "yes":
+		return true
+	default:
+		return false
+	}
 }
 
 func svcArg(rest []string) string {
@@ -329,8 +362,9 @@ func interactive(modeFlag string) error {
 		fmt.Printf("\nversetool - Asagity server manager (mode=%s, engine :%s, api :%s)\n",
 			md, cfg.EnginePort, cfg.APIPort)
 		fmt.Println("  1) start all    2) stop all      3) restart all")
-		fmt.Println("  4) status       5) health        6) doctor")
-		fmt.Println("  7) logs engine  8) logs api      9) app list")
+		fmt.Println("  4) destroy all (force-kill, emergency)")
+		fmt.Println("  5) status       6) health        7) doctor")
+		fmt.Println("  8) logs engine  9) logs api     10) app list")
 		fmt.Println("  m) switch mode (prod/dev/dbless)  d) db status")
 		fmt.Println("  0) exit")
 		fmt.Print("select> ")
@@ -344,17 +378,23 @@ func interactive(modeFlag string) error {
 		case "3":
 			_ = r.Restart("all", md)
 		case "4":
-			_ = cmdStatus(r)
+			if confirmed(in, "force-kill all services (no graceful shutdown)") {
+				r.Destroy("all")
+			} else {
+				fmt.Println("aborted")
+			}
 		case "5":
-			_ = cmdHealth(r)
+			_ = cmdStatus(r)
 		case "6":
+			_ = cmdHealth(r)
+		case "7":
 			checks := doctor.Run(cfg, r, md)
 			doctor.Print(checks)
-		case "7":
-			_ = cmdLogs(r, runner.Engine)
 		case "8":
-			_ = cmdLogs(r, runner.API)
+			_ = cmdLogs(r, runner.Engine)
 		case "9":
+			_ = cmdLogs(r, runner.API)
+		case "10":
 			_ = cmdApp(cfg, []string{"list"})
 		case "d":
 			_ = cmdDB(cfg, r, md)

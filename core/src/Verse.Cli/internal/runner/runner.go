@@ -316,6 +316,47 @@ func (r *Runner) Stop(svc string) {
 	}
 }
 
+// Destroy force-kills svc (or all four when svc is "all"/""): SIGKILL with
+// no grace period for engine/api, `docker compose kill` for db/redis.
+// Emergency counterpart of Stop — a wedged process that ignores SIGTERM
+// still goes down.
+func (r *Runner) Destroy(svc string) {
+	targets := []string{svc}
+	if svc == "" || svc == "all" {
+		targets = []string{Engine, API, Redis, DB}
+	}
+	for _, t := range targets {
+		switch t {
+		case Engine, API:
+			if r.proc.PidOf(t) == 0 {
+				fmt.Printf("[KILL] %s not running\n", t)
+				continue
+			}
+			r.proc.Destroy(t)
+			fmt.Printf("[KILL] %s force-killed\n", t)
+		case DB, Redis:
+			r.composeKill(t)
+		default:
+			fmt.Printf("[WARN] unknown service %q\n", t)
+		}
+	}
+}
+
+func (r *Runner) composeKill(svc string) {
+	if !dockerOK() {
+		fmt.Printf("[SKIP] %s: docker unavailable\n", svc)
+		return
+	}
+	file, err := r.composeFile()
+	if err != nil {
+		return
+	}
+	cmd := exec.Command("docker", "compose", "-f", file, "kill", svc)
+	cmd.Dir = r.cfg.ProjectRoot
+	_ = cmd.Run()
+	fmt.Printf("[KILL] %s container killed\n", svc)
+}
+
 // Restart stops then starts svc.
 func (r *Runner) Restart(svc string, md mode.Mode) error {
 	r.Stop(svc)

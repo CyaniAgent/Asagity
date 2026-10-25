@@ -130,6 +130,25 @@ func (m *Manager) Kill(name string) error {
 	return nil
 }
 
+// Destroy force-kills a service: SIGKILL to the whole process group with no
+// grace period. Emergency counterpart of Kill — prefer Kill for a graceful
+// stop; Destroy is for wedged processes that ignore SIGTERM.
+func (m *Manager) Destroy(name string) {
+	pid := m.PidOf(name)
+	_ = os.Remove(m.pidFile(name))
+	if pid == 0 {
+		return
+	}
+	// Spawn sets Setpgid, so -pid takes down the whole group: the service
+	// and anything it spawned (dotnet child, shells, ...).
+	if err := syscall.Kill(-pid, syscall.SIGKILL); err != nil {
+		// Group already gone (or never led): fall back to the single pid.
+		if proc, findErr := os.FindProcess(pid); findErr == nil {
+			_ = proc.Signal(syscall.SIGKILL)
+		}
+	}
+}
+
 func mergeEnv(base []string, extra map[string]string) []string {
 	out := append([]string(nil), base...)
 	for k, v := range extra {

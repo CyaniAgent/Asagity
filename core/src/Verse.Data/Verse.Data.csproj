@@ -15,6 +15,12 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.4" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <!-- Security: EF Core's default (2.1.11) ships SQLite 3.49.1, affected by
+         CVE-2025-6965 / GHSA-2m69-gcr7-jv3q (aggregate terms > columns ->
+         memory corruption, fixed in SQLite 3.50.2). bundle 2.1.14 embeds
+         SQLite 3.54.0. Pin here so every project in the solution inherits
+         the patched native library. Keep until EF Core itself ships >= 2.1.14. -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.14" />
   </ItemGroup>
 
 </Project>
