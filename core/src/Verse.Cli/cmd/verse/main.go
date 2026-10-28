@@ -1,7 +1,8 @@
 // Command versetool (Verse tool) manages the Asagity server lifecycle.
 //
 // Dual form: with arguments it runs one command and exits (script-friendly);
-// without arguments it opens an interactive menu.
+// without arguments on a TTY it opens the Termity Base CLI — a semantic
+// /command REPL (/help inside) with a per-run session journal (/recent).
 //
 // Global flag:
 //
@@ -26,12 +27,22 @@ import (
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/modulemgr"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/process"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/runner"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/termity"
 )
 
 const usage = `versetool - Verse tool, the Asagity server manager
 
 Usage:
   versetool [--mode=<databaseless|lite|production>] <command> [args]
+  versetool                          interactive Termity Base CLI (TTY only)
+
+Interactive mode (Termity Base CLI):
+  run versetool with no arguments on a terminal to open the REPL:
+    /start /stop /restart /destroy /status /health /doctor
+    /logs /app /db /mode /recent /help /exit
+  every run is a fresh session (input history resets); the command journal
+  is persisted under .verse/sessions/ and browsable with /recent.
+  scripts keep the argument form below — it is unchanged.
 
 Commands:
   start [prod|dev|dbless] [service]   start services (default: prod, all)
@@ -346,7 +357,16 @@ func cmdDB(cfg *config.Config, r *runner.Runner, md mode.Mode) error {
 }
 
 // interactive runs the numbered menu when no command is given.
+// interactive launches the Termity Base CLI (semantic /command REPL) when
+// stdin+stdout are a TTY; scripted environments get guidance instead of a
+// menu they cannot drive.
 func interactive(modeFlag string) error {
+	if !isTerminal(os.Stdin) || !isTerminal(os.Stdout) {
+		fmt.Fprintln(os.Stderr,
+			"versetool: interactive mode needs a TTY.\n"+
+				"  use the argument form for scripts: versetool start dev, versetool status, ...")
+		return nil
+	}
 	cfg, err := config.Load()
 	if err != nil {
 		return err
@@ -356,61 +376,14 @@ func interactive(modeFlag string) error {
 	if err != nil {
 		return err
 	}
+	return termity.Run(cfg, r, md)
+}
 
-	in := bufio.NewReader(os.Stdin)
-	for {
-		fmt.Printf("\nversetool - Asagity server manager (mode=%s, engine :%s, api :%s)\n",
-			md, cfg.EnginePort, cfg.APIPort)
-		fmt.Println("  1) start all    2) stop all      3) restart all")
-		fmt.Println("  4) destroy all (force-kill, emergency)")
-		fmt.Println("  5) status       6) health        7) doctor")
-		fmt.Println("  8) logs engine  9) logs api     10) app list")
-		fmt.Println("  m) switch mode (prod/dev/dbless)  d) db status")
-		fmt.Println("  0) exit")
-		fmt.Print("select> ")
-
-		line, _ := in.ReadString('\n')
-		switch strings.TrimSpace(line) {
-		case "1":
-			_ = r.Start("all", md)
-		case "2":
-			r.Stop("all")
-		case "3":
-			_ = r.Restart("all", md)
-		case "4":
-			if confirmed(in, "force-kill all services (no graceful shutdown)") {
-				r.Destroy("all")
-			} else {
-				fmt.Println("aborted")
-			}
-		case "5":
-			_ = cmdStatus(r)
-		case "6":
-			_ = cmdHealth(r)
-		case "7":
-			checks := doctor.Run(cfg, r, md)
-			doctor.Print(checks)
-		case "8":
-			_ = cmdLogs(r, runner.Engine)
-		case "9":
-			_ = cmdLogs(r, runner.API)
-		case "10":
-			_ = cmdApp(cfg, []string{"list"})
-		case "d":
-			_ = cmdDB(cfg, r, md)
-		case "m":
-			fmt.Print("mode [prod|dev|dbless]> ")
-			mline, _ := in.ReadString('\n')
-			if m, ok := mode.Alias(strings.TrimSpace(mline)); ok {
-				md = m
-				fmt.Printf("mode switched to %s\n", md)
-			} else {
-				fmt.Println("unknown mode (want prod|dev|dbless)")
-			}
-		case "0", "exit", "quit", "q":
-			return nil
-		default:
-			fmt.Println("unknown choice (type `versetool help` for commands)")
-		}
+// isTerminal reports whether f is attached to a character device.
+func isTerminal(f *os.File) bool {
+	info, err := f.Stat()
+	if err != nil {
+		return false
 	}
+	return info.Mode()&os.ModeCharDevice != 0
 }
