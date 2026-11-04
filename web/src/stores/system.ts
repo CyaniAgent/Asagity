@@ -39,7 +39,7 @@ interface SystemState {
   startHeartbeat: () => void;
   stopHeartbeat: () => void;
   fetchHostInfo: () => Promise<void>;
-  fetchHostInfoWithTimeout: () => void;
+  fetchHostInfoWithTimeout: () => Promise<void>;
 }
 
 export const ERROR_CODES = {
@@ -68,12 +68,30 @@ export const useSystemStore = create<SystemState>()((set, get) => ({
   hostInfo: null,
   heartbeatInterval: null,
 
+  /**
+   * 启动序列 — 分阶段真进度（0→100 由真实阶段推进，绝不假装满格）。
+   * 阶段：字体就绪(≤2s) → 设备解析 → hostInfo(封顶2.5s) → 最低驻留防闪现。
+   * SplashScreen 的进度条/风味文案均以此为数据源。
+   */
   initSequence: async () => {
     if (get().isInitialized) return;
+    const startedAt = performance.now();
 
-    set({ isInitialized: true, initProgress: 100 });
+    set({ isInitialized: true, initProgress: 15 });
 
     if (typeof window !== "undefined") {
+      // 阶段 1/4 · 字体就绪（2s 超时兜底，不因字体卡死开屏）
+      try {
+        await Promise.race([
+          document.fonts.ready,
+          new Promise((resolve) => setTimeout(resolve, 2000)),
+        ]);
+      } catch {
+        console.warn("Font loading sync failed or timed out");
+      }
+      set({ initProgress: 55 });
+
+      // 阶段 2/4 · UA/设备解析
       const { UAParser } = await import("ua-parser-js");
       const parser = new UAParser(navigator.userAgent);
       const device = parser.getDevice();
@@ -83,21 +101,26 @@ export const useSystemStore = create<SystemState>()((set, get) => ({
         get().enableDevMode(true);
       }
 
-      try {
-        await Promise.race([
-          document.fonts.ready,
-          new Promise((resolve) => setTimeout(resolve, 2000)),
-        ]);
-      } catch {
-        console.warn("Font loading sync failed or timed out");
-      }
-
-      set({ isMobile });
+      set({ isMobile, initProgress: 70 });
+    } else {
+      set({ initProgress: 70 });
     }
 
-    get().fetchHostInfoWithTimeout();
+    // 阶段 3/4 · 实例 hostInfo 真等待（2.5s 封顶——离线/慢后端不拖死开屏）
+    await Promise.race([
+      get().fetchHostInfoWithTimeout(),
+      new Promise((resolve) => setTimeout(resolve, 2500)),
+    ]);
+    set({ initProgress: 92 });
 
-    set({ isLoadFinished: true });
+    // 阶段 4/4 · 最低驻留：防止开屏一闪而过，保证入场动画完整播完
+    const MIN_SPLASH_MS = 1000;
+    const elapsed = performance.now() - startedAt;
+    if (elapsed < MIN_SPLASH_MS) {
+      await new Promise((resolve) => setTimeout(resolve, MIN_SPLASH_MS - elapsed));
+    }
+
+    set({ isLoadFinished: true, initProgress: 100 });
 
     if (!get().isMobile || get().isWelcomeDismissed) {
       get().launchApp();
@@ -235,11 +258,12 @@ export const useSystemStore = create<SystemState>()((set, get) => ({
     console.warn("Failed to fetch host info (engine :2048 + api :2050 unreachable)");
   },
 
+  /** hostInfo 探测（5s 自超时，可 await — initSequence 阶段 3 以 2.5s 封顶竞速）。 */
   fetchHostInfoWithTimeout: () => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    fetch("/api/system/environment", { signal: controller.signal })
+    return fetch("/api/system/environment", { signal: controller.signal })
       .then((res) => {
         if (!res.ok) throw new Error(`engine responded ${res.status}`);
         return res.json();

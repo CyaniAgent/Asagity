@@ -1,8 +1,12 @@
 package dto
 
 type VersionResponse struct {
-	Name    string `json:"name"`
+	Name string `json:"name"`
+	// AppVersion injected via APP_VERSION (release tag).
 	Version string `json:"version"`
+	// Runtime is the self-describing Go toolchain version (e.g. "go1.27.3"),
+	// from runtime.Version() — feeds the web 系统信息 window.
+	Runtime string `json:"runtime"`
 }
 
 type MetaResponse struct {

@@ -27,6 +27,19 @@ public sealed record GithubReleaseResponse(
     [property: JsonPropertyName("body")] string Body,
     [property: JsonPropertyName("published_at")] string PublishedAt);
 
+/// <summary>api.github.com <c>/repos/{owner}/{repo}/contributors</c> item (server-side proxy).</summary>
+public sealed record GithubContributorResponse(
+    [property: JsonPropertyName("login")] string Login,
+    [property: JsonPropertyName("avatar_url")] string AvatarUrl,
+    [property: JsonPropertyName("html_url")] string HtmlUrl,
+    [property: JsonPropertyName("contributions")] int Contributions);
+
+/// <summary>api.github.com <c>/orgs/{org}/members</c> item (server-side proxy).</summary>
+public sealed record GithubMemberResponse(
+    [property: JsonPropertyName("login")] string Login,
+    [property: JsonPropertyName("avatar_url")] string AvatarUrl,
+    [property: JsonPropertyName("html_url")] string HtmlUrl);
+
 /// <summary>Termity guest-entry verification code issue response.</summary>
 public sealed record ShellGuestCodeResponse(
     [property: JsonPropertyName("code")] string Code,

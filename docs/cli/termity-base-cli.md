@@ -55,16 +55,86 @@
 | `/restart [mode] [service]` | `versetool restart ...` | |
 | `/destroy [service]` | 菜单 4) destroy all | **inline 二次确认**：提示后输入 `y` 才执行 |
 | `/status` `/health` `/doctor` | 菜单 5/6/7 | 渲染为对齐表格 |
-| `/logs <engine\|api>` | 菜单 8/9 | 尾部 50 行 |
+| `/logs [-f] <engine\|api\|off>` | 菜单 8/9 | 尾部 50 行；`-f` 实时 follow |
+| `/dev <build [...]\|cache-clean>` | （新） | 开发者工具，见 §3.4 |
 | `/app <list\|enable\|disable ...>` | 菜单 10 | |
 | `/db` | 菜单 d) | db status |
 | `/mode [prod\|dev\|dbless]` | 菜单 m) | 切换**本会话**模式，/status 头部实时反映 |
 | `/recent [id]` | （新） | 列出历史 Session；带 id 则展开该会话命令流水 |
 | `/help` | （新） | 命令表 + 快捷键 |
-| `/exit` / Ctrl+C / Ctrl+D | 0) exit | Ctrl+C 第一次中断当前命令，再次退出 |
+| `/exit` / Ctrl+C / Ctrl+D | 0) exit | Ctrl+C：中断运行中命令 → 断开日志 follow → 退出（分层，见 §3.3） |
 
 - 裸文本（不以 `/` 开头）→ `unknown command` + 最近命令建议（编辑距离）；
 - 未知 `/xxx` → 同上（`/stauts` → "did you mean /status?"）。
+
+## 3.3 实时日志流（Supervisor 风格，2026-10-29 增补）
+
+早期版本的 `/start`/`/stop` 跑完才一次性倒出输出——spinner 期间一片寂静。现对齐
+Home Assistant Supervisor 的实时模型：
+
+1. **流式 runner 输出**：`captureStream` 把 stdout/stderr 逐行推入 TUI
+   （`Program.Send(liveMsg)`），build 进度、`[OK] engine starting` 边跑边显示；
+2. **服务日志自动 follow**：`/start`/`/restart` 成功后自动 tail engine/api 的
+   `.verse/logs/<svc>.log`（`/stop`/`/destroy` 自动断开）；`/logs -f <svc>` 手动
+   挂载，`/logs off` 断开；
+3. **tail 实现**：300ms 轮询（零新依赖），inode 身份检测旋转（`os.SameFile`，
+   纯 size 比较会漏掉"新文件比 offset 大"的 rotate），size 缩小检测原地截断，
+   容忍文件尚未创建，跨读半行缓存；
+4. **着色**：`[db]`/`[runtime]` 等字母标签上 accent 色，error/fatal/panic/warn
+   按严重度着色，`.NET` 数字事件 id（`[0]`）不着色；follow 行带 `[engine]`/
+   `[api]` dim 前缀区分来源；
+5. **Ctrl+C 分层语义**：运行中→中断提示；空闲且 follow 中→先断开所有 tail；
+   再按→退出。输入行下方常驻 `⚡ live: api · engine` 状态行。
+
+## 3.4 /dev 开发者功能（2026-10-30 增补）
+
+面向日常开发循环的两条子命令，构建逻辑全部下沉到 runner 包
+（`BuildEngine`/`BuildAPI`/`BuildWeb`，与 `/start` 单一事实源），termity 侧只做编排。
+
+### `/dev build [engine|api|web|all]`（默认 all）
+
+**先看再建**——执行前先打 git 改动摘要：
+
+1. `git status --porcelain` 着色列出（改动码 M/A/D/??/R 各有其色，R 取新名，
+   引号路径还原；超过 8 条折叠为 `… +N more`）；
+2. 每条按路径推断组件归属：`core/src/Verse.Engine/`→engine、
+   `core/src/Verse.{Api,Data,Modules,Shared,Tests}/`→api、`web/`→web、
+   `core/src/Verse.Cli/`→cli（提示手工重建 versetool）、其余→core/docs/infra；
+3. 汇总 `→ touched: api · web`，并给出最窄建议
+   （只动了 web → `hint: /dev build web`）；
+4. 然后流式构建请求的目标：runner 的 `streamCmd` 把子进程 stdout/stderr
+   直连当前 stdout——termity 的 live capture 管道 fd 直通子进程，
+   dotnet/vite 输出逐行实时滚动（复用 §3.3 实时流），`[DEV] building ...`/
+   `[OK] built`/`[FAIL]` 标签着色；首败即停。
+
+`/start` 原本的 `buildCmd`（CombinedOutput 缓冲）已统一替换为 `streamCmd`，
+`/start dev` 的 .NET 构建输出同样变为实时。
+
+### `/dev cache-clean`
+
+清单（带体积）→ 清理 → 释放报告：
+
+| 目录 | 处置 | 理由 |
+|---|---|---|
+| `core/src/*/obj`、`*/bin`（除 Verse.Cli） | **清理** | .NET 中间产物/构建输出，重建即回 |
+| `web/node_modules/.vite` | **清理*** | Vite 依赖缓存，下次构建透明重建；*vite dev server 在跑（:2000）时保留 |
+| `core/src/Verse.Cli/bin` | 保留 | 里面是**正在运行的 versetool** 本体 |
+| `web/dist` | 保留 | 前端产物（非缓存），`/dev build web` 可重建 |
+| `.verse/bin`、`.verse/publish` | 保留 | 运行中服务的二进制/发布目录 |
+| Go build cache（`go env GOCACHE`） | 保留 | 全机共享，跨项目，报告体积但不动 |
+
+输出形如：
+
+```
+[OK]   core/src/Verse.Api/obj                 22.4 MiB
+[OK]   web/node_modules/.vite                 58.1 MiB
+[KEEP] web/dist                               100 MiB  (build artifact — rebuild via /dev build web)
+freed 80.5 MiB across 2 cache(s)
+```
+
+测试：git 摘要解析（含 R/引号/空行）、组件推断、目标参数校验、缓存清单
+purge/keep 标志与排序、cache-clean 端到端（temp tree 清理+保留验证）、
+humanSize 格式。
 
 ## 4. 架构
 

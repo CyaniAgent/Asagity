@@ -1,6 +1,8 @@
 package service
 
 import (
+	"runtime"
+
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/instance/dto"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/instance/model"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/instance/repository"
@@ -25,7 +27,11 @@ func NewWithClients(repo repository.Repository, cfg config.Config, clients *data
 }
 
 func (s *Service) Version() dto.VersionResponse {
-	return dto.VersionResponse{Name: "Asagity Core", Version: s.cfg.AppVersion}
+	return dto.VersionResponse{
+		Name:    "Asagity Core",
+		Version: s.cfg.AppVersion,
+		Runtime: runtime.Version(), // e.g. "go1.27.3" — 系统信息 window · 服务端版本
+	}
 }
 
 func (s *Service) Meta() dto.MetaResponse {

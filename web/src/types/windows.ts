@@ -16,6 +16,7 @@ export type ViewType =
   | "welcome_timeline"
   | "welcome_federation"
   | "welcome_dashboard"
+  | "system_info"
   | "portal_debugger";
 
 export type RightViewType =

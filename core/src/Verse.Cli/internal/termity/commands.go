@@ -1,8 +1,8 @@
 package termity
 
 import (
+	"bufio"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 	"time"
@@ -17,19 +17,43 @@ import (
 )
 
 // Env is the handler environment: config, runner and the mutable session
-// mode (changed by /mode, read by /start /restart /db).
+// mode (changed by /mode, read by /start /restart /db). The Live hooks are
+// injected by the TUI (nil in tests / plain runs): they receive an already
+// colorized line and push it into the transcript immediately, so long
+// operations stream progress instead of dumping it all at the end.
 type Env struct {
 	Cfg    *config.Config
 	Runner *runner.Runner
 	Mode   mode.Mode
 	st     styles
+
+	LiveRunner func(line string)      // runner progress ([OK] engine starting...)
+	LiveLog    func(svc, line string) // service log tail lines
+}
+
+// streamRunner runs fn while forwarding every line it prints to LiveRunner.
+// When a live sink is attached the lines are NOT returned (the transcript
+// already has them); without one they are collected as before.
+func (e *Env) streamRunner(fn func()) []string {
+	var live func(string)
+	if e.LiveRunner != nil {
+		live = e.LiveRunner
+	}
+	lines := captureStream(fn, live)
+	if live != nil {
+		return nil
+	}
+	return lines
 }
 
 // Outcome is one command result: colored lines for the transcript plus the
-// success flag journaled to the session file.
+// success flag journaled to the session file. Follow/Unfollow request live
+// log tails from the TUI layer (Supervisor-style streaming).
 type Outcome struct {
-	OK    bool
-	Lines []string
+	OK       bool
+	Lines    []string
+	Follow   []string // start tailing these services' logs after success
+	Unfollow bool     // detach all log tails
 }
 
 // command is one /verb in the registry.
@@ -93,9 +117,15 @@ func init() {
 		},
 		{
 			Name:  "logs",
-			Usage: "/logs <engine|api>",
-			Desc:  "print last 50 log lines",
+			Usage: "/logs [-f] <engine|api|off>",
+			Desc:  "last 50 log lines; -f follows live, off detaches",
 			Run:   cmdLogsLines,
+		},
+		{
+			Name:  "dev",
+			Usage: "/dev <build [engine|api|web|all]|cache-clean>",
+			Desc:  "dev tools: git-aware build, redundant cache cleanup",
+			Run:   cmdDev,
 		},
 		{
 			Name:  "app",
@@ -231,10 +261,13 @@ func min3(a, b, c int) int {
 	return a
 }
 
-// capture redirects stdout+stderr while fn runs and returns the lines it
-// printed. The runner reports progress with fmt.Printf, so this keeps TUI
-// rendering intact without rewriting the runner.
-func capture(fn func()) []string {
+// captureStream redirects stdout+stderr while fn runs, splitting the output
+// into lines. When onLine is non-nil it is called for EACH line as it
+// arrives (streaming, Supervisor-style); the full slice is returned either
+// way so callers without a live sink can batch it. The runner reports
+// progress with fmt.Printf, so this keeps TUI rendering intact without
+// rewriting the runner.
+func captureStream(fn func(), onLine func(string)) []string {
 	oldOut, oldErr := os.Stdout, os.Stderr
 	r, w, err := os.Pipe()
 	if err != nil {
@@ -242,23 +275,30 @@ func capture(fn func()) []string {
 		return nil
 	}
 	os.Stdout, os.Stderr = w, w
-	done := make(chan string, 1)
+	done := make(chan []string, 1)
 	go func() {
-		var b strings.Builder
-		_, _ = io.Copy(&b, r)
-		done <- b.String()
+		var lines []string
+		sc := bufio.NewScanner(r)
+		sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+		for sc.Scan() {
+			if t := strings.TrimRight(sc.Text(), "\r"); t != "" {
+				lines = append(lines, t)
+				if onLine != nil {
+					onLine(t)
+				}
+			}
+		}
+		done <- lines
 	}()
 	fn()
 	_ = w.Close()
 	os.Stdout, os.Stderr = oldOut, oldErr
-	raw := <-done
-	var lines []string
-	for _, ln := range strings.Split(raw, "\n") {
-		if t := strings.TrimRight(ln, "\r"); t != "" {
-			lines = append(lines, t)
-		}
-	}
-	return lines
+	return <-done
+}
+
+// capture is the batch variant of captureStream (no live sink).
+func capture(fn func()) []string {
+	return captureStream(fn, nil)
 }
 
 // resolveTarget parses "[prod|dev|dbless] [service]" against the session
@@ -304,16 +344,14 @@ func invalidUsage(env *Env, usage string) Outcome {
 }
 
 // cmdStart implements /start (async; the caller runs it in a goroutine).
+// Progress streams live; on success the TUI attaches to the service logs.
 func cmdStart(args []string, env *Env) Outcome {
 	svc, md, ok := resolveTarget(args, env.Mode)
 	if !ok {
 		return invalidUsage(env, "/start [prod|dev|dbless] [service]")
 	}
-	lines := capture(func() { _ = env.Runner.Start(svc, md) })
-	for i, ln := range lines {
-		lines[i] = env.st.colorizeRunnerLine(ln)
-	}
-	return Outcome{OK: true, Lines: lines}
+	env.streamRunner(func() { _ = env.Runner.Start(svc, md) })
+	return Outcome{OK: true, Follow: loggable(svc)}
 }
 
 func cmdStop(args []string, env *Env) Outcome {
@@ -321,11 +359,8 @@ func cmdStop(args []string, env *Env) Outcome {
 	if !ok {
 		return invalidUsage(env, "/stop [service]")
 	}
-	lines := capture(func() { env.Runner.Stop(svc) })
-	for i, ln := range lines {
-		lines[i] = env.st.colorizeRunnerLine(ln)
-	}
-	return Outcome{OK: true, Lines: lines}
+	env.streamRunner(func() { env.Runner.Stop(svc) })
+	return Outcome{OK: true, Unfollow: true}
 }
 
 func cmdRestart(args []string, env *Env) Outcome {
@@ -333,11 +368,8 @@ func cmdRestart(args []string, env *Env) Outcome {
 	if !ok {
 		return invalidUsage(env, "/restart [prod|dev|dbless] [service]")
 	}
-	lines := capture(func() { _ = env.Runner.Restart(svc, md) })
-	for i, ln := range lines {
-		lines[i] = env.st.colorizeRunnerLine(ln)
-	}
-	return Outcome{OK: true, Lines: lines}
+	env.streamRunner(func() { _ = env.Runner.Restart(svc, md) })
+	return Outcome{OK: true, Follow: loggable(svc)}
 }
 
 func cmdDestroy(args []string, env *Env) Outcome {
@@ -345,11 +377,19 @@ func cmdDestroy(args []string, env *Env) Outcome {
 	if !ok {
 		return invalidUsage(env, "/destroy [service]")
 	}
-	lines := capture(func() { env.Runner.Destroy(svc) })
-	for i, ln := range lines {
-		lines[i] = env.st.colorizeRunnerLine(ln)
+	env.streamRunner(func() { env.Runner.Destroy(svc) })
+	return Outcome{OK: true, Unfollow: true}
+}
+
+// loggable maps a start target to the services whose logs are worth tailing
+// (only engine and api write log files; db/redis are docker compose).
+func loggable(svc string) []string {
+	switch svc {
+	case runner.Engine, runner.API:
+		return []string{svc}
+	default: // "all"
+		return []string{runner.Engine, runner.API}
 	}
-	return Outcome{OK: true, Lines: lines}
 }
 
 func cmdStatusLines(_ []string, env *Env) Outcome {
@@ -427,12 +467,31 @@ func cmdDoctorLines(_ []string, env *Env) Outcome {
 	return Outcome{OK: ok, Lines: lines}
 }
 
+// cmdLogsLines prints the tail of a service log, or with "-f" switches to
+// Supervisor-style live follow (tail first, then stream new lines until
+// "/logs off" or Ctrl+C).
 func cmdLogsLines(args []string, env *Env) Outcome {
+	follow := false
+	if len(args) > 0 && args[0] == "-f" {
+		follow = true
+		args = args[1:]
+	}
+	if len(args) == 1 && args[0] == "off" {
+		return Outcome{OK: true, Unfollow: true,
+			Lines: []string{env.st.dim.Render("log follow detached")}}
+	}
 	if len(args) != 1 || (args[0] != runner.Engine && args[0] != runner.API) {
-		return invalidUsage(env, "/logs <engine|api>")
+		return invalidUsage(env, "/logs [-f] <engine|api|off>")
 	}
 	data, err := os.ReadFile(env.Runner.Proc().LogFile(args[0]))
 	if err != nil {
+		if follow {
+			// No log yet (service not started) — still attach: the file may
+			// appear when the service boots.
+			return Outcome{OK: true, Follow: []string{args[0]},
+				Lines: []string{env.st.dim.Render(
+					fmt.Sprintf("no log for %s yet — following, waiting for output...", args[0]))}}
+		}
 		return Outcome{OK: false, Lines: []string{
 			env.st.fail.Render(fmt.Sprintf("no log for %s: %v", args[0], err))}}
 	}
@@ -442,10 +501,15 @@ func cmdLogsLines(args []string, env *Env) Outcome {
 	}
 	lines := make([]string, 0, len(all))
 	for _, ln := range all {
-		lines = append(lines, env.st.colorizeRunnerLine(ln))
+		lines = append(lines, env.st.colorizeServiceLine(args[0], ln))
 	}
 	if len(lines) == 0 {
 		lines = append(lines, env.st.dim.Render("(empty log)"))
+	}
+	if follow {
+		// The TUI attaches the tail and prints its own "following" banner
+		// when it processes this outcome — no duplicate footer here.
+		return Outcome{OK: true, Follow: []string{args[0]}, Lines: lines}
 	}
 	return Outcome{OK: true, Lines: lines}
 }

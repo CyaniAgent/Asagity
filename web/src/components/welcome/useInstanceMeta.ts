@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchBackend } from "@/lib/backend";
+import { formatVersionDisplay } from "@/lib/version";
 import { useInstanceStore } from "@/stores/instance";
 
 const POLL_MS = 30000;
@@ -78,7 +79,9 @@ export function useInstanceMeta(): InstanceStats {
       if (meta?.alias) useInstanceStore.getState().setAlias(meta.alias);
       if (meta?.description) useInstanceStore.getState().setDescription(meta.description);
       const version = verBody?.data?.version ?? verBody?.version;
-      if (version) useInstanceStore.getState().setVersion(version);
+      // 统一规范显示格式（Ver. 2026.Q4.Dev commit …）— 与 lib/version.ts 的
+      // fetchAppVersion 同源转换，消除两处写入赛跑导致的裸 tag 闪现
+      if (version) useInstanceStore.getState().setVersion(formatVersionDisplay(version));
     });
 
     /* ── Live stats: polled, honest nulls ── */

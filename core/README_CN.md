@@ -1,6 +1,6 @@
 # 🩵 Asagity Verse (服务端)
 
-> **一抹青色的去中心化多元社交宇宙 — 后端核心引擎**
+> **一抹冰蓝色的去中心化多元社交宇宙 — 后端核心引擎**
 
 Asagity Verse 是 Asagity 平台的后端服务端引擎项目，采用 **Go（核心底层与工具链） + ASP.NET Core（API 与模块层）** 的双引擎融合架构。基于**自主开发的解耦式模块 + App 环境设计（Modular Monolith + App 环境 / AAP）**与 **Clean Architecture (简洁架构)** 理念，融合了原生联邦宇宙 (ActivityPub / Verse 协议)、高性能实时推送、自研 VSQL 搜索解释器以及 Skyline Drive 多云盘存储系统。
 
@@ -29,7 +29,7 @@ core/
 ├── src/
 │   ├── Verse.slnx                       # .NET 解决方案 (Api + 7 Modules)
 │   ├── Verse.Api/                        # 🚀 ASP.NET Core (API 层主入口)
-│   │   ├── Program.cs                    # 动态扫描并加载 Modules
+│   │   ├── Program.cs                    # 9 个模块的静态组合 + 中间件管道
 │   │   ├── Middlewares/                  # JWT 鉴权, CORS, VSQL 路由解析中间件
 │   │   └── Verse.Api.csproj
 │   │
@@ -47,7 +47,7 @@ core/
 │   │   └── Verse.Module.Music/           # 音乐播放器与 LRC 歌词模块 (AAP 应用扩展示例)
 │   │
 │   ├── Verse.Engine/                     # ⚙️ Go 核心底层引擎 (事件/长连接/VSQL/联邦)
-│   │   ├── cmd/verse-engine/             # Go 引擎守护进程入口
+│   │   ├── cmd/verse-engine/             # Go 引擎守护进程入口 (cmd/api = 兼容垫片, cmd/worker = 桩)
 │   │   ├── pkg/
 │   │   │   ├── eventbus/                 # 高性能 EventBus & Valkey Bridge
 │   │   │   ├── vsql/                     # Verse Search Query Language 语义解释器
@@ -59,12 +59,13 @@ core/
 │   ├── Verse.Data/                      # 🗄️ EF Core 数据层 (DbContext/实体映射/provider切换/种子)
 │   │   └── Verse.Data.csproj
 │   │
-│   ├── Verse.Tests/                     # 🧪 xUnit 测试工程 (36 个用例)
+│   ├── Verse.Tests/                     # 🧪 xUnit 测试工程 (权限 scope / 数据层 / 种子 / 服务 / 访客码)
 │   │   └── Verse.Tests.csproj
 │   │
-│   └── Verse.Cli/                        # 🛠️ Verse tool (Go 编写的 CLI 管理工具)
-│       ├── cmd/verse/                    # `verse` 命令行入口 (start, stop, status, module)
+│   └── Verse.Cli/                        # 🛠️ versetool (Go 编写的 CLI 管理工具)
+│       ├── cmd/verse/                    # `versetool` 命令行入口 (start, stop, destroy, db, …)
 │       ├── internal/
+│       │   ├── termity/                  # Termity Base CLI — 语义化 /command TUI REPL
 │       │   ├── runner/                   # 双进程 (API + Engine) 调度与守护
 │       │   ├── doctor/                   # 环境与数据库自愈诊断
 │       │   └── modulemgr/                # AAP 应用管理
@@ -84,9 +85,11 @@ core/
 
 ## 🧱 模块化业务域说明 (`Verse.Modules`)
 
+> 迁移状态（[`docs/architecture/tech-stack-audit.md`](../docs/architecture/tech-stack-audit.md)）：**Instance、User、Shell、Music 已在 .NET 侧上线**（EF Core 支撑）；**Auth、Note、Drive、Follow、Asset 仍为 501 桩**，在 S5–S8 阶段转译完成前由 Go 引擎承载实际实现。
+
 | 模块包名 | 功能说明 |
 | :--- | :--- |
-| **`Verse.Module.Auth`** | 注册/登录、邮箱 6 位验证码 OTP、JWT 验证（30 分钟 Access Token + 30 天 Cookie Refresh Token 轮换）、设备信任与全局登出。 |
+| **`Verse.Module.Auth`** | 注册/登录、邮箱 6 位验证码 OTP、JWT 验证（30 分钟 Access Token + 30 天 Cookie Refresh Token 轮换）、设备信任与全局登出。*（.NET 侧 501 桩 —— Go 持有线上实现）* |
 | **`Verse.Module.User`** | 用户基本资料、权限组管理，以及 Asagity 特有的 `pubid`（`usr_` 前缀的全局唯一且支持每月变更的标识符）。 |
 | **`Verse.Module.Instance`** | 系统健康检查（`GET /healthz`）、版本及实例元信息暴露（`/api/meta/instance`）。 |
 | **`Verse.Module.Drive`** | Skyline Drive 云盘系统：支持本地磁盘、S3 对象存储、WebDAV 挂载的分片上传与目录管理。 |
@@ -121,11 +124,13 @@ Asagity 后端采用 **“模块 + App 环境”** 双层扩展体系，请注�
 
 ---
 
-## 🛠️ 管理工具：Verse tool (`Verse.Cli`)
+## 🛠️ 管理工具：versetool (`Verse.Cli`)
 
-Asagity Verse 服务端生命周期由 **Verse tool**（Go 编写的 CLI 管理工具）统一管理：
-- **服务管控**：`verse start` / `verse stop` / `verse restart` / `verse status`
-- **应用管理**：`verse app list` / `verse app enable` / `verse app disable`（管理第三方 `.aap` 应用）
+Asagity Verse 服务端生命周期由 **versetool**（Go 编写的 CLI 管理工具）统一管理：
+- **服务管控**：`versetool start` / `versetool stop` / `versetool restart` / `versetool status`，以及 `versetool destroy`（卡死进程的紧急强杀）
+- **交互式 Termity Base CLI**：在 TTY 中无参数运行 `versetool` 即进入语义化 `/command` REPL（`/start` `/status` `/doctor` `/recent` …），每次运行独立会话留痕 —— 详见 [`docs/cli/termity-base-cli.md`](../docs/cli/termity-base-cli.md)
+- **应用管理**：`versetool app list` / `versetool app enable` / `versetool app disable`（管理第三方 `.aap` 应用）
+- **数据库状态**：`versetool db status` 报告当前运行模式、数据库位置与已播种账号
 - **环境检查**：诊断 PostgreSQL、Valkey、网络端口及环境连通性。
 
 ---
@@ -138,17 +143,20 @@ Asagity Verse 服务端生命周期由 **Verse tool**（Go 编写的 CLI 管理�
 
 ## 🔧 运行与维护
 
-Asagity Verse 的生命周期和运维命令由 **Verse tool** 统一调度：
+Asagity Verse 的生命周期和运维命令由 **versetool** 统一调度：
 
 ```bash
-# 启动 Asagity Verse 服务端全套服务 (API + Engine)
-verse start
+# 启动 Asagity Verse 服务端全套服务 (Go 引擎 + .NET API)
+versetool start dev
 
-# 查看服务运行状态与模块/应用加载状态
-verse status
+# 查看服务运行状态 (进程 / 端口 / 健康度 / 内存)
+versetool status
 
-# 停止服务
-verse stop
+# 优雅停止服务
+versetool stop
+
+# 紧急强杀卡死进程 (交互式 y/N 确认, -y 供脚本跳过)
+versetool destroy
 ```
 
-API 默认监听端口：`:2048`。可以通过访问 `http://localhost:2048/healthz` 检查服务运行状态。
+Go 引擎监听 `:2048`（`SERVER_PORT`），.NET API 监听 `:2050`（`VERSE_API_PORT`）。可以通过访问 `http://localhost:2048/healthz` 检查引擎运行状态。

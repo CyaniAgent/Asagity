@@ -505,6 +505,28 @@
     "timeline": "時間線",
     "topics": "話題"
   },
+  "splash": {
+    "messageAlmost": "馬上就好...",
+    "messageCoffee": "載入中，可以喝杯咖啡...",
+    "messageSms": "SMS 系統正在啟動...",
+    "retry": "重試"
+  },
+  "sysinfo": {
+    "contribUnit": "次貢獻",
+    "contributors": "貢獻者",
+    "info": "Asagity 資訊",
+    "loading": "取得中…",
+    "modeDev": "開發模式",
+    "modeFrontendOnly": "前端獨立模式",
+    "modeProd": "生產模式",
+    "organization": "組織",
+    "organizers": "專案組織者",
+    "reactVersion": "React 版本",
+    "runMode": "運行模式",
+    "serverVersion": "服務端版本",
+    "specialThanks": "特別鳴謝",
+    "thanksPlaceholder": "佔位符 · 敬請期待"
+  },
   "tabs": {
     "announcements": "公告",
     "bookmarks": "書籤",
@@ -770,6 +792,7 @@
     "online": "線上",
     "onlineCount": "線上人數",
     "posts": "貼文",
+    "systemInfo": "系統資訊",
     "terminal": "進入終端",
     "terminalPassword": "請輸入終端密碼",
     "termity": "Termity",
@@ -800,6 +823,7 @@
     "timelineWindow": "時間線",
     "loginWindow": "登入",
     "registerWindow": "註冊新帳號",
+    "systemInfo": "系統資訊",
     "termity": "Termity"
   }
 }

@@ -53,6 +53,8 @@
 
   --font-sans: "HarmonyOS Sans SC", "HarmonyOS Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  /* Display：Quicksand — 系统信息 Banner 代号专用字（font-quicksand 工具类） */
+  --font-quicksand: "Quicksand", "HarmonyOS Sans SC", ui-sans-serif, system-ui, sans-serif;
 }
 
 /* color-scheme syncs with theme store → Astryx tokens' light-dark() auto-follows */
@@ -236,6 +238,21 @@ html.dark,  html[data-theme="dark"]  { color-scheme: dark; }
   font-display: swap;
 }
 
+/* Display: Quicksand（variable，wght 300–700）— 系统信息 Banner 代号专用 */
+@font-face {
+  font-family: 'Quicksand';
+  src: url('/fonts/Quicksand/Quicksand-VariableFont_wght.ttf') format('truetype');
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+  /* 度量覆盖（font metric override）：Quicksand hhea ascent=1000 但 cap 只有
+     700 —— normal 行盒顶部自带 0.3em half-leading 空隙，CSS 间距微调无法根治。
+     把行盒钉到 cap→基线（70%→0，降部字形允许溢出盒外渲染），两行才能紧贴。 */
+  ascent-override: 70%;
+  descent-override: 0%;
+  line-gap-override: 0%;
+}
+
 /* Global Typography */
 html {
   font-family: var(--font-sans);
@@ -277,6 +294,19 @@ code, kbd, samp, pre {
 }
 @media (prefers-reduced-motion: reduce) {
   .menu-pop { animation: none; }
+}
+
+/* ── Boot-scan 扫描线（React 侧镜像）──────────────────────────────
+ * 原始定义在 index.html 内联样式（T0 首帧用，先于任何外部 CSS）。
+ * 此处镜像同一份 keyframes，供 ChunkPulse 等 React 组件在
+ * index.html 之外（如测试环境）也能独立解析；内容保持一致。
+ */
+@keyframes boot-scan {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(300%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [class*="animate-[boot-scan"] { animation: none !important; }
 }
 
 /* Custom Scrollbar - Glass Style */

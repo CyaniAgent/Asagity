@@ -111,15 +111,50 @@ func (r *Runner) startOne(svc string, md mode.Mode) error {
 
 // startEngine builds the daemon once and runs the single binary directly
 // (never `go run`: its child would outlive the supervised parent).
-func (r *Runner) startEngine(md mode.Mode) error {
+// BuildEngine compiles the Go engine into .verse/bin/verse-engine.
+// Shared by /start (which then spawns the binary) and the termity
+// "/dev build engine" command.
+func (r *Runner) BuildEngine() error {
 	dir := filepath.Join(r.cfg.ProjectRoot, "core", "src", "Verse.Engine")
 	if _, err := os.Stat(dir); err != nil {
 		return fmt.Errorf("engine dir missing: %s", dir)
 	}
 	bin := filepath.Join(r.cfg.VerseDir, "bin", "verse-engine")
-	if out, err := buildCmd(dir, "go", "build", "-o", bin, "./cmd/verse-engine"); err != nil {
-		return fmt.Errorf("build verse-engine: %v\n%s", err, out)
+	if err := streamCmd(dir, "go", "build", "-o", bin, "./cmd/verse-engine"); err != nil {
+		return fmt.Errorf("build verse-engine: %w", err)
 	}
+	return nil
+}
+
+// BuildAPI publishes Verse.Api (Release + ReadyToRun, Debug fallback).
+// Shared by /start and "/dev build api".
+func (r *Runner) BuildAPI() error {
+	srcDir := filepath.Join(r.cfg.ProjectRoot, "core", "src")
+	if _, err := os.Stat(filepath.Join(srcDir, "Verse.Api", "Verse.Api.csproj")); err != nil {
+		return fmt.Errorf("Verse.Api missing under %s", srcDir)
+	}
+	_, err := r.publishAPI(srcDir)
+	return err
+}
+
+// BuildWeb runs the frontend build (tsc --noEmit && vite build).
+func (r *Runner) BuildWeb() error {
+	dir := filepath.Join(r.cfg.ProjectRoot, "web")
+	if _, err := os.Stat(filepath.Join(dir, "package.json")); err != nil {
+		return fmt.Errorf("web dir missing: %s", dir)
+	}
+	if err := streamCmd(dir, "npm", "run", "build"); err != nil {
+		return fmt.Errorf("build web: %w", err)
+	}
+	return nil
+}
+
+func (r *Runner) startEngine(md mode.Mode) error {
+	if err := r.BuildEngine(); err != nil {
+		return err
+	}
+	dir := filepath.Join(r.cfg.ProjectRoot, "core", "src", "Verse.Engine")
+	bin := filepath.Join(r.cfg.VerseDir, "bin", "verse-engine")
 	pid, err := r.proc.Spawn(Engine, dir, map[string]string{
 		"ASAGITY_MODE":     md.String(),
 		"SERVER_PORT":      r.cfg.EnginePort,
@@ -200,12 +235,13 @@ func (r *Runner) publishAPI(srcDir string) (string, error) {
 		"-p:PublishReadyToRun=true",
 		"-p:PublishReadyToRunComposite=true",
 	}
-	if out, err := buildCmd(srcDir, "dotnet", args...); err != nil {
+	if err := streamCmd(srcDir, "dotnet", args...); err != nil {
 		// ReadyToRun needs a runtime identifier and the crossgen2 pack; fall
 		// back to a plain Debug build so development still works offline.
-		fmt.Printf("[WARN] ReadyToRun publish failed (%v), falling back to debug build\n%s\n", err, out)
-		if buildOut, buildErr := buildCmd(srcDir, "dotnet", "build", "Verse.Api", "-v", "q", "--nologo"); buildErr != nil {
-			return "", fmt.Errorf("build Verse.Api: %v\n%s", buildErr, buildOut)
+		// The dotnet output already streamed above — no need to repeat it.
+		fmt.Printf("[WARN] ReadyToRun publish failed (%v), falling back to debug build\n", err)
+		if buildErr := streamCmd(srcDir, "dotnet", "build", "Verse.Api", "-v", "q", "--nologo"); buildErr != nil {
+			return "", fmt.Errorf("build Verse.Api: %w", buildErr)
 		}
 		return filepath.Join(srcDir, "Verse.Api", "bin", "Debug", "net10.0", "Verse.Api.dll"), nil
 	}
@@ -235,12 +271,17 @@ func dotNetRuntimeEnv(md mode.Mode) map[string]string {
 	}
 }
 
-// buildCmd runs a build in dir and returns combined output on failure.
-func buildCmd(dir, name string, args ...string) (string, error) {
+// streamCmd runs a command in dir with its output wired straight to the
+// current os.Stdout/os.Stderr. When the termity TUI redirects stdout to a
+// pipe (its live capture), the file descriptor passes through to the child
+// unchanged, so build progress streams line by line instead of being
+// buffered until the command exits.
+func streamCmd(dir, name string, args ...string) error {
 	cmd := exec.Command(name, args...)
 	cmd.Dir = dir
-	out, err := cmd.CombinedOutput()
-	return string(out), err
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 func waitPort(port string, timeout time.Duration, name string) error {

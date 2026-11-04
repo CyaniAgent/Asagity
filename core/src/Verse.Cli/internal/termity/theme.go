@@ -5,6 +5,7 @@ package termity
 import (
 	"os"
 	"strings"
+	"unicode"
 
 	"charm.land/lipgloss/v2"
 )
@@ -110,9 +111,43 @@ func (s styles) colorizeRunnerLine(line string) string {
 		return s.fail.Render(line)
 	case strings.HasPrefix(trimmed, "[SKIP]"):
 		return s.skip.Render(line)
-	case strings.HasPrefix(trimmed, "[STOP]"), strings.HasPrefix(trimmed, "[DB]"):
+	case strings.HasPrefix(trimmed, "[STOP]"), strings.HasPrefix(trimmed, "[DB]"),
+		strings.HasPrefix(trimmed, "[DEV]"):
 		return s.accentText.Render(line)
 	default:
 		return line
 	}
+}
+
+// colorizeServiceLine paints a live service log line (Supervisor style):
+// engine lines look like "2026/10/29 05:45:28 [db] message", api (.NET)
+// lines like "warn: Microsoft.Hosting.Lifetime[0]". Severity keywords win
+// over the timestamp; a dim service tag is prefixed when svc is non-empty
+// (follow mode), so interleaved engine/api streams stay distinguishable.
+func (s styles) colorizeServiceLine(svc, line string) string {
+	prefix := ""
+	if svc != "" {
+		prefix = s.dim.Render("[" + svc + "] ")
+	}
+	lower := strings.ToLower(line)
+	switch {
+	case strings.Contains(lower, "error"), strings.Contains(lower, "fatal"),
+		strings.Contains(lower, "panic"), strings.Contains(lower, "fail:"),
+		strings.Contains(lower, "crit:"):
+		return prefix + s.fail.Render(line)
+	case strings.Contains(lower, "warn"):
+		return prefix + s.warn.Render(line)
+	}
+	// Accent the bracketed tag ("... [db] msg") when present — but only
+	// alphabetic tags; .NET numeric event ids like "[0]" are noise.
+	if j := strings.Index(line, "["); j >= 0 {
+		if rel := strings.Index(line[j:], "]"); rel > 1 {
+			end := j + rel
+			tag := line[j+1 : end]
+			if strings.IndexFunc(tag, unicode.IsLetter) >= 0 {
+				return prefix + s.accentText.Render(line[:end+1]) + line[end+1:]
+			}
+		}
+	}
+	return prefix + line
 }

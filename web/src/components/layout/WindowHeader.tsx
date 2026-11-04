@@ -46,6 +46,7 @@ function getIcon(type: ViewType | null | undefined, customIcon?: string) {
     case "welcome_timeline": return "public";
     case "welcome_federation": return "globe";
     case "welcome_dashboard": return "dashboard";
+    case "system_info": return "server";
     default: return "tab_move";
   }
 }
@@ -72,6 +73,7 @@ function getTitle(type: ViewType | null | undefined, mode: string, customTitle?:
     case "welcome_timeline": return t_("window.timelineWindow");
     case "welcome_federation": return t_("window.federationWindow");
     case "welcome_dashboard": return t_("window.dashboardWindow");
+    case "system_info": return t_("window.systemInfo");
     default: return mode === "split" ? t_("window.splitView") : t_("window.freeWindow");
   }
 }

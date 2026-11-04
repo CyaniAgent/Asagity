@@ -1,8 +1,11 @@
 package termity
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
@@ -25,6 +28,13 @@ type resultMsg struct {
 	took    time.Duration
 }
 
+// liveMsg is one streamed line: runner progress during a command, or a
+// service log line from an attached follow tail.
+type liveMsg struct {
+	svc  string // "" for runner progress, service name for log tails
+	line string // RAW (uncolored) line — styling happens on the render side
+}
+
 // model is the REPL state.
 type model struct {
 	env *Env
@@ -45,8 +55,12 @@ type model struct {
 	runningLabel string // "/verb" shown next to the spinner
 	interrupt    bool   // Ctrl+C pressed while a command runs
 
+	// Live log follow (Supervisor-style): attached service tails. Each
+	// entry owns a stop channel; closing it ends that tail goroutine.
+	following map[string]chan struct{}
+
 	session *Session
-	program *tea.Program
+	send    func(tea.Msg) // inject a message into the program from any goroutine
 
 	width, height int
 	quitting      bool
@@ -75,28 +89,44 @@ func Run(cfg *config.Config, r *runner.Runner, md mode.Mode) error {
 	sp := spinner.New(spinner.WithSpinner(spinner.Dot))
 	sp.Style = st.accentText
 
-	m := &model{
-		env:     &Env{Cfg: cfg, Runner: r, Mode: md, st: st},
-		st:      st,
-		input:   ti,
-		spin:    sp,
-		histIdx: -1,
-		session: sess,
-		width:   80,
-		height:  24,
+	// The program is captured by reference so the model copy living INSIDE
+	// bubbletea can still inject messages from handler/tail goroutines —
+	// its own program field is nil (the struct was copied before assignment).
+	var prog *tea.Program
+	send := func(msg tea.Msg) {
+		if prog != nil {
+			prog.Send(msg)
+		}
 	}
+
+	m := &model{
+		env:       &Env{Cfg: cfg, Runner: r, Mode: md, st: st},
+		st:        st,
+		input:     ti,
+		spin:      sp,
+		histIdx:   -1,
+		session:   sess,
+		following: map[string]chan struct{}{},
+		send:      send,
+		width:     80,
+		height:    24,
+	}
+	m.env.LiveRunner = func(line string) { send(liveMsg{line: line}) }
+	m.env.LiveLog = func(svc, line string) { send(liveMsg{svc: svc, line: line}) }
 
 	// Lock the TUI renderer onto the real stdout BEFORE any command swaps
 	// os.Stdout for output capture (capture() must not swallow TUI frames).
-	m.program = tea.NewProgram(*m, tea.WithOutput(os.Stdout))
+	prog = tea.NewProgram(*m, tea.WithOutput(os.Stdout))
 
 	m.println(m.banner())
 	m.println(st.dim.Render("  type /help for commands · session " + st.sessionID.Render(sess.ID)))
 
-	if _, err := m.program.Run(); err != nil {
+	if _, err := prog.Run(); err != nil {
+		m.stopAllFollow()
 		sess.Close()
 		return err
 	}
+	m.stopAllFollow()
 	sess.Close()
 	// Epilogue on the real terminal, outside the alt-screen-free renderer.
 	fmt.Printf("\n%s session %s · %d commands · /recent to revisit\n",
@@ -110,6 +140,118 @@ func slashedSuggestions() []string {
 		out = append(out, "/"+c.Name)
 	}
 	return out
+}
+
+// startFollow attaches a Supervisor-style live tail of a service's log file.
+// Idempotent: an already-tailed service is left alone. The tail goroutine
+// polls (no fsnotify dependency), tolerates the file not existing yet, and
+// resets on truncation/rotation.
+func (m *model) startFollow(svc string) {
+	if m.following == nil {
+		m.following = map[string]chan struct{}{}
+	}
+	if _, live := m.following[svc]; live {
+		return
+	}
+	stop := make(chan struct{})
+	m.following[svc] = stop
+	path := m.env.Runner.Proc().LogFile(svc)
+	send := m.send
+	st := m.st
+	m.println(st.dim.Render(fmt.Sprintf("— following %s log (Ctrl+C or /logs off to stop) —", svc)))
+	go tailFile(path, svc, stop, func(line string) {
+		send(liveMsg{svc: svc, line: line}) // styled on the render side
+	})
+}
+
+// stopFollow detaches one service tail.
+func (m *model) stopFollow(svc string) {
+	if stop, ok := m.following[svc]; ok {
+		close(stop)
+		delete(m.following, svc)
+		m.println(m.st.dim.Render(fmt.Sprintf("— detached %s log —", svc)))
+	}
+}
+
+// stopAllFollow detaches every tail (called on exit paths).
+func (m *model) stopAllFollow() {
+	for svc, stop := range m.following {
+		close(stop)
+		delete(m.following, svc)
+	}
+}
+
+// followingList returns the attached services in stable order for the
+// status row.
+func (m *model) followingList() []string {
+	if len(m.following) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(m.following))
+	for svc := range m.following {
+		out = append(out, svc)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// tailFile streams newly appended lines of path to emit, starting at the
+// current end of file. Polls every 300ms; exits when stop closes. Rotation
+// is detected via inode identity (os.SameFile) — size comparison alone
+// misses the case where the new file is LARGER than the old offset — and
+// in-place truncation via the size shrinking below the offset.
+func tailFile(path, svc string, stop <-chan struct{}, emit func(string)) {
+	var offset int64
+	var identity os.FileInfo // inode of the file currently being tailed
+	if fi, err := os.Stat(path); err == nil {
+		identity = fi
+		offset = fi.Size() // follow new output only; use /logs for history
+	}
+	tick := time.NewTicker(300 * time.Millisecond)
+	defer tick.Stop()
+	var partial []byte // remainder of a line split across reads
+	for {
+		select {
+		case <-stop:
+			return
+		case <-tick.C:
+		}
+		fi, err := os.Stat(path)
+		if err != nil {
+			continue // not created yet — keep waiting
+		}
+		rotated := identity != nil && !os.SameFile(identity, fi)
+		if rotated || fi.Size() < offset {
+			offset, partial = 0, nil // rotated (new inode) or truncated
+		}
+		identity = fi
+		if fi.Size() == offset {
+			continue
+		}
+		f, err := os.Open(path)
+		if err != nil {
+			continue
+		}
+		if _, err := f.Seek(offset, io.SeekStart); err == nil {
+			chunk := make([]byte, fi.Size()-offset)
+			if n, _ := f.Read(chunk); n > 0 {
+				offset += int64(n)
+				partial = append(partial, chunk[:n]...)
+				for {
+					i := bytes.IndexByte(partial, '\n')
+					if i < 0 {
+						break
+					}
+					line := strings.TrimRight(string(partial[:i]), "\r")
+					partial = partial[i+1:]
+					if line != "" {
+						emit(line)
+					}
+				}
+			}
+		}
+		_ = f.Close()
+	}
 }
 
 // banner is the startup header.
@@ -149,8 +291,26 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if len(msg.outcome.Lines) > 0 {
 			m.println(msg.outcome.Lines...)
 		}
+		// Supervisor-style: a successful /start (or /logs -f) attaches live
+		// log tails; /stop /destroy detach them.
+		if msg.outcome.OK {
+			for _, svc := range msg.outcome.Follow {
+				m.startFollow(svc)
+			}
+			if msg.outcome.Unfollow {
+				m.stopAllFollow()
+			}
+		}
 		m.println("")
 		return m, textinput.Blink
+
+	case liveMsg:
+		if msg.svc != "" {
+			m.println(m.st.colorizeServiceLine(msg.svc, msg.line))
+		} else {
+			m.println(m.st.colorizeRunnerLine(msg.line))
+		}
+		return m, nil
 
 	case spinner.TickMsg:
 		if !m.spinnerOn {
@@ -178,6 +338,14 @@ func (m model) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			m.interrupt = true
 			m.println(m.st.warn.Render(
 				"⚠ command still running — its result will be discarded; Ctrl+C again to force quit"))
+			return m, nil
+		}
+		// Idle with live log tails: first Ctrl+C detaches them (Supervisor
+		// style), second one quits.
+		if !m.running && len(m.following) > 0 {
+			svcs := m.followingList()
+			m.stopAllFollow()
+			m.println(m.st.dim.Render("— detached " + strings.Join(svcs, ", ") + " log(s) —"))
 			return m, nil
 		}
 		m.quitting = true
@@ -390,6 +558,10 @@ func (m model) View() tea.View {
 	} else {
 		b.WriteString(m.st.prompt.Render("▸ "))
 		b.WriteString(m.input.View())
+	}
+	if svcs := m.followingList(); len(svcs) > 0 {
+		b.WriteString("\n")
+		b.WriteString(m.st.dim.Render("  ⚡ live: " + strings.Join(svcs, " · ") + "  (Ctrl+C detaches)"))
 	}
 	return tea.NewView(b.String())
 }

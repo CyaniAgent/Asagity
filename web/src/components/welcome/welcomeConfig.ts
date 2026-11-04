@@ -67,6 +67,12 @@ export const DEFAULT_MENU_GROUPS: WelcomeMenuGroupConfig[] = [
         action: { kind: "window", viewType: "welcome_timeline" },
       },
       {
+        id: "system-info",
+        icon: "server",
+        labelKey: "welcome.systemInfo",
+        action: { kind: "window", viewType: "system_info" },
+      },
+      {
         id: "federation",
         icon: "globe",
         labelKey: "welcome.federation",

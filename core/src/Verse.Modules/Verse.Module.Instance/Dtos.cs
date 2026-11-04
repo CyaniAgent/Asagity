@@ -10,10 +10,13 @@ public sealed record RootResponse(
 public sealed record HealthResponse(
     [property: JsonPropertyName("status")] string Status);
 
-/// <summary>Ported from Go <c>instance/dto.VersionResponse</c>.</summary>
+/// <summary>Ported from Go <c>instance/dto.VersionResponse</c>.
+/// Runtime is the self-describing .NET runtime version (e.g. ".NET 10.0.0"),
+/// feeding the web 系统信息 window · 服务端版本 row.</summary>
 public sealed record VersionResponse(
     [property: JsonPropertyName("name")] string Name,
-    [property: JsonPropertyName("version")] string Version);
+    [property: JsonPropertyName("version")] string Version,
+    [property: JsonPropertyName("runtime")] string Runtime);
 
 /// <summary>Ported from Go <c>instance/dto.MetaResponse</c>.</summary>
 public sealed record MetaResponse(

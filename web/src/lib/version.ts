@@ -26,19 +26,20 @@ export function formatVersionDisplay(tag: string): string {
   const v = tag.startsWith("v") ? tag.slice(1) : tag;
 
   // Dev: 2026.Q4-dev.255+1a2b3c4d → Ver. 2026.Q4.Dev commit 1a2b3c4d
-  const devMatch = v.match(/^([\d.]+)-dev\.\d+\+(.+)$/);
+  // 版本段含季度代号字母（Q4）——字符类必须允许 [0-9A-Za-z.]，不能只 [\d.]
+  const devMatch = v.match(/^([0-9A-Za-z.]+)-dev\.\d+\+(.+)$/);
   if (devMatch) {
     return `Ver. ${devMatch[1]}.Dev commit ${devMatch[2]}`;
   }
 
   // Eta: 2026.Q4-eta.1 → Ver. 2026.Q4 Eta Preview
-  const etaMatch = v.match(/^([\d.]+)-eta/);
+  const etaMatch = v.match(/^([0-9A-Za-z.]+)-eta/);
   if (etaMatch) {
     return `Ver. ${etaMatch[1]} Eta Preview`;
   }
 
   // Beta: 2026.Q4-beta.1 → Ver. 2026.Q4 Beta Preview
-  const betaMatch = v.match(/^([\d.]+)-beta/);
+  const betaMatch = v.match(/^([0-9A-Za-z.]+)-beta/);
   if (betaMatch) {
     return `Ver. ${betaMatch[1]} Beta Preview`;
   }

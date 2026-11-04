@@ -505,6 +505,28 @@
     "timeline": "Timeline",
     "topics": "Topics"
   },
+  "splash": {
+    "messageAlmost": "Almost ready...",
+    "messageCoffee": "Loading — grab a coffee...",
+    "messageSms": "SMS system is starting up...",
+    "retry": "RETRY"
+  },
+  "sysinfo": {
+    "contribUnit": "contributions",
+    "contributors": "Contributors",
+    "info": "Asagity Information",
+    "loading": "Loading…",
+    "modeDev": "Development",
+    "modeFrontendOnly": "Frontend-only",
+    "modeProd": "Production",
+    "organization": "Organization",
+    "organizers": "Project Organizers",
+    "reactVersion": "React Version",
+    "runMode": "Run Mode",
+    "serverVersion": "Server Version",
+    "specialThanks": "Special Thanks",
+    "thanksPlaceholder": "Placeholder · Coming soon"
+  },
   "tabs": {
     "announcements": "Announcements",
     "bookmarks": "Bookmarks",
@@ -770,6 +792,7 @@
     "online": "Online",
     "onlineCount": "Online",
     "posts": "Posts",
+    "systemInfo": "System Information",
     "terminal": "Enter Terminal",
     "terminalPassword": "Enter terminal password",
     "termity": "Termity",
@@ -800,6 +823,7 @@
     "timelineWindow": "Timeline",
     "loginWindow": "Login",
     "registerWindow": "Create Account",
+    "systemInfo": "System Information",
     "termity": "Termity"
   }
 }

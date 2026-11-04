@@ -505,6 +505,28 @@
     "timeline": "时间线",
     "topics": "话题"
   },
+  "splash": {
+    "messageAlmost": "马上就好...",
+    "messageCoffee": "正在加载，可以喝杯咖啡...",
+    "messageSms": "SMS 系统正在启动...",
+    "retry": "重试"
+  },
+  "sysinfo": {
+    "contribUnit": "次贡献",
+    "contributors": "贡献者",
+    "info": "Asagity 信息",
+    "loading": "获取中…",
+    "modeDev": "开发模式",
+    "modeFrontendOnly": "前端独立模式",
+    "modeProd": "生产模式",
+    "organization": "组织",
+    "organizers": "项目组织者",
+    "reactVersion": "React 版本",
+    "runMode": "运行模式",
+    "serverVersion": "服务端版本",
+    "specialThanks": "特别鸣谢",
+    "thanksPlaceholder": "占位符 · 敬请期待"
+  },
   "tabs": {
     "announcements": "公告",
     "bookmarks": "书签",
@@ -770,6 +792,7 @@
     "online": "在线",
     "onlineCount": "在线人数",
     "posts": "帖子",
+    "systemInfo": "系统信息",
     "terminal": "进入终端",
     "terminalPassword": "请输入终端密码",
     "termity": "Termity",
@@ -800,6 +823,7 @@
     "timelineWindow": "时间线",
     "loginWindow": "登录",
     "registerWindow": "注册新账号",
+    "systemInfo": "系统信息",
     "termity": "Termity"
   }
 }

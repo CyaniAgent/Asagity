@@ -39,7 +39,7 @@ Usage:
 Interactive mode (Termity Base CLI):
   run versetool with no arguments on a terminal to open the REPL:
     /start /stop /restart /destroy /status /health /doctor
-    /logs /app /db /mode /recent /help /exit
+    /logs /dev /app /db /mode /recent /help /exit
   every run is a fresh session (input history resets); the command journal
   is persisted under .verse/sessions/ and browsable with /recent.
   scripts keep the argument form below — it is unchanged.

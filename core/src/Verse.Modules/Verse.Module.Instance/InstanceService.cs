@@ -14,7 +14,8 @@ public sealed class InstanceService(
     public HealthResponse Health() => new("ok");
 
     public VersionResponse Version() =>
-        new("Asagity Core", configuration["APP_VERSION"] ?? "dev");
+        new("Asagity Core", configuration["APP_VERSION"] ?? "dev",
+            $".NET {Environment.Version}");
 
     public MetaResponse Meta() =>
         new("Asagity", string.Empty, "Asagity instance metadata is not configured yet.");

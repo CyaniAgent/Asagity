@@ -20,6 +20,18 @@ public static class ShellModule
 
     private const string GithubRepo = "CyaniAgent/Asagity";
 
+    /// <summary>Org part of <see cref="GithubRepo"/> — feeds /github/org-members.</summary>
+    private static readonly string GithubOrg = GithubRepo.Split('/')[0];
+
+    /// <summary>GitHub list cache TTL: anonymous api.github.com allows only
+    /// 60 req/h per IP — a shared server-side window keeps window reopens and
+    /// multiple visitors off the rate limit; expired entries are still served
+    /// when upstream errors (stale beats a broken 系统信息 section).</summary>
+    private static readonly TimeSpan GithubListTtl = TimeSpan.FromMinutes(10);
+
+    private static readonly GithubListCache<GithubContributorResponse> ContributorsCache = new(GithubListTtl);
+    private static readonly GithubListCache<GithubMemberResponse> OrgMembersCache = new(GithubListTtl);
+
     /// <summary>Guest-entry verification codes (Termity, not-logged-in gate).</summary>
     private static readonly GuestCodeBook GuestCodes = new();
 
@@ -126,6 +138,22 @@ public static class ShellModule
             }
         });
 
+        // ── GitHub lists (系统信息 window) ────────────────────────────────
+        // Same proxy rationale as above, plus a shared10-min cache: anonymous
+        // GitHub allows 60 req/h per IP and these sections re-open often.
+
+        group.MapGet("/github/contributors", () =>
+            GetGithubList(
+                $"https://api.github.com/repos/{GithubRepo}/contributors?per_page=100",
+                ParseContributor,
+                ContributorsCache));
+
+        group.MapGet("/github/org-members", () =>
+            GetGithubList(
+                $"https://api.github.com/orgs/{GithubOrg}/members?per_page=100",
+                ParseMember,
+                OrgMembersCache));
+
         // ── Termity guest entry (not-logged-in gate) ──────────────────────
         // Replaces the old frontend-hardcoded password: the 8-char code is
         // minted server-side, printed to runtime logs here, shown by the
@@ -183,6 +211,79 @@ public static class ShellModule
         res.EnsureSuccessStatusCode();
         var stream = await res.Content.ReadAsStreamAsync();
         return await JsonDocument.ParseAsync(stream);
+    }
+
+    /// <summary>Fetch a GitHub JSON array through the shared TTL cache.
+    /// Fresh cache short-circuits upstream; upstream errors fall back to the
+    /// last good snapshot (stale-on-error) before surfacing a gateway failure.</summary>
+    private static async Task<IResult> GetGithubList<T>(
+        string url,
+        Func<JsonElement, T> mapItem,
+        GithubListCache<T> cache)
+    {
+        if (cache.Fresh is { } fresh) return ApiResults.Ok(fresh);
+
+        try
+        {
+            using var doc = await GetGithubJson(url);
+            T[] items = doc.RootElement.ValueKind == JsonValueKind.Array
+                ? [.. doc.RootElement.EnumerateArray().Select(mapItem)]
+                : [];
+            cache.Set(items);
+            return ApiResults.Ok(items);
+        }
+        catch (HttpRequestException ex)
+        {
+            if (cache.Stale is { } stale) return ApiResults.Ok(stale);
+            return ApiResults.Fail(StatusCodes.Status502BadGateway, "GITHUB_UPSTREAM_ERROR", ex.Message);
+        }
+        catch (TaskCanceledException)
+        {
+            if (cache.Stale is { } stale) return ApiResults.Ok(stale);
+            return ApiResults.Fail(StatusCodes.Status504GatewayTimeout, "GITHUB_UPSTREAM_TIMEOUT", "GitHub request timed out");
+        }
+    }
+
+    private static GithubContributorResponse ParseContributor(JsonElement el)
+    {
+        static string Str(JsonElement e, string n) =>
+            e.TryGetProperty(n, out var v) ? v.GetString() ?? string.Empty : string.Empty;
+        return new GithubContributorResponse(
+            Str(el, "login"),
+            Str(el, "avatar_url"),
+            Str(el, "html_url"),
+            el.TryGetProperty("contributions", out var c) && c.TryGetInt32(out var n) ? n : 0);
+    }
+
+    private static GithubMemberResponse ParseMember(JsonElement el)
+    {
+        static string Str(JsonElement e, string n) =>
+            e.TryGetProperty(n, out var v) ? v.GetString() ?? string.Empty : string.Empty;
+        return new GithubMemberResponse(Str(el, "login"), Str(el, "avatar_url"), Str(el, "html_url"));
+    }
+
+    /// <summary>Thread-safe TTL slot backing <see cref="GetGithubList{T}"/>.</summary>
+    private sealed class GithubListCache<T>(TimeSpan ttl)
+    {
+        private readonly object _lock = new();
+        private (DateTimeOffset At, T[] Items)? _entry;
+
+        /// <summary>Snapshot within TTL, otherwise null (triggers upstream fetch).</summary>
+        public T[]? Fresh
+        {
+            get { lock (_lock) return _entry is { } e && DateTimeOffset.UtcNow - e.At < ttl ? e.Items : null; }
+        }
+
+        /// <summary>Last good snapshot regardless of age (stale-on-error fallback).</summary>
+        public T[]? Stale
+        {
+            get { lock (_lock) return _entry?.Items; }
+        }
+
+        public void Set(T[] items)
+        {
+            lock (_lock) _entry = (DateTimeOffset.UtcNow, items);
+        }
     }
 
     private static GithubReleaseResponse ParseRelease(JsonElement root)

@@ -31,7 +31,9 @@ export const useWelcomeStore = create<WelcomeState>()(
       // are resolved at render time, never stored.
       partialize: (s) => ({ menuGroups: s.menuGroups, statusItems: s.statusItems }),
       // v1: timeline promoted out of the menu → force re-seed stale persisted configs
-      version: 1,
+      // v2: 系统信息 entry added to the instance group → re-seed again so
+      //     already-persisted menus (partialize keeps menuGroups) pick it up
+      version: 2,
       migrate: () => ({ menuGroups: DEFAULT_MENU_GROUPS, statusItems: DEFAULT_STATUS_ITEMS }),
     }
   )

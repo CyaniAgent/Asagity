@@ -39,6 +39,9 @@ const LoginPage = lazy(() =>
 const TimelineFeed = lazy(() =>
   import("@/components/post/TimelineFeed").then((m) => ({ default: m.TimelineFeed }))
 );
+const SystemInfoContent = lazy(() =>
+  import("@/components/system/SystemInfoContent").then((m) => ({ default: m.SystemInfoContent }))
+);
 
 function WindowManagerFallback() {
   return (
@@ -84,6 +87,8 @@ export function getViewConfig(viewType: string | null) {
       return { title: "联邦实例", icon: "globe", width: 500, height: 600, disableMinimize: true };
     case "welcome_dashboard":
       return { title: "数据面板", icon: "dashboard", width: 500, height: 600, disableMinimize: true };
+    case "system_info":
+      return { title: "系统信息", icon: "server", width: 760, height: 660, minWidth: 560, minHeight: 420 };
     case "portal_debugger":
       return { title: "Portal Debugger", icon: "terminal", width: 1184, height: 756, minWidth: 720, minHeight: 480 };
     default:
@@ -133,6 +138,12 @@ function renderContent(viewType: string | null, refreshKey: number, browserUrl?:
       return <div className="flex items-center justify-center h-full text-gray-400 text-sm">数据面板开发中</div>;
     case "portal_debugger":
       return <Suspense fallback={<WindowManagerFallback />}><PortalDebuggerContent /></Suspense>;
+    case "system_info":
+      return (
+        <Suspense fallback={<WindowManagerFallback />}>
+          <SystemInfoContent key={`sysinfo-${refreshKey}`} refreshKey={refreshKey} />
+        </Suspense>
+      );
     default:
       return <div className="p-4 text-gray-500">未知视图类型</div>;
   }

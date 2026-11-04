@@ -19,7 +19,6 @@ import { Icon } from "@/components/ui/Icon";
 import { lazy } from "react";
 import { useI18n } from "@/components/providers/I18nProvider";
 
-const SplashScreen = lazy(() => import("@/components/ui/SplashScreen").then((m) => ({ default: m.SplashScreen })));
 const ContextMenu = lazy(() => import("@/components/ui/ContextMenu").then((m) => ({ default: m.ContextMenu })));
 const NetworkStatus = lazy(() => import("@/components/shared/NetworkStatus").then((m) => ({ default: m.NetworkStatus })));
 
@@ -160,7 +159,6 @@ export function MainLayout({ children, notFound }: { children: React.ReactNode; 
 
   return (
     <div className="h-screen w-screen flex bg-gray-100 dark:bg-[#121212] overflow-hidden font-sans">
-      <SplashScreen />
       <ContextMenu />
       <NetworkStatus />
 

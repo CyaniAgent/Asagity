@@ -505,6 +505,28 @@
     "timeline": "タイムライン",
     "topics": "トピック"
   },
+  "splash": {
+    "messageAlmost": "もうすぐです...",
+    "messageCoffee": "ロード中、コーヒーでもどうぞ...",
+    "messageSms": "SMSシステムを起動しています...",
+    "retry": "再試行"
+  },
+  "sysinfo": {
+    "contribUnit": "件",
+    "contributors": "コントリビューター",
+    "info": "Asagity 情報",
+    "loading": "取得中…",
+    "modeDev": "開発モード",
+    "modeFrontendOnly": "フロントエンドのみ",
+    "modeProd": "本番モード",
+    "organization": "組織",
+    "organizers": "プロジェクト主催者",
+    "reactVersion": "React バージョン",
+    "runMode": "実行モード",
+    "serverVersion": "サーバーバージョン",
+    "specialThanks": "特別謝辞",
+    "thanksPlaceholder": "プレースホルダー · 準備中"
+  },
   "tabs": {
     "announcements": "お知らせ",
     "bookmarks": "ブックマーク",
@@ -770,6 +792,7 @@
     "online": "オンライン",
     "onlineCount": "オンライン",
     "posts": "投稿",
+    "systemInfo": "システム情報",
     "terminal": "ターミナルに入る",
     "terminalPassword": "ターミナルパスワードを入力してください",
     "termity": "Termity",
@@ -800,6 +823,7 @@
     "timelineWindow": "タイムライン",
     "loginWindow": "ログイン",
     "registerWindow": "アカウント作成",
+    "systemInfo": "システム情報",
     "termity": "Termity"
   }
 }

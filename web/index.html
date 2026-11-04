@@ -14,8 +14,68 @@
     <meta name="apple-mobile-web-app-title" content="Asagity" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <!-- 引导开屏（Boot Splash）：React 挂载前的零 JS 首帧，消灭白闪。
+         视觉与 SplashScreen 对位（logo 128px + 进度条 256×3，gap 32px），交接无缝。
+         由 SplashScreen 挂载时淡出移除；main.tsx 另有 6s 兜底（root 有内容才移除）。 -->
+    <style>
+      #boot-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 32px;
+        background: var(--color-sheet, #ffffff);
+        pointer-events: none;
+        transition: opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      #boot-splash.boot-fade { opacity: 0; }
+      #boot-splash .boot-logo {
+        width: 128px;
+        height: 128px;
+        object-fit: contain;
+        animation: boot-logo-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      }
+      #boot-splash .boot-bar {
+        width: 256px;
+        height: 3px;
+        border-radius: 999px;
+        background: rgba(128, 128, 128, 0.16); /* 中性轨道：明暗两态首帧都可读 */
+        overflow: hidden;
+        position: relative;
+      }
+      #boot-splash .boot-bar i {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 38%;
+        border-radius: 999px;
+        background: var(--color-brand, #2e76b8);
+        box-shadow: 0 0 8px rgba(46, 118, 184, 0.6);
+        animation: boot-scan 1.15s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+      }
+      @keyframes boot-scan {
+        0% { transform: translateX(-110%); }
+        100% { transform: translateX(300%); }
+      }
+      @keyframes boot-logo-in {
+        from { opacity: 0; transform: scale(0.92); }
+        to { opacity: 1; transform: none; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #boot-splash .boot-bar i { animation: none; width: 100%; }
+        #boot-splash .boot-logo { animation: none; }
+      }
+    </style>
   </head>
   <body class="min-h-full flex flex-col font-sans bg-gray-100 dark:bg-[#121212]">
+    <div id="boot-splash" aria-hidden="true">
+      <img class="boot-logo" src="/favicon.ico" alt="" />
+      <div class="boot-bar"><i></i></div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

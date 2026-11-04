@@ -62,7 +62,13 @@ export function RouteView({
 
   if (!matched) {
     const FallbackComponent = Fallback;
-    return FallbackComponent ? <FallbackComponent /> : <RouteFallback />;
+    if (!FallbackComponent) return <RouteFallback />;
+    // NotFound 自身为 lazy 组件 — 必须给 Suspense 边界，否则首访 404 会因无边界 suspend 崩溃
+    return (
+      <Suspense fallback={<RouteFallback />}>
+        <FallbackComponent />
+      </Suspense>
+    );
   }
 
   const { route } = matched;

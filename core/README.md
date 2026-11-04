@@ -1,6 +1,6 @@
 # 🩵 Asagity Verse (Server)
 
-> **The Cyan-tinted Decentralized Social Universe — Backend Core Engine**
+> **The Glacier-tinted Decentralized Social Universe — Backend Core Engine**
 
 Asagity Verse is the backend server engine for the Asagity platform, powered by a dual-engine architecture combining **Go (Core Engine & Toolchain) + ASP.NET Core (API & Module Layer)**. Built on a **self-developed decoupled Module + App Environment design (Modular Monolith + App Environment / AAP)** and **Clean Architecture** principles, it integrates native federation (ActivityPub / Verse Protocol), high-performance real-time push, the in-house VSQL search interpreter, and the Skyline Drive multi-backend cloud storage system.
 
@@ -29,7 +29,7 @@ core/
 ├── src/
 │   ├── Verse.slnx                       # .NET solution (Api + 7 Modules)
 │   ├── Verse.Api/                        # 🚀 ASP.NET Core (API layer entrypoint)
-│   │   ├── Program.cs                    # Dynamically scans and loads Modules
+│   │   ├── Program.cs                    # Static composition of the 9 modules + middleware pipeline
 │   │   ├── Middlewares/                  # JWT auth, CORS, VSQL route-resolving middleware
 │   │   └── Verse.Api.csproj
 │   │
@@ -47,7 +47,7 @@ core/
 │   │   └── Verse.Module.Music/           # Music player & LRC lyrics module (AAP app extension sample)
 │   │
 │   ├── Verse.Engine/                     # ⚙️ Go core engine (events/connections/VSQL/federation)
-│   │   ├── cmd/verse-engine/             # Go engine daemon entrypoint
+│   │   ├── cmd/verse-engine/             # Go engine daemon entrypoint (cmd/api = compat shim, cmd/worker = stub)
 │   │   ├── pkg/
 │   │   │   ├── eventbus/                 # High-performance EventBus & Valkey Bridge
 │   │   │   ├── vsql/                     # Verse Search Query Language semantic interpreter
@@ -59,7 +59,7 @@ core/
 │   ├── Verse.Data/                      # 🗄️ EF Core data layer (DbContext/mappings/provider switch/seeding)
 │   │   └── Verse.Data.csproj
 │   │
-│   ├── Verse.Tests/                     # 🧪 xUnit test project (36 cases)
+│   ├── Verse.Tests/                     # 🧪 xUnit test project (scopes, data layer, seeder, services, guest codes)
 │   │   └── Verse.Tests.csproj
 │   │
 │   └── Verse.Cli/                        # 🛠️ Verse tool (Go-based CLI management tool)
@@ -84,9 +84,11 @@ core/
 
 ## 🧱 Modular Business Domains (`Verse.Modules`)
 
+> Migration status ([`docs/architecture/tech-stack-audit.md`](../docs/architecture/tech-stack-audit.md)): **Instance, User, Shell and Music are live on .NET** (EF Core backed); **Auth, Note, Drive, Follow and Asset are still 501 stubs** while the Go engine keeps the working implementation until stages S5–S8 port them over.
+
 | Module package | Description |
 | :--- | :--- |
-| **`Verse.Module.Auth`** | Registration/login, 6-digit email OTP, JWT verification (30-min Access Token + 30-day Cookie Refresh Token rotation), device trust and global logout. |
+| **`Verse.Module.Auth`** | Registration/login, 6-digit email OTP, JWT verification (30-min Access Token + 30-day Cookie Refresh Token rotation), device trust and global logout. *(501 stub on .NET — Go owns the live implementation)* |
 | **`Verse.Module.User`** | User profiles, permission-group management, and Asagity's unique `pubid` (globally unique `usr_`-prefixed identifier, changeable monthly). |
 | **`Verse.Module.Instance`** | Health checks (`GET /healthz`), version and instance metadata exposure (`/api/meta/instance`). |
 | **`Verse.Module.Drive`** | Skyline Drive cloud system: chunked uploads and directory management across Local Disk, S3 object storage, and WebDAV mounts. |
@@ -121,11 +123,13 @@ The Asagity backend adopts a **"Module + App Environment"** two-tier extension s
 
 ---
 
-## 🛠️ Management Tool: Verse tool (`Verse.Cli`)
+## 🛠️ Management Tool: versetool (`Verse.Cli`)
 
-The Asagity Verse server lifecycle is uniformly managed by **Verse tool** (a Go-based CLI management tool):
-- **Service Control**: `verse start` / `verse stop` / `verse restart` / `verse status`
-- **App Management**: `verse app list` / `verse app enable` / `verse app disable` (manage third-party `.aap` apps)
+The Asagity Verse server lifecycle is uniformly managed by **versetool** (a Go-based CLI management tool):
+- **Service Control**: `versetool start` / `versetool stop` / `versetool restart` / `versetool status`, plus `versetool destroy` (emergency force-kill for wedged processes)
+- **Interactive Termity Base CLI**: run `versetool` with no arguments on a TTY to open a semantic `/command` REPL (`/start` `/status` `/doctor` `/recent` …) with per-run session journaling — see [`docs/cli/termity-base-cli.md`](../docs/cli/termity-base-cli.md)
+- **App Management**: `versetool app list` / `versetool app enable` / `versetool app disable` (manage third-party `.aap` apps)
+- **Database Status**: `versetool db status` reports the effective runtime mode, database location and the seeded account
 - **Environment Checks**: Diagnoses PostgreSQL, Valkey, network ports, and environment connectivity.
 
 ---
@@ -154,17 +158,20 @@ flowchart TD
 
 ## 🔧 Running & Maintenance
 
-The lifecycle and ops commands of Asagity Verse are uniformly scheduled by **Verse tool**:
+The lifecycle and ops commands of Asagity Verse are uniformly scheduled by **versetool**:
 
 ```bash
-# Start the full Asagity Verse server stack (API + Engine)
-verse start
+# Start the full Asagity Verse server stack (Go engine + .NET API)
+versetool start dev
 
-# Show service runtime and module/app loading status
-verse status
+# Show service runtime (process / port / health / RSS)
+versetool status
 
-# Stop services
-verse stop
+# Stop services gracefully
+versetool stop
+
+# Emergency: force-kill wedged processes (asks y/N, -y for scripts)
+versetool destroy
 ```
 
-The API listens on `:2048` by default. You can verify server status by visiting `http://localhost:2048/healthz`.
+The Go engine listens on `:2048` (`SERVER_PORT`) and the .NET API on `:2050` (`VERSE_API_PORT`). You can verify engine status by visiting `http://localhost:2048/healthz`.
