@@ -96,9 +96,12 @@ jobs:
         working-directory: core/src/Verse.Engine
     steps:
       - uses: actions/checkout@v4
-      - uses: securego/gosec-action@v2.22.4
+      - uses: actions/setup-go@v5
         with:
-          args: -exclude-dir=pkg ./...
+          go-version: '1.23'
+          cache-dependency-path: core/src/Verse.Engine/go.sum
+      - run: go install github.com/securego/gosec/v2/cmd/gosec@latest
+      - run: gosec -exclude-dir=pkg ./...
 
   govulncheck:
     name: Go vulnerability check
