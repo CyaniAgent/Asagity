@@ -221,6 +221,10 @@ func parseInitResult(path string) (ready bool, host, port string) {
 			port = strings.TrimPrefix(line, "ASAGITY_DB_PORT=")
 		}
 	}
+	if err := scanner.Err(); err != nil {
+		log.Printf("[runtime] failed to read init result: %v", err)
+		return false, "", ""
+	}
 	return ready, host, port
 }
 
