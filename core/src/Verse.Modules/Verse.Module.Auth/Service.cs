@@ -33,11 +33,11 @@ public interface IAuthService
     RegisterSendCodeResponse SendLoginVerificationEmail(string userId, string deviceFingerprint, string deviceName);
 }
 
-/// <summary>DI stub: every call returns 501 until the real service lands.</summary>
+/// <summary>DI stub: every call returns 503 until the real service lands.</summary>
 public sealed class NotImplementedAuthService : IAuthService
 {
     private static ModuleException Todo() =>
-        new(StatusCodes.Status501NotImplemented, "AUTH_NOT_IMPLEMENTED", "Auth service is not implemented yet.");
+        new(StatusCodes.Status503ServiceUnavailable, "AUTH_NOT_IMPLEMENTED", ".NET layer is planned but not implemented; use Go engine /api/*");
 
     public AuthResponse Register(RegisterRequest request) => throw Todo();
     public RegisterSendCodeResponse RegisterWithEmail(RegisterWithEmailRequest request) => throw Todo();

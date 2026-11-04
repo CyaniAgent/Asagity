@@ -8,15 +8,28 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
+// newUpgrader constructs a websocket.Upgrader that only accepts connections
+// whose Origin header is in allowedOrigins. An empty list (dev mode) accepts
+// all origins; production must pass a non-empty list from config.
+func newUpgrader(allowedOrigins []string) websocket.Upgrader {
+	allowSet := make(map[string]bool, len(allowedOrigins))
+	for _, o := range allowedOrigins {
+		allowSet[o] = true
+	}
+	return websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			if len(allowSet) == 0 {
+				return true
+			}
+			return allowSet[r.Header.Get("Origin")]
+		},
+	}
 }
 
-func NewHandler(server *Server, requiredChannels ...string) http.HandlerFunc {
+func NewHandler(server *Server, allowedOrigins []string, requiredChannels ...string) http.HandlerFunc {
+	upgrader := newUpgrader(allowedOrigins)
 	return func(w http.ResponseWriter, r *http.Request) {
 		userPubID := httpx.GetUserPubID(r.Context())
 		if userPubID == "" {

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	usermodel "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/user/model"
-	"gorm.io/driver/sqlite"
+	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 )
 

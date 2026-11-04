@@ -47,11 +47,11 @@ public interface INoteService
     PollResponse GetPollResults(string noteId, string userId);
 }
 
-/// <summary>DI stub: every call returns 501 until the real service lands.</summary>
+/// <summary>DI stub: every call returns 503 until the real service lands.</summary>
 public sealed class NotImplementedNoteService : INoteService
 {
     private static ModuleException Todo() =>
-        new(StatusCodes.Status501NotImplemented, "NOTE_NOT_IMPLEMENTED", "Note service is not implemented yet.");
+        new(StatusCodes.Status503ServiceUnavailable, "NOTE_NOT_IMPLEMENTED", ".NET layer is planned but not implemented; use Go engine /api/*");
 
     public Note CreateNote(CreateNoteRequest request, string userId) => throw Todo();
     public Note UpdateNote(string id, string userId, UpdateNoteRequest request) => throw Todo();

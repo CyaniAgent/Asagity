@@ -63,8 +63,8 @@ func OpenLite(cfg config.Config) (*Clients, error) {
 		return nil, fmt.Errorf("lite seed developer: %w", err)
 	}
 	if created {
-		log.Printf("[db] lite mode: developer account ready — username: %s | email: %s | group: %s | password: %s",
-			LiteDeveloper.Username, LiteDeveloper.Email, AdministratorGroupName, LiteDeveloper.Password)
+		log.Printf("[db] lite mode: developer account ready — username: %s | email: %s | group: %s — see startup banner for one-time credential",
+			LiteDeveloper.Username, LiteDeveloper.Email, AdministratorGroupName)
 	} else {
 		log.Printf("[db] lite mode: administrator account already present, skipping developer seed")
 	}

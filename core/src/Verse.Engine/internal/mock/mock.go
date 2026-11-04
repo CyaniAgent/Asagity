@@ -103,7 +103,7 @@ func (s *Server) Router() *chi.Mux {
 	mux := chi.NewRouter()
 	mux.Use(middleware.Recoverer)
 	mux.Use(middleware.RequestID)
-	mux.Use(httpx.Cors)
+	mux.Use(httpx.Cors(nil))
 
 	mux.Get("/", func(w http.ResponseWriter, _ *http.Request) {
 		httpx.WriteJSON(w, http.StatusOK, map[string]any{"name": "Asagity Core", "mode": "databaseless-mock"})

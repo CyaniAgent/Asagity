@@ -5,7 +5,7 @@
    
   [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
   [![Client](https://img.shields.io/badge/Client-React%2019-61DAFB?logo=react)](web/)
-  [![Server](https://img.shields.io/badge/Server-Go%20%2B%20ASP.NET%20Core-00ADD8?logo=go)](core/)
+  [![Server](https://img.shields.io/badge/Server-Go-00ADD8?logo=go)](core/)
   [![Status](https://img.shields.io/badge/Status-正在开发-orange.svg)]()
    
   [English](./README.md) | [简体中文](./README_CN.md)

@@ -11,12 +11,11 @@
  * - 开发模式绕过：asgt_dev_mode_forever cookie = "true"
  */
 import { useRouterStore } from "@/stores/router";
-
-/** 公开页面路径 */
-const PUBLIC_PAGES = ["/", "/login", "/about"];
+import { useUserStore } from "@/stores/user";
+import { PUBLIC_PAGES, ROUTES } from "@/lib/constants";
 
 /** 需要重定向到首页的登录后页面（login/register） */
-const REDIRECT_WHEN_LOGGED_IN = ["/login"];
+const REDIRECT_WHEN_LOGGED_IN = [ROUTES.LOGIN, ROUTES.REGISTER];
 
 /**
  * 读取 cookie 值
@@ -31,7 +30,7 @@ function getCookie(name: string): string | null {
  * 检查当前用户是否已登录
  */
 export function isLoggedIn(): boolean {
-  return !!getCookie("asagity_access_token");
+  return useUserStore.getState().isLoggedIn;
 }
 
 /**

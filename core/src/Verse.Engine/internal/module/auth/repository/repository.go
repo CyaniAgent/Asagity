@@ -12,6 +12,8 @@ type Repository interface {
 	RevokeRefreshToken(id string) error
 	CreateEmailChallenge(challenge *model.EmailChallenge) error
 	GetLatestEmailChallenge(email string, purpose string) (*model.EmailChallenge, error)
+	GetEmailChallengeByID(id string) (*model.EmailChallenge, error)
+	UpdateEmailChallenge(challenge *model.EmailChallenge) error
 	MarkEmailChallengeVerified(id string) error
 }
 
@@ -56,4 +58,15 @@ func (r *repository) GetLatestEmailChallenge(email string, purpose string) (*mod
 
 func (r *repository) MarkEmailChallengeVerified(id string) error {
 	return r.db.Model(&model.EmailChallenge{}).Where("id = ?", id).Update("verified_at", gorm.Expr("NOW()")).Error
+}
+func (r *repository) GetEmailChallengeByID(id string) (*model.EmailChallenge, error) {
+	var challenge model.EmailChallenge
+	if err := r.db.Where("id = ?", id).First(&challenge).Error; err != nil {
+		return nil, err
+	}
+	return &challenge, nil
+}
+
+func (r *repository) UpdateEmailChallenge(challenge *model.EmailChallenge) error {
+	return r.db.Save(challenge).Error
 }

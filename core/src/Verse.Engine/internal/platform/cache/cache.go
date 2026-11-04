@@ -20,7 +20,11 @@ type Cache interface {
 	Get(ctx context.Context, key string) (string, error)
 	Del(ctx context.Context, key string) error
 	// Keys lists keys matching pattern. Only exact keys and "prefix*" are supported.
+	// Deprecated: use Scan to avoid O(N) blocking on Redis.
 	Keys(ctx context.Context, pattern string) ([]string, error)
+	// Scan iterates keys matching pattern, calling fn for each. Prefer over Keys
+	// to avoid O(N) blocking on Redis. Stops early if fn returns an error.
+	Scan(ctx context.Context, pattern string, fn func(key string) error) error
 	Ping(ctx context.Context) error
 	Close() error
 }

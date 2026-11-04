@@ -38,8 +38,30 @@ func (c *RedisCache) Del(ctx context.Context, key string) error {
 }
 
 // Keys delegates to Redis KEYS (refresh-token scans only; not a hot path).
+// Deprecated: use Scan.
 func (c *RedisCache) Keys(ctx context.Context, pattern string) ([]string, error) {
 	return c.client.Keys(ctx, pattern).Result()
+}
+
+// Scan iterates keys matching pattern using Redis SCAN (non-blocking, cursor
+// based, batch size 100). Calls fn for each key; stops early on error.
+func (c *RedisCache) Scan(ctx context.Context, pattern string, fn func(key string) error) error {
+	var cursor uint64
+	for {
+		keys, next, err := c.client.Scan(ctx, cursor, pattern, 100).Result()
+		if err != nil {
+			return err
+		}
+		for _, key := range keys {
+			if err := fn(key); err != nil {
+				return err
+			}
+		}
+		cursor = next
+		if cursor == 0 {
+			return nil
+		}
+	}
 }
 
 // Ping checks connectivity.

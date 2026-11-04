@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"time"
 
 	usermodel "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/user/model"
@@ -43,7 +44,7 @@ var ProductionAdministrator = AccountSpec{
 	PubID:    "usr_asagity0",
 	Username: "asagity_admin",
 	Email:    "admin@asagity.local",
-	Password: "Asagity1234",
+	Password: "",
 	Name:     "Asagity Administrator",
 	GroupID:  AdministratorGroupID,
 }
@@ -70,16 +71,16 @@ func userGroups() []usermodel.UserGroup {
 }
 
 // SeedUserGroups creates the built-in permission groups when missing.
+// Each group is upserted individually via FirstOrCreate so a partially
+// seeded instance (e.g. only admin group present) is completed on restart
+// instead of being skipped wholesale.
 func SeedUserGroups(db *gorm.DB) error {
-	var count int64
-	if err := db.Model(&usermodel.UserGroup{}).Count(&count).Error; err != nil {
-		return err
+	for _, g := range userGroups() {
+		if err := db.Where("id = ?", g.ID).FirstOrCreate(&g).Error; err != nil {
+			return err
+		}
 	}
-	if count > 0 {
-		return nil
-	}
-	groups := userGroups()
-	return db.Create(&groups).Error
+	return nil
 }
 
 // HasAdministrator reports whether the instance already owns at least one
@@ -103,6 +104,18 @@ func SeedAdministrator(db *gorm.DB, spec AccountSpec) (bool, error) {
 	}
 	if exists {
 		return false, nil
+	}
+
+	if spec.Password == "" {
+		spec.Password = os.Getenv("ADMIN_BOOTSTRAP_PASSWORD")
+		if spec.Password == "" {
+			pwd, err := randomID()
+			if err != nil {
+				return false, err
+			}
+			spec.Password = pwd
+			fmt.Printf("[seed] generated bootstrap admin password (change immediately): %s\n", spec.Password)
+		}
 	}
 
 	hashed, err := bcrypt.GenerateFromPassword([]byte(spec.Password), bcrypt.DefaultCost)

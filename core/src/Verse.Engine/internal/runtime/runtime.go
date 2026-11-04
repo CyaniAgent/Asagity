@@ -9,16 +9,20 @@ package runtime
 
 import (
 	"bufio"
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
+	"time"
 
-	"github.com/go-chi/chi/v5"
+	goruntime "runtime"
 
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/app"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/mock"
@@ -67,11 +71,26 @@ func Serve(cfg config.Config, md mode.Mode) error {
 func serveApp(cfg config.Config, clients *database.Clients, addr string) error {
 	application := app.New(cfg, clients)
 
-	r := chi.NewRouter()
-	r.Mount("/", application.Router())
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
-	log.Printf("[runtime] Asagity API listening on %s", addr)
-	return http.ListenAndServe(addr, r)
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- application.Serve(addr)
+	}()
+
+	select {
+	case err := <-errCh:
+		return err
+	case <-ctx.Done():
+		log.Println("[runtime] shutdown signal received, gracefully stopping...")
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		if err := application.Shutdown(shutdownCtx); err != nil {
+			log.Printf("[runtime] shutdown error: %v", err)
+		}
+		return <-errCh
+	}
 }
 
 func closeClients(clients *database.Clients) {
@@ -140,13 +159,23 @@ func runInitDatabase(initMode string) bool {
 		return false
 	}
 
-	initScript := filepath.Join(projectRoot, "scripts", "container", "initDatabase.sh")
-	if _, err := os.Stat(initScript); os.IsNotExist(err) {
-		log.Printf("[runtime] initDatabase.sh not found at %s", initScript)
-		return false
+	var cmd *exec.Cmd
+	if goruntime.GOOS == "windows" {
+		initScript := filepath.Join(projectRoot, "scripts", "container", "initDatabase.ps1")
+		if _, err := os.Stat(initScript); os.IsNotExist(err) {
+			log.Printf("[runtime] initDatabase.ps1 not found at %s", initScript)
+			return false
+		}
+		cmd = exec.Command("powershell", "-ExecutionPolicy", "Bypass", "-File", initScript)
+	} else {
+		initScript := filepath.Join(projectRoot, "scripts", "container", "initDatabase.sh")
+		if _, err := os.Stat(initScript); os.IsNotExist(err) {
+			log.Printf("[runtime] initDatabase.sh not found at %s", initScript)
+			return false
+		}
+		cmd = exec.Command("bash", initScript)
 	}
 
-	cmd := exec.Command("bash", initScript)
 	cmd.Dir = projectRoot
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -155,7 +184,7 @@ func runInitDatabase(initMode string) bool {
 	cmd.Env = append(os.Environ(), "INITDB_MODE="+initMode)
 
 	if err := cmd.Run(); err != nil {
-		log.Printf("[runtime] initDatabase.sh execution failed: %v", err)
+		log.Printf("[runtime] initDatabase execution failed: %v", err)
 		return false
 	}
 
@@ -185,7 +214,7 @@ func parseInitResult(path string) (ready bool, host, port string) {
 		line := scanner.Text()
 		switch {
 		case strings.HasPrefix(line, "ASAGITY_DB_READY="):
-			ready = strings.Contains(line, "true")
+			ready = strings.TrimPrefix(line, "ASAGITY_DB_READY=") == "true"
 		case strings.HasPrefix(line, "ASAGITY_DB_HOST="):
 			host = strings.TrimPrefix(line, "ASAGITY_DB_HOST=")
 		case strings.HasPrefix(line, "ASAGITY_DB_PORT="):
