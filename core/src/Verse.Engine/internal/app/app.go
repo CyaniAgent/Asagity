@@ -1,7 +1,10 @@
 package app
 
 import (
+	"context"
 	"log"
+	"net/http"
+	"sync"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -23,10 +26,13 @@ import (
 )
 
 type App struct {
-	mux      *chi.Mux
-	cfg      config.Config
-	eventBus *event.Bus
-	wsServer *ws.Server
+	mu         sync.Mutex
+	mux        *chi.Mux
+	cfg        config.Config
+	eventBus   *event.Bus
+	wsServer   *ws.Server
+	bridge     *event.Bridge
+	httpServer *http.Server
 }
 
 func New(cfg config.Config, clients *database.Clients) *App {
@@ -34,7 +40,7 @@ func New(cfg config.Config, clients *database.Clients) *App {
 
 	mux.Use(middleware.Recoverer)
 	mux.Use(middleware.RequestID)
-	mux.Use(httpx.Cors)
+	mux.Use(httpx.Cors(cfg.CORSAllowedOrigins))
 	mux.Use(httpx.Auth(cfg.JwtSecret))
 
 	searchEngine, err := search.NewBleveEngine(search.Config{
@@ -49,15 +55,17 @@ func New(cfg config.Config, clients *database.Clients) *App {
 	eventBus := event.NewBus(event.BusConfig{
 		AsyncWorkers: 16,
 	})
-	log.Println("[app] Asagity NET Core EventBus initialized")
+	log.Println("[app] Asagity EventBus initialized")
 
 	wsServer := ws.NewServer(eventBus)
 	wsServer.Start()
 
+	var bridge *event.Bridge
 	if clients.Redis != nil {
-		bridge := event.NewBridge(eventBus, clients.Redis)
+		bridge = event.NewBridge(eventBus, clients.Redis)
 		if err := bridge.Start(); err != nil {
 			log.Printf("[app] EventBridge failed to start: %v", err)
+			bridge = nil
 		}
 	}
 
@@ -70,11 +78,11 @@ func New(cfg config.Config, clients *database.Clients) *App {
 	notemodule.Register(mux, cfg, clients, searchEngine, eventBus)
 	shellmodule.Register(mux, cfg, eventBus)
 
-	mux.Get("/ws/timeline", ws.NewHandler(wsServer, ws.ChannelEventTypes(ws.ChannelTimeline)...))
-	mux.Get("/ws/notifications", ws.NewHandler(wsServer, ws.ChannelEventTypes(ws.ChannelNotifications)...))
-	mux.Get("/ws/global", ws.NewHandler(wsServer, ws.ChannelEventTypes(ws.ChannelGlobal)...))
+	mux.Get("/ws/timeline", ws.NewHandler(wsServer, cfg.WSAllowedOrigins, ws.ChannelEventTypes(ws.ChannelTimeline)...))
+	mux.Get("/ws/notifications", ws.NewHandler(wsServer, cfg.WSAllowedOrigins, ws.ChannelEventTypes(ws.ChannelNotifications)...))
+	mux.Get("/ws/global", ws.NewHandler(wsServer, cfg.WSAllowedOrigins, ws.ChannelEventTypes(ws.ChannelGlobal)...))
 
-	return &App{mux: mux, cfg: cfg, eventBus: eventBus, wsServer: wsServer}
+	return &App{mux: mux, cfg: cfg, eventBus: eventBus, wsServer: wsServer, bridge: bridge}
 }
 
 func (a *App) Router() *chi.Mux {
@@ -87,4 +95,34 @@ func (a *App) EventBus() *event.Bus {
 
 func (a *App) WSServer() *ws.Server {
 	return a.wsServer
+}
+func (a *App) Serve(addr string) error {
+	a.mu.Lock()
+	a.httpServer = &http.Server{Addr: addr, Handler: a.mux}
+	a.mu.Unlock()
+
+	log.Printf("[runtime] Asagity API listening on %s", addr)
+	return a.httpServer.ListenAndServe()
+}
+
+func (a *App) Shutdown(ctx context.Context) error {
+	a.mu.Lock()
+	srv := a.httpServer
+	a.mu.Unlock()
+
+	if srv != nil {
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Printf("[app] HTTP server shutdown error: %v", err)
+		}
+	}
+	if a.wsServer != nil {
+		a.wsServer.Stop()
+	}
+	if a.bridge != nil {
+		a.bridge.Stop()
+	}
+	if a.eventBus != nil {
+		a.eventBus.Shutdown()
+	}
+	return nil
 }

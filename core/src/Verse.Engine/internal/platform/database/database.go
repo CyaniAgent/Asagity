@@ -77,9 +77,8 @@ func Open(cfg config.Config) (*Clients, error) {
 		return nil, err
 	}
 	if created {
-		log.Printf("[db] seeded administrator account: %s (email: %s, group: %s, password: %s)",
-			ProductionAdministrator.Username, ProductionAdministrator.Email,
-			AdministratorGroupName, ProductionAdministrator.Password)
+		log.Printf("[db] seeded administrator account: %s (email: %s, group: %s) — see startup banner for one-time credential",
+			ProductionAdministrator.Username, ProductionAdministrator.Email, AdministratorGroupName)
 	}
 
 	return &Clients{DB: db, Redis: rdb, Cache: cache.NewRedisCache(rdb), Mode: mode.Production}, nil
@@ -148,12 +147,13 @@ func ensureServices(cfg config.Config) error {
 
 func openPostgres(cfg config.Config) (*gorm.DB, error) {
 	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=%s",
 		cfg.DBHost,
 		cfg.DBUser,
 		cfg.DBPassword,
 		cfg.DBName,
 		cfg.DBPort,
+		cfg.TimeZone,
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -265,14 +265,18 @@ func findProjectRoot() (string, error) {
 
 	dir := cwd
 	for {
-		composePath := filepath.Join(dir, "docker-compose.yml")
-		if _, err := os.Stat(composePath); err == nil {
+		for _, name := range []string{"docker-compose.yml", "docker-compose.yaml"} {
+			if _, err := os.Stat(filepath.Join(dir, name)); err == nil {
+				return dir, nil
+			}
+		}
+		if _, err := os.Stat(filepath.Join(dir, "container")); err == nil {
 			return dir, nil
 		}
 
 		parent := filepath.Dir(dir)
 		if parent == dir {
-			return "", errors.New("could not locate project root containing docker-compose.yml")
+			return "", errors.New("could not locate project root containing docker-compose.yaml")
 		}
 
 		dir = parent

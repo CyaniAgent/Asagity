@@ -5,7 +5,7 @@
    
   [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
   [![Client](https://img.shields.io/badge/Client-React%2019-61DAFB?logo=react)](web/)
-  [![Server](https://img.shields.io/badge/Server-Go%20%2B%20ASP.NET%20Core-00ADD8?logo=go)](core/)
+  [![Server](https://img.shields.io/badge/Server-Go-00ADD8?logo=go)](core/)
   [![Status](https://img.shields.io/badge/Status-In%20Development-orange.svg)]()
    
   [English](./README.md) | [简体中文](./README_CN.md)
@@ -27,14 +27,14 @@ Built on the self-developed **Verse for Asagity** backend engine, leveraging the
 - **Topics System**: Community-driven topic discovery with activity tracking, trending analysis, and real-time post integration.
 - **Highly Customizable UI**: Breaking the traditional three-column layout. Asagity adopts an advanced tab mechanism with on-open loading, on-close release, and minimized-page preloading, delivering an OS-level page experience.
 - **Rich Toy-like Widgets**: Built-in mini music player with lyrics sync, custom dynamic emojis, typing effects, and weather-based online status.
-- **Blazing Fast**: Powered by Go + ASP.NET Core for massive concurrent federation broadcasting, and React 19 for instant client-side delivery.
+- **Blazing Fast**: Powered by Go for massive concurrent federation broadcasting, and React 19 for instant client-side delivery. The .NET layer is planned but not yet implemented.
 
 ## Tech Stack
 
 Asagity is built as a symmetric Monorepo, separating the client layer from the server core.
 
 *   **Client (`/web`)**: React 19, Tailwind CSS v4, Zustand.
-*   **Server (`/core`)**: Go + ASP.NET Core, GORM, Asynq (Valkey-based task queue).
+*   **Server (`/core`)**: Go (GORM, Asynq). The .NET layer is planned but not yet implemented; use the Go engine `/api/*` endpoints.
 *   **Infrastructure**: PostgreSQL (Main database with JSONB), Valkey (Cache & Queue).
 *   **Container Runtime**: Docker & Podman support with separate container configs.
 
@@ -100,7 +100,7 @@ Asagity/
 │   │   └── messages/       # i18n (zh-CN, zh-TW, en-US, ja-JP)
 │   ├── public/             # Static assets (fonts, sounds, PWA)
 │   └── middleware.ts       # Auth route guard
-├── core/                   # Server (Go + ASP.NET Core)
+├── core/                   # Server (Go; .NET layer planned)
 │   ├── cmd/api/            # API entrypoint
 │   ├── internal/
 │   │   ├── module/         # Domain modules

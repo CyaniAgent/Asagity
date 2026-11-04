@@ -17,7 +17,7 @@ interface UserState {
   logout: () => Promise<void>;
   logoutAll: () => Promise<void>;
   refreshAccessToken: () => Promise<boolean>;
-  fetchMe: () => Promise<void>;
+  fetchMe: (depth?: number) => Promise<void>;
 }
 
 export const useUserStore = create<UserState>()(
@@ -37,7 +37,7 @@ export const useUserStore = create<UserState>()(
       },
 
       get isAdmin() {
-        return get().user?.role === "admin" || get().user?.username === "Developer";
+        return get().user?.role === "admin";
       },
 
       get isModerator() {
@@ -61,6 +61,7 @@ export const useUserStore = create<UserState>()(
             username: "Developer",
             name: "Asagity Dev",
             avatar_url: "https://avatars.githubusercontent.com/u/739984?v=4",
+            role: "admin",
           },
         }),
 
@@ -115,7 +116,7 @@ export const useUserStore = create<UserState>()(
         }
       },
 
-      fetchMe: async () => {
+      fetchMe: async (depth = 0) => {
         const state = get();
         if (!state.accessToken) return;
 
@@ -155,10 +156,10 @@ export const useUserStore = create<UserState>()(
             // Offline fallback handled by system store
           } else {
             const refreshed = await get().refreshAccessToken();
-            if (!refreshed) {
+            if (!refreshed || depth >= 1) {
               get().logout();
             } else {
-              await get().fetchMe();
+              await get().fetchMe(depth + 1);
             }
           }
         }

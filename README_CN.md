@@ -5,7 +5,7 @@
    
   [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
   [![Client](https://img.shields.io/badge/Client-React%2019-61DAFB?logo=react)](web/)
-  [![Server](https://img.shields.io/badge/Server-Go%20%2B%20ASP.NET%20Core-00ADD8?logo=go)](core/)
+  [![Server](https://img.shields.io/badge/Server-Go-00ADD8?logo=go)](core/)
   [![Status](https://img.shields.io/badge/Status-正在开发-orange.svg)]()
    
   [English](./README.md) | [简体中文](./README_CN.md)
@@ -27,14 +27,14 @@
 - **话题系统**：社区驱动的话题发现机制，支持活动追踪、趋势分析和实时帖子整合。
 - **高度自由可定制 UI**：打破传统三栏布局，采用先进的标签页机制，并加入即开即加载、关闭即释放、页面最小化预载机制，打造类操作系统级别的页面体验。
 - **趣味交互组件**：内置迷你音乐播放器（含歌词同步）、动态自定义表情包、打字机特效签名及个性化在线状态。
-- **极致性能驱动**：服务端由 Go + ASP.NET Core 驱动，轻松扛住海量联邦并发广播；客户端采用 React 19，首屏秒开，开发体验极致。
+- **极致性能驱动**：服务端由 Go 驱动，轻松扛住海量联邦并发广播；客户端采用 React 19，首屏秒开，开发体验极致。.NET 层规划中未实现。
 
 ## 技术栈
 
 Asagity 采用清晰的 Monorepo（单体仓库）架构，客户端与服务端分离但协同开发：
 
 *   **客户端 (`/web`)**: React 19, Tailwind CSS v4, Zustand.
-*   **服务端 (`/core`)**: Go + ASP.NET Core, GORM, Asynq (基于 Valkey 的强力异步任务队列).
+*   **服务端 (`/core`)**: Go, GORM, Asynq (基于 Valkey 的强力异步任务队列). .NET 层规划中未实现，请使用 Go 引擎 `/api/*` 端点。
 *   **底层基建**: PostgreSQL (极其依赖 JSONB 处理联邦数据), Valkey (缓存与消息队列).
 *   **容器运行时**: 支持 Docker 与 Podman，配置分离管理。
 
@@ -99,7 +99,7 @@ Asagity/
 │   │   └── messages/       # i18n 语言包 (4 语言)
 │   ├── public/             # 静态资源 (字体, 音效, PWA)
 │   └── middleware.ts       # Auth 路由守卫
-├── core/                   # 服务端 (Go + ASP.NET Core)
+├── core/                   # 服务端 (Go; .NET 层规划中)
 │   ├── cmd/api/           # API 入口
 │   ├── internal/
 │   │   ├── module/        # 领域模块
