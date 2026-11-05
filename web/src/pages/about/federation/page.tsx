@@ -18,7 +18,7 @@ export default function AboutFederationPage() {
     <div className="h-full flex flex-col items-center p-8 relative overflow-y-auto">
       {/* Background Decoration */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-30 dark:opacity-10">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-cyan-500 rounded-full mix-blend-multiply filter blur-[100px] animate-pulse" />
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-brand rounded-full mix-blend-multiply filter blur-[100px] animate-pulse" />
         <div
           className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-500 rounded-full mix-blend-multiply filter blur-[100px] animate-pulse"
           style={{ animationDelay: "2s" }}
@@ -30,7 +30,7 @@ export default function AboutFederationPage() {
         <div className="bg-white/60 dark:bg-gray-900/60 backdrop-blur-2xl rounded-[32px] border border-white/40 dark:border-white/10 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
-              <Icon name="globe" className="text-cyan-500" fontSize={24} />
+              <Icon name="globe" className="text-fgaccent" fontSize={24} />
               {t("about.federatedInstances")}
             </h1>
             <button
@@ -49,11 +49,11 @@ export default function AboutFederationPage() {
             <div key={instance.domain} className="bg-white/60 dark:bg-gray-900/60 backdrop-blur-2xl rounded-[32px] border border-white/40 dark:border-white/10 p-6 shadow-sm hover:shadow-md transition-all group">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white font-black text-lg shadow-lg shadow-cyan-500/20">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand to-blue-500 flex items-center justify-center text-white font-black text-lg shadow-lg shadow-brand/20">
                     {instance.name.charAt(0)}
                   </div>
                   <div>
-                    <h3 className="text-base font-black text-gray-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                    <h3 className="text-base font-black text-gray-900 dark:text-white group-hover:text-branddeep dark:group-hover:text-fgaccent transition-colors">
                       {instance.name}
                     </h3>
                     <p className="text-xs font-bold text-gray-500">{instance.domain}</p>

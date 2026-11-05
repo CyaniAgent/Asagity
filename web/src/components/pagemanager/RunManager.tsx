@@ -61,13 +61,13 @@ export function RunManager() {
         </span>
         <button
           onClick={focusLeft}
-          className="flex items-center gap-3 px-3 py-2 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 transition-colors group"
+          className="flex items-center gap-3 px-3 py-2 rounded-xl bg-brand/10 text-branddeep dark:text-fgaccent transition-colors group"
         >
           <Icon name={routeEntry?.kind === "link" ? routeEntry.icon : "home"} fontSize={18} className="shrink-0" />
           <span className="flex-1 text-left text-[13px] font-semibold truncate">
             {routeEntry?.kind === "link" ? t(routeEntry.labelKey) : pathname}
           </span>
-          <span className="size-1.5 rounded-full bg-cyan-500 shrink-0" />
+          <span className="size-1.5 rounded-full bg-brand shrink-0" />
         </button>
       </div>
 
@@ -82,7 +82,7 @@ export function RunManager() {
             onClick={focusRight}
             className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-colors cursor-pointer group ${
               splitActive
-                ? "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
+                ? "bg-brand/10 text-branddeep dark:text-fgaccent"
                 : "hover:bg-black/5 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300"
             }`}
           >
@@ -109,7 +109,7 @@ export function RunManager() {
               onClick={() => focusWindow(win.id)}
               className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-colors cursor-pointer group ${
                 focused
-                  ? "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
+                  ? "bg-brand/10 text-branddeep dark:text-fgaccent"
                   : "hover:bg-black/5 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300"
               } ${win.isMinimized ? "opacity-50" : ""}`}
             >

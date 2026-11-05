@@ -6,7 +6,7 @@ binary built to `core/src/Verse.Cli/bin/versetool`).
 
 * `verse` manages the new dual-process layout: Go `verse-engine` daemon
   (`core/src/Verse.Engine`) + C# `Verse.Api` (`core/src`), plus
-  PostgreSQL/Redis containers in production mode.
+  PostgreSQL/Valkey containers in production mode.
 * `verse` supports the three runtime modes (`databaseless` / `lite` /
   `production`) via `ASAGITY_MODE` / `--mode`.
 * `appmgr` only knows the old single-process Go layout and is no longer

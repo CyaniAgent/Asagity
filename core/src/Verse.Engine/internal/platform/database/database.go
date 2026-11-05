@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"os/exec"
@@ -19,7 +20,6 @@ import (
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/mode"
 	"github.com/redis/go-redis/v9"
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -68,55 +68,20 @@ func Open(cfg config.Config) (*Clients, error) {
 		return nil, err
 	}
 
-	if err := seedInitialData(db); err != nil {
+	if err := SeedUserGroups(db); err != nil {
 		return nil, err
 	}
 
+	created, err := SeedAdministrator(db, ProductionAdministrator)
+	if err != nil {
+		return nil, err
+	}
+	if created {
+		log.Printf("[db] seeded administrator account: %s (email: %s, group: %s) — see startup banner for one-time credential",
+			ProductionAdministrator.Username, ProductionAdministrator.Email, AdministratorGroupName)
+	}
+
 	return &Clients{DB: db, Redis: rdb, Cache: cache.NewRedisCache(rdb), Mode: mode.Production}, nil
-}
-
-func seedInitialData(db *gorm.DB) error {
-	var count int64
-	db.Model(&usermodel.UserGroup{}).Count(&count)
-	if count == 0 {
-		userGroups := []usermodel.UserGroup{
-			{ID: "admin", Name: "Administrator", Code: "admin", Description: "System administrators", CreatedAt: time.Now()},
-			{ID: "moderator", Name: "Moderator", Code: "moderator", Description: "Content moderators", CreatedAt: time.Now()},
-			{ID: "default", Name: "User", Code: "user", Description: "Regular users", CreatedAt: time.Now()},
-		}
-		if err := db.Create(&userGroups).Error; err != nil {
-			return err
-		}
-	}
-
-	var userCount int64
-	db.Model(&usermodel.User{}).Count(&userCount)
-	if userCount == 0 {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("Asagity1234"), bcrypt.DefaultCost)
-		if err != nil {
-			return err
-		}
-
-		instanceUser := &usermodel.User{
-			ID:          "00000000000000000000000000000001",
-			PubID:       "usr_asagity0",
-			Username:    "asagity_admin",
-			Email:       stringPtr("admin@asagity.local"),
-			PasswdHash:  string(hashedPassword),
-			UserGroupID: "admin",
-			Name:        "Asagity Administrator",
-			CreatedAt:   time.Now(),
-		}
-		if err := db.Create(instanceUser).Error; err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func stringPtr(s string) *string {
-	return &s
 }
 
 func ensureServices(cfg config.Config) error {
@@ -182,12 +147,13 @@ func ensureServices(cfg config.Config) error {
 
 func openPostgres(cfg config.Config) (*gorm.DB, error) {
 	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=%s",
 		cfg.DBHost,
 		cfg.DBUser,
 		cfg.DBPassword,
 		cfg.DBName,
 		cfg.DBPort,
+		cfg.TimeZone,
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -299,14 +265,18 @@ func findProjectRoot() (string, error) {
 
 	dir := cwd
 	for {
-		composePath := filepath.Join(dir, "docker-compose.yml")
-		if _, err := os.Stat(composePath); err == nil {
+		for _, name := range []string{"docker-compose.yml", "docker-compose.yaml"} {
+			if _, err := os.Stat(filepath.Join(dir, name)); err == nil {
+				return dir, nil
+			}
+		}
+		if _, err := os.Stat(filepath.Join(dir, "container")); err == nil {
 			return dir, nil
 		}
 
 		parent := filepath.Dir(dir)
 		if parent == dir {
-			return "", errors.New("could not locate project root containing docker-compose.yml")
+			return "", errors.New("could not locate project root containing docker-compose.yaml")
 		}
 
 		dir = parent

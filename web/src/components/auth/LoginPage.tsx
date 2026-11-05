@@ -130,7 +130,7 @@ export function LoginPage() {
             </div>
 
             {/* Accent line */}
-            <div className="w-10 h-[2px] mx-auto mb-5 bg-gradient-to-r from-cyan-400 to-cyan-600 rounded-full shadow-[0_0_10px_rgba(57,197,187,0.3)]" />
+            <div className="w-10 h-[2px] mx-auto mb-5 bg-gradient-to-r from-brandlight to-branddeep rounded-full shadow-[0_0_10px_rgba(46,118,184,0.3)]" />
 
             <h1 className={`text-xl font-bold ${textPrimary} mb-1`}>
               {t("auth.loginToInstance")}
@@ -276,7 +276,7 @@ function M3LoginField({
         relative rounded-2xl border transition-all duration-200
         ${
           focused
-            ? "border-cyan-500/50 shadow-[0_0_12px_rgba(57,197,187,0.15)]"
+            ? "border-brand/50 shadow-[0_0_12px_rgba(46,118,184,0.15)]"
             : isDark
               ? "border-white/10 hover:border-white/20"
               : "border-gray-200 hover:border-gray-300"
@@ -288,7 +288,7 @@ function M3LoginField({
         className={`
           absolute left-11 transition-all duration-200 pointer-events-none z-10
           ${isFloating ? "top-2 text-[10px] font-bold" : "top-1/2 -translate-y-1/2 text-[13px]"}
-          ${focused ? "text-cyan-400" : isDark ? "text-gray-500" : "text-gray-400"}
+          ${focused ? "text-fgaccent" : isDark ? "text-gray-500" : "text-gray-400"}
         `}
       >
         {label}
@@ -301,7 +301,7 @@ function M3LoginField({
           <Icon
             name={icon}
             fontSize={18}
-            className={focused ? "text-cyan-500" : isDark ? "text-gray-500" : "text-gray-400"}
+            className={focused ? "text-fgaccent" : isDark ? "text-gray-500" : "text-gray-400"}
           />
         </div>
         <input

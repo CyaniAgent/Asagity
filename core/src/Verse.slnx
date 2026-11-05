@@ -11,5 +11,7 @@
     <Project Path="Verse.Modules/Verse.Module.User/Verse.Module.User.csproj" />
   </Folder>
   <Project Path="Verse.Api/Verse.Api.csproj" />
+  <Project Path="Verse.Data/Verse.Data.csproj" />
   <Project Path="Verse.Shared/Verse.Shared.csproj" />
+  <Project Path="Verse.Tests/Verse.Tests.csproj" />
 </Solution>

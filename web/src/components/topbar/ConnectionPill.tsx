@@ -21,8 +21,8 @@ export function ConnectionPill() {
       {isDevMode && (
         <>
           <div className="w-px h-3 bg-gray-300 dark:bg-gray-600 mx-0.5" />
-          <Icon name="terminal" className="text-cyan-500" fontSize={14} />
-          <span className="text-[10px] font-normal text-cyan-500">{t("header.inDevelopment")}</span>
+          <Icon name="terminal" className="text-fgaccent" fontSize={14} />
+          <span className="text-[10px] font-normal text-fgaccent">{t("header.inDevelopment")}</span>
         </>
       )}
     </div>

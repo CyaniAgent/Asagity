@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "@/hooks/useRouter";
-import { useThemeStore } from "@/stores/theme";
+import { useThemeStore, resolveMode } from "@/stores/theme";
 import { Icon } from "@/components/ui/Icon";
 import { useI18n } from "@/components/providers/I18nProvider";
 import {
@@ -35,7 +35,8 @@ const federationData = days.map((day, i) => ({
 
 export default function AboutChartsPage() {
   const router = useRouter();
-  const { isDark } = useThemeStore();
+  const { preference, systemPreference } = useThemeStore();
+  const isDark = resolveMode(preference, systemPreference) === "dark";
   const { t } = useI18n();
 
   const textColor = isDark ? "#9CA3AF" : "#6B7280";
@@ -48,7 +49,7 @@ export default function AboutChartsPage() {
     <div className="h-full flex flex-col items-center p-8 relative overflow-y-auto">
       {/* Background Decoration */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-30 dark:opacity-10">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-cyan-500 rounded-full mix-blend-multiply filter blur-[100px] animate-pulse" />
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-brand rounded-full mix-blend-multiply filter blur-[100px] animate-pulse" />
         <div
           className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-500 rounded-full mix-blend-multiply filter blur-[100px] animate-pulse"
           style={{ animationDelay: "2s" }}
@@ -60,7 +61,7 @@ export default function AboutChartsPage() {
         <div className="bg-white/60 dark:bg-gray-900/60 backdrop-blur-2xl rounded-[32px] border border-white/40 dark:border-white/10 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
-              <Icon name="dashboard" className="text-cyan-500" fontSize={24} />
+              <Icon name="dashboard" className="text-fgaccent" fontSize={24} />
               {t("about.charts")}
             </h1>
             <button
@@ -81,8 +82,8 @@ export default function AboutChartsPage() {
               <AreaChart data={userData}>
                 <defs>
                   <linearGradient id="gradientUsers" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#39C5BB" stopOpacity={0.6} />
-                    <stop offset="95%" stopColor="#39C5BB" stopOpacity={0.05} />
+                    <stop offset="5%" stopColor="#2E76B8" stopOpacity={0.6} />
+                    <stop offset="95%" stopColor="#2E76B8" stopOpacity={0.05} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
@@ -97,7 +98,7 @@ export default function AboutChartsPage() {
                     padding: "8px 12px",
                   }}
                 />
-                <Area type="monotone" dataKey="users" name={t("about.userCount")} stroke="#39C5BB" strokeWidth={3} fill="url(#gradientUsers)" dot={{ r: 4, fill: "#39C5BB", strokeWidth: 2, stroke: "#fff" }} />
+                <Area type="monotone" dataKey="users" name={t("about.userCount")} stroke="#2E76B8" strokeWidth={3} fill="url(#gradientUsers)" dot={{ r: 4, fill: "#2E76B8", strokeWidth: 2, stroke: "#fff" }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>

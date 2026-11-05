@@ -58,8 +58,8 @@ export default function PanelFederationPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-            <Icon name="globe" className="text-cyan-500" fontSize={20} />
+          <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center border border-brand/20">
+            <Icon name="globe" className="text-fgaccent" fontSize={20} />
           </div>
           <div>
             <h1 className="text-xl font-black text-gray-900 dark:text-white">{t("panel.federationManagement")}</h1>
@@ -77,13 +77,13 @@ export default function PanelFederationPage() {
             placeholder={t("panel.searchInstancePlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white/60 dark:bg-gray-800/60 border border-white/40 dark:border-gray-700/50 text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+            className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white/60 dark:bg-gray-800/60 border border-white/40 dark:border-gray-700/50 text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/50"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2.5 rounded-2xl bg-white/60 dark:bg-gray-800/60 border border-white/40 dark:border-gray-700/50 text-sm font-bold text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-cyan-500/50"
+          className="px-4 py-2.5 rounded-2xl bg-white/60 dark:bg-gray-800/60 border border-white/40 dark:border-gray-700/50 text-sm font-bold text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-brand/50"
         >
           <option value="all">{t("panel.allStatus")}</option>
           <option value="federating">{t("panel.federated")}</option>
@@ -103,11 +103,11 @@ export default function PanelFederationPage() {
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white font-black text-lg shadow-lg shadow-cyan-500/20">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand to-blue-500 flex items-center justify-center text-white font-black text-lg shadow-lg shadow-brand/20">
                   {instance.name.charAt(0)}
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-gray-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                  <h3 className="text-base font-black text-gray-900 dark:text-white group-hover:text-branddeep dark:group-hover:text-fgaccent transition-colors">
                     {instance.name}
                   </h3>
                   <p className="text-xs font-bold text-gray-500">{instance.domain}</p>

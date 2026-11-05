@@ -134,20 +134,20 @@ export default function DriveDropPage() {
     >
       {/* Background Decor */}
       <div className="absolute inset-0 pointer-events-none opacity-20 dark:opacity-10">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-400 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-teal-400 rounded-full blur-[120px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brandlight rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-ok rounded-full blur-[120px]" />
       </div>
 
       {/* Identity Block */}
       <div className="absolute top-6 left-6 z-20 animate-[fadeIn_0.5s_ease-out]">
         <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-white/40 dark:border-gray-700/50 p-5 rounded-3xl shadow-xl flex items-center gap-4 group">
           <div className="relative">
-            <div className="w-16 h-16 rounded-full overflow-hidden ring-4 ring-cyan-500/20 group-hover:ring-cyan-500/40 transition-all shadow-md">
+            <div className="w-16 h-16 rounded-full overflow-hidden ring-4 ring-brand/20 group-hover:ring-brand/40 transition-all shadow-md">
               {userStore.avatar ? (
                 <img src={userStore.avatar} width={64} height={64} className="w-full h-full object-cover" alt="Avatar" />
               ) : (
-                <div className="w-full h-full bg-cyan-500/20 flex items-center justify-center">
-                  <Icon name="person" className="text-cyan-500" fontSize={28} />
+                <div className="w-full h-full bg-brand/20 flex items-center justify-center">
+                  <Icon name="person" className="text-fgaccent" fontSize={28} />
                 </div>
               )}
             </div>
@@ -158,11 +158,11 @@ export default function DriveDropPage() {
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="text-lg font-black text-gray-900 dark:text-white">{userStore.username}</span>
-              <span className="px-2 py-0.5 rounded-full bg-cyan-500/10 text-[10px] font-bold uppercase text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">{t("drive.owner")}</span>
+              <span className="px-2 py-0.5 rounded-full bg-brand/10 text-[10px] font-bold uppercase text-branddeep dark:text-fgaccent border border-brand/20">{t("drive.owner")}</span>
             </div>
             <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1">{myDevice.deviceName}</span>
             <div className="mt-2 flex items-center gap-1.5 py-1 px-2.5 bg-black/5 dark:bg-white/5 rounded-full w-fit max-w-[200px]">
-              <Icon name="fingerprint" fontSize={14} className="text-cyan-500 shrink-0" />
+              <Icon name="fingerprint" fontSize={14} className="text-fgaccent shrink-0" />
               <span className="text-[9px] font-mono font-bold text-gray-400 dark:text-gray-500 truncate">{myDevice.pubId}</span>
             </div>
             <div className="mt-1 flex items-center gap-1.5 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-md w-fit">
@@ -182,13 +182,13 @@ export default function DriveDropPage() {
           >
             <div className="flex flex-col items-center gap-3 hover:scale-110 active:scale-95 transition-all duration-300">
               <div className="relative">
-                <div className="absolute inset-0 bg-cyan-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="w-20 h-20 rounded-full overflow-hidden ring-2 ring-gray-200 dark:ring-gray-700 group-hover:ring-cyan-500/50 transition-all shadow-xl relative z-10">
+                <div className="absolute inset-0 bg-brand/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="w-20 h-20 rounded-full overflow-hidden ring-2 ring-gray-200 dark:ring-gray-700 group-hover:ring-brand/50 transition-all shadow-xl relative z-10">
                   {peer.avatar ? (
                     <img src={peer.avatar} width={80} height={80} className="w-full h-full object-cover" alt={peer.displayName} />
                   ) : (
-                    <div className="w-full h-full bg-cyan-500/20 flex items-center justify-center">
-                      <Icon name="person" className="text-cyan-500" fontSize={28} />
+                    <div className="w-full h-full bg-brand/20 flex items-center justify-center">
+                      <Icon name="person" className="text-fgaccent" fontSize={28} />
                     </div>
                   )}
                 </div>
@@ -201,7 +201,7 @@ export default function DriveDropPage() {
                 <div className="flex items-center gap-1">
                   <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400">{peer.system}</span>
                   <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
-                  <span className={`text-[9px] font-bold uppercase ${peer.isRemote ? "text-amber-500" : "text-cyan-500"}`}>
+                  <span className={`text-[9px] font-bold uppercase ${peer.isRemote ? "text-amber-500" : "text-fgaccent"}`}>
                     {peer.isRemote ? t("drive.remote") : t("drive.local")}
                   </span>
                 </div>
@@ -218,9 +218,9 @@ export default function DriveDropPage() {
           <div className="px-8 pt-8 pb-4 shrink-0 flex items-center justify-between">
             <div>
               <h3 className="text-xl font-black text-gray-900 dark:text-white">{t("drive.activeTransfer")}</h3>
-              <span className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest mt-1">{t("drive.activityLog")}</span>
+              <span className="text-[10px] font-bold text-fgaccent uppercase tracking-widest mt-1">{t("drive.activityLog")}</span>
             </div>
-            <button className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-500/10 transition-colors">
+            <button className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-fgaccent hover:bg-brand/10 transition-colors">
               <Icon name="settings" fontSize={18} />
             </button>
           </div>
@@ -238,14 +238,14 @@ export default function DriveDropPage() {
                       {task.targetAvatar ? (
                         <img src={task.targetAvatar} width={40} height={40} className="w-full h-full object-cover" alt="" />
                       ) : (
-                        <div className="w-full h-full bg-cyan-500/20 flex items-center justify-center">
-                          <Icon name="person" className="text-cyan-500" fontSize={16} />
+                        <div className="w-full h-full bg-brand/20 flex items-center justify-center">
+                          <Icon name="person" className="text-fgaccent" fontSize={16} />
                         </div>
                       )}
                     </div>
                     <div
                       className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800 ${
-                        task.direction === "send" ? "bg-cyan-500 text-white" : "bg-teal-500 text-white"
+                        task.direction === "send" ? "bg-brand text-onbrand" : "bg-ok text-onbrand"
                       }`}
                     >
                       <Icon name={task.direction === "send" ? "upload" : "download"} fontSize={12} />
@@ -256,7 +256,7 @@ export default function DriveDropPage() {
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-[10px] font-bold text-gray-400 uppercase">{task.fileSize}</span>
                       <span className="w-0.5 h-0.5 rounded-full bg-gray-300 dark:bg-gray-700" />
-                      <span className={`text-[10px] font-bold ${task.state === "active" ? "text-cyan-500" : "text-gray-400"}`}>
+                      <span className={`text-[10px] font-bold ${task.state === "active" ? "text-fgaccent" : "text-gray-400"}`}>
                         {task.speed}
                       </span>
                     </div>
@@ -264,7 +264,7 @@ export default function DriveDropPage() {
                   {(task.state === "active" || task.state === "paused") && (
                     <button
                       onClick={() => toggleTaskPause(task.id)}
-                      className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 hover:bg-cyan-50 dark:hover:bg-cyan-500/10 transition-colors shrink-0"
+                      className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 hover:bg-brand/10 transition-colors shrink-0"
                     >
                       <Icon name={task.state === "active" ? "pause" : "play_arrow"} fontSize={16} />
                     </button>
@@ -276,17 +276,17 @@ export default function DriveDropPage() {
                   <div
                     className={`absolute inset-y-0 left-0 transition-all duration-700 ease-out ${
                       task.state === "completed"
-                        ? "bg-teal-500"
+                        ? "bg-ok"
                         : task.state === "paused"
                           ? "bg-amber-400"
-                          : "bg-cyan-500 shadow-[0_0_12px_rgba(57,197,187,0.4)]"
+                          : "bg-brand shadow-[0_0_12px_rgba(46,118,184,0.4)]"
                     }`}
                     style={{ width: `${task.progress}%` }}
                   />
                 </div>
                 <div className="mt-2 flex items-center justify-between">
                   <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase">{task.state}</span>
-                  <span className="text-[10px] font-bold text-cyan-500">{task.progress}%</span>
+                  <span className="text-[10px] font-bold text-fgaccent">{task.progress}%</span>
                 </div>
               </div>
             ))}
@@ -299,7 +299,7 @@ export default function DriveDropPage() {
               <span className="text-[11px] font-bold text-gray-900 dark:text-white tracking-wider">3.5 GB / 16 GB</span>
             </div>
             <div className="h-1.5 w-full bg-gray-300/30 dark:bg-gray-700/30 rounded-full overflow-hidden">
-              <div className="h-full bg-cyan-400/50 rounded-full shadow-[0_0_8px_rgba(57,197,187,0.3)]" style={{ width: "21.6%" }} />
+              <div className="h-full bg-brandlight/50 rounded-full shadow-[0_0_8px_rgba(46,118,184,0.3)]" style={{ width: "21.6%" }} />
             </div>
           </div>
         </div>
@@ -307,12 +307,12 @@ export default function DriveDropPage() {
 
       {/* Drop Overlay */}
       {isDropping && (
-        <div className="absolute inset-0 z-40 pointer-events-none flex items-center justify-center bg-cyan-500/10 backdrop-blur-md">
+        <div className="absolute inset-0 z-40 pointer-events-none flex items-center justify-center bg-brand/10 backdrop-blur-md">
           <div className="flex flex-col items-center gap-6 animate-bounce">
-            <div className="w-32 h-32 rounded-[40px] border-4 border-dashed border-cyan-500 flex items-center justify-center bg-cyan-500/20">
-              <Icon name="cloud_upload" className="text-cyan-500" fontSize={56} />
+            <div className="w-32 h-32 rounded-[40px] border-4 border-dashed border-brand flex items-center justify-center bg-brand/20">
+              <Icon name="cloud_upload" className="text-fgaccent" fontSize={56} />
             </div>
-            <h2 className="text-4xl font-black text-cyan-500 drop-shadow-[0_0_20px_rgba(57,197,187,0.8)] tracking-widest">
+            <h2 className="text-4xl font-black text-fgaccent drop-shadow-[0_0_20px_rgba(46,118,184,0.8)] tracking-widest">
               {t("drive.dropToAirdrop")}
             </h2>
           </div>

@@ -2,9 +2,12 @@ package event
 
 import (
 	"context"
+	"crypto/rand"
+	"fmt"
 	"log"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Handler func(ctx context.Context, event Event) error
@@ -18,6 +21,12 @@ type Subscriber struct {
 
 type BusConfig struct {
 	AsyncWorkers int
+	// EmitTimeout is how long Emit waits when the event channel is full
+	// before dropping the event. Zero means 100ms.
+	EmitTimeout time.Duration
+	// AsyncConcurrency bounds the number of in-flight async handler
+	// goroutines. Zero means 256.
+	AsyncConcurrency int
 }
 
 type Bus struct {
@@ -28,11 +37,19 @@ type Bus struct {
 	cancel      context.CancelFunc
 	wg          sync.WaitGroup
 	idempotency *IdempotencyStore
+	emitTimeout time.Duration
+	asyncSem    chan struct{}
 }
 
 func NewBus(cfg BusConfig) *Bus {
 	if cfg.AsyncWorkers <= 0 {
 		cfg.AsyncWorkers = 16
+	}
+	if cfg.EmitTimeout <= 0 {
+		cfg.EmitTimeout = 100 * time.Millisecond
+	}
+	if cfg.AsyncConcurrency <= 0 {
+		cfg.AsyncConcurrency = 256
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -42,6 +59,8 @@ func NewBus(cfg BusConfig) *Bus {
 		ctx:         ctx,
 		cancel:      cancel,
 		idempotency: NewIdempotencyStore(100000),
+		emitTimeout: cfg.EmitTimeout,
+		asyncSem:    make(chan struct{}, cfg.AsyncConcurrency),
 	}
 
 	for i := 0; i < cfg.AsyncWorkers; i++ {
@@ -78,8 +97,8 @@ func (b *Bus) Emit(ctx context.Context, event Event) {
 	case b.eventCh <- event:
 	case <-b.ctx.Done():
 		return
-	default:
-		log.Printf("[EventBus] event channel full, dropping event: %s", event.Type)
+	case <-time.After(b.emitTimeout):
+		log.Printf("[EventBus] event channel full, dropping event after %s: %s", b.emitTimeout, event.Type)
 	}
 }
 
@@ -130,11 +149,17 @@ func (b *Bus) dispatch(event Event) {
 
 	for _, sub := range subs {
 		if sub.Async {
-			go func(s *Subscriber) {
-				if err := s.Handler(b.ctx, event); err != nil {
-					log.Printf("[EventBus] async handler error for %s (sub=%s): %v", event.Type, s.ID, err)
-				}
-			}(sub)
+			select {
+			case b.asyncSem <- struct{}{}:
+				go func(s *Subscriber) {
+					defer func() { <-b.asyncSem }()
+					if err := s.Handler(b.ctx, event); err != nil {
+						log.Printf("[EventBus] async handler error for %s (sub=%s): %v", event.Type, s.ID, err)
+					}
+				}(sub)
+			case <-b.ctx.Done():
+				return
+			}
 		} else {
 			if err := sub.Handler(b.ctx, event); err != nil {
 				log.Printf("[EventBus] handler error for %s (sub=%s): %v", event.Type, sub.ID, err)
@@ -181,18 +206,11 @@ var randChars = []byte("abcdefghijklmnopqrstuvwxyz0123456789")
 
 func randString(n int) string {
 	b := make([]byte, n)
+	if _, err := rand.Read(b); err != nil {
+		panic(fmt.Sprintf("crypto/rand.Read failed: %v", err))
+	}
 	for i := range b {
-		b[i] = randChars[seededInt()%len(randChars)]
+		b[i] = randChars[b[i]%byte(len(randChars))]
 	}
 	return string(b)
-}
-
-var seededMu sync.Mutex
-var seededCounter int
-
-func seededInt() int {
-	seededMu.Lock()
-	defer seededMu.Unlock()
-	seededCounter++
-	return seededCounter
 }

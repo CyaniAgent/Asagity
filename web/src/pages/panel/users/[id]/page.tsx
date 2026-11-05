@@ -52,7 +52,7 @@ export default function PanelUserDetailPage() {
         <Icon name="error" className="text-red-400 mb-4" fontSize={48} />
         <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t("panel.userNotFound")}</h2>
         <p className="text-sm text-gray-500 mt-2">{t("panel.idNotFound", { id })}</p>
-        <button onClick={() => router.back()} className="mt-4 px-4 py-2 rounded-full bg-cyan-500 text-white text-sm font-bold">
+        <button onClick={() => router.back()} className="mt-4 px-4 py-2 rounded-full bg-brand text-onbrand text-sm font-bold">
           {t("common.back")}
         </button>
       </div>
@@ -62,7 +62,7 @@ export default function PanelUserDetailPage() {
   return (
     <div className="flex flex-col gap-6 animate-[fadeIn_0.4s_ease-out]">
       {/* Back */}
-      <button onClick={() => router.back()} className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-cyan-500 transition-colors">
+      <button onClick={() => router.back()} className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-fgaccent transition-colors">
         <Icon name="arrow_left" fontSize={16} />
         {t("panel.backToUserList")}
       </button>
@@ -70,8 +70,8 @@ export default function PanelUserDetailPage() {
       {/* User Header */}
       <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl rounded-[24px] border border-white/40 dark:border-gray-700/50 p-6 shadow-sm">
         <div className="flex items-start gap-4">
-          <div className="w-16 h-16 rounded-full bg-cyan-500/20 flex items-center justify-center shrink-0">
-            <Icon name="person" className="text-cyan-500" fontSize={28} />
+          <div className="w-16 h-16 rounded-full bg-brand/20 flex items-center justify-center shrink-0">
+            <Icon name="person" className="text-fgaccent" fontSize={28} />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-1">
@@ -116,7 +116,7 @@ export default function PanelUserDetailPage() {
             <Icon name="eye" fontSize={16} />
             {t("panel.silenceUser")}
           </button>
-          <button className="px-4 py-2 rounded-2xl text-sm font-bold bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-200 dark:hover:bg-cyan-900/50 transition-colors flex items-center gap-2">
+          <button className="px-4 py-2 rounded-2xl text-sm font-bold bg-brandmuted text-branddeep dark:text-fgaccent hover:bg-brand/20 transition-colors flex items-center gap-2">
             <Icon name="shield" fontSize={16} />
             {t("panel.setAsModerator")}
           </button>

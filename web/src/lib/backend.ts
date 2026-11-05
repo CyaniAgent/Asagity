@@ -75,3 +75,21 @@ export async function probeHealth(path: string, timeoutMs = 2000): Promise<boole
     return false;
   }
 }
+
+/**
+ * Termity platform-shell gateway fetch.
+ *
+ * Per docs/architecture/tech-stack-audit.md the shell gateway endpoints
+ * (meta / github / termity/*) are owned by .NET Verse.Module.Shell, while the
+ * Go engine (:2048) only registers ping/vnet. fetchBackend only falls back on
+ * transport errors, so a primary 404 means "this backend does not own the
+ * route" — retry the .NET mirror once instead of surfacing a dead endpoint.
+ */
+export async function fetchShell(path: string, init?: RequestInit): Promise<Response> {
+  const res = await fetchBackend(path, init);
+  if (res.status === 404 && path.startsWith("/api/shell/")) {
+    const mirror = toApiNetPath(path);
+    if (mirror) return fetch(mirror, init);
+  }
+  return res;
+}

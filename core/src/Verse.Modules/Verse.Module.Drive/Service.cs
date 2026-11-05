@@ -28,11 +28,11 @@ public interface IDriveService
     UsageResponse GetUsage(string userId);
 }
 
-/// <summary>DI stub: every call returns 501 until the real service lands.</summary>
+/// <summary>DI stub: every call returns 503 until the real service lands.</summary>
 public sealed class NotImplementedDriveService : IDriveService
 {
     private static ModuleException Todo() =>
-        new(StatusCodes.Status501NotImplemented, "DRIVE_NOT_IMPLEMENTED", "Drive service is not implemented yet.");
+        new(StatusCodes.Status503ServiceUnavailable, "DRIVE_NOT_IMPLEMENTED", ".NET layer is planned but not implemented; use Go engine /api/*");
 
     public ListFilesResponse ListFiles(string userId, ListFilesRequest request) => throw Todo();
     public FileResponse GetFile(string userId, Guid fileId) => throw Todo();

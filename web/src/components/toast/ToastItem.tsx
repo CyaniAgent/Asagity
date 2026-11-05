@@ -63,7 +63,7 @@ export function ToastItem({ toast, onRemove }: ToastItemProps) {
         {/* 通知源图标 */}
         <div
           className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0
-            ${isDark ? "bg-cyan-500/15 text-cyan-400" : "bg-cyan-500/10 text-cyan-600"}`}
+            ${isDark ? "bg-brand/15 text-fgaccent" : "bg-brand/10 text-branddeep"}`}
         >
           <Icon name={toast.icon ?? "notifications"} fontSize={18} />
         </div>
@@ -95,8 +95,8 @@ export function ToastItem({ toast, onRemove }: ToastItemProps) {
             }}
             className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors
               ${isDark
-                ? "text-white/30 hover:text-cyan-400 hover:bg-white/10"
-                : "text-gray-400 hover:text-cyan-600 hover:bg-gray-100"
+                ? "text-white/30 hover:text-fgaccent hover:bg-white/10"
+                : "text-gray-400 hover:text-branddeep hover:bg-gray-100"
               }`}
             title="延后"
           >

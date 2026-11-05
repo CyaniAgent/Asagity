@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 	"strings"
 	"time"
 
@@ -162,7 +163,9 @@ func (s *NoteService) UpdateNote(id, userID string, req *dto.UpdateNoteRequest) 
 			Content: note.Content,
 			Cw:      note.Cw,
 		}
-		s.repo.CreateEdit(edit)
+		if err := s.repo.CreateEdit(edit); err != nil {
+			log.Printf("[note] failed to save edit history for %s: %v", note.ID, err)
+		}
 	}
 
 	// Apply updates
@@ -498,7 +501,11 @@ func (s *NoteService) buildTimelineResponse(notes []notemodel.Note, users []user
 
 	result := make([]dto.TimelineNoteResponse, 0, len(notes))
 	for _, note := range notes {
-		user := userMap[note.UserID]
+		user, ok := userMap[note.UserID]
+		if !ok {
+			log.Printf("[note] timeline: note %s references missing user %s, skipping", note.ID, note.UserID)
+			continue
+		}
 		replies, _ := s.repo.CountReplies(note.ID)
 		reposts, _ := s.repo.CountReposts(note.ID)
 		likes, _ := s.repo.CountReactions(note.ID)
@@ -568,6 +575,10 @@ func (s *NoteService) AddReaction(noteID, userID, emoji string) error {
 
 	if note.IsDeleted {
 		return errors.New(dto.ErrNoteDeleted)
+	}
+
+	if !s.canViewNote(note, userID) {
+		return errors.New(dto.ErrNoteForbidden)
 	}
 
 	existing, _ := s.repo.GetUserReaction(noteID, userID)
@@ -725,7 +736,15 @@ func (s *NoteService) VoteOnPoll(noteID, userID string, optionIDs []string) erro
 		}
 	}
 
+	votedSet := make(map[string]bool, len(existingVotes))
+	for _, v := range existingVotes {
+		votedSet[v.OptionID] = true
+	}
+
 	for _, optID := range optionIDs {
+		if votedSet[optID] {
+			continue
+		}
 		vote := &notemodel.PollVote{
 			PollID:   poll.ID,
 			OptionID: optID,

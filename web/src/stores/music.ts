@@ -143,7 +143,7 @@ export const useMusicStore = create<MusicState>()(
       currentIndex: 0,
       isLyricsWindowOpen: false,
       isPlaylistWindowOpen: false,
-      themeColor: "#39C5BB",
+      themeColor: "#2E76B8",
       textColor: "#FFFFFF",
 
       get progressPercentage() {

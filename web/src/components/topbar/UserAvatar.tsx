@@ -33,13 +33,13 @@ export function UserAvatar() {
     <div ref={rootRef} className="relative">
       <button
         onClick={() => (username ? router.push(`/user/${username}`) : setOpen(!open))}
-        className="size-8 rounded-full overflow-hidden ring-2 ring-cyan-500/50 hover:ring-cyan-500 transition-all cursor-pointer shrink-0 grid place-items-center"
+        className="size-8 rounded-full overflow-hidden ring-2 ring-brand/50 hover:ring-brand transition-all cursor-pointer shrink-0 grid place-items-center"
       >
         {userAvatar ? (
           <img src={userAvatar} width={32} height={32} className="w-full h-full object-cover" alt="Avatar" />
         ) : (
-          <div className="w-full h-full bg-cyan-500/20 flex items-center justify-center">
-            <Icon name="person" className="text-cyan-500" fontSize={16} />
+          <div className="w-full h-full bg-brand/20 flex items-center justify-center">
+            <Icon name="person" className="text-fgaccent" fontSize={16} />
           </div>
         )}
       </button>
@@ -63,7 +63,7 @@ export function UserAvatar() {
             <Link
               href="/settings/profile"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-cyan-50 dark:hover:bg-cyan-500/10 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-brand/10 transition-colors"
             >
               <Icon name="settings" fontSize={16} />
               {t("header.settings")}

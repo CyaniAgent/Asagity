@@ -101,6 +101,7 @@ func (c *MemoryCache) Del(_ context.Context, key string) error {
 }
 
 // Keys supports exact keys and "prefix*" patterns.
+// Deprecated: use Scan.
 func (c *MemoryCache) Keys(_ context.Context, pattern string) ([]string, error) {
 	now := time.Now()
 	var out []string
@@ -117,6 +118,31 @@ func (c *MemoryCache) Keys(_ context.Context, pattern string) ([]string, error) 
 	}
 	c.mu.RUnlock()
 	return out, nil
+}
+
+// Scan iterates keys matching pattern (exact or "prefix*"), calling fn for
+// each non-expired match. Stops early if fn returns an error.
+func (c *MemoryCache) Scan(_ context.Context, pattern string, fn func(key string) error) error {
+	now := time.Now()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	for k, e := range c.items {
+		if e.expired(now) {
+			continue
+		}
+		matched := false
+		if strings.HasSuffix(pattern, "*") {
+			matched = strings.HasPrefix(k, strings.TrimSuffix(pattern, "*"))
+		} else {
+			matched = k == pattern
+		}
+		if matched {
+			if err := fn(k); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // Ping always succeeds for the in-process cache.

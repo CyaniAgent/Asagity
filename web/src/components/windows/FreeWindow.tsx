@@ -18,14 +18,14 @@ const HANDLE_STYLE_BASE: React.CSSProperties = {
   transition: "background-color 150ms",
 };
 const RESIZE_HANDLE_STYLES: Record<string, React.CSSProperties & { className: string }> = {
-  top:          { ...HANDLE_STYLE_BASE, top: 0, left: 4, right: 4, height: 4, cursor: "n-resize",  className: "hover:bg-cyan-500/15" },
-  bottom:       { ...HANDLE_STYLE_BASE, bottom: 0, left: 4, right: 4, height: 4, cursor: "s-resize",  className: "hover:bg-cyan-500/15" },
-  left:         { ...HANDLE_STYLE_BASE, left: 0, top: 4, bottom: 4, width: 4, cursor: "w-resize",   className: "hover:bg-cyan-500/15" },
-  right:        { ...HANDLE_STYLE_BASE, right: 0, top: 4, bottom: 4, width: 4, cursor: "e-resize",   className: "hover:bg-cyan-500/15" },
-  topRight:     { ...HANDLE_STYLE_BASE, top: 0, right: 0, width: 14, height: 14, cursor: "ne-resize", className: "hover:bg-cyan-500/15 rounded-bl" },
-  bottomRight:  { ...HANDLE_STYLE_BASE, bottom: 0, right: 0, width: 14, height: 14, cursor: "se-resize", className: "hover:bg-cyan-500/15 rounded-tl" },
-  bottomLeft:   { ...HANDLE_STYLE_BASE, bottom: 0, left: 0, width: 14, height: 14, cursor: "sw-resize", className: "hover:bg-cyan-500/15 rounded-tr" },
-  topLeft:      { ...HANDLE_STYLE_BASE, top: 0, left: 0, width: 14, height: 14, cursor: "nw-resize", className: "hover:bg-cyan-500/15 rounded-br" },
+  top:          { ...HANDLE_STYLE_BASE, top: 0, left: 4, right: 4, height: 4, cursor: "n-resize",  className: "hover:bg-brand/15" },
+  bottom:       { ...HANDLE_STYLE_BASE, bottom: 0, left: 4, right: 4, height: 4, cursor: "s-resize",  className: "hover:bg-brand/15" },
+  left:         { ...HANDLE_STYLE_BASE, left: 0, top: 4, bottom: 4, width: 4, cursor: "w-resize",   className: "hover:bg-brand/15" },
+  right:        { ...HANDLE_STYLE_BASE, right: 0, top: 4, bottom: 4, width: 4, cursor: "e-resize",   className: "hover:bg-brand/15" },
+  topRight:     { ...HANDLE_STYLE_BASE, top: 0, right: 0, width: 14, height: 14, cursor: "ne-resize", className: "hover:bg-brand/15 rounded-bl" },
+  bottomRight:  { ...HANDLE_STYLE_BASE, bottom: 0, right: 0, width: 14, height: 14, cursor: "se-resize", className: "hover:bg-brand/15 rounded-tl" },
+  bottomLeft:   { ...HANDLE_STYLE_BASE, bottom: 0, left: 0, width: 14, height: 14, cursor: "sw-resize", className: "hover:bg-brand/15 rounded-tr" },
+  topLeft:      { ...HANDLE_STYLE_BASE, top: 0, left: 0, width: 14, height: 14, cursor: "nw-resize", className: "hover:bg-brand/15 rounded-br" },
 };
 
 interface FreeWindowProps {
@@ -45,6 +45,8 @@ interface FreeWindowProps {
   onFocus?: () => void;
   onRefresh?: () => void;
   onSwitchMode?: () => void;
+  /** 自定义标题渲染（用于 Termity 的 Session 选择器等） */
+  renderTitle?: () => React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -65,6 +67,7 @@ export function FreeWindow({
   onFocus,
   onRefresh,
   onSwitchMode,
+  renderTitle,
   children,
 }: FreeWindowProps) {
   const [isMaximized, setIsMaximized] = useState(false);
@@ -337,6 +340,7 @@ export function FreeWindow({
                 onToggleMinimize={handleToggleMinimize}
                 onRefresh={onRefresh}
                 onSwitchMode={onSwitchMode}
+                renderTitle={renderTitle}
               />
             </div>
           </div>

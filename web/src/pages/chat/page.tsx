@@ -55,10 +55,10 @@ export default function ChatPage() {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 shrink-0">
         <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <Icon name="chat" className="text-cyan-500" fontSize={20} />
+          <Icon name="chat" className="text-fgaccent" fontSize={20} />
           {t("chat.messages")}
         </h2>
-        <button className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-cyan-500 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+        <button className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-fgaccent hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
           <Icon name="edit_square" fontSize={18} />
         </button>
       </div>
@@ -70,16 +70,16 @@ export default function ChatPage() {
             <div
               key={chat.id}
               onClick={() => router.push(`/chat/${chat.id}`)}
-              className="flex items-center gap-4 bg-white/70 dark:bg-gray-800/60 backdrop-blur-md p-4 rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 border border-white/50 dark:border-gray-700/50 hover:border-cyan-500/30 dark:hover:border-cyan-400/30 cursor-pointer group hover:-translate-y-0.5"
+              className="flex items-center gap-4 bg-white/70 dark:bg-gray-800/60 backdrop-blur-md p-4 rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 border border-white/50 dark:border-gray-700/50 hover:border-brand/30 dark:hover:border-brandlight/30 cursor-pointer group hover:-translate-y-0.5"
             >
               {/* Avatar */}
               <div className="relative shrink-0">
-                <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-transparent group-hover:ring-cyan-500/50 transition-all duration-300 shadow-sm">
+                <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-transparent group-hover:ring-brand/50 transition-all duration-300 shadow-sm">
                   {chat.avatar ? (
                     <img src={chat.avatar} width={48} height={48} className="w-full h-full object-cover" alt={chat.name} />
                   ) : (
-                    <div className="w-full h-full bg-cyan-500/20 flex items-center justify-center">
-                      <Icon name="person" className="text-cyan-500" fontSize={22} />
+                    <div className="w-full h-full bg-brand/20 flex items-center justify-center">
+                      <Icon name="person" className="text-fgaccent" fontSize={22} />
                     </div>
                   )}
                 </div>
@@ -99,11 +99,11 @@ export default function ChatPage() {
               {/* Info */}
               <div className="flex flex-col flex-1 min-w-0 overflow-hidden py-0.5">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                  <span className="text-[15px] font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-branddeep dark:group-hover:text-fgaccent transition-colors">
                     {chat.name}
                   </span>
                   {chat.isGroup && (
-                    <span className="text-[10px] font-bold text-cyan-700 dark:text-cyan-300 bg-cyan-100 dark:bg-cyan-900/60 px-1.5 py-0.5 rounded-md">
+                    <span className="text-[10px] font-bold text-branddeep dark:text-fgaccent bg-brandmuted px-1.5 py-0.5 rounded-md">
                       ({chat.memberCount}人)
                     </span>
                   )}
@@ -122,7 +122,7 @@ export default function ChatPage() {
 
               {/* Time */}
               <div className="flex flex-col items-end shrink-0 pl-2">
-                <span className="text-xs font-bold text-gray-400 dark:text-gray-500 group-hover:text-cyan-500 transition-colors">
+                <span className="text-xs font-bold text-gray-400 dark:text-gray-500 group-hover:text-fgaccent transition-colors">
                   {chat.time}
                 </span>
               </div>

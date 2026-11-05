@@ -27,7 +27,7 @@ export default function AboutEmojisPage() {
     <div className="h-full flex flex-col items-center p-8 relative overflow-y-auto">
       {/* Background Decoration */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-30 dark:opacity-10">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-cyan-500 rounded-full mix-blend-multiply filter blur-[100px] animate-pulse" />
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-brand rounded-full mix-blend-multiply filter blur-[100px] animate-pulse" />
         <div
           className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-500 rounded-full mix-blend-multiply filter blur-[100px] animate-pulse"
           style={{ animationDelay: "2s" }}
@@ -39,7 +39,7 @@ export default function AboutEmojisPage() {
         <div className="bg-white/60 dark:bg-gray-900/60 backdrop-blur-2xl rounded-[32px] border border-white/40 dark:border-white/10 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
-              <Icon name="emoji" className="text-cyan-500" fontSize={24} />
+              <Icon name="emoji" className="text-fgaccent" fontSize={24} />
               {t("about.customEmojis")}
             </h1>
             <button
@@ -57,7 +57,7 @@ export default function AboutEmojisPage() {
               placeholder={t("about.searchEmojis")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-gray-800 text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+              className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-gray-800 text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand/50"
             />
           </div>
         </div>
@@ -66,7 +66,7 @@ export default function AboutEmojisPage() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {filtered.map((emoji) => (
             <div key={emoji.name} className="bg-white/60 dark:bg-gray-900/60 backdrop-blur-2xl rounded-[24px] border border-white/40 dark:border-white/10 p-4 shadow-sm hover:shadow-md transition-all group cursor-pointer text-center">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center mb-3 mx-auto text-3xl group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand/20 to-purple-500/20 flex items-center justify-center mb-3 mx-auto text-3xl group-hover:scale-110 transition-transform">
                 :{emoji.name}:
               </div>
               <p className="text-sm font-bold text-gray-900 dark:text-white truncate">:{emoji.name}:</p>

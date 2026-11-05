@@ -160,7 +160,7 @@ export function ContextMenu() {
       {type === "link_internal" && (
         <>
           <div className="px-3 py-2 mb-1 flex flex-col gap-0.5 overflow-hidden">
-            <span className="text-[10px] font-black text-cyan-500 uppercase tracking-widest opacity-60">{t("contextMenu.internalPath")}</span>
+            <span className="text-[10px] font-black text-fgaccent uppercase tracking-widest opacity-60">{t("contextMenu.internalPath")}</span>
             <span className="text-xs font-bold text-gray-500 dark:text-gray-400 truncate">
               {(data as { path?: string })?.path}
             </span>
@@ -237,8 +237,8 @@ function MenuItem({
         danger
           ? "text-red-600 dark:text-red-400 hover:bg-red-500/10"
           : bold
-            ? "text-cyan-600 dark:text-cyan-400 font-bold hover:bg-cyan-500/10"
-            : "text-gray-700 dark:text-gray-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400"
+            ? "text-branddeep dark:text-fgaccent font-bold hover:bg-brand/10"
+            : "text-gray-700 dark:text-gray-300 hover:bg-brand/10 hover:text-branddeep dark:hover:text-fgaccent"
       }`}
     >
       <Icon name={icon} className="opacity-70" fontSize={16} />

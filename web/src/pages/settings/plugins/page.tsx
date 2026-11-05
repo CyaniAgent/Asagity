@@ -8,7 +8,7 @@ function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean
   return (
     <button
       onClick={() => onChange(!enabled)}
-      className={`relative w-11 h-6 rounded-full transition-colors ${enabled ? "bg-cyan-500" : "bg-gray-300 dark:bg-gray-600"}`}
+      className={`relative w-11 h-6 rounded-full transition-colors ${enabled ? "bg-brand" : "bg-gray-300 dark:bg-gray-600"}`}
     >
       <span
         className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${enabled ? "translate-x-5" : ""}`}
@@ -68,7 +68,7 @@ export default function PluginsSettingsPage() {
     <div className="max-w-[700px] mx-auto p-6 space-y-8 animate-[fadeIn_0.3s_ease-out]">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-400 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand to-ok flex items-center justify-center shadow-lg shadow-brand/20">
           <Icon name="extension" className="text-white" fontSize={24} />
         </div>
         <div>
@@ -81,15 +81,15 @@ export default function PluginsSettingsPage() {
       <section className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Icon name="extension" className="text-cyan-500" fontSize={18} />
+            <Icon name="extension" className="text-fgaccent" fontSize={18} />
             {t("settings.installed")}
           </h2>
         </div>
         <div className="divide-y divide-gray-100 dark:divide-gray-800">
           {plugins.map((plugin) => (
             <div key={plugin.id} className="p-4 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center shrink-0">
-                <Icon name="extension" className="text-cyan-500" fontSize={20} />
+              <div className="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center shrink-0">
+                <Icon name="extension" className="text-fgaccent" fontSize={20} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
@@ -111,7 +111,7 @@ export default function PluginsSettingsPage() {
       <section className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Icon name="add_circle" className="text-cyan-500" fontSize={18} />
+            <Icon name="add_circle" className="text-fgaccent" fontSize={18} />
             {t("settings.installNewPlugin")}
           </h2>
         </div>

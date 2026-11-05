@@ -1,4 +1,5 @@
-export const MIKU_GREEN = "#39C5BB";
+/** Yukinoshita Glacier accent — glacier.light[60], see docs/design-tokens.md §2 */
+export const GLACIER_ACCENT = "#2E76B8";
 
 export const ERROR_CODES = {
   INIT_FAILED: "ERR 12201",

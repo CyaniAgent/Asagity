@@ -66,7 +66,7 @@ export function WidgetsArea() {
             <div ref={catalogRef} className="relative flex-1">
               <button
                 onClick={() => setCatalogOpen((v) => !v)}
-                className="w-full py-2.5 px-4 rounded-2xl text-[13px] font-semibold text-white bg-gradient-to-r from-cyan-500 to-cyan-400 shadow-[0_0_16px_rgba(57,197,187,0.3)] hover:shadow-[0_0_24px_rgba(57,197,187,0.5)] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                className="w-full py-2.5 px-4 rounded-2xl text-[13px] font-semibold text-white bg-gradient-to-r from-brand to-brandlight shadow-[0_0_16px_rgba(46,118,184,0.3)] hover:shadow-[0_0_24px_rgba(46,118,184,0.5)] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
               >
                 <Icon name="add" fontSize={16} />
                 {t("widgets.addWidget")}
@@ -82,7 +82,7 @@ export function WidgetsArea() {
                       }}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                     >
-                      <Icon name={c.icon} fontSize={18} className="text-cyan-500" />
+                      <Icon name={c.icon} fontSize={18} className="text-fgaccent" />
                       <span className="flex-1 text-left">{t(c.titleKey)}</span>
                     </button>
                   ))}

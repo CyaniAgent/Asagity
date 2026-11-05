@@ -17,6 +17,7 @@ import (
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/event"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/id"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/jwtx"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/mail"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -49,16 +50,10 @@ func NewWithEventBus(authRepo authrepo.Repository, userRepo *userrepo.Repository
 
 func (s *Service) Register(req dto.RegisterRequest) (*dto.AuthResponse, error) {
 	if req.Email != "" {
-		if _, err := s.userRepo.GetByEmail(req.Email); err == nil {
-			return nil, errors.New("email already registered")
-		}
+		return nil, errors.New("email verification required; use RegisterWithEmail")
 	}
 	if _, err := s.userRepo.GetByUsername(req.Username); err == nil {
 		return nil, errors.New("username already taken")
-	}
-
-	if req.Email != "" {
-		return nil, errors.New("email verification required")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
@@ -198,19 +193,13 @@ func (s *Service) Logout(refreshToken string) error {
 
 func (s *Service) LogoutAll(userID string) error {
 	ctx := context.Background()
-	pattern := "refresh:*"
-	keys, err := s.cache.Keys(ctx, pattern)
-	if err != nil {
-		return err
-	}
-
-	for _, key := range keys {
+	return s.cache.Scan(ctx, "refresh:*", func(key string) error {
 		val, _ := s.cache.Get(ctx, key)
 		if val == userID {
 			s.cache.Del(ctx, key)
 		}
-	}
-	return nil
+		return nil
+	})
 }
 
 func (s *Service) Me(userID string) (*dto.UserResponse, error) {
@@ -262,7 +251,7 @@ func (s *Service) generateAccessToken(userID, userPubID, userGroupID string) (st
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(s.cfg.JwtSecret))
+	return token.SignedString(jwtx.DeriveKey(s.cfg.JwtSecret))
 }
 
 func (s *Service) generateRefreshToken(userID string) (string, error) {
@@ -292,13 +281,9 @@ func generatePubID() string {
 }
 
 func (s *Service) VerifyRegisterEmail(req dto.VerifyEmailRequest) (*dto.AuthResponse, error) {
-	challenge, err := s.authRepo.GetLatestEmailChallenge("", "register_with_email")
+	challenge, err := s.authRepo.GetEmailChallengeByID(req.ChallengeID)
 	if err != nil {
 		return nil, errors.New("challenge not found")
-	}
-
-	if challenge.ID != req.ChallengeID {
-		return nil, errors.New("invalid challenge id")
 	}
 
 	if time.Now().After(challenge.ExpiresAt) {
@@ -319,7 +304,7 @@ func (s *Service) VerifyRegisterEmail(req dto.VerifyEmailRequest) (*dto.AuthResp
 			cooldownUntil := time.Now().Add(VerificationCooldownDuration)
 			challenge.CooldownUntil = &cooldownUntil
 		}
-		s.authRepo.CreateEmailChallenge(challenge)
+		s.authRepo.UpdateEmailChallenge(challenge)
 		return nil, errors.New("invalid verification code")
 	}
 
@@ -411,13 +396,9 @@ func (s *Service) SendLoginVerificationEmail(userID, deviceFingerprint, deviceNa
 }
 
 func (s *Service) VerifyLoginEmail(req dto.VerifyEmailRequest, deviceFingerprint, deviceName string) (*dto.AuthResponse, error) {
-	challenge, err := s.authRepo.GetLatestEmailChallenge("", "login_new_device")
+	challenge, err := s.authRepo.GetEmailChallengeByID(req.ChallengeID)
 	if err != nil {
 		return nil, errors.New("challenge not found")
-	}
-
-	if challenge.ID != req.ChallengeID {
-		return nil, errors.New("invalid challenge id")
 	}
 
 	if time.Now().After(challenge.ExpiresAt) {
@@ -434,7 +415,7 @@ func (s *Service) VerifyLoginEmail(req dto.VerifyEmailRequest, deviceFingerprint
 			cooldownUntil := time.Now().Add(VerificationCooldownDuration)
 			challenge.CooldownUntil = &cooldownUntil
 		}
-		s.authRepo.CreateEmailChallenge(challenge)
+		s.authRepo.UpdateEmailChallenge(challenge)
 		return nil, errors.New("invalid verification code")
 	}
 

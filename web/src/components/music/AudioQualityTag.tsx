@@ -5,7 +5,7 @@ import { Icon } from "@/components/ui/Icon";
 
 const QUALITY_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   "Hi-Res": { label: "Hi-Res", color: "text-amber-500", bg: "bg-amber-500/10" },
-  Lossless: { label: "Lossless", color: "text-cyan-500", bg: "bg-cyan-500/10" },
+  Lossless: { label: "Lossless", color: "text-fgaccent", bg: "bg-brand/10" },
   HQ: { label: "HQ", color: "text-green-500", bg: "bg-green-500/10" },
   Standard: { label: "Standard", color: "text-blue-500", bg: "bg-blue-500/10" },
   Low: { label: "Low", color: "text-gray-400", bg: "bg-gray-400/10" },

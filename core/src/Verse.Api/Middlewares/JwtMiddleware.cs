@@ -1,13 +1,16 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using Verse.Shared;
 
 namespace Verse.Api.Middlewares;
 
 /// <summary>
 /// Optional JWT authentication, ported from Go <c>httpx.Auth</c>:
-/// a valid Bearer token populates <c>user_id</c>/<c>user_pubid</c> items,
-/// otherwise the request passes through and endpoints decide (401) themselves.
+/// a valid Bearer token populates <c>user_id</c>/<c>user_pubid</c> (plus the
+/// group/scope/app claims used by the permission layer); otherwise the request
+/// passes through and endpoints decide (401) themselves.
 /// </summary>
 public sealed class JwtMiddleware(RequestDelegate next, IConfiguration config)
 {
@@ -29,8 +32,26 @@ public sealed class JwtMiddleware(RequestDelegate next, IConfiguration config)
                 var pubId = principal.FindFirst("pubid")?.Value;
                 if (!string.IsNullOrEmpty(sub))
                 {
-                    http.Items["user_id"] = sub;
-                    http.Items["user_pubid"] = pubId ?? string.Empty;
+                    http.Items[CurrentUser.UserIdItem] = sub;
+                    http.Items[CurrentUser.UserPubIdItem] = pubId ?? string.Empty;
+                }
+
+                var group = principal.FindFirst("grp")?.Value;
+                if (!string.IsNullOrEmpty(group))
+                {
+                    http.Items[CurrentUser.UserGroupItem] = group;
+                }
+
+                var scope = principal.FindFirst("scope")?.Value;
+                if (!string.IsNullOrEmpty(scope))
+                {
+                    http.Items[CurrentUser.TokenScopesItem] = scope;
+                }
+
+                var appId = principal.FindFirst("app")?.Value;
+                if (!string.IsNullOrEmpty(appId))
+                {
+                    http.Items[CurrentUser.AppIdItem] = appId;
                 }
             }
         }
@@ -42,11 +63,20 @@ public sealed class JwtMiddleware(RequestDelegate next, IConfiguration config)
     {
         try
         {
-            return new JwtSecurityTokenHandler().ValidateToken(token,
+            // MapInboundClaims = false keeps the raw claim names ("sub", "pubid",
+            // "grp", "scope", "app"); the default mapping rewrites "sub" to
+            // ClaimTypes.NameIdentifier and breaks the contract with the Go engine.
+            var handler = new JwtSecurityTokenHandler { MapInboundClaims = false };
+            return handler.ValidateToken(token,
                 new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret)),
+                    // HMAC-SHA256 needs a 256-bit key, while the shared secret is
+                    // shorter. Both stacks derive the key as SHA-256(secret)
+                    // (core/src/Verse.Engine/internal/platform/jwtx), so tokens
+                    // stay interchangeable.
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        SHA256.HashData(Encoding.UTF8.GetBytes(_secret))),
                     ValidateIssuer = false,
                     ValidateAudience = false,
                     ValidateLifetime = true,

@@ -294,9 +294,9 @@ export function RegisterPage() {
                         transition-all duration-300
                         ${
                           isActive
-                            ? "bg-cyan-500 text-white shadow-[0_0_16px_rgba(57,197,187,0.4)]"
+                            ? "bg-brand text-onbrand shadow-[0_0_16px_rgba(46,118,184,0.4)]"
                             : isCompleted
-                              ? "bg-cyan-500/20 text-cyan-400"
+                              ? "bg-brand/20 text-fgaccent"
                               : `${isDark ? "bg-white/5 text-gray-500" : "bg-gray-100 text-gray-400"}`
                         }
                       `}
@@ -310,7 +310,7 @@ export function RegisterPage() {
                     <span
                       className={`
                         mt-2 text-[11px] font-medium whitespace-nowrap
-                        ${isActive ? "text-cyan-400" : isCompleted ? "text-cyan-500/60" : textTertiary}
+                        ${isActive ? "text-fgaccent" : isCompleted ? "text-fgaccent/60" : textTertiary}
                       `}
                     >
                       {s.label}
@@ -322,7 +322,7 @@ export function RegisterPage() {
                     <div
                       className={`
                         w-16 h-[2px] mx-3 mb-6 rounded-full transition-colors duration-300
-                        ${i < step ? "bg-cyan-500/40" : isDark ? "bg-white/10" : "bg-gray-200"}
+                        ${i < step ? "bg-brand/40" : isDark ? "bg-white/10" : "bg-gray-200"}
                       `}
                     />
                   )}
@@ -362,7 +362,7 @@ export function RegisterPage() {
                         key={doc.id}
                         className={`
                           rounded-2xl border overflow-hidden
-                          ${isAgreed ? "border-cyan-500/30 bg-cyan-500/5" : borderColor}
+                          ${isAgreed ? "border-brand/30 bg-brand/5" : borderColor}
                         `}
                       >
                         {/* Doc header */}
@@ -373,13 +373,13 @@ export function RegisterPage() {
                             <Icon
                               name="description"
                               fontSize={16}
-                              className="text-cyan-500"
+                              className="text-fgaccent"
                             />
                             <span className={`text-[13px] font-semibold ${textPrimary}`}>
                               {t(doc.titleKey)}
                             </span>
                             {doc.required && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-500 font-medium">
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-brand/15 text-fgaccent font-medium">
                                 {t("register.required")}
                               </span>
                             )}
@@ -579,8 +579,8 @@ export function RegisterPage() {
             {step === 2 && (
               <div className="h-full flex flex-col">
                 <div className="px-6 pt-6 pb-4 text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-cyan-500/15 flex items-center justify-center">
-                    <Icon name="mail" fontSize={28} className="text-cyan-500" />
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-brand/15 flex items-center justify-center">
+                    <Icon name="mail" fontSize={28} className="text-fgaccent" />
                   </div>
                   <h3 className={`text-[15px] font-bold ${textPrimary} mb-1.5`}>
                     {t("register.verifyTitle")}
@@ -693,7 +693,7 @@ function M3TextField({
             error
               ? "border-red-500/50"
               : focused
-                ? "border-cyan-500/50 shadow-[0_0_12px_rgba(57,197,187,0.15)]"
+                ? "border-brand/50 shadow-[0_0_12px_rgba(46,118,184,0.15)]"
                 : isDark
                   ? "border-white/10 hover:border-white/20"
                   : "border-gray-200 hover:border-gray-300"
@@ -705,7 +705,7 @@ function M3TextField({
           className={`
             absolute left-11 transition-all duration-200 pointer-events-none z-10
             ${isFloating ? "top-2 text-[10px] font-bold" : "top-1/2 -translate-y-1/2 text-[13px]"}
-            ${error ? "text-red-400" : focused ? "text-cyan-400" : isDark ? "text-gray-500" : "text-gray-400"}
+            ${error ? "text-red-400" : focused ? "text-fgaccent" : isDark ? "text-gray-500" : "text-gray-400"}
           `}
         >
           {label}
@@ -718,7 +718,7 @@ function M3TextField({
             <Icon
               name={icon}
               fontSize={18}
-              className={error ? "text-red-400" : focused ? "text-cyan-500" : isDark ? "text-gray-500" : "text-gray-400"}
+              className={error ? "text-red-400" : focused ? "text-fgaccent" : isDark ? "text-gray-500" : "text-gray-400"}
             />
           </div>
           <input

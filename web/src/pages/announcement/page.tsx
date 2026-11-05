@@ -23,7 +23,7 @@ const mockAnnouncements: Announcement[] = [
   {
     id: "1",
     title: "Asagity v2.0 发布公告",
-    text: "**✨ Asagity v2.0 正式发布！**\n\n本次更新包含以下重要特性：\n\n$[color=#39C5BB **MFM 渲染引擎升级**] — 支持更多文本特效\n$[color=#FF6B9D **全新文本标记语言**] — 更丰富的排版能力\n\n**新功能一览：**\n- 多维码 (QR Code) 支持\n- Skyline 云盘优化\n- 性能提升 40%\n\n详细更新日志请查看 #更新日志 话题。",
+    text: "**✨ Asagity v2.0 正式发布！**\n\n本次更新包含以下重要特性：\n\n$[color=#2E76B8 **MFM 渲染引擎升级**] — 支持更多文本特效\n$[color=#FF6B9D **全新文本标记语言**] — 更丰富的排版能力\n\n**新功能一览：**\n- 多维码 (QR Code) 支持\n- Skyline 云盘优化\n- 性能提升 40%\n\n详细更新日志请查看 #更新日志 话题。",
     icon: "success",
     forYou: true,
     isRead: false,
@@ -40,7 +40,7 @@ const mockAnnouncements: Announcement[] = [
   {
     id: "3",
     title: "新功能预告：多维码",
-    text: "大家好！\n\n我们很高兴地宣布 **多维码 (QR Code)** 功能即将上线！\n\n**功能特点：**\n- 支持自定义样式\n- 动态二维码生成\n- 与 Skyline 云盘深度集成\n\n$[color=#39C5BB 敬请期待！]\n\n#新功能 #多维码",
+    text: "大家好！\n\n我们很高兴地宣布 **多维码 (QR Code)** 功能即将上线！\n\n**功能特点：**\n- 支持自定义样式\n- 动态二维码生成\n- 与 Skyline 云盘深度集成\n\n$[color=#2E76B8 敬请期待！]\n\n#新功能 #多维码",
     icon: "info",
     isRead: true,
     createdAt: "2026-06-28T09:15:00Z",
@@ -57,7 +57,7 @@ const mockAnnouncements: Announcement[] = [
 ];
 
 const iconMap = {
-  info: { name: "info", color: "text-cyan-500" },
+  info: { name: "info", color: "text-fgaccent" },
   warning: { name: "warning", color: "text-yellow-500" },
   error: { name: "error", color: "text-red-500" },
   success: { name: "check_circle", color: "text-green-500" },
@@ -87,8 +87,8 @@ export default function AnnouncementPage() {
       <div className="flex-shrink-0 px-4 pt-4 pb-2">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-              <Icon name="campaign" className="text-cyan-500" fontSize={22} />
+            <div className="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center">
+              <Icon name="campaign" className="text-fgaccent" fontSize={22} />
             </div>
             <div>
               <h1 className="text-lg font-black text-gray-900 dark:text-white">
@@ -120,7 +120,7 @@ export default function AnnouncementPage() {
               onClick={() => setTab(tabItem.key)}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all ${
                 tab === tabItem.key
-                  ? "bg-white dark:bg-gray-800 text-cyan-600 dark:text-cyan-400 shadow-sm"
+                  ? "bg-white dark:bg-gray-800 text-branddeep dark:text-fgaccent shadow-sm"
                   : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               }`}
             >
@@ -194,9 +194,9 @@ function AnnouncementCard({
     >
       {/* For You Badge */}
       {announcement.forYou && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border-b border-cyan-500/20">
-          <Icon name="push_pin" className="text-cyan-500" fontSize={14} />
-          <span className="text-xs font-bold text-cyan-600 dark:text-cyan-400">
+        <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand/10 to-blue-500/10 border-b border-brand/20">
+          <Icon name="push_pin" className="text-fgaccent" fontSize={14} />
+          <span className="text-xs font-bold text-branddeep dark:text-fgaccent">
             {t("announcement.exclusiveToYou")}
           </span>
         </div>
@@ -213,7 +213,7 @@ function AnnouncementCard({
                 ? "bg-red-500/10"
                 : announcement.icon === "success"
                 ? "bg-green-500/10"
-                : "bg-cyan-500/10"
+                : "bg-brand/10"
             }`}
           >
             <Icon
@@ -225,7 +225,7 @@ function AnnouncementCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               {!announcement.isRead && (
-                <span className="w-2 h-2 rounded-full bg-cyan-500 flex-shrink-0" />
+                <span className="w-2 h-2 rounded-full bg-brand flex-shrink-0" />
               )}
               <h3 className="text-base font-black text-gray-900 dark:text-white truncate">
                 {announcement.title}
@@ -266,7 +266,7 @@ function AnnouncementCard({
         <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800">
           <button
             onClick={() => onRead(announcement.id)}
-            className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-bold text-sm transition-colors"
+            className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl bg-brand hover:bg-branddeep text-onbrand font-bold text-sm transition-colors"
           >
             <Icon name="check" fontSize={16} />
             {t("announcement.gotIt")}

@@ -48,14 +48,14 @@ export function PanelSettingsLayout({ children }: { children: React.ReactNode })
                 onClick={() => router.push(item.to)}
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all duration-300 group w-full text-left ${
                   pathname === item.to
-                    ? "bg-cyan-500 text-white shadow-[0_8px_20px_-4px_rgba(6,182,212,0.4)]"
+                    ? "bg-brand text-onbrand shadow-[0_8px_20px_-4px_rgba(6,182,212,0.4)]"
                     : "hover:bg-gray-100 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-400 font-bold"
                 }`}
               >
                 <Icon
                   name={item.icon}
                   className={`transition-transform duration-300 group-hover:scale-110 ${
-                    pathname === item.to ? "text-white" : "text-gray-400 group-hover:text-cyan-500"
+                    pathname === item.to ? "text-white" : "text-gray-400 group-hover:text-fgaccent"
                   }`}
                   fontSize={18}
                 />

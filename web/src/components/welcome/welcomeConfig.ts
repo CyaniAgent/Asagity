@@ -45,12 +45,7 @@ export const DEFAULT_MENU_GROUPS: WelcomeMenuGroupConfig[] = [
   {
     id: "quick",
     items: [
-      {
-        id: "timeline",
-        icon: "timeline_20_filled",
-        labelKey: "welcome.browseTimeline",
-        action: { kind: "window", viewType: "welcome_timeline" },
-      },
+      // timeline 已提升为 WelcomeActionPanel 的显性入口行 — 不再重复挂进菜单
       {
         id: "announcements",
         icon: "campaign",

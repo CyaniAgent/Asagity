@@ -14,7 +14,7 @@ const mockPosts: TimelinePost[] = [
       instance: "asagity.io",
     },
     createdAt: new Date(Date.now() - 1000 * 60 * 5),
-    content: "欢迎来到 **Asagity** — 多维社交平台！✨\n\n$[color=#39C5BB 这是一个为创作者与梦想家打造的平台。]\n\n#Asagity #欢迎",
+    content: "欢迎来到 **Asagity** — 多维社交平台！✨\n\n$[color=#2E76B8 这是一个为创作者与梦想家打造的平台。]\n\n#Asagity #欢迎",
     metrics: { replies: 12, reposts: 34, reactions: 128 },
   },
   {

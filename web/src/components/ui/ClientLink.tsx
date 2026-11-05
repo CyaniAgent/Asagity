@@ -20,7 +20,7 @@ interface ClientLinkProps {
  * 使用 History API 实现客户端导航，不触发页面刷新。
  *
  * @example
- * <ClientLink href="/user/123" className="text-cyan-500">
+ * <ClientLink href="/user/123" className="text-fgaccent">
  *   用户主页
  * </ClientLink>
  */

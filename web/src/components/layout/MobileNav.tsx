@@ -25,7 +25,7 @@ export function MobileNav() {
               key={item.icon}
               href={item.to}
               className={`flex flex-col items-center gap-0.5 p-2 rounded-xl transition-colors ${
-                isActive ? "text-cyan-600 dark:text-cyan-400" : "text-gray-500 dark:text-gray-400"
+                isActive ? "text-branddeep dark:text-fgaccent" : "text-gray-500 dark:text-gray-400"
               }`}
             >
               <Icon name={item.icon} fontSize={24} />

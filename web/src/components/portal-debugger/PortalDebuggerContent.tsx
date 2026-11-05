@@ -39,7 +39,7 @@ const SMALL_SCREEN_THRESHOLD = 768;
 function RightPanelFallback() {
   return (
     <div className="flex items-center justify-center h-full">
-      <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+      <div className="w-6 h-6 border-2 border-brand border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }
@@ -107,7 +107,7 @@ export const PortalDebuggerContent = memo(function PortalDebuggerContent() {
                     transition-all duration-150
                     ${
                       leftTab === tab.id
-                        ? "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
+                        ? "bg-brand/10 text-branddeep dark:text-fgaccent"
                         : "text-gray-500 dark:text-gray-400 hover:bg-gray-200/40 dark:hover:bg-gray-700/40 hover:text-gray-700 dark:hover:text-gray-300"
                     }
                   `}
@@ -133,7 +133,7 @@ export const PortalDebuggerContent = memo(function PortalDebuggerContent() {
         </Panel>
 
         {/* ── 分隔条 ─────────────────────────────────────── */}
-        <PanelResizeHandle className="w-1.5 rounded-full mx-1.5 hover:bg-cyan-500/20 active:bg-cyan-500/40 transition-colors shrink-0" />
+        <PanelResizeHandle className="w-1.5 rounded-full mx-1.5 hover:bg-brand/20 active:bg-brand/40 transition-colors shrink-0" />
 
         {/* ── 右栏：交互控制台 / Termity（默认 1/3）──────── */}
         <Panel id="pdebug-right" defaultSize={33.3} minSize={22}>
@@ -149,7 +149,7 @@ export const PortalDebuggerContent = memo(function PortalDebuggerContent() {
                     transition-all duration-150
                     ${
                       rightTab === tab.id
-                        ? "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
+                        ? "bg-brand/10 text-branddeep dark:text-fgaccent"
                         : "text-gray-500 dark:text-gray-400 hover:bg-gray-200/40 dark:hover:bg-gray-700/40 hover:text-gray-700 dark:hover:text-gray-300"
                     }
                   `}
@@ -203,7 +203,7 @@ export const PortalDebuggerContent = memo(function PortalDebuggerContent() {
               </button>
               <button
                 onClick={() => setShowSmallScreenWarn(false)}
-                className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-cyan-500 hover:bg-cyan-600 text-white shadow-lg shadow-cyan-500/25 transition-all"
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-brand hover:bg-branddeep text-onbrand shadow-lg shadow-brand/25 transition-all"
               >
                 {t("portalDebugger.smallScreenContinue")}
               </button>

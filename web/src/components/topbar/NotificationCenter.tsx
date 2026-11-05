@@ -17,7 +17,7 @@ const DATE_LOCALES: Record<Locale, typeof zhCN> = {
 
 /** 通知类型 → 图标 + 点缀色（仅用 iconMap 已有图标） */
 const TYPE_STYLE: Record<NotificationType, { icon: string; tint: string }> = {
-  mention: { icon: "chat", tint: "text-cyan-500 bg-cyan-500/10" },
+  mention: { icon: "chat", tint: "text-fgaccent bg-brand/10" },
   reblog: { icon: "repeat", tint: "text-green-500 bg-green-500/10" },
   quote: { icon: "comment", tint: "text-indigo-500 bg-indigo-500/10" },
   reaction: { icon: "star", tint: "text-amber-500 bg-amber-500/10" },
@@ -76,7 +76,7 @@ export function NotificationCenter() {
             <span className="text-sm font-bold text-gray-900 dark:text-white">
               {t("tabs.notifications")}
               {unread > 0 && (
-                <span className="ml-1.5 text-xs font-semibold text-cyan-600 dark:text-cyan-400 tabular-nums">
+                <span className="ml-1.5 text-xs font-semibold text-branddeep dark:text-fgaccent tabular-nums">
                   {unread}
                 </span>
               )}
@@ -84,7 +84,7 @@ export function NotificationCenter() {
             {unread > 0 && (
               <button
                 onClick={markAllAsRead}
-                className="text-xs font-medium text-cyan-600 dark:text-cyan-400 hover:underline"
+                className="text-xs font-medium text-branddeep dark:text-fgaccent hover:underline"
               >
                 {t("notificationCenter.markAllRead")}
               </button>
@@ -131,7 +131,7 @@ export function NotificationCenter() {
                       </span>
                     </span>
                     {!n.isRead && (
-                      <span className="size-2 rounded-full bg-cyan-500 shrink-0 mt-1.5" />
+                      <span className="size-2 rounded-full bg-brand shrink-0 mt-1.5" />
                     )}
                   </button>
                 );

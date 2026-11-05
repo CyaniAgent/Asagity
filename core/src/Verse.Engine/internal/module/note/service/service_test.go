@@ -11,7 +11,7 @@ import (
 	notemodel "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/note/model"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/note/repository"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/search"
-	"gorm.io/driver/sqlite"
+	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 )
 

@@ -4,8 +4,8 @@
   "description": "A cyan-tinted decentralized social universe",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#121212",
-  "theme_color": "#39C5BB",
+  "background_color": "#001421",
+  "theme_color": "#2E76B8",
   "orientation": "any",
   "icons": [
     {

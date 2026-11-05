@@ -46,7 +46,7 @@ docker compose -f container/docker/docker-compose.yaml down -v
 | Service | Image | Port | Purpose |
 |---------|-------|------|---------|
 | PostgreSQL | postgres:18.3-alpine3.23 | 5432 | Primary database |
-| Redis | redis:8.6.2-alpine | 6379 | Cache & session storage |
+| Valkey | valkey/valkey | 6379 | Cache & session storage |
 
 ## Environment Variables
 

@@ -114,8 +114,8 @@ export function AuthModal() {
   const inputPH = isDark ? "placeholder-gray-500" : "placeholder-gray-400";
   const iconColor = isDark ? "text-gray-500" : "text-gray-400";
   const tabActive = isDark
-    ? "bg-cyan-500/20 text-cyan-400"
-    : "bg-cyan-500/15 text-cyan-600";
+    ? "bg-brand/20 text-fgaccent"
+    : "bg-brand/15 text-branddeep";
   const tabInactive = isDark
     ? "text-gray-400 hover:text-gray-300"
     : "text-gray-500 hover:text-gray-700";
@@ -138,7 +138,7 @@ export function AuthModal() {
         {/* ── Header ── */}
         <div className="relative shrink-0 px-8 pt-8 pb-4">
           {/* Gradient accent */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-[2px] bg-gradient-to-r from-cyan-400 to-cyan-600 rounded-full shadow-[0_0_12px_rgba(57,197,187,0.4)]" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-[2px] bg-gradient-to-r from-brandlight to-branddeep rounded-full shadow-[0_0_12px_rgba(46,118,184,0.4)]" />
 
           {/* Logo + Instance name */}
           <div className="flex flex-col items-center gap-3 mb-6">
@@ -210,7 +210,7 @@ export function AuthModal() {
                     required
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    className={`w-full ${inputBg} border ${inputBorder} rounded-xl py-3 pl-10 pr-4 text-sm ${inputText} ${inputPH} focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all`}
+                    className={`w-full ${inputBg} border ${inputBorder} rounded-xl py-3 pl-10 pr-4 text-sm ${inputText} ${inputPH} focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand/50 transition-all`}
                     placeholder="syskuku@asagity.net"
                   />
                 </div>
@@ -225,7 +225,7 @@ export function AuthModal() {
                   </label>
                   <button
                     type="button"
-                    className="text-[10px] font-bold text-cyan-500 hover:text-cyan-400"
+                    className="text-[10px] font-bold text-fgaccent hover:text-fgaccent"
                   >
                     {t("auth.forgotKey")}
                   </button>
@@ -239,7 +239,7 @@ export function AuthModal() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={`w-full ${inputBg} border ${inputBorder} rounded-xl py-3 pl-10 pr-4 text-sm ${inputText} ${inputPH} focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all`}
+                    className={`w-full ${inputBg} border ${inputBorder} rounded-xl py-3 pl-10 pr-4 text-sm ${inputText} ${inputPH} focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand/50 transition-all`}
                     placeholder="••••••••"
                   />
                 </div>
@@ -248,7 +248,7 @@ export function AuthModal() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full mt-2 bg-gradient-to-r from-cyan-600 to-cyan-400 hover:from-cyan-500 hover:to-cyan-300 text-gray-900 font-black tracking-wider py-3.5 rounded-xl shadow-[0_0_15px_rgba(57,197,187,0.3)] hover:shadow-[0_0_25px_rgba(57,197,187,0.5)] transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full mt-2 bg-gradient-to-r from-branddeep to-brandlight hover:from-brand hover:to-brandlight text-gray-900 font-black tracking-wider py-3.5 rounded-xl shadow-[0_0_15px_rgba(46,118,184,0.3)] hover:shadow-[0_0_25px_rgba(46,118,184,0.5)] transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
@@ -281,7 +281,7 @@ export function AuthModal() {
                     pattern="[A-Za-z0-9_]+"
                     value={regUsername}
                     onChange={(e) => setRegUsername(e.target.value)}
-                    className={`w-full ${inputBg} border ${inputBorder} rounded-xl py-3 pl-10 pr-4 text-sm ${inputText} ${inputPH} focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all`}
+                    className={`w-full ${inputBg} border ${inputBorder} rounded-xl py-3 pl-10 pr-4 text-sm ${inputText} ${inputPH} focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand/50 transition-all`}
                     placeholder="syskuku"
                   />
                 </div>
@@ -303,7 +303,7 @@ export function AuthModal() {
                     minLength={8}
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
-                    className={`w-full ${inputBg} border ${inputBorder} rounded-xl py-3 pl-10 pr-4 text-sm ${inputText} ${inputPH} focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all`}
+                    className={`w-full ${inputBg} border ${inputBorder} rounded-xl py-3 pl-10 pr-4 text-sm ${inputText} ${inputPH} focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand/50 transition-all`}
                     placeholder="••••••••"
                   />
                 </div>
@@ -329,7 +329,7 @@ export function AuthModal() {
                     minLength={8}
                     value={regConfirmPassword}
                     onChange={(e) => setRegConfirmPassword(e.target.value)}
-                    className={`w-full ${inputBg} border ${inputBorder} rounded-xl py-3 pl-10 pr-4 text-sm ${inputText} ${inputPH} focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all ${
+                    className={`w-full ${inputBg} border ${inputBorder} rounded-xl py-3 pl-10 pr-4 text-sm ${inputText} ${inputPH} focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand/50 transition-all ${
                       passwordsMismatch
                         ? "border-red-500/60 focus:ring-red-500/50"
                         : ""
@@ -347,7 +347,7 @@ export function AuthModal() {
               <button
                 type="submit"
                 disabled={loading || passwordsMismatch || !regUsername || !regPassword || !regConfirmPassword}
-                className="w-full mt-1 bg-gradient-to-r from-cyan-600 to-cyan-400 hover:from-cyan-500 hover:to-cyan-300 text-gray-900 font-black tracking-wider py-3.5 rounded-xl shadow-[0_0_15px_rgba(57,197,187,0.3)] hover:shadow-[0_0_25px_rgba(57,197,187,0.5)] transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full mt-1 bg-gradient-to-r from-branddeep to-brandlight hover:from-brand hover:to-brandlight text-gray-900 font-black tracking-wider py-3.5 rounded-xl shadow-[0_0_15px_rgba(46,118,184,0.3)] hover:shadow-[0_0_25px_rgba(46,118,184,0.5)] transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>

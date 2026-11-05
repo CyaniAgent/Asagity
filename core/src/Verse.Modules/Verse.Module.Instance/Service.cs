@@ -1,4 +1,6 @@
 using Verse.Shared;
+using Verse.Data;
+using Verse.Data.Entities;
 
 namespace Verse.Module.Instance;
 
@@ -11,22 +13,12 @@ public static class InstanceErrors
 /// <summary>Contract ported from Go <c>instance/service.Service</c>.</summary>
 public interface IInstanceService
 {
+    RootResponse Root();
+    HealthResponse Health();
     VersionResponse Version();
     MetaResponse Meta();
     IReadOnlyList<InstanceSetting> GetAllSettings();
     IReadOnlyList<DatabaseStat> GetDatabaseStats();
     SystemEnvironmentResponse SystemEnvironment();
-}
-
-/// <summary>DI stub: every call returns 501 until the real service lands.</summary>
-public sealed class NotImplementedInstanceService : IInstanceService
-{
-    private static ModuleException Todo() =>
-        new(StatusCodes.Status501NotImplemented, "INSTANCE_NOT_IMPLEMENTED", "Instance service is not implemented yet.");
-
-    public VersionResponse Version() => throw Todo();
-    public MetaResponse Meta() => throw Todo();
-    public IReadOnlyList<InstanceSetting> GetAllSettings() => throw Todo();
-    public IReadOnlyList<DatabaseStat> GetDatabaseStats() => throw Todo();
-    public SystemEnvironmentResponse SystemEnvironment() => throw Todo();
+    DeveloperAccountResponse DeveloperAccount();
 }

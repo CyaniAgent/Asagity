@@ -16,9 +16,9 @@ public interface IAssetService
     (byte[] Data, string ContentType) GetCachedIcon(string remoteUrl);
 }
 
-/// <summary>DI stub: every call returns 501 until the real service lands.</summary>
+/// <summary>DI stub: every call returns 503 until the real service lands.</summary>
 public sealed class NotImplementedAssetService : IAssetService
 {
     public (byte[] Data, string ContentType) GetCachedIcon(string remoteUrl) =>
-        throw new ModuleException(StatusCodes.Status501NotImplemented, "ASSET_NOT_IMPLEMENTED", "Asset service is not implemented yet.");
+        throw new ModuleException(StatusCodes.Status503ServiceUnavailable, "ASSET_NOT_IMPLEMENTED", ".NET layer is planned but not implemented; use Go engine /api/*");
 }

@@ -11,12 +11,12 @@ export default function DriveSharedPage() {
       <div className="flex items-center justify-between px-4 py-3 shrink-0">
         <div>
           <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Icon name="folder_shared" className="text-cyan-500" fontSize={20} />
+            <Icon name="folder_shared" className="text-fgaccent" fontSize={20} />
             {t("drive.sharedFiles")}
           </h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t("drive.sharedWithOthers")}</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-teal-400 text-white rounded-full text-sm font-bold shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-105 transition-all">
+        <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand to-ok text-onbrand rounded-full text-sm font-bold shadow-lg shadow-brand/25 hover:shadow-brand/40 hover:scale-105 transition-all">
           <Icon name="share" fontSize={16} />
           {t("drive.sharedFiles")}
         </button>

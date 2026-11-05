@@ -49,7 +49,7 @@ export function SettingsLayout({ children }: { children: React.ReactNode }) {
                   href={item.to}
                   className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-all ${
                     active
-                      ? "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-semibold"
+                      ? "bg-brand/10 text-branddeep dark:text-fgaccent font-semibold"
                       : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
                   }`}
                 >
@@ -70,7 +70,7 @@ export function SettingsLayout({ children }: { children: React.ReactNode }) {
                   onClick={() => router.push(item.to)}
                   className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-[10px] transition-all shrink-0 ${
                     active
-                      ? "text-cyan-600 dark:text-cyan-400 font-semibold"
+                      ? "text-branddeep dark:text-fgaccent font-semibold"
                       : "text-gray-500 dark:text-gray-400"
                   }`}
                 >

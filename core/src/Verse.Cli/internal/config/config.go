@@ -44,6 +44,12 @@ func Load() (*Config, error) {
 	return cfg, nil
 }
 
+// LiteDBPath is the SQLite file the developing lite mode uses. The runner
+// passes it to the engine through LITE_SQLITE_PATH.
+func (c *Config) LiteDBPath() string {
+	return filepath.Join(c.VerseDir, "lite", "asagity.db")
+}
+
 // FindProjectRoot walks up from cwd and the executable looking for the
 // repository marker core/src/Verse.slnx (falling back to a core+web pair).
 func FindProjectRoot() (string, error) {

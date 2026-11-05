@@ -3,12 +3,30 @@ import { persist } from "zustand/middleware";
 
 export type ColorMode = "light" | "dark" | "system";
 
+/** Pure derivation from plain state fields — NEVER store getters: zustand's
+ * Object.assign merges bake getter snapshots into the state object, leaving
+ * subscribers stale (the dark-theme wrapper regression). */
+export function resolveMode(
+  preference: ColorMode,
+  systemPreference: "light" | "dark",
+): "light" | "dark" {
+  return preference === "system" ? systemPreference : preference;
+}
+
+export function resolveModeLabel(preference: ColorMode): string {
+  switch (preference) {
+    case "light":
+      return "浅色";
+    case "dark":
+      return "深色";
+    default:
+      return "跟随系统";
+  }
+}
+
 interface ThemeState {
   preference: ColorMode;
   systemPreference: "light" | "dark";
-  isDark: boolean;
-  currentMode: "light" | "dark";
-  modeLabel: string;
   _mediaQueryHandler: ((e: MediaQueryListEvent) => void) | null;
   init: () => void;
   destroy: () => void;
@@ -28,36 +46,6 @@ export const useThemeStore = create<ThemeState>()(
           ? "dark"
           : "light",
       _mediaQueryHandler: null,
-
-      get isDark() {
-        const state = get();
-        if (state.preference === "system") {
-          return state.systemPreference === "dark";
-        }
-        return state.preference === "dark";
-      },
-
-      get currentMode() {
-        const state = get();
-        if (state.preference === "system") {
-          return state.systemPreference;
-        }
-        return state.preference;
-      },
-
-      get modeLabel() {
-        const state = get();
-        switch (state.preference) {
-          case "light":
-            return "浅色";
-          case "dark":
-            return "深色";
-          case "system":
-            return "跟随系统";
-          default:
-            return "跟随系统";
-        }
-      },
 
       init: () => {
         if (typeof window === "undefined") return;

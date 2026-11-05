@@ -50,7 +50,7 @@ export function QuickMenu() {
               href={entry.query ? `${entry.to}${entry.query}` : entry.to}
               className={`flex items-center gap-4 px-4 py-2.5 rounded-2xl transition-colors font-normal group/nav ${
                 active
-                  ? "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
+                  ? "bg-brand/10 text-branddeep dark:text-fgaccent"
                   : "hover:bg-black/5 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300"
               }`}
             >

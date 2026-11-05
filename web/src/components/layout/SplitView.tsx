@@ -56,7 +56,7 @@ export function SplitView({ children, isWidgetsOpen = false }: SplitViewProps) {
           <div
             className={`h-full bg-white dark:bg-gray-900 rounded-[30px] border overflow-hidden cursor-default transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
               activeView === "left"
-                ? "border-cyan-400/60 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.2)]"
+                ? "border-brandlight/60 shadow-[inset_0_0_0_1px_rgba(65,135,200,0.2)]"
                 : "border-gray-200/50 dark:border-gray-800/50"
             }`}
             onPointerDown={focusLeft}
@@ -70,7 +70,7 @@ export function SplitView({ children, isWidgetsOpen = false }: SplitViewProps) {
         {/* Right Panel Divider */}
         {isOpen && (
           <>
-            <PanelResizeHandle className="w-1.5 rounded-full mx-1.5 hover:bg-cyan-500/20 active:bg-cyan-500/40 transition-colors z-30 shrink-0" />
+            <PanelResizeHandle className="w-1.5 rounded-full mx-1.5 hover:bg-brand/20 active:bg-brand/40 transition-colors z-30 shrink-0" />
             <Panel
               id="right"
               defaultSize={50}
@@ -79,7 +79,7 @@ export function SplitView({ children, isWidgetsOpen = false }: SplitViewProps) {
               <div
                 className={`h-full overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
                   activeView === "right"
-                    ? "border-cyan-400/60 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.2)]"
+                    ? "border-brandlight/60 shadow-[inset_0_0_0_1px_rgba(65,135,200,0.2)]"
                     : "border-gray-200/50 dark:border-gray-800/50"
                 }`}
                 onPointerDown={focusRight}
@@ -139,7 +139,7 @@ export function SplitView({ children, isWidgetsOpen = false }: SplitViewProps) {
         {/* Widgets Panel */}
         {isWidgetsOpen && (
           <>
-            <PanelResizeHandle className="w-1.5 rounded-full mx-1.5 hover:bg-cyan-500/20 active:bg-cyan-500/40 transition-colors z-30 shrink-0" />
+            <PanelResizeHandle className="w-1.5 rounded-full mx-1.5 hover:bg-brand/20 active:bg-brand/40 transition-colors z-30 shrink-0" />
             <Panel
               id="widgets"
               defaultSize={30}
@@ -148,7 +148,7 @@ export function SplitView({ children, isWidgetsOpen = false }: SplitViewProps) {
               <div
                 className={`h-full bg-white dark:bg-gray-900 rounded-[30px] border overflow-hidden flex flex-col ${
                   activeView === "widgets"
-                    ? "border-cyan-400/60 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.2)]"
+                    ? "border-brandlight/60 shadow-[inset_0_0_0_1px_rgba(65,135,200,0.2)]"
                     : "border-gray-200/50 dark:border-gray-800/50"
                 }`}
                 onPointerDown={focusWidgets}

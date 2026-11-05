@@ -1,7 +1,8 @@
 // Command versetool (Verse tool) manages the Asagity server lifecycle.
 //
 // Dual form: with arguments it runs one command and exits (script-friendly);
-// without arguments it opens an interactive menu.
+// without arguments on a TTY it opens the Termity Base CLI — a semantic
+// /command REPL (/help inside) with a per-run session journal (/recent).
 //
 // Global flag:
 //
@@ -14,26 +15,39 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/config"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/doctor"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/engineapi"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/mode"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/modulemgr"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/process"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/runner"
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/termity"
 )
 
 const usage = `versetool - Verse tool, the Asagity server manager
 
 Usage:
   versetool [--mode=<databaseless|lite|production>] <command> [args]
+  versetool                          interactive Termity Base CLI (TTY only)
+
+Interactive mode (Termity Base CLI):
+  run versetool with no arguments on a terminal to open the REPL:
+    /start /stop /restart /destroy /status /health /doctor
+    /logs /app /db /mode /recent /help /exit
+  every run is a fresh session (input history resets); the command journal
+  is persisted under .verse/sessions/ and browsable with /recent.
+  scripts keep the argument form below — it is unchanged.
 
 Commands:
   start [prod|dev|dbless] [service]   start services (default: prod, all)
   stop [all|engine|api|db|redis]      stop services (default: all)
+  destroy [-y] [all|engine|api|db|redis]  force-kill, asks y/N; -y for scripts
   restart [prod|dev|dbless] [service] restart services (default: prod, all)
   status                              three-level status: process, port, /healthz
   logs <service>                      print last 50 log lines (engine|api)
@@ -42,6 +56,7 @@ Commands:
   app list                            list installed .aap applications
   app enable <name>                   enable an application
   app disable <name>                  disable an application
+  db status                           show database mode, path and seeded account
   help                                show this help
 
 Start shorthands (service defaults to all):
@@ -87,6 +102,24 @@ func run(argv []string) error {
 	case "stop":
 		r.Stop(svcArg(rest))
 		return nil
+	case "destroy":
+		// -y/--yes skips the prompt so automation can recover a wedged
+		// stack without a TTY; interactive use always asks.
+		svc, skipPrompt := "all", false
+		for _, a := range rest[1:] {
+			switch a {
+			case "-y", "--yes":
+				skipPrompt = true
+			default:
+				svc = a
+			}
+		}
+		if !skipPrompt && !confirmed(os.Stdin, fmt.Sprintf("force-kill %s (no graceful shutdown)", svc)) {
+			fmt.Println("aborted")
+			return nil
+		}
+		r.Destroy(svc)
+		return nil
 	case "restart":
 		svc, md := resolveStart(rest[1:], modeFlag)
 		return r.Restart(svc, md)
@@ -108,6 +141,8 @@ func run(argv []string) error {
 		return nil
 	case "app":
 		return cmdApp(cfg, rest[1:])
+	case "db":
+		return cmdDB(cfg, r, md)
 	case "help", "-h", "--help":
 		fmt.Print(usage)
 		return nil
@@ -161,6 +196,19 @@ func splitModeFlag(argv []string) (string, []string) {
 	return flagVal, rest
 }
 
+// confirmed asks for an explicit y/N before an irreversible action.
+// -y/--yes in args skips the prompt for scripted use.
+func confirmed(in io.Reader, what string) bool {
+	fmt.Printf("%s — continue? [y/N] ", what)
+	line, _ := bufio.NewReader(in).ReadString('\n')
+	switch strings.ToLower(strings.TrimSpace(line)) {
+	case "y", "yes":
+		return true
+	default:
+		return false
+	}
+}
+
 func svcArg(rest []string) string {
 	if len(rest) > 1 {
 		return rest[1]
@@ -170,13 +218,22 @@ func svcArg(rest []string) string {
 
 func cmdStatus(r *runner.Runner) error {
 	st := r.Status()
-	fmt.Printf("%-8s %-9s %-7s %-7s\n", "SERVICE", "PROCESS", "PORT", "HEALTH")
-	fmt.Println(strings.Repeat("-", 40))
+	fmt.Printf("%-8s %-9s %-7s %-7s %-10s\n", "SERVICE", "PROCESS", "PORT", "HEALTH", "RSS")
+	fmt.Println(strings.Repeat("-", 48))
 	for _, svc := range runner.All {
 		lv := st[svc]
-		fmt.Printf("%-8s %-9s %-7s %-7s\n", svc, yesNo(lv.Process), yesNo(lv.Port), healthCell(svc, lv.Health))
+		fmt.Printf("%-8s %-9s %-7s %-7s %-10s\n",
+			svc, yesNo(lv.Process), yesNo(lv.Port), healthCell(svc, lv.Health), rssCell(lv.RSSKB))
 	}
 	return nil
+}
+
+// rssCell renders the resident memory of a process.
+func rssCell(kb int) string {
+	if kb <= 0 {
+		return "-"
+	}
+	return fmt.Sprintf("%.1f MB", float64(kb)/1024.0)
 }
 
 func healthCell(svc string, ok bool) string {
@@ -260,8 +317,56 @@ func cmdApp(cfg *config.Config, args []string) error {
 	}
 }
 
+// cmdDB reports the storage state of the instance: effective mode, database
+// location and the seeded administrator/developer account. The CLI owns no
+// database driver, so every fact comes from the engine's own endpoints.
+func cmdDB(cfg *config.Config, r *runner.Runner, md mode.Mode) error {
+	fmt.Printf("DATABASE STATUS (mode: %s)\n", md)
+	fmt.Println(strings.Repeat("-", 52))
+
+	switch md {
+	case mode.Lite:
+		fmt.Printf("  engine      : %s\n", r.EngineURL())
+		fmt.Printf("  sqlite path : %s\n", cfg.LiteDBPath())
+		fmt.Printf("  cache       : in-process memory (no external service)\n")
+	case mode.Databaseless:
+		fmt.Printf("  engine      : %s\n", r.EngineURL())
+		fmt.Println("  storage     : none (databaseless mock mode)")
+	default:
+		fmt.Printf("  engine      : %s\n", r.EngineURL())
+		fmt.Printf("  postgres    : %s:%s/%s\n", cfg.Env["DB_HOST"], cfg.Env["DB_PORT"], cfg.Env["DB_NAME"])
+		fmt.Printf("  redis       : %s\n", cfg.Env["REDIS_ADDR"])
+	}
+
+	acc, err := engineapi.FetchDeveloperAccount(r.EngineURL(), 3*time.Second)
+	switch {
+	case err != nil:
+		fmt.Println("  account     : engine unreachable (start it with `versetool start`)")
+		return nil
+	case !acc.Exists:
+		fmt.Println("  account     : none seeded yet")
+		return nil
+	default:
+		fmt.Printf("  account     : %s <%s>\n", acc.Username, acc.Email)
+		fmt.Printf("  group       : %s (%s)\n", acc.Group, acc.GroupID)
+		if md == mode.Lite {
+			fmt.Printf("  password    : %s (fixed dev credential)\n", runner.LiteDeveloperPassword)
+		}
+	}
+	return nil
+}
+
 // interactive runs the numbered menu when no command is given.
+// interactive launches the Termity Base CLI (semantic /command REPL) when
+// stdin+stdout are a TTY; scripted environments get guidance instead of a
+// menu they cannot drive.
 func interactive(modeFlag string) error {
+	if !isTerminal(os.Stdin) || !isTerminal(os.Stdout) {
+		fmt.Fprintln(os.Stderr,
+			"versetool: interactive mode needs a TTY.\n"+
+				"  use the argument form for scripts: versetool start dev, versetool status, ...")
+		return nil
+	}
 	cfg, err := config.Load()
 	if err != nil {
 		return err
@@ -271,52 +376,14 @@ func interactive(modeFlag string) error {
 	if err != nil {
 		return err
 	}
+	return termity.Run(cfg, r, md)
+}
 
-	in := bufio.NewReader(os.Stdin)
-	for {
-		fmt.Printf("\nversetool - Asagity server manager (mode=%s, engine :%s, api :%s)\n",
-			md, cfg.EnginePort, cfg.APIPort)
-		fmt.Println("  1) start all    2) stop all      3) restart all")
-		fmt.Println("  4) status       5) health        6) doctor")
-		fmt.Println("  7) logs engine  8) logs api      9) app list")
-		fmt.Println("  m) switch mode (prod/dev/dbless)")
-		fmt.Println("  0) exit")
-		fmt.Print("select> ")
-
-		line, _ := in.ReadString('\n')
-		switch strings.TrimSpace(line) {
-		case "1":
-			_ = r.Start("all", md)
-		case "2":
-			r.Stop("all")
-		case "3":
-			_ = r.Restart("all", md)
-		case "4":
-			_ = cmdStatus(r)
-		case "5":
-			_ = cmdHealth(r)
-		case "6":
-			checks := doctor.Run(cfg, r, md)
-			doctor.Print(checks)
-		case "7":
-			_ = cmdLogs(r, runner.Engine)
-		case "8":
-			_ = cmdLogs(r, runner.API)
-		case "9":
-			_ = cmdApp(cfg, []string{"list"})
-		case "m":
-			fmt.Print("mode [prod|dev|dbless]> ")
-			mline, _ := in.ReadString('\n')
-			if m, ok := mode.Alias(strings.TrimSpace(mline)); ok {
-				md = m
-				fmt.Printf("mode switched to %s\n", md)
-			} else {
-				fmt.Println("unknown mode (want prod|dev|dbless)")
-			}
-		case "0", "exit", "quit", "q":
-			return nil
-		default:
-			fmt.Println("unknown choice (type `versetool help` for commands)")
-		}
+// isTerminal reports whether f is attached to a character device.
+func isTerminal(f *os.File) bool {
+	info, err := f.Stat()
+	if err != nil {
+		return false
 	}
+	return info.Mode()&os.ModeCharDevice != 0
 }

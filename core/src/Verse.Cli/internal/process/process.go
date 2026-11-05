@@ -130,6 +130,25 @@ func (m *Manager) Kill(name string) error {
 	return nil
 }
 
+// Destroy force-kills a service: SIGKILL to the whole process group with no
+// grace period. Emergency counterpart of Kill — prefer Kill for a graceful
+// stop; Destroy is for wedged processes that ignore SIGTERM.
+func (m *Manager) Destroy(name string) {
+	pid := m.PidOf(name)
+	_ = os.Remove(m.pidFile(name))
+	if pid == 0 {
+		return
+	}
+	// Spawn sets Setpgid, so -pid takes down the whole group: the service
+	// and anything it spawned (dotnet child, shells, ...).
+	if err := syscall.Kill(-pid, syscall.SIGKILL); err != nil {
+		// Group already gone (or never led): fall back to the single pid.
+		if proc, findErr := os.FindProcess(pid); findErr == nil {
+			_ = proc.Signal(syscall.SIGKILL)
+		}
+	}
+}
+
 func mergeEnv(base []string, extra map[string]string) []string {
 	out := append([]string(nil), base...)
 	for k, v := range extra {
@@ -147,6 +166,29 @@ func mergeEnv(base []string, extra map[string]string) []string {
 		}
 	}
 	return out
+}
+
+// RSS returns the resident set size of a process in kilobytes (0 when unknown).
+func RSS(pid int) int {
+	if pid <= 0 {
+		return 0
+	}
+	data, err := os.ReadFile(fmt.Sprintf("/proc/%d/status", pid))
+	if err != nil {
+		return 0
+	}
+	for _, line := range strings.Split(string(data), "\n") {
+		if strings.HasPrefix(line, "VmRSS:") {
+			fields := strings.Fields(line)
+			if len(fields) >= 2 {
+				var kb int
+				if _, err := fmt.Sscanf(fields[1], "%d", &kb); err == nil {
+					return kb
+				}
+			}
+		}
+	}
+	return 0
 }
 
 // PortOpen dials host:port within timeout.

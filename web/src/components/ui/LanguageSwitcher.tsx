@@ -14,7 +14,7 @@ export function LanguageSwitcher() {
           onClick={() => setLocale(l)}
           className={`px-2 py-1 rounded-lg text-xs font-medium transition-all ${
             locale === l
-              ? "bg-cyan-500/20 text-cyan-600 dark:text-cyan-400"
+              ? "bg-brand/20 text-branddeep dark:text-fgaccent"
               : "text-gray-500 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5"
           }`}
           title={localeNames[l]}

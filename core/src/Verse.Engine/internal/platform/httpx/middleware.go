@@ -2,10 +2,13 @@ package httpx
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
+
+	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/jwtx"
 )
 
 type contextKey string
@@ -20,20 +23,39 @@ const UserGroupKey contextKey = "user_group"
 const TokenScopesKey contextKey = "token_scopes"
 const AppIDKey contextKey = "app_id"
 
-func Cors(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*") // For development, allow all
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
+// Cors returns a middleware that echoes the request Origin when it appears in
+// the allowed list, together with Access-Control-Allow-Credentials: true and
+// Vary: Origin. Origins outside the list receive no Allow-Origin header, so
+// browsers reject the cross-origin request. An empty allowed list (dev mode)
+// falls back to permissive "*" without credentials.
+func Cors(allowed []string) func(http.Handler) http.Handler {
+	allowSet := make(map[string]bool, len(allowed))
+	for _, o := range allowed {
+		allowSet[o] = true
+	}
+	permissive := len(allowSet) == 0
 
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			origin := r.Header.Get("Origin")
+			if permissive {
+				w.Header().Set("Access-Control-Allow-Origin", "*")
+			} else if allowSet[origin] {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				w.Header().Set("Access-Control-Allow-Credentials", "true")
+				w.Header().Add("Vary", "Origin")
+			}
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
-		next.ServeHTTP(w, r)
-	})
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 func Auth(secret string) func(http.Handler) http.Handler {
@@ -47,7 +69,10 @@ func Auth(secret string) func(http.Handler) http.Handler {
 
 			tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 			token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-				return []byte(secret), nil
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+				}
+				return jwtx.DeriveKey(secret), nil
 			})
 
 			if err == nil && token.Valid {

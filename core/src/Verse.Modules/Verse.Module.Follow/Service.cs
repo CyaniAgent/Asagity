@@ -34,11 +34,11 @@ public interface IFollowService
     IReadOnlyList<string> GetFollowingUserIds(string userId);
 }
 
-/// <summary>DI stub: every call returns 501 until the real service lands.</summary>
+/// <summary>DI stub: every call returns 503 until the real service lands.</summary>
 public sealed class NotImplementedFollowService : IFollowService
 {
     private static ModuleException Todo() =>
-        new(StatusCodes.Status501NotImplemented, "FOLLOW_NOT_IMPLEMENTED", "Follow service is not implemented yet.");
+        new(StatusCodes.Status503ServiceUnavailable, "FOLLOW_NOT_IMPLEMENTED", ".NET layer is planned but not implemented; use Go engine /api/*");
 
     public Follow FollowUser(string followerId, string followingId) => throw Todo();
     public void UnfollowUser(string followerId, string followingId) => throw Todo();

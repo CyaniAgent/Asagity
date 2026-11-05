@@ -8,7 +8,7 @@ function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean
   return (
     <button
       onClick={() => onChange(!enabled)}
-      className={`relative w-11 h-6 rounded-full transition-colors ${enabled ? "bg-cyan-500" : "bg-gray-300 dark:bg-gray-600"}`}
+      className={`relative w-11 h-6 rounded-full transition-colors ${enabled ? "bg-brand" : "bg-gray-300 dark:bg-gray-600"}`}
     >
       <span
         className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${enabled ? "translate-x-5" : ""}`}
@@ -51,7 +51,7 @@ export default function PrivacySettingsPage() {
     <div className="max-w-[700px] mx-auto p-6 space-y-8 animate-[fadeIn_0.3s_ease-out]">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-400 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand to-ok flex items-center justify-center shadow-lg shadow-brand/20">
           <Icon name="shield" className="text-white" fontSize={24} />
         </div>
         <div>
@@ -64,7 +64,7 @@ export default function PrivacySettingsPage() {
       <section className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Icon name="public" className="text-cyan-500" fontSize={18} />
+            <Icon name="public" className="text-fgaccent" fontSize={18} />
             {t("settings.defaultPostVisibility")}
           </h2>
         </div>
@@ -75,13 +75,13 @@ export default function PrivacySettingsPage() {
               onClick={() => setDefaultVisibility(opt.value)}
               className={`w-full flex items-center gap-3 p-3 rounded-2xl border-2 transition-all text-left ${
                 defaultVisibility === opt.value
-                  ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-500/10"
+                  ? "border-brand bg-brand/10"
                   : "border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700"
               }`}
             >
               <Icon
                 name={opt.icon}
-                className={defaultVisibility === opt.value ? "text-cyan-500" : "text-gray-400"}
+                className={defaultVisibility === opt.value ? "text-fgaccent" : "text-gray-400"}
                 fontSize={20}
               />
               <div className="flex-1">
@@ -89,7 +89,7 @@ export default function PrivacySettingsPage() {
                 <div className="text-xs text-gray-500 dark:text-gray-400">{opt.desc}</div>
               </div>
               {defaultVisibility === opt.value && (
-                <Icon name="check_circle" className="text-cyan-500" fontSize={20} />
+                <Icon name="check_circle" className="text-fgaccent" fontSize={20} />
               )}
             </button>
           ))}
@@ -100,7 +100,7 @@ export default function PrivacySettingsPage() {
       <section className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Icon name="group" className="text-cyan-500" fontSize={18} />
+            <Icon name="group" className="text-fgaccent" fontSize={18} />
             {t("settings.interactionPermissions")}
           </h2>
         </div>
@@ -114,7 +114,7 @@ export default function PrivacySettingsPage() {
                   onClick={() => setWhoCanFollow(opt.value)}
                   className={`flex-1 py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${
                     whoCanFollow === opt.value
-                      ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
+                      ? "border-brand bg-brand/10 text-branddeep dark:text-fgaccent"
                       : "border-gray-100 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-200 dark:hover:border-gray-700"
                   }`}
                 >
@@ -132,7 +132,7 @@ export default function PrivacySettingsPage() {
                   onClick={() => setWhoCanReply(opt.value)}
                   className={`flex-1 min-w-[80px] py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${
                     whoCanReply === opt.value
-                      ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"
+                      ? "border-brand bg-brand/10 text-branddeep dark:text-fgaccent"
                       : "border-gray-100 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-200 dark:hover:border-gray-700"
                   }`}
                 >
@@ -148,7 +148,7 @@ export default function PrivacySettingsPage() {
       <section className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Icon name="visibility" className="text-cyan-500" fontSize={18} />
+            <Icon name="visibility" className="text-fgaccent" fontSize={18} />
             {t("settings.visibilitySettings")}
           </h2>
         </div>
@@ -181,7 +181,7 @@ export default function PrivacySettingsPage() {
       <section className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Icon name="lock" className="text-cyan-500" fontSize={18} />
+            <Icon name="lock" className="text-fgaccent" fontSize={18} />
             {t("settings.accountSecurity")}
           </h2>
         </div>
@@ -216,7 +216,7 @@ export default function PrivacySettingsPage() {
       <section className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Icon name="storage" className="text-cyan-500" fontSize={18} />
+            <Icon name="storage" className="text-fgaccent" fontSize={18} />
             {t("settings.dataPrivacy")}
           </h2>
         </div>

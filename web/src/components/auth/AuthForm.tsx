@@ -99,7 +99,7 @@ export function AuthForm({ onModeSwitch, compact }: AuthFormProps) {
             onClick={() => switchMode("login")}
             className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
               mode === "login"
-                ? "bg-cyan-500/20 text-cyan-400"
+                ? "bg-brand/20 text-fgaccent"
                 : "text-gray-400 hover:text-gray-300"
             }`}
           >
@@ -109,7 +109,7 @@ export function AuthForm({ onModeSwitch, compact }: AuthFormProps) {
             onClick={() => switchMode("register")}
             className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
               mode === "register"
-                ? "bg-cyan-500/20 text-cyan-400"
+                ? "bg-brand/20 text-fgaccent"
                 : "text-gray-400 hover:text-gray-300"
             }`}
           >
@@ -142,7 +142,7 @@ export function AuthForm({ onModeSwitch, compact }: AuthFormProps) {
                 required
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand/50 transition-all"
                 placeholder="syskuku@asagity.net"
               />
             </div>
@@ -153,7 +153,7 @@ export function AuthForm({ onModeSwitch, compact }: AuthFormProps) {
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                 {t("auth.password")}
               </label>
-              <button type="button" className="text-[9px] font-bold text-cyan-500 hover:text-cyan-400">
+              <button type="button" className="text-[9px] font-bold text-fgaccent hover:text-fgaccent">
                 {t("auth.forgotKey")}
               </button>
             </div>
@@ -166,7 +166,7 @@ export function AuthForm({ onModeSwitch, compact }: AuthFormProps) {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand/50 transition-all"
                 placeholder="••••••••"
               />
             </div>
@@ -175,7 +175,7 @@ export function AuthForm({ onModeSwitch, compact }: AuthFormProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 bg-gradient-to-r from-cyan-600 to-cyan-400 hover:from-cyan-500 hover:to-cyan-300 text-gray-900 font-black tracking-wider py-3 rounded-xl shadow-[0_0_15px_rgba(57,197,187,0.3)] hover:shadow-[0_0_25px_rgba(57,197,187,0.5)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full mt-2 bg-gradient-to-r from-branddeep to-brandlight hover:from-brand hover:to-brandlight text-gray-900 font-black tracking-wider py-3 rounded-xl shadow-[0_0_15px_rgba(46,118,184,0.3)] hover:shadow-[0_0_25px_rgba(46,118,184,0.5)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>
@@ -206,7 +206,7 @@ export function AuthForm({ onModeSwitch, compact }: AuthFormProps) {
                 pattern="[A-Za-z0-9_]+"
                 value={regUsername}
                 onChange={(e) => setRegUsername(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand/50 transition-all"
                 placeholder="syskuku"
               />
             </div>
@@ -224,7 +224,7 @@ export function AuthForm({ onModeSwitch, compact }: AuthFormProps) {
                 type="email"
                 value={regEmail}
                 onChange={(e) => setRegEmail(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand/50 transition-all"
                 placeholder="syskuku@asagity.net"
               />
             </div>
@@ -246,7 +246,7 @@ export function AuthForm({ onModeSwitch, compact }: AuthFormProps) {
                   minLength={8}
                   value={regPassword}
                   onChange={(e) => setRegPassword(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand/50 transition-all"
                   placeholder="••••••••"
                 />
               </div>
@@ -266,7 +266,7 @@ export function AuthForm({ onModeSwitch, compact }: AuthFormProps) {
                   minLength={8}
                   value={regConfirmPassword}
                   onChange={(e) => setRegConfirmPassword(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand/50 transition-all"
                   placeholder="••••••••"
                 />
               </div>
@@ -276,7 +276,7 @@ export function AuthForm({ onModeSwitch, compact }: AuthFormProps) {
           <button
             type="submit"
             disabled={loading || regPassword !== regConfirmPassword}
-            className="w-full mt-2 bg-gradient-to-r from-cyan-600 to-cyan-400 hover:from-cyan-500 hover:to-cyan-300 text-gray-900 font-black tracking-wider py-3 rounded-xl shadow-[0_0_15px_rgba(57,197,187,0.3)] hover:shadow-[0_0_25px_rgba(57,197,187,0.5)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full mt-2 bg-gradient-to-r from-branddeep to-brandlight hover:from-brand hover:to-brandlight text-gray-900 font-black tracking-wider py-3 rounded-xl shadow-[0_0_15px_rgba(46,118,184,0.3)] hover:shadow-[0_0_25px_rgba(46,118,184,0.5)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>
@@ -297,7 +297,7 @@ export function AuthForm({ onModeSwitch, compact }: AuthFormProps) {
           <button
             type="button"
             onClick={() => switchMode(mode === "login" ? "register" : "login")}
-            className="text-cyan-400 font-bold hover:text-cyan-300 ml-1"
+            className="text-fgaccent font-bold hover:text-fgaccent ml-1"
           >
             {mode === "login" ? t("auth.initNewAccount") : t("auth.returnToLogin")}
           </button>

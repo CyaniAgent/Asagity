@@ -62,7 +62,7 @@ export default function PostPage() {
         <div className="flex-1 overflow-y-auto">
           {loading && (
             <div className="flex items-center justify-center py-24">
-              <Icon name="refresh" className="animate-spin text-cyan-500" fontSize={32} />
+              <Icon name="refresh" className="animate-spin text-fgaccent" fontSize={32} />
             </div>
           )}
 
@@ -77,7 +77,7 @@ export default function PostPage() {
               </p>
               <Link
                 href="/"
-                className="mt-6 px-4 py-2 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-xl text-sm font-medium hover:bg-cyan-500/20 transition-colors"
+                className="mt-6 px-4 py-2 bg-brand/10 text-branddeep dark:text-fgaccent rounded-xl text-sm font-medium hover:bg-brand/20 transition-colors"
               >
                 {t("common.backToTimeline")}
               </Link>
@@ -97,7 +97,7 @@ export default function PostPage() {
                       key={tab.value}
                       className={`whitespace-nowrap py-3 px-1 font-medium text-sm transition-colors duration-200 border-b-2 ${
                         activeTab === tab.value
-                          ? "border-cyan-500 text-cyan-600 dark:text-cyan-400"
+                          ? "border-brand text-branddeep dark:text-fgaccent"
                           : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:border-gray-300"
                       }`}
                       onClick={() => setActiveTab(tab.value)}
