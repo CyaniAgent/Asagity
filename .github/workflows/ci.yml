@@ -13,7 +13,7 @@ jobs:
     outputs:
       app-version: ${{ steps.gen.outputs.app-version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # git rev-list --count HEAD 需要完整提交历史（默认浅克隆为 1）
           fetch-depth: 0
@@ -31,8 +31,8 @@ jobs:
       run:
         working-directory: core/src/Verse.Engine
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           # 从 go.mod 读工具链要求（评审 2026.11.4 §6-2：钉 1.23 形同虚设，
           # 实际靠 GOTOOLCHAIN=auto 下载；go.mod 另有 toolchain go1.26.10）
@@ -47,8 +47,8 @@ jobs:
       run:
         working-directory: core/src/Verse.Engine
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           # 从 go.mod 读工具链要求（评审 2026.11.4 §6-2：钉 1.23 形同虚设，
           # 实际靠 GOTOOLCHAIN=auto 下载；go.mod 另有 toolchain go1.26.10）
@@ -67,8 +67,8 @@ jobs:
       run:
         working-directory: core/src/Verse.Engine
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           # 从 go.mod 读工具链要求（评审 2026.11.4 §6-2：钉 1.23 形同虚设，
           # 实际靠 GOTOOLCHAIN=auto 下载；go.mod 另有 toolchain go1.26.10）
@@ -86,8 +86,8 @@ jobs:
       run:
         working-directory: core/src/Verse.Engine
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           # 从 go.mod 读工具链要求（评审 2026.11.4 §6-2：钉 1.23 形同虚设，
           # 实际靠 GOTOOLCHAIN=auto 下载；go.mod 另有 toolchain go1.26.10）
@@ -102,13 +102,13 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
         with:
           # 对齐本地开发环境（pnpm-workspace.yaml 使用 pnpm 10+ schema，
           # pnpm 9 解析会报 "packages field missing or empty"）
           version: 12
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           # Vite 8 / vitest 4 要求 ^20.19 || >=22.12
           node-version: '22'
@@ -125,8 +125,8 @@ jobs:
       run:
         working-directory: core/src/Verse.Engine
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           # 从 go.mod 读工具链要求（评审 2026.11.4 §6-2：钉 1.23 形同虚设，
           # 实际靠 GOTOOLCHAIN=auto 下载；go.mod 另有 toolchain go1.26.10）
@@ -142,8 +142,8 @@ jobs:
       run:
         working-directory: core/src/Verse.Engine
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           # 从 go.mod 读工具链要求（评审 2026.11.4 §6-2：钉 1.23 形同虚设，
           # 实际靠 GOTOOLCHAIN=auto 下载；go.mod 另有 toolchain go1.26.10）

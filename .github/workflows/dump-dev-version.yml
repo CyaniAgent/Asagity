@@ -30,7 +30,7 @@ jobs:
     steps:
       # 完整历史是硬前提：rev-list --count HEAD 需要全部提交（浅克隆恒为 1）。
       # 显式 ref: Dev —— 无论从哪个分支手动触发，更新目标都是 Dev。
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: Dev
           fetch-depth: 0
@@ -46,7 +46,7 @@ jobs:
       # ── 轻量验证（写入前执行：失败即红，且工作区保持干净）──────────────
 
       - name: Verify Go mirror (runner.appVersion contract)
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           # 从 go.mod 读真实工具链要求（go 1.26.1），不手工钉版本
           go-version-file: core/src/Verse.Cli/go.mod
@@ -57,13 +57,13 @@ jobs:
         run: go test ./internal/runner/
 
       - name: Verify web parser (formatVersionDisplay)
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           # 对齐本地与 ci.yml：pnpm-workspace.yaml 使用 pnpm 10+ schema，
           # pnpm 9 解析会报 "packages field missing or empty"
           version: 12
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           # Vite 8 / vitest 4 要求 ^20.19 || >=22.12
           node-version: 22
