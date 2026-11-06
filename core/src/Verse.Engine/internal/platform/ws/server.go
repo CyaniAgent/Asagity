@@ -57,7 +57,7 @@ func (s *Server) Stop() {
 
 	s.mu.Lock()
 	for _, client := range s.clients {
-		client.conn.Close()
+		_ = client.conn.Close()
 	}
 	s.clients = make(map[string]*Client)
 	s.mu.Unlock()
@@ -86,7 +86,7 @@ func (s *Server) unregister(client *Client) {
 
 	if _, ok := s.clients[client.id]; ok {
 		delete(s.clients, client.id)
-		client.conn.Close()
+		_ = client.conn.Close()
 	}
 }
 

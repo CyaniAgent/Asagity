@@ -304,9 +304,19 @@ func detectComposeCommand() ([]string, error) {
 }
 
 func runComposeUp(projectRoot string, baseCommand []string) error {
+	if len(baseCommand) == 0 {
+		return errors.New("compose command is empty")
+	}
+	// 只允许 detectComposeCommand 产出的两个已知二进制，杜绝任意命令执行（gosec G204）。
+	switch baseCommand[0] {
+	case "docker", "docker-compose":
+	default:
+		return fmt.Errorf("unsupported compose command: %q", baseCommand[0])
+	}
 	args := append([]string{}, baseCommand[1:]...)
 	args = append(args, "up", "-d", "postgres", "redis")
 
+	// #nosec G204 -- executable is restricted to the allowlist above; args are fixed literals.
 	cmd := exec.Command(baseCommand[0], args...)
 	cmd.Dir = projectRoot
 	output, err := cmd.CombinedOutput()

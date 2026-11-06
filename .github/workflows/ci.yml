@@ -34,7 +34,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          # 从 go.mod 读工具链要求（评审 2026.11.4 §6-2：钉 1.23 形同虚设，
+          # 实际靠 GOTOOLCHAIN=auto 下载；go.mod 另有 toolchain go1.26.10）
+          go-version-file: core/src/Verse.Engine/go.mod
           cache-dependency-path: core/src/Verse.Engine/go.sum
       - run: go vet ./...
 
@@ -48,7 +50,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          # 从 go.mod 读工具链要求（评审 2026.11.4 §6-2：钉 1.23 形同虚设，
+          # 实际靠 GOTOOLCHAIN=auto 下载；go.mod 另有 toolchain go1.26.10）
+          go-version-file: core/src/Verse.Engine/go.mod
           cache-dependency-path: core/src/Verse.Engine/go.sum
       - run: go build ./...
 
@@ -66,10 +70,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          # 从 go.mod 读工具链要求（评审 2026.11.4 §6-2：钉 1.23 形同虚设，
+          # 实际靠 GOTOOLCHAIN=auto 下载；go.mod 另有 toolchain go1.26.10）
+          go-version-file: core/src/Verse.Engine/go.mod
           cache-dependency-path: core/src/Verse.Engine/go.sum
       - run: go mod tidy
+      # windows runner 默认 pwsh，Unix 的 VAR=1 前缀语法会直接报错
       - run: CGO_ENABLED=0 go test ./...
+        shell: bash
 
   go-test-cgo:
     name: Go test (CGO, sqlite3)
@@ -81,7 +89,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          # 从 go.mod 读工具链要求（评审 2026.11.4 §6-2：钉 1.23 形同虚设，
+          # 实际靠 GOTOOLCHAIN=auto 下载；go.mod 另有 toolchain go1.26.10）
+          go-version-file: core/src/Verse.Engine/go.mod
           cache-dependency-path: core/src/Verse.Engine/go.sum
       - run: CGO_ENABLED=1 go test ./...
 
@@ -95,10 +105,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
-          version: 9
+          # 对齐本地开发环境（pnpm-workspace.yaml 使用 pnpm 10+ schema，
+          # pnpm 9 解析会报 "packages field missing or empty"）
+          version: 12
       - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          # Vite 8 / vitest 4 要求 ^20.19 || >=22.12
+          node-version: '22'
           cache: 'pnpm'
           cache-dependency-path: web/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
@@ -115,7 +128,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          # 从 go.mod 读工具链要求（评审 2026.11.4 §6-2：钉 1.23 形同虚设，
+          # 实际靠 GOTOOLCHAIN=auto 下载；go.mod 另有 toolchain go1.26.10）
+          go-version-file: core/src/Verse.Engine/go.mod
           cache-dependency-path: core/src/Verse.Engine/go.sum
       - run: go install github.com/securego/gosec/v2/cmd/gosec@latest
       - run: gosec -exclude-dir=pkg ./...
@@ -130,7 +145,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          # 从 go.mod 读工具链要求（评审 2026.11.4 §6-2：钉 1.23 形同虚设，
+          # 实际靠 GOTOOLCHAIN=auto 下载；go.mod 另有 toolchain go1.26.10）
+          go-version-file: core/src/Verse.Engine/go.mod
           cache-dependency-path: core/src/Verse.Engine/go.sum
       - run: go install golang.org/x/vuln/cmd/govulncheck@latest
       - run: govulncheck ./...

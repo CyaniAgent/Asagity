@@ -29,5 +29,9 @@ func (h *Handler) Icon(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", contentType)
 	w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-	w.Write(data)
+	// 阻止浏览器对响应体做 MIME 嗅探改写，配合 service 侧的 image/* 白名单（gosec G705）。
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	// #nosec G705 -- Content-Type is derived from byte sniffing in the service (image/* only)
+	// and X-Content-Type-Options: nosniff blocks browser MIME sniffing.
+	_, _ = w.Write(data)
 }

@@ -51,13 +51,23 @@ var ProductionAdministrator = AccountSpec{
 
 // LiteDeveloper is the default developer account of the developing lite
 // mode. It is seeded into the local SQLite database so a fresh checkout can
-// log in immediately; the fixed password is dev-only by design.
+// log in immediately; the fixed password is dev-only by design and can be
+// overridden via ASAGITY_DEV_PASSWORD.
 var LiteDeveloper = AccountSpec{
 	Username: "Asagity-dev@asagity.example",
 	Email:    "example@example.com",
-	Password: "Asagity-dev1234",
+	Password: devBootstrapPassword(),
 	Name:     "Asagity Developer",
 	GroupID:  AdministratorGroupID,
+}
+
+// devBootstrapPassword 返回 lite 模式开发账号的引导密码：
+// 优先读环境变量 ASAGITY_DEV_PASSWORD，否则回落到文档化的开发专用口令。
+func devBootstrapPassword() string {
+	if pw := os.Getenv("ASAGITY_DEV_PASSWORD"); pw != "" {
+		return pw
+	}
+	return "Asagity-dev1234" // #nosec G101 -- documented dev-only bootstrap credential, env-overridable
 }
 
 // userGroups are the built-in permission groups of every instance.

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -98,7 +99,12 @@ func (a *App) WSServer() *ws.Server {
 }
 func (a *App) Serve(addr string) error {
 	a.mu.Lock()
-	a.httpServer = &http.Server{Addr: addr, Handler: a.mux}
+	// ReadHeaderTimeout 缺省会被 Slowloris 类慢速头部攻击拖垮（gosec G112）。
+	a.httpServer = &http.Server{
+		Addr:              addr,
+		Handler:           a.mux,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
 	a.mu.Unlock()
 
 	log.Printf("[runtime] Asagity API listening on %s", addr)

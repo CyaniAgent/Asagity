@@ -212,11 +212,11 @@ func (h *NoteHandler) SearchNotes(w http.ResponseWriter, r *http.Request) {
 
 	page := 1
 	if p := r.URL.Query().Get("page"); p != "" {
-		fmt.Sscanf(p, "%d", &page)
+		_, _ = fmt.Sscanf(p, "%d", &page)
 	}
 	limit := 20
 	if l := r.URL.Query().Get("limit"); l != "" {
-		fmt.Sscanf(l, "%d", &limit)
+		_, _ = fmt.Sscanf(l, "%d", &limit)
 	}
 	if limit > 50 {
 		limit = 50
@@ -275,11 +275,11 @@ func (h *NoteHandler) SearchNotesRegexp(w http.ResponseWriter, r *http.Request) 
 
 	page := 1
 	if p := r.URL.Query().Get("page"); p != "" {
-		fmt.Sscanf(p, "%d", &page)
+		_, _ = fmt.Sscanf(p, "%d", &page)
 	}
 	limit := 20
 	if l := r.URL.Query().Get("limit"); l != "" {
-		fmt.Sscanf(l, "%d", &limit)
+		_, _ = fmt.Sscanf(l, "%d", &limit)
 	}
 	if limit > 50 {
 		limit = 50

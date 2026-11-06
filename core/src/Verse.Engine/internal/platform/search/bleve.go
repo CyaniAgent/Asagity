@@ -68,7 +68,7 @@ type BleveEngine struct {
 
 // NewBleveEngine creates a new Bleve search engine
 func NewBleveEngine(cfg Config) (*BleveEngine, error) {
-	if err := os.MkdirAll(cfg.IndexPath, 0755); err != nil {
+	if err := os.MkdirAll(cfg.IndexPath, 0750); err != nil {
 		return nil, err
 	}
 

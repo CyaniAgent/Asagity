@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/auth/dto"
@@ -127,7 +128,8 @@ func (s *Service) RegisterWithEmail(req dto.RegisterWithEmailRequest) (*dto.Regi
 		"password_hash": string(hashedPassword),
 	}
 	regJSON, _ := json.Marshal(regData)
-	s.cache.Set(ctx, "register:"+challengeID, string(regJSON), VerificationCodeExpiry)
+	// 缓存写失败不阻断注册流程（验证通过后仍会从缓存读回），显式丢弃（gosec G104）。
+	_ = s.cache.Set(ctx, "register:"+challengeID, string(regJSON), VerificationCodeExpiry)
 
 	if s.mail.IsEnabled() {
 		if err := s.mail.SendVerificationEmail(normalizedEmail, code, "register_with_email"); err != nil {
@@ -175,7 +177,8 @@ func (s *Service) Refresh(refreshToken string) (*dto.AuthResponse, error) {
 		return nil, err
 	}
 
-	s.cache.Del(ctx, "refresh:"+refreshToken)
+	// 注销失败仅记录：刷新令牌已消费，删除缓存是尽力而为（gosec G104）。
+	_ = s.cache.Del(ctx, "refresh:"+refreshToken)
 
 	user, err := s.userRepo.GetByID(userID)
 	if err != nil {
@@ -196,7 +199,7 @@ func (s *Service) LogoutAll(userID string) error {
 	return s.cache.Scan(ctx, "refresh:*", func(key string) error {
 		val, _ := s.cache.Get(ctx, key)
 		if val == userID {
-			s.cache.Del(ctx, key)
+			_ = s.cache.Del(ctx, key)
 		}
 		return nil
 	})
@@ -304,7 +307,9 @@ func (s *Service) VerifyRegisterEmail(req dto.VerifyEmailRequest) (*dto.AuthResp
 			cooldownUntil := time.Now().Add(VerificationCooldownDuration)
 			challenge.CooldownUntil = &cooldownUntil
 		}
-		s.authRepo.UpdateEmailChallenge(challenge)
+		if err := s.authRepo.UpdateEmailChallenge(challenge); err != nil {
+			log.Printf("[auth] failed to update email challenge %s: %v", challenge.ID, err)
+		}
 		return nil, errors.New("invalid verification code")
 	}
 
@@ -319,7 +324,8 @@ func (s *Service) VerifyRegisterEmail(req dto.VerifyEmailRequest) (*dto.AuthResp
 		return nil, errors.New("invalid registration data")
 	}
 
-	s.cache.Del(ctx, "register:"+challenge.ID)
+	// 一次性注册数据删除失败仅记录（用户已创建，残留键会自然过期）（gosec G104）。
+	_ = s.cache.Del(ctx, "register:"+challenge.ID)
 
 	user := &usermodel.User{
 		ID:          generateID(),
@@ -339,7 +345,10 @@ func (s *Service) VerifyRegisterEmail(req dto.VerifyEmailRequest) (*dto.AuthResp
 	s.emitAuthEvent(event.UserRegistered, user)
 
 	challenge.VerifiedAt = &[]time.Time{time.Now()}[0]
-	s.authRepo.MarkEmailChallengeVerified(challenge.ID)
+	if err := s.authRepo.MarkEmailChallengeVerified(challenge.ID); err != nil {
+		// 标记失败不回滚：用户已创建/令牌已签发，残留 challenge 会自然过期。
+		log.Printf("[auth] failed to mark email challenge %s verified: %v", challenge.ID, err)
+	}
 
 	return s.generateAuthResponse(user)
 }
@@ -415,7 +424,9 @@ func (s *Service) VerifyLoginEmail(req dto.VerifyEmailRequest, deviceFingerprint
 			cooldownUntil := time.Now().Add(VerificationCooldownDuration)
 			challenge.CooldownUntil = &cooldownUntil
 		}
-		s.authRepo.UpdateEmailChallenge(challenge)
+		if err := s.authRepo.UpdateEmailChallenge(challenge); err != nil {
+			log.Printf("[auth] failed to update email challenge %s: %v", challenge.ID, err)
+		}
 		return nil, errors.New("invalid verification code")
 	}
 
@@ -429,7 +440,10 @@ func (s *Service) VerifyLoginEmail(req dto.VerifyEmailRequest, deviceFingerprint
 	}
 
 	challenge.VerifiedAt = &[]time.Time{time.Now()}[0]
-	s.authRepo.MarkEmailChallengeVerified(challenge.ID)
+	if err := s.authRepo.MarkEmailChallengeVerified(challenge.ID); err != nil {
+		// 标记失败不回滚：用户已创建/令牌已签发，残留 challenge 会自然过期。
+		log.Printf("[auth] failed to mark email challenge %s verified: %v", challenge.ID, err)
+	}
 
 	authResponse, err := s.generateAuthResponse(user)
 	if err != nil {

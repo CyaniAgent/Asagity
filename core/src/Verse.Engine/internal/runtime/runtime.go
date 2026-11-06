@@ -53,7 +53,13 @@ func Serve(cfg config.Config, md mode.Mode) error {
 	switch md {
 	case mode.Databaseless:
 		log.Printf("[runtime] mode=databaseless: mock API without database on %s", addr)
-		return http.ListenAndServe(addr, mock.NewServer().Router())
+		// 直接 ListenAndServe 无法设置超时（gosec G114）；显式 Server + ReadHeaderTimeout。
+		dblessSrv := &http.Server{
+			Addr:              addr,
+			Handler:           mock.NewServer().Router(),
+			ReadHeaderTimeout: 10 * time.Second,
+		}
+		return dblessSrv.ListenAndServe()
 	case mode.Lite:
 		log.Printf("[runtime] mode=lite: SQLite (%s) + memory cache on %s", cfg.SQLitePath, addr)
 		clients, err := database.OpenLite(cfg)
@@ -166,6 +172,7 @@ func runInitDatabase(initMode string) bool {
 			log.Printf("[runtime] initDatabase.ps1 not found at %s", initScript)
 			return false
 		}
+		// #nosec G204 -- script path is built from findProjectRoot() inside the repo, not user input.
 		cmd = exec.Command("powershell", "-ExecutionPolicy", "Bypass", "-File", initScript)
 	} else {
 		initScript := filepath.Join(projectRoot, "scripts", "container", "initDatabase.sh")
@@ -173,6 +180,7 @@ func runInitDatabase(initMode string) bool {
 			log.Printf("[runtime] initDatabase.sh not found at %s", initScript)
 			return false
 		}
+		// #nosec G204 -- script path is built from findProjectRoot() inside the repo, not user input.
 		cmd = exec.Command("bash", initScript)
 	}
 
@@ -191,7 +199,7 @@ func runInitDatabase(initMode string) bool {
 	resultFile := filepath.Join(projectRoot, ".initdb_result")
 	if _, err := os.Stat(resultFile); err == nil {
 		dbReady, dbHost, dbPort := parseInitResult(resultFile)
-		os.Remove(resultFile)
+		_ = os.Remove(resultFile)
 		if dbReady {
 			log.Printf("[runtime] Database verification successful (host=%s port=%s)", dbHost, dbPort)
 			return true
@@ -203,6 +211,11 @@ func runInitDatabase(initMode string) bool {
 }
 
 func parseInitResult(path string) (ready bool, host, port string) {
+	// 只接受固定文件名的结果文件，杜绝路径拼接型任意文件读取（gosec G304）。
+	if filepath.Base(path) != ".initdb_result" {
+		return false, "", ""
+	}
+	// #nosec G304 -- path is validated above: basename must be .initdb_result.
 	file, err := os.Open(path)
 	if err != nil {
 		return false, "", ""

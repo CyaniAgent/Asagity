@@ -210,7 +210,8 @@ func randString(n int) string {
 		panic(fmt.Sprintf("crypto/rand.Read failed: %v", err))
 	}
 	for i := range b {
-		b[i] = randChars[b[i]%byte(len(randChars))]
+		// b[i] 是 0-255 的无符号值；先转 int 再取模，避免 byte(len) 截断溢出（gosec G115）。
+		b[i] = randChars[int(b[i])%len(randChars)]
 	}
 	return string(b)
 }

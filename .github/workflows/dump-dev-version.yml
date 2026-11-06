@@ -59,7 +59,9 @@ jobs:
       - name: Verify web parser (formatVersionDisplay)
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          # 对齐本地与 ci.yml：pnpm-workspace.yaml 使用 pnpm 10+ schema，
+          # pnpm 9 解析会报 "packages field missing or empty"
+          version: 12
 
       - uses: actions/setup-node@v4
         with:
