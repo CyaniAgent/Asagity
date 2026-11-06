@@ -1,0 +1,142 @@
+name: Dump Dev Version
+
+# 手动触发（workflow_dispatch）· Ubuntu runner。
+#
+# 核心：把当前 Dev 分支的「真版本号」固化写入 web/package.json 的 version
+# 字段（孤儿字段 0.1.0 → {年份}.{commit总数}+{短哈希}，如 2026.193+da1b434a），
+# 格式与生成器见 docs/architecture/versioning.md §4.1 / §4.4-3（sync-version）。
+#
+# 流程：派生（scripts/version.sh，git 需完整历史）→ 轻量验证（Go 镜像
+# runner.appVersion + 前端 formatVersionDisplay 两层解析）→ 写入 + 回读
+# → 自动 commit 回 Dev（带 [skip ci]，GITHUB_TOKEN 直推）。
+#
+# 幂等：同一 HEAD 重复触发时版本不变，跳过 commit 直接绿。
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write # GITHUB_TOKEN 直推 Dev
+
+concurrency:
+  group: dump-dev-version # 串行化，避免并发触发互相推挤
+  cancel-in-progress: false
+
+jobs:
+  dump:
+    name: Dump Dev version → web/package.json
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # 完整历史是硬前提：rev-list --count HEAD 需要全部提交（浅克隆恒为 1）。
+      # 显式 ref: Dev —— 无论从哪个分支手动触发，更新目标都是 Dev。
+      - uses: actions/checkout@v4
+        with:
+          ref: Dev
+          fetch-depth: 0
+
+      - name: Derive true version
+        id: ver
+        run: |
+          V="$(bash scripts/version.sh)"
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "### 🧬 Dump Dev Version" >> "$GITHUB_STEP_SUMMARY"
+          echo "- derived: \`$V\`" >> "$GITHUB_STEP_SUMMARY"
+
+      # ── 轻量验证（写入前执行：失败即红，且工作区保持干净）──────────────
+
+      - name: Verify Go mirror (runner.appVersion contract)
+        uses: actions/setup-go@v5
+        with:
+          # 从 go.mod 读真实工具链要求（go 1.26.1），不手工钉版本
+          go-version-file: core/src/Verse.Cli/go.mod
+          cache-dependency-path: core/src/Verse.Cli/go.sum
+
+      - name: Run version_test.go
+        working-directory: core/src/Verse.Cli
+        run: go test ./internal/runner/
+
+      - name: Verify web parser (formatVersionDisplay)
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          # Vite 8 / vitest 4 要求 ^20.19 || >=22.12
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Install web dependencies
+        working-directory: web
+        run: pnpm install --frozen-lockfile
+
+      - name: Run version.test.ts
+        working-directory: web
+        run: pnpm exec vitest run src/lib/__tests__/version.test.ts
+
+      # ── 写入 + 回读 ─────────────────────────────────────────────────
+
+      - name: Write version into web/package.json
+        id: write
+        env:
+          NEW_VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          OLD="$(node -p "require('./web/package.json').version")"
+
+          node -e '
+            const fs = require("fs");
+            const file = "web/package.json";
+            const next = process.env.NEW_VERSION;
+            const pkg = JSON.parse(fs.readFileSync(file, "utf8"));
+            if (pkg.version !== next) {
+              pkg.version = next;
+              // 保持原格式（2-space + 末尾换行），只动 version 一行
+              fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + "\n");
+            }
+          '
+
+          # 回读校验：写进去的必须读得回来
+          GOT="$(node -p "require('./web/package.json').version")"
+          if [ "$GOT" != "$NEW_VERSION" ]; then
+            echo "::error::readback mismatch: wrote $NEW_VERSION, found $GOT"
+            exit 1
+          fi
+
+          # 格式护栏：version 字段之外不允许任何字节变化（防重排/缩进污染）
+          if ! git diff --quiet -- web/package.json; then
+            read -r ADDED REMOVED _ < <(git diff --numstat -- web/package.json)
+            if [ "$ADDED" != "1" ] || [ "$REMOVED" != "1" ]; then
+              echo "::error::package.json changed beyond the version line (+${ADDED}/-${REMOVED}); refusing to commit a reformatted file"
+              git diff -- web/package.json | head -n 40
+              exit 1
+            fi
+          fi
+
+          echo "- updated: \`${OLD}\` → \`${GOT}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      # ── 自动 commit 回 Dev ──────────────────────────────────────────
+
+      - name: Commit & push to Dev
+        id: push
+        env:
+          NEW_VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          if git diff --quiet -- web/package.json; then
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+            echo "- status: already up to date (same HEAD, nothing to commit)" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/package.json
+          # [skip ci] 防止 push 再次触发 CI（GITHUB_TOKEN 本身也会抑制递归，
+          # 双保险；语义上标注这是版本固化提交）
+          git commit -m "chore(version): dump Dev version ${NEW_VERSION} [skip ci]"
+          git push origin HEAD:Dev
+
+          SHA="$(git rev-parse --short HEAD)"
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+          echo "- status: committed \`${SHA}\` and pushed to Dev" >> "$GITHUB_STEP_SUMMARY"

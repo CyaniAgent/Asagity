@@ -7,6 +7,23 @@ on:
     branches: [Dev, main]
 
 jobs:
+  version:
+    name: Version (真版本号)
+    runs-on: ubuntu-latest
+    outputs:
+      app-version: ${{ steps.gen.outputs.app-version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # git rev-list --count HEAD 需要完整提交历史（默认浅克隆为 1）
+          fetch-depth: 0
+      - id: gen
+        run: |
+          V="$(scripts/version.sh)"
+          echo "app-version=$V" >> "$GITHUB_OUTPUT"
+          echo "APP_VERSION=$V" >> "$GITHUB_ENV"
+          echo "### APP_VERSION: $V" >> "$GITHUB_STEP_SUMMARY"
+
   go-vet:
     name: Go vet
     runs-on: ubuntu-latest

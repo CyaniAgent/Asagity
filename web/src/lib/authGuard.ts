@@ -14,8 +14,9 @@ import { useRouterStore } from "@/stores/router";
 import { useUserStore } from "@/stores/user";
 import { PUBLIC_PAGES, ROUTES } from "@/lib/constants";
 
-/** 需要重定向到首页的登录后页面（login/register） */
-const REDIRECT_WHEN_LOGGED_IN = [ROUTES.LOGIN, ROUTES.REGISTER];
+/** 需要重定向到首页的登录后页面（login/register）——显式放宽为 string[]，
+ *  使 includes() 接受 router store 的任意 string 路径（字面量元组会 TS2345） */
+const REDIRECT_WHEN_LOGGED_IN: string[] = [ROUTES.LOGIN, ROUTES.REGISTER];
 
 /**
  * 读取 cookie 值

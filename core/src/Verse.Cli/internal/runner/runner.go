@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Cli/internal/config"
@@ -159,6 +160,7 @@ func (r *Runner) startEngine(md mode.Mode) error {
 		"ASAGITY_MODE":     md.String(),
 		"SERVER_PORT":      r.cfg.EnginePort,
 		"LITE_SQLITE_PATH": r.cfg.LiteDBPath(),
+		"APP_VERSION":      appVersion(r.cfg.ProjectRoot),
 	}, bin, "--mode", md.String())
 	if err != nil {
 		return err
@@ -191,6 +193,38 @@ func (r *Runner) printDeveloperHint(md mode.Mode) {
 	fmt.Println()
 }
 
+// appVersion resolves the true version string injected into spawned services
+// as APP_VERSION. Priority mirrors scripts/version.sh (docs/architecture/
+// versioning.md §4.1): explicit APP_VERSION env, then the /VERSION file
+// (plan A fact source), then git-derived {UTC year}.{commit count}+{short
+// sha}, else the "dev" sentinel (frontend renders "Ver. Dev").
+func appVersion(projectRoot string) string {
+	if v := strings.TrimSpace(os.Getenv("APP_VERSION")); v != "" {
+		return v
+	}
+	if b, err := os.ReadFile(filepath.Join(projectRoot, "VERSION")); err == nil {
+		if v := strings.TrimSpace(string(b)); v != "" {
+			return v
+		}
+	}
+	count := gitLine(projectRoot, "rev-list", "--count", "HEAD")
+	sha := gitLine(projectRoot, "rev-parse", "--short=8", "HEAD")
+	if count == "" || sha == "" {
+		return "dev"
+	}
+	return fmt.Sprintf("%d.%s+%s", time.Now().UTC().Year(), count, sha)
+}
+
+// gitLine runs git in dir and returns the trimmed first line of stdout, or
+// "" when git is unavailable (source tarball, git missing, no commits).
+func gitLine(dir string, args ...string) string {
+	out, err := exec.Command("git", append([]string{"-C", dir}, args...)...).Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(out))
+}
+
 // startAPI builds Verse.Api once and runs the dll in-process
 // (never `dotnet run`: same orphan-child problem as `go run`).
 //
@@ -212,6 +246,7 @@ func (r *Runner) startAPI(md mode.Mode) error {
 	env := map[string]string{
 		"ASAGITY_MODE":   md.String(),
 		"VERSE_API_PORT": r.cfg.APIPort,
+		"APP_VERSION":    appVersion(r.cfg.ProjectRoot),
 	}
 	for k, v := range dotNetRuntimeEnv(md) {
 		env[k] = v

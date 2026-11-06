@@ -57,6 +57,9 @@ services:
       REDIS_ADDR: valkey:6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set to a strong value}
+      # 真版本号（见 docs/architecture/versioning.md §4.1）：默认 dev；
+      # 用 scripts/version.sh 的输出写入 .env 可注入 {year}.{count}+{sha}
+      APP_VERSION: ${APP_VERSION:-dev}
       DRIVE_STORAGE_PATH: /app/storage/drive
       TZ: ${TZ:-Asia/Shanghai}
     ports:
