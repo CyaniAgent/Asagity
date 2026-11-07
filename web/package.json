@@ -26,7 +26,7 @@
     "date-fns": "^4.4.0",
     "echarts": "^6.1.0",
     "echarts-for-react": "^3.0.6",
-    "framer-motion": "^12.42.2",
+    "framer-motion": "^14.9.0",
     "lrc-kit": "^1.2.1",
     "mfm-js": "^0.28.0",
     "music-metadata": "^11.13.0",
