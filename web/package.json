@@ -29,7 +29,7 @@
     "framer-motion": "^12.42.2",
     "lrc-kit": "^1.2.1",
     "mfm-js": "^0.28.0",
-    "music-metadata": "^11.13.0",
+    "music-metadata": "^12.3.4",
     "re-resizable": "^6.11.2",
     "react": "19.3.1",
     "react-dom": "19.3.1",
