@@ -112,10 +112,15 @@
 build metadata 段。历史记法 `v2026.Q4-dev.N+sha` 的解析分支保留（旧 tag
 不迁移），新旧并行。
 
-> 转换链路：`scripts/version.sh` → `APP_VERSION` → 后端
-> `/api/meta/version` 原样返回真版本号 → `formatVersionDisplay()` →
-> instance store → 欢迎面板 / SystemInfo 显示
-> `Ver. 2026 Build 193 (da1b434a)`。
+> 转换链路（前端展示，2026-11-07 换源为 package.json 单一信源）：
+> `scripts/version.sh` → CI `dump-dev-version` 回写 `web/package.json`
+> `"version"` → 前端构建期静态导入 → `parseBuildVersion()` 拆
+> `{updateYear}/{commitsTotal}/{latestCommitHash}` → `formatVersionDisplay()`
+> → instance store → 欢迎面板 / Termity `info` / SystemInfo 显示
+> `Ver. 2026 Build 193 (da1b434a)`。**前端不再 fetch 后端**
+> `/api/meta/version`（该端点仍服务机器链路：日志 / 运维 / 远程客户端）；
+> 消费路径由三条（`fetchAppVersion` / `useInstanceMeta` / Termity）收敛为
+> `initAppVersion()` 一条。
 
 ### 4.2 注入链（✅ = 2026-11-07 已实现）
 
@@ -126,7 +131,7 @@ build metadata 段。历史记法 `v2026.Q4-dev.N+sha` 的解析分支保留（�
 | CI | `version` job（`fetch-depth: 0`，commit 总数需完整历史）跑生成器 → job output + step summary，供 release/artifact 消费 | ✅ |
 | docker-compose | `APP_VERSION: ${APP_VERSION:-dev}`；`.env` 可写 `scripts/version.sh` 输出 | ✅ |
 | `.env.example` | 注释说明与可选手动覆盖示例 | ✅ |
-| web | 无需构建期注入——运行时 fetch `/api/meta/version` 后经 `formatVersionDisplay()` 转换 | ✅ |
+| web | 读取 `web/package.json` `version`（CI `dump-dev-version` 回写，构建期静态导入）→ `initAppVersion()` 经 `parseBuildVersion()`/`formatVersionDisplay()` 转换；**不再 fetch 后端**（单一信源，2026-11-07 换源） | ✅ |
 | C# | 经 spawn env `APP_VERSION`（`IConfiguration` 与裸 env 同源） | ✅ |
 | Dockerfile build-arg | `ARG APP_VERSION`（方案 A 发版镜像） | ⏳ 方案 A |
 | release tag 校验 | `VERSION` ↔ git tag ↔ README 一致（发版 checklist） | ⏳ 方案 A |
@@ -142,7 +147,8 @@ build metadata 段。历史记法 `v2026.Q4-dev.N+sha` 的解析分支保留（�
 ### 4.4 一致性小项（与主方案无关也应做）
 
 1. C# 两处读取统一为 `IConfiguration`（消掉 §2.3-4 的双机制）。
-2. 前端三处缺省值收敛为单一导出常量（如 `DEFAULT_VERSION = "Ver. Dev"`）。
+2. 前端三处缺省值收敛为单一导出常量（如 `DEFAULT_VERSION = "Ver. Dev"`）
+   ——✅ 已完成（2026-11-07，`stores/instance.ts` 导出，banner / Termity 兜底共用）。
 3. `package.json` version 由 `sync-version` 脚本同步（§4.2）。
 4. `.env.example` 补 `APP_VERSION` 说明——✅ 已完成（2026-11-07，见 §4.2）。
 

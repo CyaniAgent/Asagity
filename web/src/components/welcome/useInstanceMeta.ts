@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { fetchBackend } from "@/lib/backend";
-import { formatVersionDisplay } from "@/lib/version";
 import { useInstanceStore } from "@/stores/instance";
 
 const POLL_MS = 30000;
@@ -22,7 +21,6 @@ type InstanceMetaBody = {
   ok?: boolean;
   data?: { name?: string; alias?: string; description?: string };
 };
-type VersionBody = { data?: { version?: string }; version?: string };
 
 /* Field names the future backend may use — first hit wins. */
 const ONLINE_KEYS = ["online_count", "onlineCount", "online", "onlineUsers", "online_users"];
@@ -52,9 +50,11 @@ function pickNumberString(data: unknown, keys: string[]): string | null {
 /**
  * Instance identity hydrator + live stats poller.
  *
- * Identity — one-shot from /api/meta/instance + /api/meta/version:
+ * Identity — one-shot from /api/meta/instance:
  *   hydrates the instance store so the welcome panel (and Termity) show
  *   backend-controlled values instead of developer fallback defaults.
+ *   版本除外：单一信源 = package.json（lib/version.ts initAppVersion），
+ *   本 hook 不再写 version，杜绝多路径写入赛跑与旧后端 dev 退化。
  * Stats — polled every 30s; any missing field stays `null` so the UI can
  *   render "—" instead of fake numbers (online turns green once known).
  */
@@ -64,25 +64,17 @@ export function useInstanceMeta(): InstanceStats {
   useEffect(() => {
     let alive = true;
 
-    /* ── Identity: one-shot hydrate ── */
-    Promise.all([
-      fetchBackend("/api/meta/instance", { signal: AbortSignal.timeout(TIMEOUT_MS) })
-        .then((r) => (r.ok ? (r.json() as Promise<InstanceMetaBody>) : null))
-        .catch(() => null),
-      fetchBackend("/api/meta/version", { signal: AbortSignal.timeout(TIMEOUT_MS) })
-        .then((r) => (r.ok ? (r.json() as Promise<VersionBody>) : null))
-        .catch(() => null),
-    ]).then(([metaBody, verBody]) => {
-      if (!alive) return;
-      const meta = metaBody?.data;
-      if (meta?.name) useInstanceStore.getState().setName(meta.name);
-      if (meta?.alias) useInstanceStore.getState().setAlias(meta.alias);
-      if (meta?.description) useInstanceStore.getState().setDescription(meta.description);
-      const version = verBody?.data?.version ?? verBody?.version;
-      // 统一规范显示格式（Ver. 2026.Q4.Dev commit …）— 与 lib/version.ts 的
-      // fetchAppVersion 同源转换，消除两处写入赛跑导致的裸 tag 闪现
-      if (version) useInstanceStore.getState().setVersion(formatVersionDisplay(version));
-    });
+    /* ── Identity: one-shot hydrate（版本除外——package.json 单一信源） ── */
+    fetchBackend("/api/meta/instance", { signal: AbortSignal.timeout(TIMEOUT_MS) })
+      .then((r) => (r.ok ? (r.json() as Promise<InstanceMetaBody>) : null))
+      .catch(() => null)
+      .then((metaBody) => {
+        if (!alive) return;
+        const meta = metaBody?.data;
+        if (meta?.name) useInstanceStore.getState().setName(meta.name);
+        if (meta?.alias) useInstanceStore.getState().setAlias(meta.alias);
+        if (meta?.description) useInstanceStore.getState().setDescription(meta.description);
+      });
 
     /* ── Live stats: polled, honest nulls ── */
     const load = async () => {

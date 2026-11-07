@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useSystemStore } from "@/stores/system";
-import { useInstanceStore } from "@/stores/instance";
+import { useInstanceStore, DEFAULT_VERSION } from "@/stores/instance";
 import { useUserStore } from "@/stores/user";
 import { useFreeWindowStore } from "@/stores/freeWindow";
 import { useLocaleStore, localeNames, type Locale } from "@/stores/locale";
@@ -686,22 +686,18 @@ export function Termity({ windowId, sessionId }: { windowId?: string; sessionId?
 
         case "info": {
           addLine({ type: "output", text: `${t("termity.serverInfo")}:` });
-          // Backend first (/api/meta/instance + /api/meta/version), local store fallback.
-          Promise.all([
-            fetchBackend("/api/meta/instance", { signal: AbortSignal.timeout(5000) }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
-            fetchBackend("/api/meta/version", { signal: AbortSignal.timeout(5000) }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
-          ]).then(([metaBody, verBody]) => {
-            const meta = (metaBody as { ok: boolean; data: { name?: string; alias?: string; description?: string } } | null)?.data;
-            const ver = (verBody as { ok: boolean; data: { version?: string } } | { version?: string } | null);
-            const version = (ver as { data?: { version?: string }; version?: string } | null)?.data?.version
-              ?? (ver as { version?: string } | null)?.version
-              ?? instanceStore.version;
-            addLine({ type: "output", text: `  ${t("termity.infoName")}: ${meta?.name || instanceStore.name || "Asagity"} (backend)` });
-            addLine({ type: "output", text: `  ${t("termity.infoAlias")}: ${meta?.alias || instanceStore.alias || "asagity.io"}` });
-            addLine({ type: "output", text: `  ${t("termity.infoVersion")}: ${version || "2.0.0"}` });
-            addLine({ type: "output", text: `  ${t("termity.infoDesc")}: ${meta?.description || instanceStore.description || "Asagity"}` });
-            addLine({ type: "output", text: `  ${t("termity.infoDev")}: ${userStore.isLoggedIn ? userStore.username || t("termity.loggedIn") : t("termity.notLoggedIn")}` });
-          });
+          // Instance identity from backend；版本为 package.json 单一信源
+          // （store 已由 lib/version.ts initAppVersion 语义化，不再请求后端）。
+          fetchBackend("/api/meta/instance", { signal: AbortSignal.timeout(5000) })
+            .then((r) => (r.ok ? r.json() : null)).catch(() => null)
+            .then((metaBody) => {
+              const meta = (metaBody as { ok: boolean; data: { name?: string; alias?: string; description?: string } } | null)?.data;
+              addLine({ type: "output", text: `  ${t("termity.infoName")}: ${meta?.name || instanceStore.name || "Asagity"} (backend)` });
+              addLine({ type: "output", text: `  ${t("termity.infoAlias")}: ${meta?.alias || instanceStore.alias || "asagity.io"}` });
+              addLine({ type: "output", text: `  ${t("termity.infoVersion")}: ${instanceStore.version || DEFAULT_VERSION}` });
+              addLine({ type: "output", text: `  ${t("termity.infoDesc")}: ${meta?.description || instanceStore.description || "Asagity"}` });
+              addLine({ type: "output", text: `  ${t("termity.infoDev")}: ${userStore.isLoggedIn ? userStore.username || t("termity.loggedIn") : t("termity.notLoggedIn")}` });
+            });
           break;
         }
 

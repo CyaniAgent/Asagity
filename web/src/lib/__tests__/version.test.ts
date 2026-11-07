@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { formatVersionDisplay } from "@/lib/version";
+import { formatVersionDisplay, parseBuildVersion, initAppVersion } from "@/lib/version";
+import { useInstanceStore, DEFAULT_VERSION } from "@/stores/instance";
+import { version as PACKAGE_VERSION } from "../../../package.json";
 
 /**
  * 回归锚点：季度代号含字母（Q4），早前正则 [\d.]+ 永远匹配不上
@@ -39,5 +41,39 @@ describe("formatVersionDisplay", () => {
   it("keeps the plain dev sentinel readable", () => {
     expect(formatVersionDisplay("dev")).toBe("Ver. Dev");
     expect(formatVersionDisplay("")).toBe("Ver. Dev");
+  });
+});
+
+describe("parseBuildVersion", () => {
+  it("splits the count-based dev tag into the three semantic keys", () => {
+    expect(parseBuildVersion("2026.204+73f2b407")).toEqual({
+      updateYear: "2026",
+      commitsTotal: "204",
+      latestCommitHash: "73f2b407",
+    });
+    expect(parseBuildVersion("v2026.193+da1b434a")).toEqual({
+      updateYear: "2026",
+      commitsTotal: "193",
+      latestCommitHash: "da1b434a",
+    });
+  });
+
+  it("returns null for quarterly / legacy / sentinel tags", () => {
+    for (const tag of ["2026.Q4.1", "v2026.Q4", "2026.Q4-dev.255+1a2b3c4d", "2026.Q4-eta.1", "dev", ""]) {
+      expect(parseBuildVersion(tag)).toBeNull();
+    }
+  });
+});
+
+describe("initAppVersion (package.json 单一信源)", () => {
+  it("exposes an honest pre-mount default", () => {
+    expect(DEFAULT_VERSION).toBe("Ver. Dev");
+  });
+
+  it("hydrates the store from package.json in semantic display form", () => {
+    initAppVersion();
+    const shown = useInstanceStore.getState().version;
+    expect(shown).toMatch(/^Ver\. /); // 解释性语义化前缀
+    expect(shown).toBe(formatVersionDisplay(PACKAGE_VERSION)); // 与 package.json 真版本号同源
   });
 });

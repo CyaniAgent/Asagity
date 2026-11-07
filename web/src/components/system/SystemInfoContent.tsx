@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { version as reactVersion } from "react";
-import { useInstanceStore } from "@/stores/instance";
+import { useInstanceStore, DEFAULT_VERSION } from "@/stores/instance";
 import { useSystemStore } from "@/stores/system";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { toApiNetPath } from "@/lib/backend";
@@ -207,7 +207,7 @@ export function SystemInfoContent({ refreshKey = 0 }: SystemInfoContentProps) {
               @font-face 的 ascent-override 已把行盒钉到 cap→基线，两行紧贴不留空隙 */}
           <div className="absolute left-6 bottom-5 text-white drop-shadow-md">
             <div className="text-[26px] leading-tight font-semibold tracking-wide">
-              {version || "Ver. Dev"}
+              {version || DEFAULT_VERSION}
             </div>
             {season && (
               <div className="font-quicksand text-[14px] font-medium tracking-[0.18em] opacity-90">

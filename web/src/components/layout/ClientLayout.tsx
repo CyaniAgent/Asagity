@@ -6,7 +6,7 @@ import { ThemeInit } from "@/components/providers/ThemeInit";
 import { TermityAuthModal } from "@/components/termity/TermityAuthModal";
 import { PortalDebugger } from "@/components/portal-debugger/PortalDebugger";
 import { initAuth } from "@/lib/authGuard";
-import { fetchAppVersion } from "@/lib/version";
+import { initAppVersion } from "@/lib/version";
 import { usePathname } from "@/hooks/usePathname";
 import { allRoutes } from "@/lib/routes";
 import { RouteView } from "@/components/layout/RouteView";
@@ -51,9 +51,9 @@ export function ClientLayout() {
     initAuth();
   }, []);
 
-  // 从后端获取当前版本号
+  // package.json 版本语义化写入（构建期静态读取，零网络——versioning.md §4.1）
   useEffect(() => {
-    fetchAppVersion();
+    initAppVersion();
   }, []);
 
   return (
