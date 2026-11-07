@@ -1,4 +1,4 @@
-name: CI
+name: Vitest Build Test
 
 on:
   push:
@@ -10,18 +10,15 @@ jobs:
   version:
     name: Version (真版本号)
     runs-on: ubuntu-latest
-    outputs:
-      app-version: ${{ steps.gen.outputs.app-version }}
     steps:
       - uses: actions/checkout@v7
         with:
           # git rev-list --count HEAD 需要完整提交历史（默认浅克隆为 1）
           fetch-depth: 0
-      - id: gen
-        run: |
+      # 只保留 step summary 展示；outputs.app-version / GITHUB_ENV 的
+      # APP_VERSION 曾声明但全工作流无任何 needs/后续步骤消费（死代码）
+      - run: |
           V="$(scripts/version.sh)"
-          echo "app-version=$V" >> "$GITHUB_OUTPUT"
-          echo "APP_VERSION=$V" >> "$GITHUB_ENV"
           echo "### APP_VERSION: $V" >> "$GITHUB_STEP_SUMMARY"
 
   go-vet:
@@ -39,22 +36,6 @@ jobs:
           go-version-file: core/src/Verse.Engine/go.mod
           cache-dependency-path: core/src/Verse.Engine/go.sum
       - run: go vet ./...
-
-  go-build:
-    name: Go build
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: core/src/Verse.Engine
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
-        with:
-          # 从 go.mod 读工具链要求（评审 2026.11.4 §6-2：钉 1.23 形同虚设，
-          # 实际靠 GOTOOLCHAIN=auto 下载；go.mod 另有 toolchain go1.26.10）
-          go-version-file: core/src/Verse.Engine/go.mod
-          cache-dependency-path: core/src/Verse.Engine/go.sum
-      - run: go build ./...
 
   go-test-modernc:
     name: Go test (modernc, no CGO)
@@ -75,6 +56,9 @@ jobs:
           go-version-file: core/src/Verse.Engine/go.mod
           cache-dependency-path: core/src/Verse.Engine/go.sum
       - run: go mod tidy
+      # 漂移检查：tidy 结果必须与已提交的 go.mod/go.sum 一致，否则报错
+      # （此前缺这步，tidy 只会默默改文件，CI 永远绿）
+      - run: git diff --exit-code -- go.mod go.sum
       # windows runner 默认 pwsh，Unix 的 VAR=1 前缀语法会直接报错
       - run: CGO_ENABLED=0 go test ./...
         shell: bash
@@ -96,7 +80,7 @@ jobs:
       - run: CGO_ENABLED=1 go test ./...
 
   frontend:
-    name: Frontend build & test
+    name: Vitest Build Test
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -118,8 +102,25 @@ jobs:
       - run: pnpm build
       - run: pnpm test
 
-  gosec:
-    name: Gosec security scan
+  dotnet:
+    name: .NET build & test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: core/src
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          # 与 13 个 csproj 的 <TargetFramework>net10.0</TargetFramework> 对齐
+          dotnet-version: '10.0.x'
+      # Verse.slnx 收录全部 13 个项目（Api/Data/Shared/9 Modules/Tests）
+      - run: dotnet build Verse.slnx --nologo
+      # 复用上一步构建产物，不重复编译
+      - run: dotnet test Verse.slnx --no-build --nologo
+
+  security:
+    name: Security scan (gosec + govulncheck)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -134,20 +135,10 @@ jobs:
           cache-dependency-path: core/src/Verse.Engine/go.sum
       - run: go install github.com/securego/gosec/v2/cmd/gosec@latest
       - run: gosec -exclude-dir=pkg ./...
-
-  govulncheck:
-    name: Go vulnerability check
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: core/src/Verse.Engine
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
-        with:
-          # 从 go.mod 读工具链要求（评审 2026.11.4 §6-2：钉 1.23 形同虚设，
-          # 实际靠 GOTOOLCHAIN=auto 下载；go.mod 另有 toolchain go1.26.10）
-          go-version-file: core/src/Verse.Engine/go.mod
-          cache-dependency-path: core/src/Verse.Engine/go.sum
+      # 前面的 gosec 失败也继续跑 govulncheck，一次拿全两个信号
+      # （否则 gosec 红了要修完重跑才知道 govulncheck 状态）
+      # 用 !cancelled() 而非 always()：取消时不拖住收尾
       - run: go install golang.org/x/vuln/cmd/govulncheck@latest
+        if: ${{ !cancelled() }}
       - run: govulncheck ./...
+        if: ${{ !cancelled() }}
