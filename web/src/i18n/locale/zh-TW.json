@@ -508,7 +508,7 @@
   "splash": {
     "messageAlmost": "馬上就好...",
     "messageCoffee": "載入中，可以喝杯咖啡...",
-    "messageSms": "SMS 系統正在啟動...",
+    "messageSns": "SNS 系統正在啟動...",
     "retry": "重試"
   },
   "sysinfo": {

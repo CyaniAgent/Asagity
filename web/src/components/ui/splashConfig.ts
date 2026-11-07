@@ -9,7 +9,7 @@
  */
 export const SPLASH_MESSAGE_KEYS = [
   "splash.messageCoffee",
-  "splash.messageSms",
+  "splash.messageSns",
   "splash.messageAlmost",
 ] as const;
 

@@ -508,7 +508,7 @@
   "splash": {
     "messageAlmost": "もうすぐです...",
     "messageCoffee": "ロード中、コーヒーでもどうぞ...",
-    "messageSms": "SMSシステムを起動しています...",
+    "messageSns": "SNSシステムを起動しています...",
     "retry": "再試行"
   },
   "sysinfo": {

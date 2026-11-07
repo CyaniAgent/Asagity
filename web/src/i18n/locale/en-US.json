@@ -508,7 +508,7 @@
   "splash": {
     "messageAlmost": "Almost ready...",
     "messageCoffee": "Loading — grab a coffee...",
-    "messageSms": "SMS system is starting up...",
+    "messageSns": "SNS system is starting up...",
     "retry": "RETRY"
   },
   "sysinfo": {
