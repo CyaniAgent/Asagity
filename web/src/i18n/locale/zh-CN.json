@@ -512,10 +512,9 @@
     "retry": "重试"
   },
   "sysinfo": {
-    "contribUnit": "次贡献",
-    "contributors": "贡献者",
     "info": "Asagity 信息",
     "loading": "获取中…",
+    "memberCount": "{count} 位成员",
     "modeDev": "开发模式",
     "modeFrontendOnly": "前端独立模式",
     "modeProd": "生产模式",
@@ -525,7 +524,7 @@
     "runMode": "运行模式",
     "serverVersion": "服务端版本",
     "specialThanks": "特别鸣谢",
-    "thanksPlaceholder": "占位符 · 敬请期待"
+    "thanksPlaceholder": "正在筹备，敬请期待"
   },
   "tabs": {
     "announcements": "公告",

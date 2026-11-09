@@ -512,10 +512,9 @@
     "retry": "RETRY"
   },
   "sysinfo": {
-    "contribUnit": "contributions",
-    "contributors": "Contributors",
     "info": "Asagity Information",
     "loading": "Loading…",
+    "memberCount": "{count} members",
     "modeDev": "Development",
     "modeFrontendOnly": "Frontend-only",
     "modeProd": "Production",
@@ -525,7 +524,7 @@
     "runMode": "Run Mode",
     "serverVersion": "Server Version",
     "specialThanks": "Special Thanks",
-    "thanksPlaceholder": "Placeholder · Coming soon"
+    "thanksPlaceholder": "In the works · Coming soon"
   },
   "tabs": {
     "announcements": "Announcements",

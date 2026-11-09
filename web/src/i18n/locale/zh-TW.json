@@ -512,10 +512,9 @@
     "retry": "重試"
   },
   "sysinfo": {
-    "contribUnit": "次貢獻",
-    "contributors": "貢獻者",
     "info": "Asagity 資訊",
     "loading": "取得中…",
+    "memberCount": "{count} 位成員",
     "modeDev": "開發模式",
     "modeFrontendOnly": "前端獨立模式",
     "modeProd": "生產模式",
@@ -525,7 +524,7 @@
     "runMode": "運行模式",
     "serverVersion": "服務端版本",
     "specialThanks": "特別鳴謝",
-    "thanksPlaceholder": "佔位符 · 敬請期待"
+    "thanksPlaceholder": "正在籌備，敬請期待"
   },
   "tabs": {
     "announcements": "公告",

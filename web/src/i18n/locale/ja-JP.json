@@ -512,10 +512,9 @@
     "retry": "再試行"
   },
   "sysinfo": {
-    "contribUnit": "件",
-    "contributors": "コントリビューター",
     "info": "Asagity 情報",
     "loading": "取得中…",
+    "memberCount": "{count} 名のメンバー",
     "modeDev": "開発モード",
     "modeFrontendOnly": "フロントエンドのみ",
     "modeProd": "本番モード",
@@ -525,7 +524,7 @@
     "runMode": "実行モード",
     "serverVersion": "サーバーバージョン",
     "specialThanks": "特別謝辞",
-    "thanksPlaceholder": "プレースホルダー · 準備中"
+    "thanksPlaceholder": "準備中 · 近日公開"
   },
   "tabs": {
     "announcements": "お知らせ",

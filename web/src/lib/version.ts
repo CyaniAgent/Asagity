@@ -105,3 +105,11 @@ export function formatVersionDisplay(tag: string): string {
 export function initAppVersion(): void {
   useInstanceStore.getState().setVersion(formatVersionDisplay(PACKAGE_VERSION));
 }
+
+/**
+ * package.json 真版本号的三键值拆解（不可解析时 null）。
+ * 供展示层取用——如系统信息 Banner 的巨型 Build 数字（数据即装饰）。
+ */
+export function getBuildVersion(): BuildVersion | null {
+  return parseBuildVersion(PACKAGE_VERSION);
+}
