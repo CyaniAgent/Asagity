@@ -1,5 +1,11 @@
 # Asagity Design System
 
+> ⚠️ **部分废除（2026-11-09）**：本文为 2026-07-13 历史存档。与新规范
+> [`design-standard.md`](./design-standard.md)（v2「中性基准」）冲突的条目以新规范为准，
+> 具体包括：**§5 Shadows & Glows 的 Glow 行、§8 Button Primary 渐变行、
+> §1 中 "glows / Decorative sparkles" 用途**——已废除（禁发光、禁渐变、
+> 主操作改中性 inverted 实底）。季节色值以 [`design-tokens.md`](./design-tokens.md) 为准。
+
 > 2D/3D 混合级视觉规范 — "A glacier-tinted decentralized social universe"
 > 🧊 **2026.Q4 赛季「Yukinoshita Glacier」**：完整 token 规范见 [`design-tokens.md`](./design-tokens.md)；
 > 本文档的青绿数值段落为 Miku 时代存档，以 Glacier 语义 token 为准。
