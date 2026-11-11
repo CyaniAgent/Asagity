@@ -14,9 +14,12 @@ export interface WelcomeMenuItemConfig {
   /** i18n key, e.g. "welcome.browseTimeline" */
   labelKey: string;
   action: WelcomeMenuAction;
-  /** kept visible but disabled with "in development" badge (Q3) */
+  /**
+   * Kept visible but disabled (Q3). The disabled state itself (opacity +
+   * cursor-not-allowed + aria-disabled) carries "in development" — no badge
+   * (design rule 4: decorative badges are redundant).
+   */
   comingSoon?: boolean;
-  badgeKey?: string;
   small?: boolean;
   children?: WelcomeMenuItemConfig[];
 }
@@ -39,8 +42,6 @@ export interface WelcomeStatusItemConfig {
   source: WelcomeStatusSource;
 }
 
-export const DEFAULT_DEV_BADGE_KEY = "header.inDevelopment";
-
 export const DEFAULT_MENU_GROUPS: WelcomeMenuGroupConfig[] = [
   {
     id: "quick",
@@ -52,7 +53,6 @@ export const DEFAULT_MENU_GROUPS: WelcomeMenuGroupConfig[] = [
         labelKey: "announcement.announcements",
         action: { kind: "none" },
         comingSoon: true,
-        badgeKey: DEFAULT_DEV_BADGE_KEY,
       },
     ],
   },
@@ -78,7 +78,6 @@ export const DEFAULT_MENU_GROUPS: WelcomeMenuGroupConfig[] = [
         labelKey: "welcome.federation",
         action: { kind: "none" },
         comingSoon: true,
-        badgeKey: DEFAULT_DEV_BADGE_KEY,
       },
       {
         id: "dashboard",
@@ -86,7 +85,6 @@ export const DEFAULT_MENU_GROUPS: WelcomeMenuGroupConfig[] = [
         labelKey: "welcome.dataDashboard",
         action: { kind: "none" },
         comingSoon: true,
-        badgeKey: DEFAULT_DEV_BADGE_KEY,
       },
       {
         id: "adpool",
@@ -94,15 +92,13 @@ export const DEFAULT_MENU_GROUPS: WelcomeMenuGroupConfig[] = [
         labelKey: "welcome.adPool",
         action: { kind: "none" },
         comingSoon: true,
-        badgeKey: DEFAULT_DEV_BADGE_KEY,
       },
       {
         id: "contact",
-        icon: "mail_inbox",
+        icon: "inbox",
         labelKey: "welcome.contactUs",
         action: { kind: "none" },
         comingSoon: true,
-        badgeKey: DEFAULT_DEV_BADGE_KEY,
       },
     ],
   },
@@ -128,7 +124,6 @@ export const DEFAULT_MENU_GROUPS: WelcomeMenuGroupConfig[] = [
             labelKey: "welcome.verseNET",
             action: { kind: "none" },
             comingSoon: true,
-            badgeKey: DEFAULT_DEV_BADGE_KEY,
             small: true,
           },
         ],

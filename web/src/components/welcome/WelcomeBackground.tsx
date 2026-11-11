@@ -15,8 +15,8 @@ export interface FocalPoint {
 export interface WelcomeBackgroundProps {
   /** Background image path (relative to public/ or absolute URL) */
   src?: string;
-  /** Fallback gradient if image fails to load */
-  fallbackGradient?: string;
+  /** Flat fallback color behind the image (neutral token — no gradients, rule 1) */
+  fallbackColor?: string;
   /** CSS object-position for crop focus, e.g. "center top" or "50% 30%" */
   objectPosition?: string;
   /** Focal point 0–100 — wins over objectPosition when provided. */
@@ -36,8 +36,8 @@ export interface WelcomeBackgroundProps {
 
 const DEFAULT_BG = "/images/background/default.jpg";
 
-const DEFAULT_GRADIENT =
-  "linear-gradient(135deg, #0a0a1a 0%, #0f1b2d 30%, #0a1628 60%, #0d0d1a 100%)";
+/** 中性底色令牌（明暗随 light-dark 自动）—— 替代旧硬编码渐变（铁律 1：禁渐变） */
+const DEFAULT_FALLBACK = "var(--color-background-body)";
 
 function clamp(n: number, min = 0, max = 100): number {
   return Math.min(max, Math.max(min, n));
@@ -45,7 +45,7 @@ function clamp(n: number, min = 0, max = 100): number {
 
 export function WelcomeBackground({
   src = DEFAULT_BG,
-  fallbackGradient = DEFAULT_GRADIENT,
+  fallbackColor = DEFAULT_FALLBACK,
   objectPosition = "center",
   focalPoint,
   fit = "cover",
@@ -91,11 +91,11 @@ export function WelcomeBackground({
   const position = resolved ? `${resolved.x}% ${resolved.y}%` : legacyPosition;
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#0a0a0f] text-white font-sans">
-      {/* Layer 0: Fallback gradient (always behind) */}
+    <div className="relative w-screen h-screen overflow-hidden bg-plate font-sans">
+      {/* Layer 0: neutral fallback color (always behind — flat, no gradient) */}
       <div
         className="absolute inset-0 z-0"
-        style={{ background: fallbackGradient }}
+        style={{ background: fallbackColor }}
       />
 
       {/* Layer 1: background image(s) */}

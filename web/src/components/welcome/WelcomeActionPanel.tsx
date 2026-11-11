@@ -1,7 +1,6 @@
 "use client";
 
 import { Fragment, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
-import { Button } from "@astryxdesign/core/Button";
 import { IconButton } from "@astryxdesign/core/IconButton";
 import { useInstanceStore } from "@/stores/instance";
 import { useWelcomeStore } from "@/stores/welcome";
@@ -31,7 +30,7 @@ function StatCell({ value, label, tone }: { value: string; label: string; tone: 
       <div className={`text-xl font-bold tabular-nums leading-none truncate transition-colors ${color}`}>
         {value}
       </div>
-      <div className="mt-1.5 text-[10px] font-medium tracking-wide text-fgdim">{label}</div>
+      <div className="mt-1 text-[10px] font-medium tracking-wide text-fgdim">{label}</div>
     </div>
   );
 }
@@ -44,7 +43,8 @@ function StatCell({ value, label, tone }: { value: string; label: string; tone: 
  * Z1 身份区    logo + 实例名 + alias · 版本 + 右上更多菜单（原生手搓，菜单已令牌化）
  * Z2 状态区    实时状态芯片并入面板（count 类已上浮 Z0，此处只留 heartbeat 类）
  * Z3 入口区    时间线（当前唯一真实可跳的窗口）提为显性入口行
- * Z4 CTA 区    加入实例(primary) / 已有账户登录(secondary)
+ * Z4 CTA 区    加入实例(inverted 主操作) / 已有账户登录(neutral 次操作)
+ *              —— 一屏一个 inverted 实底，禁 glow/渐变（design-standard §1）
  *
  * 「更多」菜单（原样保形 + 令牌化 + 无障碍基线）：
  *   - 锚点在外层 stack 容器：菜单从数据条上沿之外弹出，不再自噬数据条；
@@ -193,7 +193,7 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
             role="menuitem"
             aria-expanded={open}
             onClick={() => item.id === "developer-group" && setDevOpen((v) => !v)}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium
+            className={`w-full flex items-center gap-3 px-4 py-3 text-[13px] font-medium
               transition-colors focus:outline-none focus-visible:bg-fg/10 hover:bg-fg/5
               ${itemCls}`}
           >
@@ -221,7 +221,6 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
         itemCls={cls}
         small={small}
         comingSoon={item.comingSoon}
-        comingSoonLabel={item.badgeKey ? t(item.badgeKey) : undefined}
         onClick={() => dispatch(item.action)}
       />
     );
@@ -242,7 +241,7 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
     status === "green" ? "bg-ok" : status === "red" ? "bg-bad" : "bg-fgdim";
 
   return (
-    <div ref={stackRef} className="relative w-[360px] max-w-[calc(100vw-3rem)] flex flex-col gap-2.5">
+    <div ref={stackRef} className="relative w-[360px] max-w-[calc(100vw-3rem)] flex flex-col gap-4">
       {/* ── Z0 三大数据条：用户总数 / 帖子总数 / 在线人数 ── */}
       <div
         className="flex items-stretch rounded-3xl bg-sheet/95 border border-line
@@ -261,18 +260,18 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
       </div>
 
       {/* ── 面板本体 ── */}
-      <div className="relative w-full flex flex-col gap-3.5 rounded-3xl p-5 bg-sheet/95 border border-line backdrop-blur-glassheavy shadow-2xl">
+      <div className="relative w-full flex flex-col gap-3 rounded-3xl p-5 bg-sheet/95 border border-line backdrop-blur-glassheavy shadow-2xl">
         {/* ── Z1 身份区 + 更多触发钮 ── */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-11 h-11 rounded-xl bg-fg/5 border border-line p-1.5 shrink-0">
+            <div className="w-11 h-11 rounded-lg bg-fg/5 border border-line p-1 shrink-0">
               <img src={instanceStore.logoURL} alt={instanceStore.name} className="w-full h-full object-contain" />
             </div>
             <div className="min-w-0">
               <h1 className="text-base font-bold truncate leading-tight text-fg">
                 {instanceStore.name}
               </h1>
-              <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
+              <div className="flex items-center gap-1 mt-1 min-w-0">
                 <span className="text-[11px] font-medium text-fgaccent truncate">
                   {instanceStore.alias}
                 </span>
@@ -312,7 +311,7 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
           {chipItems.map((item) => (
             <div
               key={item.label}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 ${chipTone(item.status)}`}
+              className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 ${chipTone(item.status)}`}
             >
               <span className="relative flex h-1.5 w-1.5 shrink-0">
                 {item.status === "green" && (
@@ -332,12 +331,13 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
 
         {/* ── Z3 入口区：时间线（唯一真实可跳入口）── */}
         <button
+          type="button"
           onClick={() => dispatch({ kind: "window", viewType: "welcome_timeline" })}
-          className="group flex items-center gap-3 w-full rounded-xl px-3 py-2.5 text-[13px] font-medium
-            text-fg hover:bg-fg/5 active:scale-[0.99] transition-all"
+          className="group flex items-center gap-3 w-full rounded-lg px-4 py-3 text-[13px] font-medium
+            text-fg hover:bg-fg/5 active:scale-[0.99] transition-all focus:outline-none focus-visible:bg-fg/10"
         >
           <span className="h-7 w-7 rounded-lg bg-brand/10 text-fgaccent flex items-center justify-center shrink-0">
-            <Icon name="timeline_20_filled" fontSize={16} />
+            <Icon name="history" fontSize={16} />
           </span>
           <span className="flex-1 text-left">{t("welcome.browseTimeline")}</span>
           <Icon
@@ -347,25 +347,30 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
           />
         </button>
 
-        {/* ── Z4 CTA ── */}
-        <div className="flex flex-col gap-2.5">
-          <Button
-            variant="primary"
-            size="lg"
-            width="100%"
-            label={t("welcome.joinInstance")}
-            icon={<Icon name="arrow_right_16" fontSize={16} />}
+        {/* ── Z4 CTA：一屏一个 inverted 主操作 + neutral 次操作，左对齐，无 glow ── */}
+        <div className="flex flex-col gap-2">
+          <button
+            type="button"
             onClick={handleJoin}
-            className="glow-accent glow-accent-hover"
-          />
-          <Button
-            variant="secondary"
-            size="md"
-            width="100%"
-            label={t("welcome.loginExisting")}
-            icon={<Icon name="arrow_enter_16" fontSize={16} />}
+            className="w-full h-11 flex items-center justify-start gap-3 rounded-lg px-4
+              bg-invert text-plate text-[13px] font-semibold
+              transition-colors hover:opacity-90
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-fgaccent"
+          >
+            <Icon name="arrow_right_16" fontSize={16} />
+            <span>{t("welcome.joinInstance")}</span>
+          </button>
+          <button
+            type="button"
             onClick={handleLogin}
-          />
+            className="w-full h-10 flex items-center justify-start gap-3 rounded-lg px-4
+              bg-fg/5 border border-line text-fg text-[13px] font-medium
+              transition-colors hover:bg-fg/10
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-fgaccent"
+          >
+            <Icon name="arrow_enter_16" fontSize={16} />
+            <span>{t("welcome.loginExisting")}</span>
+          </button>
         </div>
       </div>
 
@@ -374,14 +379,14 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
         <div
           id="welcome-more-menu"
           role="menu"
-          className={`menu-pop absolute bottom-full right-0 mb-2.5 w-56 max-h-[70vh] overflow-y-auto
-            overscroll-contain rounded-2xl py-1.5 z-50 backdrop-blur-xl
+          className={`menu-pop absolute bottom-full right-0 mb-2 w-56 max-h-[70vh] overflow-y-auto
+            overscroll-contain rounded-2xl py-1 z-50 backdrop-blur-xl
             bg-popover/95 border border-line text-fg shadow-2xl`}
           onKeyDown={handleMenuKeys}
         >
           {menuGroups.map((group, gi) => (
             <Fragment key={group.id}>
-              {gi > 0 && <div aria-hidden className="my-1.5 mx-3 h-px bg-line" />}
+              {gi > 0 && <div aria-hidden className="my-1 mx-3 h-px bg-line" />}
               {group.items.map((item) => renderItem(item))}
             </Fragment>
           ))}
