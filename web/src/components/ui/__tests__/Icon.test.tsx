@@ -26,10 +26,4 @@ describe("Icon", () => {
     const svg = document.querySelector("svg");
     expect(svg).toBeInTheDocument();
   });
-
-  it("uses filled variant when filled prop is true", () => {
-    render(<Icon name="home" filled />);
-    const svg = document.querySelector("svg");
-    expect(svg).toBeInTheDocument();
-  });
 });

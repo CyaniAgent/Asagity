@@ -87,31 +87,25 @@ import {
 } from "lucide-react";
 
 /**
- * Semantic icon registry (§7 of docs/design-standard.md).
+ * Semantic icon registry (docs/design-standard.md §4.2 / §7).
  *
- * Library: lucide-react (stroke/linear only — no filled variants exist, which
- * is exactly what design rule 4 requires). Keys are semantic names consumed by
- * 372 call sites across the app and MUST NOT change; only the artwork behind
- * them is swappable (Fluent → Lucide, 2026-11-09).
+ * Library: lucide-react — stroke/linear only; no filled variants exist, so
+ * design rule 4 ("one linear set") is structurally satisfied. Keys are
+ * semantic names consumed by 372 call sites and MUST NOT change; only the
+ * artwork behind them is swappable (Fluent → Lucide, S1 2026-11-09).
  *
- * `*_filled` keys and the `filled` prop remain as a compatibility shim until
- * S2 removes them; they resolve to the same linear artwork.
+ * S2 (2026-11-09): filled path removed — the `filled` prop, all `*_filled`
+ * keys, and the baseName fallback are gone. Unknown names still fall back
+ * to `tag` (loud in tests, silent in prod).
  */
 const iconMap: Record<string, LucideIcon> = {
   home: Home,
-  home_filled: Home,
   tag: Tag,
-  tag_filled: Tag,
   cloud: Cloud,
-  cloud_filled: Cloud,
   chat: MessageCircle,
-  chat_filled: MessageCircle,
   campaign: Megaphone,
-  campaign_filled: Megaphone,
   group: Users,
-  group_filled: Users,
   settings: Settings,
-  settings_filled: Settings,
   more_horiz: MoreHorizontal,
   close: X,
   send: Send,
@@ -122,7 +116,6 @@ const iconMap: Record<string, LucideIcon> = {
   open_in_new: SquareArrowOutUpRight,
   window_arrow_up: SquareArrowUp,
   person: User,
-  person_filled: User,
   article: FileText,
   music_note: Music,
   notifications: Bell,
@@ -174,7 +167,6 @@ const iconMap: Record<string, LucideIcon> = {
   military_tech: Award,
   help_outline: CircleHelp,
   terminal: Terminal,
-  window_dev_tools_filled: Terminal,
   check_circle: CircleCheck,
   text_list: List,
   weather_drizzle: CloudDrizzle,
@@ -194,24 +186,18 @@ const iconMap: Record<string, LucideIcon> = {
   view: Eye,
   arrow_right_16: ArrowRight,
   arrow_enter_16: LogIn,
-  earth_16_filled: Globe,
-  timeline_20_filled: History,
-  server_link_20_filled: Server,
-  chart_multiple_16_filled: ChartColumn,
+  chart_multiple: ChartColumn,
   clock_alarm: AlarmClock,
 };
 
 interface IconProps {
   name: string;
   className?: string;
-  filled?: boolean;
   fontSize?: number | string;
 }
 
-export const Icon = memo(function Icon({ name, className = "", filled = false, fontSize }: IconProps) {
-  const baseName = name.replace("_filled", "");
-  const key = filled ? `${baseName}_filled` : name;
-  const IconComponent = iconMap[key] || iconMap[baseName] || iconMap["tag"];
+export const Icon = memo(function Icon({ name, className = "", fontSize }: IconProps) {
+  const IconComponent = iconMap[name] || iconMap["tag"];
 
   return (
     <IconComponent

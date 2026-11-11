@@ -22,7 +22,7 @@ const TYPE_STYLE: Record<NotificationType, { icon: string; tint: string }> = {
   quote: { icon: "comment", tint: "text-indigo-500 bg-indigo-500/10" },
   reaction: { icon: "star", tint: "text-amber-500 bg-amber-500/10" },
   follow: { icon: "person_add", tint: "text-blue-500 bg-blue-500/10" },
-  poll: { icon: "chart_multiple_16_filled", tint: "text-purple-500 bg-purple-500/10" },
+  poll: { icon: "chart_multiple", tint: "text-purple-500 bg-purple-500/10" },
   tip: { icon: "military_tech", tint: "text-orange-500 bg-orange-500/10" },
   system: { icon: "info", tint: "text-gray-500 bg-gray-500/10" },
 };
