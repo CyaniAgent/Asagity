@@ -204,6 +204,9 @@ WelcomeActionPanel / WelcomeMenuItem / WelcomeStatusBar / welcomeConfig）。
 
 ## 6. 设计改进清单（欢迎页）
 
+> **执行状态（2026-11-09）**：P0 1–3 ✅ / P1 4–7 ✅ / P2 8–9 ✅ 全部落地；
+> P2-10（欢迎页外 glow-accent 5 处 + DESIGN.md 对齐）另行排期。
+
 ### P0 — 正确性 / 违反铁律
 1. `welcomeConfig.ts:101` `mail_inbox` → `inbox`（现为静默错误图标）。
 2. 主 CTA 去发光去渐变：删 `glow-accent glow-accent-hover`
@@ -281,8 +284,8 @@ Astryx 内部图标全是 30 个兜底。
 | 步骤 | 内容 | 验证 |
 | --- | --- | --- |
 | **S1 换库** ✅ | `pnpm add lucide-react`；重写 `src/components/ui/Icon.tsx` 的 `iconMap`（101 条映射，**`name` 键全部不动** → 372 处调用零改动）；逐名核对语义 | `tsc --noEmit` + `vitest run` + `vite build` |
-| **S2 清 filled** | 删 13 个 `*_filled` 白名单条目与 `filled` 属性通路；`Icon.tsx:217` 缺名回退问题一并复核（`mail_inbox` → `inbox` 即原 P0-1） | 同上 + 全仓 `grep` 无 `filled` 残留 |
-| **S3 接管注册表** | 应用入口 `registerIcons(...)` 用 Lucide 覆盖 Astryx 30 个语义名兜底，终结 `Link` 外链等处的双风格；Astryx 组件 `icon` prop 直接传 Lucide 组件 | Playwright 全页截图回归（浅/深），确认同屏单一线性语言 |
+| **S2 清 filled** ✅ | 删 13 个 `*_filled` 白名单条目与 `filled` 属性通路；`Icon.tsx:217` 缺名回退问题一并复核（`mail_inbox` → `inbox` 即原 P0-1） | 同上 + 全仓 `grep` 无 `filled` 残留 |
+| **S3 接管注册表** ✅ | 主题 `defineTheme({ icons })` 用 Lucide 覆盖 Astryx 30 个语义名兜底（Astryx 官方推荐路径，global `registerIcons` 会 dev 告警，故不采用）；Astryx 组件 `icon` prop 本就直传 Lucide 组件 | `tsc` + `vitest`（含 30 键覆盖与 built 产物管线测试）+ `vite build` + Playwright 截图回归（浅/深） |
 
 **S1 执行记录（2026-11-09 完成）**：
 - `lucide-react@1.70.0` 提为直接依赖；`@fluentui/react-icons` 已移除，全仓零残留。
@@ -291,6 +294,40 @@ Astryx 内部图标全是 30 个兜底。
 - Playwright 截图回归 5 张（欢迎明/暗、更多菜单明/暗、登录明）：图标全部线性渲染、明暗双面正常、
   无渲染/控制台异常（仅预期的 backend offline 502）；截图存 `/tmp/opencode/icon-qa/`。
 - 附带达成：`timeline_20_filled` 现解析为线性 `History`（原 P0-3 视觉已修，config 改名可并入 P0）。
+
+**S2 执行记录（2026-11-09 完成，与欢迎页 P0/P1/P2 同批）**：
+- `Icon.tsx`：删 13 个 `*_filled` key、`filled` prop、baseName fallback——回退收敛为
+  `iconMap[name] || iconMap["tag"]`；S1 的兼容垫片使命完成。key 总数 101 → 88。
+- 改名：`mail_inbox` → `inbox`（P0-1，原解析为错误图标）、`timeline_20_filled` → `history`（P0-3）、
+  `chart_multiple_16_filled` → `chart_multiple`（`NotificationCenter` 同步）。
+- 欢迎页 P0/P1/P2 同批落地：CTA 换原生 inverted/neutral 实底（去 glow、左对齐、一屏一主）、
+  间距/圆角全归档位（栈 gap-4 / 面板 gap-3 / CTA gap-2 / 圆角 4-8-16-24）、
+  `badgeKey` 通路与 pill 徽章删除（禁用态保留）、`WelcomeBackground` fallback 渐变 → `background-body` 纯色、
+  `WelcomeStatusBar` 死组件删除（hook 保留）。
+- 验证全绿：`tsc --noEmit` **0 错误**、`vitest` **64/64**（−1 删除的 filled 用例）、`vite build` ✓ 1.39s；
+  全仓 grep `_filled` / `filled=` / `badgeKey` / 违规间距均为 0 残留。
+- Playwright 截图回归 5 张（欢迎明/暗、菜单明/暗、登录明）：CTA inverted 明=深底白字 / 暗=白底深字、
+  徽章消失、菜单"联系我们"显示正确 Inbox、非 502 控制台错误 0；截图存 `/tmp/opencode/icon-qa/`。
+
+**S3 执行记录（2026-11-11 完成）**：
+- 落点改为**主题级**：`src/theme/yukinoshita-glacier/icons.ts` 导出 `yukinoshitaGlacierIcons`
+  （30 键 = Astryx `defaultIcons` 全集：29 个 `IconName` + `numberInput:stepperDown` 扩展键），
+  主题源 `defineTheme({ icons })` 引用。原计划的应用入口 `registerIcons` 实测触发 Astryx dev 告警
+  （"Prefer defineTheme({ icons })"），上游明确推荐主题级——且换季换主题时图标随主题一并交接。
+- CLI 构建管线三个坑（均已解决并写入主题源注释）：
+  1. theme 构建的 jiti 加载器不认 `@/` 别名 → 图标模块用相对路径 `./icons` 导入；
+  2. jiti 经典 JSX 转译报 `React is not defined` → 注册表用 `createElement` 而非 JSX；
+  3. built `.js` 落在 `dist/` 而 `./icons` 按源目录解析 → 构建必须带
+     `--icons-specifier '../icons'`（已烘入 `package.json` 的 `theme:build` script）。
+- 测试（`src/theme/yukinoshita-glacier/__tests__/icons.test.tsx`，3 用例）：30 键全覆盖、
+  **直接消费 built dist 产物**断言 `getIcon(key, theme)` 命中注册表（锁住构建管线不回退）、
+  glyph 渲染为 1em/aria-hidden 的 Lucide svg。
+- 验证全绿：`tsc --noEmit` **0 错误**、`vitest` **67/67**、`vite build` ✓ 3.06s、
+  `pnpm theme:build` ✓（126 token overrides，产物 `import ... from "../icons"` + `icons:` 挂载正确）。
+- Playwright 回归 5 张（明暗欢迎页/菜单 + 登录）：**icon 相关 console.warn = 0**（registerIcons 告警消失）、
+  欢迎页 4 张与 S3 前指纹完全一致（像素级零回归）、非 502 错误仅预期 backend offline ×3；2001 已清理。
+- 现状盘点：Astryx 注册表现存消费方（Chat/Avatar/MoreMenu/Collapsible/Link 外链）当前均未在应用中
+  渲染——接管属**结构性防御**：未来任何 Astryx 组件接入即自动获得 Lucide artwork，无双风格窗口期。
 
 - **顺序**：S1 → S2 → S3，每步独立提交、独立验证；S1 与欢迎页 P0 清单
   （`mail_inbox`、CTA、`timeline_20_filled`）可并行，互不阻塞。
