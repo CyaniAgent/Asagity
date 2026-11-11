@@ -9,13 +9,21 @@
  *
  * 构建: pnpm exec astryx theme build src/theme/yukinoshita-glacier/yukinoshita-glacier.ts
  * 生成 yukinoshita-glacier.css/.js/.d.ts 后由 main.tsx 载入 CSS。
+ * ⚠️ 必须带 --icons-specifier '../icons'（已烘入 package.json theme:build）：
+ *   built .js 落在 dist/，而图标注册表 import（./icons）按主题源目录解析，
+ *   不覆盖会产出 dist/icons 断链。CI 可用 --check 验产物无漂移。
  * 色板候选: glacier.palette.ts（astryx-oklch-v1 生成，勿手改 — 改 seeds 重跑 palette.config.json）
  */
 import { defineTheme } from "@astryxdesign/core/theme";
 import { palette, black, white } from "./glacier.palette";
+import { yukinoshitaGlacierIcons } from "./icons";
 
 export const yukinoshitaGlacierTheme = defineTheme({
   name: "yukinoshita-glacier",
+
+  /* 图标接管：Astryx 内置 30 语义名 → Lucide（design-standard.md §7 S3）。
+   * 主题级覆盖 = Astryx 官方推荐路径（global registerIcons 会 dev 告警）。 */
+  icons: yukinoshitaGlacierIcons,
 
   typography: {
     scale: { base: 14, ratio: 1.2 },

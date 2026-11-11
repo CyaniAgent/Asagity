@@ -5,6 +5,10 @@ import "./theme/yukinoshita-glacier/dist/yukinoshita-glacier.css";
 import "@astryxdesign/core/astryx.css";
 import { App } from "./App";
 
+// S3 图标接管（docs/design-standard.md §7）在主题层完成：
+// yukinoshita-glacier 主题 defineTheme({ icons }) 覆盖 Astryx 内置 30 个
+// 语义名兜底 → Lucide，随主题载入，无需入口注册。
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />
