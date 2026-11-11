@@ -2,6 +2,10 @@ module github.com/CyaniAgent/Asagity/core/src/Verse.Cli
 
 go 1.26.1
 
+// 与 Verse.Engine 对齐的工具链下限（govulncheck/gosec 之外，dump-dev-version
+// workflow 用 go-version-file 读本文件）：go1.26.11 修 net/http GO-2026-6859。
+toolchain go1.26.11
+
 require (
 	charm.land/bubbles/v2 v2.2.1
 	charm.land/bubbletea/v2 v2.1.1

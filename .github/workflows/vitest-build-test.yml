@@ -31,8 +31,9 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
-          # 从 go.mod 读工具链要求（评审 2026.11.4 §6-2：钉 1.23 形同虚设，
-          # 实际靠 GOTOOLCHAIN=auto 下载；go.mod 另有 toolchain go1.26.10）
+          # setup-go@v7 优先读 go.mod 的 toolchain 行（go1.26.11）直接安装，
+          # 无 toolchain 行才回退 go 行（评审 2026.11.4 §6-2：不手工钉版本，
+          # 漏洞修复靠抬高 toolchain 行；GOTOOLCHAIN=auto 兜底）
           go-version-file: core/src/Verse.Engine/go.mod
           cache-dependency-path: core/src/Verse.Engine/go.sum
       - run: go vet ./...
@@ -51,8 +52,9 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
-          # 从 go.mod 读工具链要求（评审 2026.11.4 §6-2：钉 1.23 形同虚设，
-          # 实际靠 GOTOOLCHAIN=auto 下载；go.mod 另有 toolchain go1.26.10）
+          # setup-go@v7 优先读 go.mod 的 toolchain 行（go1.26.11）直接安装，
+          # 无 toolchain 行才回退 go 行（评审 2026.11.4 §6-2：不手工钉版本，
+          # 漏洞修复靠抬高 toolchain 行；GOTOOLCHAIN=auto 兜底）
           go-version-file: core/src/Verse.Engine/go.mod
           cache-dependency-path: core/src/Verse.Engine/go.sum
       - run: go mod tidy
@@ -73,8 +75,9 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
-          # 从 go.mod 读工具链要求（评审 2026.11.4 §6-2：钉 1.23 形同虚设，
-          # 实际靠 GOTOOLCHAIN=auto 下载；go.mod 另有 toolchain go1.26.10）
+          # setup-go@v7 优先读 go.mod 的 toolchain 行（go1.26.11）直接安装，
+          # 无 toolchain 行才回退 go 行（评审 2026.11.4 §6-2：不手工钉版本，
+          # 漏洞修复靠抬高 toolchain 行；GOTOOLCHAIN=auto 兜底）
           go-version-file: core/src/Verse.Engine/go.mod
           cache-dependency-path: core/src/Verse.Engine/go.sum
       - run: CGO_ENABLED=1 go test ./...
@@ -129,8 +132,9 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
-          # 从 go.mod 读工具链要求（评审 2026.11.4 §6-2：钉 1.23 形同虚设，
-          # 实际靠 GOTOOLCHAIN=auto 下载；go.mod 另有 toolchain go1.26.10）
+          # setup-go@v7 优先读 go.mod 的 toolchain 行（go1.26.11）直接安装，
+          # 无 toolchain 行才回退 go 行（评审 2026.11.4 §6-2：不手工钉版本，
+          # 漏洞修复靠抬高 toolchain 行；GOTOOLCHAIN=auto 兜底）
           go-version-file: core/src/Verse.Engine/go.mod
           cache-dependency-path: core/src/Verse.Engine/go.sum
       - run: go install github.com/securego/gosec/v2/cmd/gosec@latest

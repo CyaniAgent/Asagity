@@ -2,9 +2,11 @@ module github.com/CyaniAgent/Asagity/core/src/Verse.Engine
 
 go 1.26.1
 
-// govulncheck 报告 stdlib 漏洞最高修复版本为 go1.26.10（crypto/x509 等 13 项），
-// 钉住工具链让 GOTOOLCHAIN=auto 自动切换到已修复版本。
-toolchain go1.26.10
+// govulncheck 报告的 stdlib 漏洞以最新修复版本为准，钉住工具链让
+// GOTOOLCHAIN=auto 自动切换到已修复版本。历史：go1.26.10 修 crypto/x509
+// 等 13 项；go1.26.11 修 net/http GO-2026-6859（MaxBytesReader header race，
+// 2026-11-11）。升级漏洞时同步抬高此行（CI security job 依赖它）。
+toolchain go1.26.11
 
 require (
 	github.com/blevesearch/bleve/v2 v2.6.3

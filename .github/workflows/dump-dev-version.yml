@@ -48,7 +48,9 @@ jobs:
       - name: Verify Go mirror (runner.appVersion contract)
         uses: actions/setup-go@v7
         with:
-          # 从 go.mod 读真实工具链要求（go 1.26.1），不手工钉版本
+          # setup-go@v7 优先读 go.mod 的 toolchain 行（go1.26.11，修
+          # GO-2026-6859），无 toolchain 行才回退 go 行（1.26.1 = 语言版本
+          # 下限）——不手工钉版本，漏洞修复靠抬高 toolchain 行
           go-version-file: core/src/Verse.Cli/go.mod
           cache-dependency-path: core/src/Verse.Cli/go.sum
 
