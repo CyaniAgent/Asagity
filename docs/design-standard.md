@@ -183,7 +183,7 @@ WelcomeActionPanel / WelcomeMenuItem / WelcomeStatusBar / welcomeConfig）。
 | ❌ | `:264` 面板本体 | `gap-3.5`(14) → `gap-3`(12)（组内） |
 | ❌ | `:351` CTA 组 | `gap-2.5`(10) → `gap-2`(8) |
 | ❌ | `:315` 芯片 | `px-2.5 gap-1.5` → `px-2 gap-1`（8/4） |
-| ❌ | `:377-378` 下拉菜单 | `mb-2.5 py-1.5` → `mb-2 py-1`（8/4） |
+| ❌ | `:377-378` 下拉菜单（2026-11-14 移至触发钮 wrapper `:340`/`:360`） | `mb-2.5 py-1.5` → `mb-2 py-1`（8/4） |
 | ❌ | `WelcomeMenuItem.tsx:35` | `py-2.5`(10) → `py-3`(12)（大项）/`py-2`(8)（小项已合规） |
 | ❌ | `WelcomeActionPanel.tsx:34` 数据格标签 | `mt-1.5`(6) → `mt-1`(4) |
 | ✅ | 数据格/菜单行/面板内距 | `px-4 py-3`、`px-4`、`p-5`、`gap-3`、`rounded-3xl/2xl/lg` 合规 |
@@ -245,6 +245,35 @@ WelcomeActionPanel / WelcomeMenuItem / WelcomeStatusBar / welcomeConfig）。
     一并清除。`DESIGN.md` 过时段落对齐（§8）：顶部废除提示更新为
     "accent 实底"，§1 用途表 / §5 Glow 行 / §8 Primary 渐变行就地加 ❌ 标记。
     图标库迁移 §7 三步（S1 换 Lucide → S2 清 filled → S3 注册表接管）已完成。
+
+### 追加 · 更多菜单弹出位置与收起动画（2026-11-14 完成）
+
+锚点由外层 stack 容器迁移至**触发钮 wrapper**（`WelcomeActionPanel.tsx:340`），
+菜单不再悬在数据条上沿之外，改为紧贴触发钮弹出：
+
+- **设计定律依据**（联网一手资料）：Fitts 定律（触发钮→菜单 D 距离
+  ~90px → **8.00px**）、Gestalt 邻近律（菜单视觉归属触发钮而非整个面板）、
+  W3C APG menu-button（a11y 基线：aria-haspopup/expanded/controls、
+  ↑↓/Home/End/Esc、焦点归还——原样保留）、MDN `@starting-style`/exit
+  动画模式（本实现取 React 双状态 + `animationend` 路线，兼容性无要求）。
+- **位置**：`top-full mt-2 right-0`——右缘与触发钮对齐（§0 铁律三）、
+  间距 8px（§2.3 4px 网格）；默认向下弹，下方空间 <160px 且上方更宽裕时
+  自动上翻（`bottom-full mb-2`），并按可用空间限高内滚（4px 网格取整）。
+  wrapper 加 `flex` 消灭 inline 行盒 descender 空隙，保证 gap 恰为 8px。
+- **动画**：入场 `menu-pop` / 收起 `menu-pop-out`（150ms `--ease-standard`，
+  §1 时长档）；起始位移经 `--menu-pop-shift` 随弹出方向切换、origin 经
+  Tailwind `origin-*` 随翻转切换（下=从钮下缘冒出 / 上翻=从钮上缘冒出，
+  运动方向与生长方向自洽）。关闭时保持挂载跑退场 → `animationend` 卸载；
+  reduced-motion 走瞬时 `opacity:0` + 240ms 兜底定时器；收起期间
+  `inert` + `pointer-events-none`（防焦点/点击打进淡出层）。
+  触发钮 wrapper 键盘处理器加 `e.target` 守卫——菜单移入 wrapper 后
+  菜单按键会冒泡，只处理触发钮自身的按键（并新增"已开时 ↑↓ 直接送焦进菜单"）。
+- **验证（2026-11-14）**：`tsc --noEmit` 0 / `vitest` **67/67** /
+  `vite build` ✓；Playwright 文本断言两轮 **ALL PASS**：
+  明/暗 gap=8.00、右缘 0 偏差、origin `224px 0px`（right top）、
+  入/退场动画类与 0.15s 时长、t+0 保持挂载 + `inert` + aria-expanded=false、
+  ~200ms 由 animationend 卸载、Esc 焦点归还、菜单内 ↑↓ 不误触 wrapper 开合、
+  菜单项点击走退场、reduced-motion 卸载路径、控制台 0 非预期错误。
 
 ---
 
@@ -362,4 +391,5 @@ Astryx 内部图标全是 30 个兜底。
 
 ---
 
-*Asagity Design Standard v2 · Neutral Baseline — 2026-11-09（§7 图标选型：Fluent → Lucide）*
+*Asagity Design Standard v2 · Neutral Baseline — 2026-11-09（§7 图标选型：Fluent → Lucide；
+2026-11-14 §1.2 修订：主 CTA 优先 accent 实底；2026-11-14 §6 追加：更多菜单锚定触发钮 + 收起动画）*

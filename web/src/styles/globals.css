@@ -270,19 +270,30 @@ code, kbd, samp, pre {
   font-family: var(--font-mono);
 }
 
-/* ── Hand-menu pop motion（保形换血计划-D）──────────────────────────
- * 时长取季节 fast motion 常量（150ms）+ --ease-standard；尊重系统减动效。
+/* ── 更多菜单出入场（design-standard：150ms 季节 fast + --ease-standard）──
+ * 起始位移由 --menu-pop-shift 给出：向下弹 = -4px（从触发钮下缘冒出），
+ * 上翻 = +4px（从触发钮上缘冒出）；transform-origin 由 JSX 侧 Tailwind
+ * origin 工具类随翻转方向切换（top right / bottom right）。
+ * 收起（menu-pop-out）播完由 animationend 卸载；reduced-motion 下无动画 →
+ * 瞬时 opacity:0 + 组件侧兜底定时器卸载，避免残留遮挡点击。
  */
 @keyframes menu-pop-in {
-  from { opacity: 0; transform: scale(0.96) translateY(4px); }
+  from { opacity: 0; transform: scale(0.96) translateY(var(--menu-pop-shift, -4px)); }
   to   { opacity: 1; transform: none; }
 }
+@keyframes menu-pop-out {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: scale(0.96) translateY(var(--menu-pop-shift, -4px)); }
+}
 .menu-pop {
-  transform-origin: top right;
   animation: menu-pop-in 150ms var(--ease-standard, cubic-bezier(0.2, 0.8, 0.2, 1));
+}
+.menu-pop-out {
+  animation: menu-pop-out 150ms var(--ease-standard, cubic-bezier(0.2, 0.8, 0.2, 1)) forwards;
 }
 @media (prefers-reduced-motion: reduce) {
   .menu-pop { animation: none; }
+  .menu-pop-out { animation: none; opacity: 0; }
 }
 
 /* ── Boot-scan 扫描线（React 侧镜像）──────────────────────────────

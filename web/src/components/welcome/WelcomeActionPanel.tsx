@@ -1,6 +1,14 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import {
+  Fragment,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import { IconButton } from "@astryxdesign/core/IconButton";
 import { useInstanceStore } from "@/stores/instance";
 import { useWelcomeStore } from "@/stores/welcome";
@@ -47,10 +55,14 @@ function StatCell({ value, label, tone }: { value: string; label: string; tone: 
  *              —— 一屏一个实底主操作，禁 glow/渐变（design-standard §1.2）
  *
  * 「更多」菜单（原样保形 + 令牌化 + 无障碍基线）：
- *   - 锚点在外层 stack 容器：菜单从数据条上沿之外弹出，不再自噬数据条；
+ *   - 锚点在触发钮 wrapper（Fitts/D 距离 + Gestalt 邻近律）：菜单紧贴触发钮、
+ *     右缘与触发钮右缘对齐（同类元素对齐铁律）；
+ *   - 弹出方向：默认自触发钮下方（top-full mt-2，与 origin top right 自洽）；
+ *     下方空间不足（<160px）且上方更宽裕时自动上翻，并按可用空间限高内滚；
  *   - role/aria：menu / menuitem / aria-expanded / aria-controls；
  *   - 键盘：↑↓ 循环 / Home / End / Esc 关闭并归还焦点 / Tab 收起；
- *   - 动效：menu-pop（150ms 季节 fast + --ease-standard，respects reduced-motion）。
+ *   - 动效：menu-pop 入场 / menu-pop-out 收起（150ms 季节 fast + --ease-standard，
+ *     origin 与起始位移随翻转方向切换；reduced-motion → 瞬时隐藏 + 定时卸载）。
  */
 export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
   const { t } = useI18n();
@@ -71,6 +83,11 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
   const triggerRef = useRef<HTMLButtonElement>(null);
   /** 键盘开菜单时首/尾行预置焦点 */
   const queueFocusRef = useRef<"first" | "last" | null>(null);
+  /** 收起动画进行中：保持挂载跑 menu-pop-out，animationend/兜底定时器再卸载 */
+  const [menuClosing, setMenuClosing] = useState(false);
+  /** 菜单相对触发钮的翻转/限高：开菜单时 useLayoutEffect 量一次（绘制前定稿） */
+  const [menuAnchor, setMenuAnchor] = useState<{ flip: boolean; maxH: number } | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -92,11 +109,43 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
     queueFocusRef.current = null;
   }, [menuOpen]);
 
+  /* 开菜单时量一次：首选向下弹；下方装不下且上方更宽裕 → 上翻，
+   * 并按可用空间限高（菜单自身 overflow-y 内滚）。useLayoutEffect 在绘制前
+   * 定稿，首帧即终态、无闪跳。间距取 4px 网格（design-standard §2.3）。 */
+  useLayoutEffect(() => {
+    if (!menuOpen) return;
+    const trigger = triggerRef.current;
+    const menu = menuRef.current;
+    if (!trigger || !menu) return;
+    const t = trigger.getBoundingClientRect();
+    const gap = 8; // mt-2 / mb-2
+    const edge = 8; // 距视口边缘留白
+    const below = window.innerHeight - t.bottom - gap - edge;
+    const above = t.top - gap - edge;
+    const flip = below < 160 && above > below;
+    const usable = Math.max(96, Math.min(flip ? above : below, window.innerHeight * 0.7));
+    setMenuAnchor({ flip, maxH: Math.floor(usable / 4) * 4 });
+  }, [menuOpen]);
+
+  /* 收起动画兜底：reduced-motion（animation:none）或动画事件丢失时按时卸载，
+   * 避免不可见的菜单残留在面板上挡点击。正常路径由 animationend 先行卸载。 */
+  useEffect(() => {
+    if (!menuClosing) return;
+    const timer = window.setTimeout(() => setMenuClosing(false), 240);
+    return () => window.clearTimeout(timer);
+  }, [menuClosing]);
+
   /* ── Handlers ── */
   const closeMenu = (returnFocus = false) => {
+    if (menuOpen) setMenuClosing(true); // 保持挂载跑收起动画，播完再卸载
     setMenuOpen(false);
     setDevOpen(false);
     if (returnFocus) triggerRef.current?.focus();
+  };
+
+  /* 收起动画播完 → 卸载（只认 menu-pop-out，入场/子元素动画冒泡不误触） */
+  const handleMenuExitEnd = (e: React.AnimationEvent) => {
+    if (menuClosing && e.animationName === "menu-pop-out") setMenuClosing(false);
   };
 
   /** Q4 dispatcher: window + link (termity keeps its auth-gated entry). */
@@ -133,14 +182,16 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
   };
 
   const handleTriggerKeys = (e: ReactKeyboardEvent) => {
-    if (e.key === "ArrowDown") {
+    /* 菜单现挂载于 wrapper 内，菜单按键会冒泡到此 —— 只处理触发钮自身的按键 */
+    if (e.target !== triggerRef.current) return;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
-      queueFocusRef.current = "first";
-      setMenuOpen(true);
-      setDevOpen(false);
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      queueFocusRef.current = "last";
+      const dir = e.key === "ArrowDown" ? 1 : -1;
+      if (menuOpen) {
+        focusRelative(null, dir); // 已开（鼠标开、焦点仍在触发钮）→ 直接送进菜单
+        return;
+      }
+      queueFocusRef.current = dir > 0 ? "first" : "last";
       setMenuOpen(true);
       setDevOpen(false);
     }
@@ -283,21 +334,56 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
             </div>
           </div>
 
-          {/* 触发钮：键盘监听挂容器（Button 内部会覆 onKeyDown，靠冒泡兜住） */}
-          <div className="shrink-0" onKeyDown={handleTriggerKeys}>
+          {/* 触发钮：键盘监听挂容器（Button 内部会覆 onKeyDown，靠冒泡兜住）；
+              wrapper 同时是菜单的定位锚点（relative，紧贴弹出）。
+              flex 消灭 inline 行盒的 descender 空隙，保证菜单与按钮下缘恰差 8px */}
+          <div className="relative flex shrink-0" onKeyDown={handleTriggerKeys}>
             <IconButton
               ref={triggerRef}
               id="welcome-more-trigger"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
-              aria-controls={menuOpen ? "welcome-more-menu" : undefined}
+              aria-controls={menuOpen || menuClosing ? "welcome-more-menu" : undefined}
               variant="ghost"
               size="sm"
               icon={<Icon name="more_horiz" fontSize={18} />}
               label={t("welcome.more")}
               tooltip={t("welcome.more")}
-              onClick={() => { if (menuOpen) closeMenu(true); else { setMenuOpen(true); setDevOpen(false); } }}
+              onClick={() => { if (menuOpen) closeMenu(true); else { setMenuOpen(true); setMenuClosing(false); setDevOpen(false); } }}
             />
+
+            {/* ── Dropdown（原生样式 · 令牌化）：锚在触发钮 wrapper，
+                 右缘对齐、紧贴弹出（Fitts/D + Gestalt 邻近）；收起走 menu-pop-out ── */}
+            {(menuOpen || menuClosing) && (
+              <div
+                ref={menuRef}
+                id="welcome-more-menu"
+                role="menu"
+                inert={menuClosing}
+                className={`${menuClosing ? "menu-pop-out" : "menu-pop"} absolute right-0 w-56 max-h-[70vh]
+                  overflow-y-auto overscroll-contain rounded-2xl py-1 z-50 backdrop-blur-xl
+                  bg-popover/95 border border-line text-fg shadow-2xl
+                  ${menuAnchor?.flip ? "bottom-full mb-2 origin-bottom-right" : "top-full mt-2 origin-top-right"}
+                  ${menuClosing ? "pointer-events-none" : ""}`}
+                style={
+                  menuAnchor
+                    ? ({
+                        maxHeight: menuAnchor.maxH,
+                        "--menu-pop-shift": menuAnchor.flip ? "4px" : "-4px",
+                      } as CSSProperties)
+                    : undefined
+                }
+                onKeyDown={handleMenuKeys}
+                onAnimationEnd={handleMenuExitEnd}
+              >
+                {menuGroups.map((group, gi) => (
+                  <Fragment key={group.id}>
+                    {gi > 0 && <div aria-hidden className="my-1 mx-3 h-px bg-line" />}
+                    {group.items.map((item) => renderItem(item))}
+                  </Fragment>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -373,25 +459,6 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
           </button>
         </div>
       </div>
-
-      {/* ── Dropdown（原生样式 · 令牌化）：锚在 stack 容器，从数据条上沿之外弹出 ── */}
-      {menuOpen && (
-        <div
-          id="welcome-more-menu"
-          role="menu"
-          className={`menu-pop absolute bottom-full right-0 mb-2 w-56 max-h-[70vh] overflow-y-auto
-            overscroll-contain rounded-2xl py-1 z-50 backdrop-blur-xl
-            bg-popover/95 border border-line text-fg shadow-2xl`}
-          onKeyDown={handleMenuKeys}
-        >
-          {menuGroups.map((group, gi) => (
-            <Fragment key={group.id}>
-              {gi > 0 && <div aria-hidden className="my-1 mx-3 h-px bg-line" />}
-              {group.items.map((item) => renderItem(item))}
-            </Fragment>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
