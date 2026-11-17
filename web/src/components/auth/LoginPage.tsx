@@ -202,7 +202,6 @@ export function LoginPage() {
               label={loading ? t("auth.verifying") : t("auth.loginToInstance")}
               isLoading={loading}
               isDisabled={!identifier || !password}
-              className="glow-accent glow-accent-hover"
             />
           </form>
 

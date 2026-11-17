@@ -439,7 +439,6 @@ export function RegisterPage() {
                     label={allRequiredAgreed ? t("register.startButton") : t("register.readAllRequired")}
                     isDisabled={!allRequiredAgreed}
                     onClick={() => goToStep(1)}
-                    className="glow-accent glow-accent-hover"
                   />
                 </div>
               </div>
@@ -569,7 +568,6 @@ export function RegisterPage() {
                     isLoading={loading}
                     isDisabled={!isFormValid}
                     onClick={handleSubmitInfo}
-                    className="glow-accent glow-accent-hover"
                   />
                 </div>
               </div>
@@ -636,7 +634,6 @@ export function RegisterPage() {
                     isLoading={loading}
                     isDisabled={verifyCode.length !== 8}
                     onClick={handleVerify}
-                    className="glow-accent glow-accent-hover"
                   />
                 </div>
               </div>

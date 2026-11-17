@@ -1,10 +1,12 @@
 # Asagity Design System
 
-> ⚠️ **部分废除（2026-11-09）**：本文为 2026-07-13 历史存档。与新规范
-> [`design-standard.md`](./design-standard.md)（v2「中性基准」）冲突的条目以新规范为准，
+> ⚠️ **部分废除（2026-11-09 制定，2026-11-14 对齐）**：本文为 2026-07-13 历史存档。
+> 与新规范 [`design-standard.md`](./design-standard.md)（v2「中性基准」）冲突的条目以新规范为准，
 > 具体包括：**§5 Shadows & Glows 的 Glow 行、§8 Button Primary 渐变行、
 > §1 中 "glows / Decorative sparkles" 用途**——已废除（禁发光、禁渐变、
-> 主操作改中性 inverted 实底）。季节色值以 [`design-tokens.md`](./design-tokens.md) 为准。
+> 主操作改**主题 accent 实底** `bg-brand`/`text-onbrand`，design-standard §1.2
+> 2026-11-14 修订）。`glow-accent` 工具类已随 P2-10（2026-11-14）从代码库删除。
+> 季节色值以 [`design-tokens.md`](./design-tokens.md) 为准。
 
 > 2D/3D 混合级视觉规范 — "A glacier-tinted decentralized social universe"
 > 🧊 **2026.Q4 赛季「Yukinoshita Glacier」**：完整 token 规范见 [`design-tokens.md`](./design-tokens.md)；
@@ -18,11 +20,11 @@
 
 | Token | Hex | 语义 Token | Usage |
 |:---|:---|:---|:---|
-| Primary | `#2E76B8` | `accent` | Core brand, buttons, links, glows |
+| Primary | `#2E76B8` | `accent` | Core brand, buttons, links（❌ "glows" 已废除） |
 | Primary Light | `#78B2EE` | accent (dark) | Hover states, highlights |
 | Primary Dark | `#1D6DB0` | — | Active states, pressed |
-| Accent | `#4187C8` | — | Secondary glow, outer shadows |
-| Accent Bright | `#B4D9FF` | — | Decorative sparkles |
+| Accent | `#4187C8` | — | ❌ Secondary glow, outer shadows（发光禁用） |
+| Accent Bright | `#B4D9FF` | — | ❌ Decorative sparkles（装饰光斑禁用） |
 
 ### Semantic Colors
 
@@ -141,6 +143,11 @@ className="bg-white/40 dark:bg-gray-800/40 backdrop-blur-md
 
 ## 5. Shadows & Glows
 
+> ⚠️ **Glow 行已废除**（design-standard §1.4 禁发光，2026-11-14 对齐）：
+> 下表 `Cyan Glow` / `Cyan Glow Strong` / `Cyan Outer` / `Red Glow` 四行及
+> `pulse → Glow effects` 用途一律不得使用（代码库 `glow-accent` 类已删除）；
+> 非发光的深度阴影（Subtle / Medium / Large）仍可用。
+
 ### Box Shadows
 
 | Pattern | Value | Usage |
@@ -189,7 +196,7 @@ ring-2 ring-cyan-500     // Avatar hover
 |:---|:---|:---|
 | shimmer | 1.5s infinite linear | Loading bars |
 | marquee | 10s linear infinite | Music track title |
-| pulse | Tailwind default | Glow effects, badges |
+| pulse | Tailwind default | ❌ Glow effects（已废除）；装饰 badges 亦禁 |
 | ping | Tailwind default | Notification badges |
 | flicker | 4s infinite | Welcome page label |
 | spin | Tailwind default | Loading spinners |
@@ -236,7 +243,7 @@ active:cursor-grabbing   // During drag
 
 | Variant | Classes |
 |:---|:---|
-| Primary | `bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-full shadow-lg` |
+| Primary | ❌ 已废除（禁渐变/发光/圆药丸）→ 现行 `bg-brand text-onbrand hover:bg-branddeep`（design-standard §1.2，2026-11-14） |
 | Ghost | `hover:bg-black/5 dark:hover:bg-white/5` |
 | Danger | `bg-red-500/10 text-red-600 dark:text-red-400 rounded-xl` |
 | Glass Pill | `bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border border-white/20` |

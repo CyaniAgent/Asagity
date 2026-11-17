@@ -21,7 +21,7 @@ const EASE = [0.2, 0.8, 0.2, 1] as const;
  * 动效：framer-motion 编排 — 入场（logo spring + 进度 spring + 文案 stagger），
  * 退场 AnimatePresence 整体淡出上飘（治旧版硬切）；useReducedMotion 兜底。
  *
- * 视觉：季节语义令牌（bg-sheet/text-fg/text-fgdim/text-bad + glow-accent），
+ * 视觉：季节语义令牌（bg-sheet/text-fg/text-fgdim/text-bad），
  * 与 index.html 的 boot splash（T0 层）像素对位：logo 128px、进度条 256×3、
  * gap 32px —— 挂载时把 #boot-splash 淡出移除，实现零白帧交接。
  *

@@ -270,17 +270,6 @@ code, kbd, samp, pre {
   font-family: var(--font-mono);
 }
 
-/* ── Season glow · Yukinoshita Glacier ────────────────────────────
- * 取代旧版硬编码 rgba(57,197,187,*) 辉光；色值走 --color-accent 令牌。
- */
-.glow-accent {
-  box-shadow: 0 0 20px color-mix(in srgb, var(--color-accent) 30%, transparent);
-}
-
-.glow-accent-hover:hover {
-  box-shadow: 0 0 30px color-mix(in srgb, var(--color-accent) 45%, transparent);
-}
-
 /* ── Hand-menu pop motion（保形换血计划-D）──────────────────────────
  * 时长取季节 fast motion 常量（150ms）+ --ease-standard；尊重系统减动效。
  */

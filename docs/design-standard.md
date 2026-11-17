@@ -204,8 +204,9 @@ WelcomeActionPanel / WelcomeMenuItem / WelcomeStatusBar / welcomeConfig）。
 
 ## 6. 设计改进清单（欢迎页）
 
-> **执行状态（2026-11-09）**：P0 1–3 ✅ / P1 4–7 ✅ / P2 8–9 ✅ 全部落地；
-> P2-10（欢迎页外 glow-accent 5 处 + DESIGN.md 对齐）另行排期。
+> **执行状态（2026-11-09 制定，2026-11-14 全部收口）**：P0 1–3 ✅ / P1 4–7 ✅ /
+> P2 8–10 ✅ 全部落地；P2-10 于 2026-11-14 完成（欢迎页外 `glow-accent` 5 处删除 +
+> `DESIGN.md` 过时段落对齐）；图标库迁移 §7 三步（S1/S2/S3）亦全部完成。
 
 ### P0 — 正确性 / 违反铁律
 1. `welcomeConfig.ts:101` `mail_inbox` → `inbox`（现为静默错误图标）。
@@ -229,10 +230,14 @@ WelcomeActionPanel / WelcomeMenuItem / WelcomeStatusBar / welcomeConfig）。
 8. `animate-ping` 同屏收敛为一处（面板心跳芯片），StatusBar 死点删除。
 9. `WelcomeStatusBar.tsx` 死代码：删除 `StatusPills`/`WelcomeStatusBar`
    导出（hook 保留）；若保留则改语义令牌 + 去手动 `isDark`。
-10. 全局延伸（欢迎页外，另行排期）：`glow-accent` 其余 5 处
+10. ✅ 全局延伸（欢迎页外，**2026-11-14 完成**）：`glow-accent` 其余 5 处
     （`LoginPage.tsx:205`、`RegisterPage.tsx:442/572/639`、
-    `TermityAuthModal.tsx:262`）与 `DESIGN.md` 过时段落对齐（§8）；
-    图标库迁移按 §7 三步执行（S1 换 Lucide → S2 清 filled → S3 注册表接管）。
+    `TermityAuthModal.tsx:262`）已删——这 5 处也是全仓仅有的
+    `variant="primary"` 用点，实测其底已为 accent 纯色（`#2E76B8`，无渐变），
+    故只删发光即可归档；`.glow-accent` 工具类与 `SplashScreen` 过时注释
+    一并清除。`DESIGN.md` 过时段落对齐（§8）：顶部废除提示更新为
+    "accent 实底"，§1 用途表 / §5 Glow 行 / §8 Primary 渐变行就地加 ❌ 标记。
+    图标库迁移 §7 三步（S1 换 Lucide → S2 清 filled → S3 注册表接管）已完成。
 
 ---
 

@@ -259,7 +259,6 @@ export function TermityAuthModal() {
               onClick={() => void handleVerify()}
               isLoading={verifying}
               isDisabled={digits.length !== GUEST_CODE_LENGTH}
-              className="glow-accent glow-accent-hover"
             />
           </div>
         </div>
