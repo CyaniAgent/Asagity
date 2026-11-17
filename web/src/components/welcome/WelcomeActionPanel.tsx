@@ -43,8 +43,8 @@ function StatCell({ value, label, tone }: { value: string; label: string; tone: 
  * Z1 身份区    logo + 实例名 + alias · 版本 + 右上更多菜单（原生手搓，菜单已令牌化）
  * Z2 状态区    实时状态芯片并入面板（count 类已上浮 Z0，此处只留 heartbeat 类）
  * Z3 入口区    时间线（当前唯一真实可跳的窗口）提为显性入口行
- * Z4 CTA 区    加入实例(inverted 主操作) / 已有账户登录(neutral 次操作)
- *              —— 一屏一个 inverted 实底，禁 glow/渐变（design-standard §1）
+ * Z4 CTA 区    加入实例(accent 主操作) / 已有账户登录(neutral 次操作)
+ *              —— 一屏一个实底主操作，禁 glow/渐变（design-standard §1.2）
  *
  * 「更多」菜单（原样保形 + 令牌化 + 无障碍基线）：
  *   - 锚点在外层 stack 容器：菜单从数据条上沿之外弹出，不再自噬数据条；
@@ -347,14 +347,14 @@ export function WelcomeActionPanel(_props: WelcomeActionPanelProps) {
           />
         </button>
 
-        {/* ── Z4 CTA：一屏一个 inverted 主操作 + neutral 次操作，左对齐，无 glow ── */}
+        {/* ── Z4 CTA：一屏一个 accent 实底主操作 + neutral 次操作，左对齐，无 glow ── */}
         <div className="flex flex-col gap-2">
           <button
             type="button"
             onClick={handleJoin}
             className="w-full h-11 flex items-center justify-start gap-3 rounded-lg px-4
-              bg-invert text-plate text-[13px] font-semibold
-              transition-colors hover:opacity-90
+              bg-brand text-onbrand text-[13px] font-semibold
+              transition-colors hover:bg-branddeep
               focus:outline-none focus-visible:ring-2 focus-visible:ring-fgaccent"
           >
             <Icon name="arrow_right_16" fontSize={16} />

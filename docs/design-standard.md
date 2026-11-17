@@ -10,8 +10,8 @@
 
 ## 0. TL;DR — 四条铁律
 
-1. **色彩受控**：底色与文字只用中性令牌；主要操作靠**明暗对比**（inverted 实底）
-   突出；**取消一切渐变，不发光**。
+1. **色彩受控**：正文/容器底与文字默认只用中性令牌；主要操作靠**主题 accent
+   实底**（或明暗对比 inverted）突出；**取消一切渐变，不发光**。
 2. **变量统一**：间距与圆角只用**固定档位**分层；**组内紧凑，组间留白**
    （间距 = 内间距 + 外间距，成对设计）。
 3. **左缘对齐**：同一类元素默认共享同一条左边缘。
@@ -34,16 +34,22 @@
 | 描边 | `border-line` | 中性细线 |
 | 反转面 | `bg-invert`（background-inverted） | 明 `#0E1115` / 暗 `#FFFFFF` |
 
-**底色与文字一律中性**；不得为"好看"给正文/容器上主题色底或彩色文字。
+**正文/容器底与文字一律中性**；主题色底仅限**主操作按钮**（§1.2）与状态色
+（§1.3），不得为"好看"给正文/容器上主题色底或彩色文字。
 
-### 1.2 主要操作 = 明暗对比（inverted），不是彩色
+### 1.2 主要操作 = 主题 accent 实底（inverted 为可选）
 
-- **Primary CTA**：`bg-invert` + 高对比反字（明版黑底浅字 / 暗版白底深字，
-  文字取 `background-body` 档），**无渐变、无发光、无彩色**。
-- 一屏只允许一个 inverted 实底按钮（即"主要操作"）；次要操作用
-  `bg-sheet`/描边/ghost，靠**明暗层级**而不是颜色数量区分主次。
-- `accent`（Glacier 蓝）收窄用途：**链接、焦点环、选中态**——不作大面积底，
-  不作正文色，不作按钮渐变端。
+- **Primary CTA**：优先 `bg-brand` + `text-onbrand`（Glacier accent 实底 + 反字：
+  明 `#2E76B8`/白字 4.8:1，暗 `#7FC9F0`/深冰字），hover 走 `bg-branddeep`；
+  也可用 `bg-invert` + `text-plate` 中性反转面。**无渐变、无发光**。
+- 一屏只允许一个主操作实底按钮；次要操作用 `bg-sheet`/描边/ghost，靠
+  **明暗层级与是否实底**区分主次。
+- `accent`（Glacier 蓝）用途：**主操作实底、链接、焦点环、选中态**——不作
+  正文色，不作渐变端，不作大面积容器底。
+
+> **修订（2026-11-14）**：主 CTA 由"inverted 中性实底"改为**优先 accent 实底**，
+> 与 `design-tokens.md` §3（`--color-accent` 用途含"按钮"）对齐。欢迎页
+> "加入实例"已落地；原 P0-2 的 inverted 结论作废（见 §6）。
 
 ### 1.3 状态色是唯一例外
 
@@ -211,9 +217,10 @@ WelcomeActionPanel / WelcomeMenuItem / WelcomeStatusBar / welcomeConfig）。
 ### P0 — 正确性 / 违反铁律
 1. `welcomeConfig.ts:101` `mail_inbox` → `inbox`（现为静默错误图标）。
 2. 主 CTA 去发光去渐变：删 `glow-accent glow-accent-hover`
-   （`WelcomeActionPanel.tsx:359`），按钮改 inverted 中性实底
-   （`bg-invert` + 高对比反字，§1.2）——由 astryx `primary`（渐变）改
-   `secondary`/自定类，保证一屏一个主操作。
+   （`WelcomeActionPanel.tsx:359`），按钮改自定实底——由 astryx `primary`
+   （渐变）改 `secondary`/自定类，保证一屏一个主操作。
+   ⚠️ **2026-11-14 修订**：实底取色由 inverted 中性改为 **accent 实底**
+   （`bg-brand`/`text-onbrand`，§1.2），原 inverted 结论作废。
 3. `WelcomeActionPanel.tsx:340` `timeline_20_filled` → `history`（线性统一）。
 
 ### P1 — 档位 / 节奏 / 对齐
