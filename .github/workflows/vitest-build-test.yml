@@ -115,7 +115,11 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v6
         with:
-          # 与 13 个 csproj 的 <TargetFramework>net10.0</TargetFramework> 对齐
+          # 与 13 个 csproj 的 <TargetFramework>net10.0</TargetFramework> 对齐。
+          # ubuntu-latest 预装 11.x：无 global.json 时 muxer 选最高版本（11.0.100），
+          # 其 Blazor scoped-CSS/HotReload 校验会把 HotReload lib.module.js 判为
+          # 无匹配 endpoint 而报错。仓库根 global.json 把 SDK 钉在 10.0.x
+          # （rollForward: latestFeature），与此处安装版本协同，确保 CI 用 10.0.x 构建。
           dotnet-version: '10.0.x'
       # Verse.slnx 收录全部 13 个项目（Api/Data/Shared/9 Modules/Tests）
       - run: dotnet build Verse.slnx --nologo
