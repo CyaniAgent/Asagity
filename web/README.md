@@ -1,6 +1,6 @@
 # Asagity Web (React Frontend)
 
-> Vite 8 + React 19 + Tailwind CSS v4 + Zustand + Astryx design system
+> Asagity BuildX is built on Vite — React 19 + Tailwind CSS v4 + Zustand + Astryx design system
 
 ## Getting Started
 
@@ -15,11 +15,12 @@ The dev server proxies the dual backend: `/api` → Go engine (`:2048`), `/api-n
 
 | Command | Description |
 |---------|-------------|
-| `pnpm dev` | Vite dev server (port 2000, HMR) |
-| `pnpm build` | Typecheck (`tsc --noEmit`) + production build |
-| `pnpm preview` | Serve the production build |
+| `pnpm dev` | Asagity BuildX dev server (port 2000, HMR) |
+| `pnpm build` | Typecheck (`tsc --noEmit`) + production build via BuildX |
+| `pnpm preview` | Serve the production build via BuildX |
 | `pnpm typecheck` | TypeScript check |
-| `pnpm test` | Unit tests (Vitest) |
+| `pnpm test` | Unit tests (Vitest + BuildX banner tests) |
+| `pnpm test:buildx` | BuildX banner / log normalization tests (node:test) |
 | `pnpm test:watch` | Vitest watch mode |
 | `pnpm test:e2e` | E2E tests (Playwright) |
 | `pnpm test:e2e:ui` | Playwright UI mode |
@@ -28,7 +29,7 @@ The dev server proxies the dual backend: `/api` → Go engine (`:2048`), `/api-n
 
 ## Tech Stack
 
-- **Framework**: React 19.2 + Vite 8 (ESM dev server, HMR)
+- **Framework**: React 19.2 + **Asagity BuildX** (built on Vite; ESM dev server, HMR)
 - **UI**: Tailwind CSS v4, Astryx design system (`@astryxdesign/*`), Framer Motion
 - **State**: Zustand (persist middleware, ~20 stores)
 - **Icons**: @fluentui/react-icons, mapped through the local `Icon` wrapper
@@ -37,6 +38,17 @@ The dev server proxies the dual backend: `/api` → Go engine (`:2048`), `/api-n
 - **i18n**: 4 locales (zh-CN, zh-TW, en-US, ja-JP) under `src/i18n/locale`
 - **Seasonal theme**: `src/theme/yukinoshita-glacier` (2026.Q4, Astryx `defineTheme` → built CSS in `dist/`)
 - **Testing**: Vitest + React Testing Library, Playwright (e2e)
+
+## Asagity BuildX
+
+**Asagity BuildX is built on Vite** — BuildX is the frontend compiler runner behind `dev` / `build` / `preview`:
+
+- `scripts/buildx.mjs` calls the Vite JS API (`createServer` / `build` / `preview`) instead of the Vite CLI, so the startup banner, build logs and exit message are all produced by BuildX.
+- The banner shows `Asagity BuildX <version>` plus "Asagity BuildX is built on Vite". The version comes from the `version` field in `package.json` (the CI-rewritten true version) and matches the project version verbatim.
+- Address lines carry the actual listening port: `IPv4 127.0.0.1:2000`, `IPv6 [::1]:2000`. When the port is busy, Vite auto-increments and the banner shows the real value.
+- Runtime `[vite]` prefixes are rewritten to `[BuildX]`. The attribution tagline is product copy, not a Vite CLI artifact.
+
+Configuration lives in `vite.config.ts` (BuildX plugin); the pure banner helpers live in `scripts/buildx/banner.mjs`.
 
 ## Project Structure
 
@@ -62,4 +74,7 @@ src/
 ├── lib/              # Utilities (backend proxy, termity suggest, debug commands, …)
 ├── types/            # TypeScript types
 └── styles/           # globals.css (semantic design tokens)
+scripts/
+├── buildx.mjs        # Asagity BuildX compiler runner entry (dev / build / preview)
+└── buildx/           # BuildX banner, version metadata and tests
 ```

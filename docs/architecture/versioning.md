@@ -132,6 +132,7 @@ build metadata 段。历史记法 `v2026.Q4-dev.N+sha` 的解析分支保留（�
 | docker-compose | `APP_VERSION: ${APP_VERSION:-dev}`；`.env` 可写 `scripts/version.sh` 输出 | ✅ |
 | `.env.example` | 注释说明与可选手动覆盖示例 | ✅ |
 | web | 读取 `web/package.json` `version`（CI `dump-dev-version` 回写，构建期静态导入）→ `initAppVersion()` 经 `parseBuildVersion()`/`formatVersionDisplay()` 转换；**不再 fetch 后端**（单一信源，2026-11-07 换源） | ✅ |
+| web · BuildX banner | `web/scripts/buildx/meta.mjs` reads the same `package.json` `version`; the banner shows `Asagity BuildX <version>` and "Asagity BuildX is built on Vite". **No new version consumer, no string assembly** | ✅ |
 | C# | 经 spawn env `APP_VERSION`（`IConfiguration` 与裸 env 同源） | ✅ |
 | Dockerfile build-arg | `ARG APP_VERSION`（方案 A 发版镜像） | ⏳ 方案 A |
 | release tag 校验 | `VERSION` ↔ git tag ↔ README 一致（发版 checklist） | ⏳ 方案 A |
@@ -151,6 +152,7 @@ build metadata 段。历史记法 `v2026.Q4-dev.N+sha` 的解析分支保留（�
    ——✅ 已完成（2026-11-07，`stores/instance.ts` 导出，banner / Termity 兜底共用）。
 3. `package.json` version 由 `sync-version` 脚本同步（§4.2）。
 4. `.env.example` 补 `APP_VERSION` 说明——✅ 已完成（2026-11-07，见 §4.2）。
+5. **BuildX startup banner** (2026-11-19): the terminal banner shows the true version (verbatim from `package.json`), while the UI keeps the explanatory form from `formatVersionDisplay()`; same source, no mixing, per the two-layer model in §4.1.
 
 ### 4.5 迁移影响清单
 

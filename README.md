@@ -36,7 +36,7 @@ Built on the self-developed **Verse for Asagity** backend engine, leveraging the
 
 Asagity is built as a symmetric Monorepo, separating the client layer from the server core.
 
-*   **Client (`/web`)**: React 19, Vite, Tailwind CSS v4, Zustand, Astryx design system.
+*   **Client (`/web`)**: React 19, **Asagity BuildX** ("Asagity BuildX is built on Vite"), Tailwind CSS v4, Zustand, Astryx design system.
 *   **Server (`/core`)** — dual-engine, split by responsibility (see [`docs/architecture/tech-stack-audit.md`](docs/architecture/tech-stack-audit.md)):
     *   **Go (`Verse.Engine`, `:2048`)**: core services — EventBus, WebSocket push, VSQL search, ActivityPub federation.
     *   **ASP.NET Core (`Verse.Api` + `Verse.Modules`, `:2050`)**: public REST API and business modules, backed by EF Core (`Verse.Data`) sharing one database with GORM.
@@ -107,11 +107,13 @@ pnpm dev
 ```
 Visit `http://localhost:2000` to enter the Glacier Universe!
 
+The client is compiled and served by **Asagity BuildX**, which is built on Vite — the launcher wraps Vite's JS API, so the startup banner, build logs and exit message are all branded as BuildX (see [`web/README.md`](web/README.md#asagity-buildx)).
+
 ## Project Structure
 
 ```
 Asagity/
-├── web/                       # Client (React 19 + Vite)
+├── web/                       # Client (React 19 + Asagity BuildX, based on Vite)
 │   ├── src/
 │   │   ├── pages/             # Route pages (about, panel, settings, chat, drive, …)
 │   │   ├── components/        # React components (windows, termity, topbar, widgets, …)
@@ -121,7 +123,8 @@ Asagity/
 │   │   ├── lib/               # Utilities (backend proxy, termity suggest, …)
 │   │   └── hooks/             # Shared React hooks
 │   ├── public/                # Static assets (fonts, sounds, PWA)
-│   └── vite.config.ts         # Dev server + dual-backend proxy
+│   ├── vite.config.ts         # Dev server + dual-backend proxy + BuildX plugin
+│   └── scripts/buildx*        # Asagity BuildX compiler runner + banner
 ├── core/                      # Server (Go + ASP.NET Core)
 │   └── src/
 │       ├── Verse.slnx         # .NET solution

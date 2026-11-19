@@ -36,7 +36,7 @@
 
 Asagity 采用清晰的 Monorepo（单体仓库）架构，客户端与服务端分离但协同开发：
 
-*   **客户端 (`/web`)**: React 19, Vite, Tailwind CSS v4, Zustand, Astryx 设计体系。
+*   **客户端 (`/web`)**: React 19、**Asagity BuildX**（基于 Vite 构建 —— "Asagity BuildX 基于 Vite 构建"）、Tailwind CSS v4、Zustand、Astryx 设计体系。
 *   **服务端 (`/core`)** —— 双引擎按职责划分（见 [`docs/architecture/tech-stack-audit.md`](docs/architecture/tech-stack-audit.md)）：
     *   **Go (`Verse.Engine`, `:2048`)**: 核心服务 —— EventBus、WebSocket 推送、VSQL 搜索、ActivityPub 联邦。
     *   **ASP.NET Core (`Verse.Api` + `Verse.Modules`, `:2050`)**: 公共 REST API 与业务模块，由 EF Core（`Verse.Data`）提供数据访问，与 GORM 共享同一数据库。
@@ -106,11 +106,13 @@ pnpm dev
 ```
 在浏览器中访问 `http://localhost:2000`，欢迎来到冰河之城邦！
 
+客户端由 **Asagity BuildX 基于 Vite 构建** 的编译执行器驱动：启动器封装 Vite JS API，启动横幅、构建日志与退出语全部以 BuildX 名义呈现（详见 [`web/README.md`](web/README.md#asagity-buildx)）。
+
 ## 📁 项目结构
 
 ```
 Asagity/
-├── web/                       # 客户端 (React 19 + Vite)
+├── web/                       # 客户端 (React 19 + Asagity BuildX，基于 Vite 构建)
 │   ├── src/
 │   │   ├── pages/             # 路由页面 (about, panel, settings, chat, drive, …)
 │   │   ├── components/        # React 组件 (windows, termity, topbar, widgets, …)
@@ -120,7 +122,8 @@ Asagity/
 │   │   ├── lib/               # 工具函数 (backend 代理, termity 建议, …)
 │   │   └── hooks/             # 共享 React hooks
 │   ├── public/                # 静态资源 (字体, 音效, PWA)
-│   └── vite.config.ts         # 开发服务器 + 双后端代理
+│   ├── vite.config.ts         # 开发服务器 + 双后端代理 + BuildX 插件
+│   └── scripts/buildx*        # Asagity BuildX 编译执行器与启动横幅
 ├── core/                      # 服务端 (Go + ASP.NET Core)
 │   └── src/
 │       ├── Verse.slnx         # .NET 解决方案
