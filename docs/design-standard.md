@@ -1,7 +1,8 @@
 # Asagity 界面设计规范 — v2「中性基准（Neutral Baseline）」
 
 > 状态：**2026-11-09 制定，欢迎页首审完成（§5 审计 / §6 改进清单）；
-> 图标库选型完成（§7，决定 Fluent → Lucide）**
+> 图标库选型完成（§7，决定 Fluent → Lucide）；
+> 系统信息窗口审查方案已提出、待实施（§9，2026-11-20）**
 > 适用范围：欢迎页及后续所有页面。规范性条文以本文为准；季节色值仍以
 > [`design-tokens.md`](./design-tokens.md) 为准；[`DESIGN.md`](./DESIGN.md) 中
 > §5 Glows、§8 渐变按钮等与本文冲突的条目**废除**（见 §8）。
@@ -387,9 +388,95 @@ Astryx 内部图标全是 30 个兜底。
 | `DESIGN.md` | 历史规范（2026-07-13 存档）。其中 **该文档 §5 Shadows & Glows 的
   Glow 行、该文档 §8 Button Primary 渐变行、该文档 §1 "glows/Decorative sparkles" 用途**
   与本文冲突，以本文为准（已在该文档顶部加废除提示） |
-| 本文 | 页面级设计的**规范性条文**；新页面先过 §0 四条铁律再评审；图标库迁移走 §7 三步 |
+| 本文 | 页面级设计的**规范性条文**；新页面先过 §0 四条铁律再评审；图标库迁移走 §7 三步；页面审查方案见 §9 |
+
+---
+
+## 9. 系统信息窗口设计审查方案（2026-11-20 提出，待实施）
+
+### 9.1 范围与结论
+
+对自由窗口 `viewType=system_info`（760×660，明暗双面）做**只读**设计审查，未改代码。
+渲染实测 + Astryx 官方 Design Conventions（wiki）+ 独立子代理源码一致性审查三路交叉：
+
+- **Design Score C+ / AI Slop Score C**，共 11 条发现（4 high / 6 medium / 1 polish）。
+- 截图与基线：`~/.gstack/projects/asagity/designs/design-audit-20261119/`。
+- Codex 本机不可用，按 single-model 记录；子代理发现以 `[subagent]` 标注。
+- 做对的部分必须保留：冰河照片 + `Yukinoshita Glacier · 2026.Q4` 的季节指纹、
+  左标签右值的干净键值表、真实 build/版本数据、无 emoji 无彩色左边框。
+
+**依据**：Astryx 官方 *Design Conventions*（token purity、4px grid、同心圆角
+`r_inner = r_outer − gap`、elevation 层级、状态必须颜色+图标配对、AI tells：
+decorative blobs / colored glow / nested cards / off-role sizing）；本文 §0 四条铁律、
+§1.4 禁用清单、§2 间距圆角档位；`design-tokens.md` §3/§4（Glacier/Frost/Aurora/Periwinkle、
+base 14 × 1.2 字阶、150ms `--ease-standard`）。
+
+> Astryx 官方允许 2px 光学半档，但本项目 v2 标准禁用 `*.5`，**从严按本文执行**。
+
+### 9.2 发现清单（按落点）
+
+| ID | 级别 | 落点 | 问题 |
+| --- | --- | --- | --- |
+| F001 | high | `SystemInfoContent.tsx:250,235,238,244,369,376` | 150px/300 巨型 `204` 与 26px build 文案重复同一事实；periwinkle 径向 blur blob、`from-black/65` 渐变遮罩、空状态渐变 + shimmer |
+| F002 | high | `SystemInfoContent.tsx:92,260` | 3 处 `shadow-[0_0_6/8px_var(--color-accent)]` 彩色发光（P2-10 只删了 `glow-accent` 类，arbitrary shadow 漏网） |
+| F003 | high | `FreeWindow.tsx:322`；`WindowHeader.tsx:107,114,126,137,148,159,166,171`；`WindowManager.tsx:102,104–114,136,138,148,195` `[subagent]` | 窗壳 raw `bg-white/90 dark:bg-gray-900/90`、`border-gray-*`、`text-gray-*`、手写 `dark:` 分支；暗面成灰蓝而非赛季「冰下」`#001F2F` |
+| F004 | high | `SystemInfoContent.tsx:39,73,76,100,101,263,267,321,250`；`WindowHeader.tsx:114` | 4 个 H2 全为 `text-[11px] font-black tracking-[0.14em]`；12.5px 与 150px/300 off-scale；13/14/15px 相邻档挤压 |
+| F005 | high | `SystemInfoContent.tsx:72,98,311,333,99,119,258`；`WindowHeader.tsx:107,121,166`；`FreeWindow.tsx:322` | `py-2.5`/`gap-2.5`/`gap-3.5`/`px-3.5`/`mt-[7px]` 半档与任意值；`rounded-xl`(12) 禁用档；窗口 16px 而赛季 `rounded-freewin`(30) 未用 |
+| F006 | medium | 内容区结构 | 外层卡内再套 Go/.NET 蓝色小卡 + 组织链接卡，嵌套卡违反 Astryx 间距异味 |
+| F007 | medium | `SystemInfoContent.tsx:365–391` | 「特别鸣谢 / 正在筹备，敬请期待」居中渐变 placeholder；`org-members` 404 时暗面只剩裸标题 |
+| F008 | medium | `WindowHeader.tsx:171` | 关闭按钮 `text-gray-400` 对白底 **2.54:1**，低于 WCAG UI 组件 3:1 |
+| F009 | polish | 全页 | 手写 `div`/`span` + arbitrary CSS，未走 Astryx `Card`/`Heading`/`Text`/`Divider`/`EmptyState` |
+| F010 | medium | `WindowHeader.tsx:137,171`；`EmptyState.tsx:24–28`；`ConnectionPill.tsx:18`/`NetworkStatus.tsx:49`/`MainLayout.tsx:233` `[subagent]` | indigo hover 不在 Glacier ramp；`hover:bg-red-500` 把危险色当普通填充；共享 `EmptyState` 零消费且自身 raw 灰阶；在线/离线状态色多套并存 |
+| F011 | medium | `SystemInfoContent.tsx:23,333,376`；`FreeWindow.tsx:223–228` `[subagent]` | 三套缓动（自定义 `EASE=[0.22,1,0.36,1]` / `--ease-standard` / 外壳 `(0.4,0,1,1)` 等）+ 装饰性 shimmer 与头像堆 |
+
+### 9.3 解决方案（三步，按收益排序）
+
+**第一步 · 守铁律，去 AI 味（最高收益，改动最小）**
+
+1. 删 F001 的巨型数字、径向光斑、空状态渐变与 shimmer；build 文案保留为唯一焦点。
+   照片压暗不要直接删（白字需要对比度），改为**新增赛季 scrim token**（半透明冰下色）替代 `from-black/65`。
+2. 删 F002 的 3 处 arbitrary glow：竖条改纯 `bg-brand` 无光；Go/.NET 圆点改线性 Icon 或 `bg-fgdim`。
+3. raw 色统一换语义 token：`bg-white/90 dark:bg-gray-900/90` → `bg-sheet`/`bg-popover`；
+   `border-gray-*` → `border-line`；`text-gray-800/500/400` → `text-fg`/`text-fgdim`；
+   `hover:bg-red-500` → token 化 `bg-bad/10` + `text-bad`；indigo hover → `text-branddeep`/`text-fgaccent`。
+   删除手写 `dark:` 分支，交给令牌的 `light-dark()`。
+4. 间距圆角归档：14→12/16、6→8、10→8/12、`mt-[7px]`→`mt-2`、`rounded-xl`→`rounded-lg/2xl`；
+   外壳 `rounded-2xl` → `rounded-freewin`，header 顶角同值。
+
+**第二步 · 重建层级（按 Astryx 官方约定）**
+
+- Hero 只留一个焦点：build 文案（20px/600）+ 季节 codename 作 supporting text；照片是氛围不是信息。
+- 4 个 H2 → 13px/600/字距 normal；版本值 → 14px/500；删 12.5px、150px、font-black、
+  `tracking-[0.14em]`；Quicksand 随巨型数字一起退役。
+- 删嵌套卡（F006）：外层容器内用 `Divider` + 行内 Icon 分组；组织链接降级为普通可点行。
+- 状态统一（F007/F010）：错误态给「Icon + 文案 + 重试」，无内容的「特别鸣谢」直接不渲染；
+  共享 `EmptyState` 先令牌化再复用；状态色一律 token + Icon 配对。
+
+**第三步 · 赛季精细化**
+
+- 明版雪原/冰面玻璃：面 `#EDF1F6`/`#FFFFFF`、冰纹线 `#00325C1A`、accent `#2E76B8`；
+  暗版冰下：面 `#001421`/`#001F2F`、文字 `#DEE3E9`/`#8A9299`、accent `#7FC9F0`。
+- Periwinkle 仅作话题/引用点缀，不做背景光斑；冰河照片保留但降低饱和度 + token 化 scrim。
+- 动效统一 `--ease-standard` 150ms，只保留一次有语义的 stagger 入场；
+  `prefers-reduced-motion` 降级；删 shimmer 与其他装饰性 motion（F011）。
+
+### 9.4 验收标准（转修复任务时逐条勾选）
+
+| 项 | 标准 |
+| --- | --- |
+| 静态残留 | `SystemInfoContent.tsx` / `FreeWindow.tsx` / `WindowHeader.tsx` / `WindowManager.tsx` 中 `shadow-[0_0_*]`、`blur-3xl` blob、`linear-gradient`/`radial-gradient`、`text-gray-*`、`bg-white/90`、`border-gray-*`、`rounded-xl`、`text-[12.5px]`、`text-[150px]`、`font-black`、`tracking-[0.14em]` 全部为 0 |
+| 字阶字重 | 计算值字号 ⊆ {12,13,14,16,20,24}，字重 ⊆ {400,500,600,700}，字距 ≤0.05em |
+| 间距圆角 | gap/padding ∈ 4/8/12/16/20/24/32；圆角 ∈ {4,8,16,24,30} |
+| 对比度 | 关闭按钮 ≥3:1（gray-500 实测 4.83:1、`text-fgdim` 6.48:1）；正文 ≥4.5:1；明暗双面均需满足 |
+| 状态与 a11y | 错误/空态有 Icon + 文案 + 可操作项；状态不靠颜色单独编码；焦点可见 |
+| 动效 | 仅 transform/opacity；统一 `--ease-standard`；减动效降级；无装饰性连续动画 |
+| 验证 | Playwright 明暗双面的计算值断言 + 前后截图；`tsc --noEmit` 0 / `vitest run` 全绿 / `vite build` ✓；每个修复独立提交 |
+
+**状态**：方案已提出，**尚未实施**。实施时把 F001–F011 按本节顺序转成修复任务，
+逐条提交并回填执行记录；本轮审查未改任何组件代码。
 
 ---
 
 *Asagity Design Standard v2 · Neutral Baseline — 2026-11-09（§7 图标选型：Fluent → Lucide；
-2026-11-14 §1.2 修订：主 CTA 优先 accent 实底；2026-11-14 §6 追加：更多菜单锚定触发钮 + 收起动画）*
+2026-11-14 §1.2 修订：主 CTA 优先 accent 实底；2026-11-14 §6 追加：更多菜单锚定触发钮 + 收起动画；
+2026-11-20 §9 追加：系统信息窗口设计审查方案，待实施）*
