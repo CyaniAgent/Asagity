@@ -2,7 +2,7 @@
 
 > 状态：**2026-11-09 制定，欢迎页首审完成（§5 审计 / §6 改进清单）；
 > 图标库选型完成（§7，决定 Fluent → Lucide）；
-> 系统信息窗口审查方案已提出、待实施（§9，2026-11-20）**
+> 系统信息窗口：方案见 §9（2026-11-20），第一圈已修复并验证（§9.5），第二/三圈待实施**
 > 适用范围：欢迎页及后续所有页面。规范性条文以本文为准；季节色值仍以
 > [`design-tokens.md`](./design-tokens.md) 为准；[`DESIGN.md`](./DESIGN.md) 中
 > §5 Glows、§8 渐变按钮等与本文冲突的条目**废除**（见 §8）。
@@ -472,11 +472,40 @@ base 14 × 1.2 字阶、150ms `--ease-standard`）。
 | 动效 | 仅 transform/opacity；统一 `--ease-standard`；减动效降级；无装饰性连续动画 |
 | 验证 | Playwright 明暗双面的计算值断言 + 前后截图；`tsc --noEmit` 0 / `vitest run` 全绿 / `vite build` ✓；每个修复独立提交 |
 
-**状态**：方案已提出，**尚未实施**。实施时把 F001–F011 按本节顺序转成修复任务，
-逐条提交并回填执行记录；本轮审查未改任何组件代码。
+**状态**：方案已提出，按 §9.5 分圈实施。修复任务按顺序转成提交，逐条回填执行记录。
+
+### 9.5 执行记录 · 第一圈（2026-11-20 完成，未提交）
+
+**范围**：只改 `web/src/components/system/SystemInfoContent.tsx`，共享外壳未动（第二圈）。
+按用户要求，提交由用户自行完成，本轮未执行任何 `git commit`。
+
+| Finding | 处置 | 落点 |
+| --- | --- | --- |
+| F001 ✅ | 删 150px `204`、periwinkle blur blob、`from-black/65` 渐变压暗、空状态渐变 + shimmer；build 文案改放 `bg-sheet/80 backdrop-blur-glasslight` 磨砂带，`text-fg` 随明暗令牌解析（用 token 化磨砂带替代新增 scrim token，保持第一圈只碰单文件） | Hero Banner |
+| F002 ✅ | 删 3 处 `shadow-[0_0_6/8px_var(--color-accent)]`；brand 短划线与运行行圆点无辉光 | `RuntimeRow` / Hero |
+| F004 ✅ | 4 个 H2 → 13px/600/正常字距；标签 11px→12px、值 13px→14px、运行时值 12.5px→12px、组织名 15px→14px、build 26px→20px；Quicksand 退役（字族降至 2） | 全页 |
+| F005 ✅ | `py-2.5`/`gap-2.5`/`gap-3.5`/`px-3.5`/`py-0.5`/`gap-1.5`/`mt-[7px]`/`h-[24px]`/`w-[2px]` → 4px 档；`rounded-xl`→`rounded-lg`；`-space-x-2.5`→`-space-x-2`；头像 ring 用 `ring-plate` | 全页 |
+| F006 ✅ | Go/.NET 去掉内层卡底与描边，改 hairline 分隔行；组织行去掉第二层卡，平铺 + `hover:bg-fg/5` | 规格表 / 组织区 |
+| F007 ✅ | 无内容的「特别鸣谢」整段不渲染（渐变 + shimmer + placeholder 一并消失）；组织数据失败仍由组织行兜底 + `—` | 页尾 |
+| F011（本文件部分）✅ | `EASE` → `[0.2,0.8,0.2,1]`（`--ease-standard`）；删图片 `scale(1.04)` 装饰入场与头像 `hover:scale-110`；只保留 3 段有语义的 stagger 入场，reduced-motion 降级 | 动效 |
+
+**验证（2026-11-20）**：
+
+- `tsc --noEmit` **0 错误** / `vitest run` **67/67** / `vite build` ✓ 4.65s。
+- Playwright 明暗双面 **28/28 断言 ALL PASS**（本文件作用域）：0 glow、0 gradient、
+  无 150px 数字、0 Quicksand、H2 全 13px/600/normal、无 12px 圆角、
+  无 6/10/14px 间距、无 placeholder 鸣谢、0 inline background、
+  磨砂带走 token 且无渐变、组织行无卡描边、字族仅 2、内容仍渲染、0 非预期控制台错误。
+- 明/暗前后截图：`screenshots/sysinfo-{light,dark}-before.png` →
+  `screenshots/sysinfo-{light,dark}-after.png`（同目录 `design-audit-20261119/`）。
+- 分类：**verified**（无 revert，无新增控制台错误）。
+
+**仍待实施**：F003 / F008 / F010 / F011 的共享外壳部分（`FreeWindow.tsx` /
+`WindowHeader.tsx` / `WindowManager.tsx`），属第二圈，需跨窗口回归；F009 组件化为第三圈。
+2001 临时服务已清理。
 
 ---
 
 *Asagity Design Standard v2 · Neutral Baseline — 2026-11-09（§7 图标选型：Fluent → Lucide；
 2026-11-14 §1.2 修订：主 CTA 优先 accent 实底；2026-11-14 §6 追加：更多菜单锚定触发钮 + 收起动画；
-2026-11-20 §9 追加：系统信息窗口设计审查方案，待实施）*
+2026-11-20 §9 追加：系统信息窗口设计审查方案；§9.5 第一圈修复完成并验证）*
