@@ -117,18 +117,10 @@
       "sha256": "4d0121934478a1bf8cd12f51aa1bad28afab0bf29bb098198218b3ac8a238d92"
     },
     "System/NoteReceived.webm": {
-      "bytes": 17248,
-      "sha256": "48e231f3af2c280bbce5dce249e94345cf3bdcf3b43192f07a6040c267601e96"
-    },
-    "System/NoteReceived_V2.webm": {
       "bytes": 34035,
       "sha256": "96a06d677edbe6a19e038c355915394b04764f81a49dba332a3a6f0af16fd7c5"
     },
     "System/NoteSent.webm": {
-      "bytes": 31145,
-      "sha256": "8a299b2351158a97747a7b46ce27a4f50e1fd4ed2ab814df29cfaa5ff499d0b2"
-    },
-    "System/NoteSent_V2.webm": {
       "bytes": 35351,
       "sha256": "9af1cfccfcf7f19312833777fb3cfb7d3c62ea66d2889ce0d0def8c3bf127914"
     },
