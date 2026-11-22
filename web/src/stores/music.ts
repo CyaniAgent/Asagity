@@ -57,9 +57,9 @@ interface MusicState {
 }
 
 const DEFAULT_PLAYLIST: Track[] = [
-  { id: "track-0", title: "MusicTest0", artist: "Local Track", albumArt: "", duration: 0, url: "/sounds/MusicTest0.mp3" },
-  { id: "track-1", title: "MusicTest1", artist: "Local Track", albumArt: "", duration: 0, url: "/sounds/MusicTest1.mp3" },
-  { id: "track-2", title: "MusicTest2", artist: "Local Track", albumArt: "", duration: 0, url: "/sounds/MusicTest2.mp3" },
+  { id: "track-0", title: "MusicTest0", artist: "Local Track", albumArt: "", duration: 0, url: "/sounds/MusicTest.mp3" },
+  { id: "track-1", title: "MusicTest1", artist: "Local Track", albumArt: "", duration: 0, url: "/sounds/MusicTest.mp3" },
+  { id: "track-2", title: "MusicTest2", artist: "Local Track", albumArt: "", duration: 0, url: "/sounds/MusicTest.mp3" },
 ];
 
 const DEFAULT_TRACK: Track = {
@@ -68,7 +68,7 @@ const DEFAULT_TRACK: Track = {
   artist: "Loading...",
   albumArt: "https://images.microcms-assets.io/assets/2665b63c437a44f4a35048d2eb4b7b3b/0cc8e4b8a9f34a41b7cc1d83049b4c05/tell-your-world.jpg",
   duration: 0,
-  url: "/sounds/MusicTest0.mp3",
+  url: "/sounds/MusicTest.mp3",
 };
 
 let audioElement: HTMLAudioElement | null = null;
