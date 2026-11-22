@@ -2,7 +2,14 @@
 
 > 状态：**2026-11-09 制定，欢迎页首审完成（§5 审计 / §6 改进清单）；
 > 图标库选型完成（§7，决定 Fluent → Lucide）；
-> 系统信息窗口：方案见 §9（2026-11-20），第一圈已修复并验证（§9.5），第二/三圈待实施**
+> 系统信息窗口：方案见 §9（2026-11-20），第一圈（§9.5）与第二圈（§9.6）已修复并验证；
+> 圆角按用户要求回退、F009 组件化完成（§9.7）；
+> 「Asagity 信息」卡片重构 + 页脚完成（§9.8）；
+> 页脚字号统一 + 服务端版本分组修复（§9.9）；
+> 项目组织者改为 4 条透明响应式 Grid（§9.10）；
+> 「Asagity」英雄区重建为手机系统设置式（§9.11），并按用户反馈简化为照片直排（§9.12），
+> 补文字投影 / 去图标 / 图片禁右键（§9.13）；
+> 自由窗口活跃机制 + 真全屏修复（§9.14）**
 > 适用范围：欢迎页及后续所有页面。规范性条文以本文为准；季节色值仍以
 > [`design-tokens.md`](./design-tokens.md) 为准；[`DESIGN.md`](./DESIGN.md) 中
 > §5 Glows、§8 渐变按钮等与本文冲突的条目**废除**（见 §8）。
@@ -500,12 +507,282 @@ base 14 × 1.2 字阶、150ms `--ease-standard`）。
   `screenshots/sysinfo-{light,dark}-after.png`（同目录 `design-audit-20261119/`）。
 - 分类：**verified**（无 revert，无新增控制台错误）。
 
-**仍待实施**：F003 / F008 / F010 / F011 的共享外壳部分（`FreeWindow.tsx` /
-`WindowHeader.tsx` / `WindowManager.tsx`），属第二圈，需跨窗口回归；F009 组件化为第三圈。
-2001 临时服务已清理。
+**仍待实施**：F003 / F008 / F010 / F011 的共享外壳部分已在 §9.6 完成；F009 组件化为第三圈。
+
+### 9.6 执行记录 · 第二圈共享外壳（2026-11-20 完成，未提交）
+
+**范围**：`FreeWindow.tsx` / `WindowHeader.tsx` / `WindowManager.tsx` / `SplitView.tsx` /
+`EmptyState.tsx`（后两者为共享件）。共享改动波及所有自由窗口，故做跨窗口回归。
+按用户要求未执行任何 `git commit`。
+
+| Finding | 处置 | 落点 |
+| --- | --- | --- |
+| F003 ✅ | 窗壳 `bg-white/90 dark:bg-gray-900/90` → `bg-sheet/90`；`border-gray-*` → `border-line`；`backdrop-blur-3xl` → `backdrop-blur-glassheavy`；`shadow-[0_10px_40px_rgba(...)]` → `shadow-2xl`。暗面由灰蓝回到赛季「冰下」`oklab(0.2259 -0.0274 -0.0394 / 0.9)` | `FreeWindow.tsx:322` |
+| F003/F010 ✅ | 标题栏 + 按钮全令牌：`text-gray-800/500/400` → `text-fg`/`text-fgdim`，`hover:bg-black/5 dark:hover:bg-white/10` → `hover:bg-fg/5`，indigo hover → `hover:text-branddeep`，`hover:bg-red-500` → `hover:text-bad hover:bg-bad/10`；删全部手写 `dark:` 分支 | `WindowHeader.tsx:107–171` |
+| F005 ✅ | 窗口 `rounded-2xl` → `rounded-freewin`(30px)、header `rounded-t-2xl` → `rounded-t-freewin`；SplitView `rounded-[30px]` → `rounded-freewin`；`py-1.5`/`gap-1.5`/`h-3.5`/`mx-0.5`/`w-1.5 mx-1.5` 全归 4px 档 | `FreeWindow` / `WindowHeader` / `SplitView` |
+| F008 ✅ | 关闭钮 `text-gray-400`(2.54:1) → `text-fgdim`，明 6.48:1 / 暗 5.38:1，过 WCAG UI 3:1 | `WindowHeader.tsx:171` |
+| F010 ✅ | `WindowManager` 占位文案 raw 灰/红 → `text-fgdim`/`text-bad`；`EmptyState` raw 灰阶 + `font-black` → `bg-fg/5`/`text-fgdim`/13px-600 令牌（当前零消费，先令牌化备用） | `WindowManager.tsx:102–195`、`EmptyState.tsx:23–28` |
+| F011 ✅ | 三套缓动收敛到 `--ease-standard`：FreeWindow 内联 transition 用 `var(--ease-standard, cubic-bezier(.2,.8,.2,1))`（closing/restore/maximize/open 四态）；SplitView `ease-[cubic-bezier(0.4,0,0.2,1)]` → `ease-[var(--ease-standard)]` | `FreeWindow.tsx:221–229`、`SplitView.tsx:57,80` |
+
+**验证（2026-11-20）**：
+
+- `tsc --noEmit` **0 错误** / `vitest run` **67/67** / `vite build` ✓ 11.51s。
+- 5 个改动文件 raw 色/半档/旧缓动残留 grep **0**。
+- Playwright 跨窗口回归：系统信息 / 时间线 / 登录窗口 × 明暗双面，**58/58 断言 ALL PASS**：
+  窗口与标题栏圆角均 30px、标题 14px/500/正常字距、分割线 16px、
+  关闭钮 token 色（明 `rgb(87,95,104)` / 暗 `rgb(138,146,153)`）、
+  窗壳走 surface token（无 gray-900）、transition 缓动解析为
+  `cubic-bezier(0.2, 0.8, 0.2, 1)`、内容仍渲染、0 非预期控制台错误。
+- 截图：`screenshots/sysinfo-{light,dark}-shell-after.png`。
+- 分类：**verified**，无 revert。
+- 诚实标注：SplitView 需登录态布局，本轮仅做源码 grep + 编译验证，未做浏览器实测；
+  `/api/shell/github/org-members` 与 `/api/meta/version` 后端离线返回 404，
+  内容显示 `—`，属预期数据行为非回归。
+
+**仍待实施**：无。F009 组件化见 §9.7（2026-11-22 完成）。
+
+### 9.7 圆角回退 + 第三圈 F009 组件化（2026-11-22 完成，未提交）
+
+**圆角回退（用户要求）**：§9.6 把自由窗口圆角从 16px 改成 `rounded-freewin`(30px) 后，
+部分页面细节被大圆角裁切。恢复修改前形式：
+
+- `FreeWindow.tsx:323` `rounded-freewin` → `rounded-2xl`（16px）。
+- `WindowHeader.tsx:107` `rounded-t-freewin` → `rounded-t-2xl`（16px）。
+- `SplitView.tsx` 原本就是 30px（`rounded-[30px]`），保留等价的 token 写法
+  `rounded-freewin`，**视觉未变**，不属于本次回退范围。
+
+> 涟漪：窗口圆角不再是赛季 `rounded-freewin`(30px)，而是标准容器档 16px；
+> 这是用户基于实际裁切问题的决定，记录在案，后续勿误判为「漏改」。
+
+**F009 组件化**（`SystemInfoContent.tsx` 全量重写，数据逻辑原样保留）：
+
+| 原手写 | 替换为 |
+| --- | --- |
+| `h2` 标签 | Astryx `Text as="h2" type="label" weight="semibold" color="secondary"`（语义 h2，14px/600 走角色 token） |
+| 布局 `div` | `VStack gap` / `HStack gap`（间距走 4px step）、`Card padding/variant`（表面 + 边框走主题） |
+| 行文本 `span` | `Text type="code" size="sm"`（mono 标签）/ `Text type="label" weight="medium"`（值）/ `hasTabularNumbers` |
+| 区块分隔 `border-t` | Astryx `Divider` |
+| 脉冲骨架 `div` | Astryx `Skeleton radius={2} index={i}`（token 圆角 + 交错节奏） |
+
+保留的原生元素仅两类：装饰点（`<span aria-hidden>`）、外链图片（`<img>`，Astryx 模板允许的图片例外）。
+`motion.section` 三段 stagger 与 reduced-motion 降级保留。
+
+**验证（2026-11-22）**：
+
+- `tsc --noEmit` **0 错误** / `vitest run` **67/67** / `vite build` ✓ 4.24s。
+- Playwright 明暗双面 **20/20 断言 ALL PASS**：窗口与标题栏圆角 **16px**（回退生效）、
+  H2 14px/600/正常字距（Astryx Text label）、0 glow / 0 gradient / 0 巨型数字、
+  无 12px 圆角与 6/10/14px 间距、磨砂带走 token、登录窗口圆角同为 16px、
+  内容仍渲染、0 非预期控制台错误。
+- 截图：`screenshots/sysinfo-{light,dark}-f009-after.png`（后端恢复在线，Go/.NET 显示真实值）。
+- 分类：**verified**，无 revert。
+
+**审查闭环**：F001–F011 全部处置完成；原始评分 Design C+ / AI Slop C 作为基线保留，
+最终评分不再重算（组件化后视觉已按方案收敛）。2001 临时服务已清理。
+
+### 9.8 「Asagity 信息」卡片重构 + 页脚（2026-11-22 完成，未提交）
+
+**问题**：原卡片混用 `border-b` 与 `Divider` 两套分隔线，字体在 mono / body 之间跳；
+窗口滚到底时页尾贴边，没有呼吸空间。
+
+**重构**（Astryx 官方 `MetadataList` 模式）：
+
+- `SpecRow` 改为 `MetadataListItem`，整卡包在 `MetadataList columns={1} label={{ position: "start", width: 112 }}`，
+  渲染为语义 `dl`/`dt`/`dd`，分隔由组件统一接管，移除手写 `Divider` 与所有 `border-b`（错乱分割线清零）。
+- 字体分组：`运行模式` / `React 版本` / `服务端版本` 标签与中文值走 `--font-sans`
+  （`HarmonyOS Sans SC` 优先，中文自动命中 SC；拉丁回退 `HarmonyOS Sans`），
+  符合 §4 字体按语种智能映射；`React 19.3.1` 与 Go / .NET 运行时值走 `font-quicksand`
+  （`--font-quicksand` 已存在，Quicksand variable 字库随主题加载）。
+- Go / .NET 运行时行保留状态点（无辉光）与 `hasTabularNumbers`，数据值 Quicksand。
+
+**页脚**（用户确认后的两个决定）：
+
+- 文案：`2026 Asagity Developer by CyaniAgent and contributors. Licensed by MIT`。
+  原需求写 `AGPL-3.0`，但仓库根目录 `LICENSE` 实为 **MIT**，为避免文案与授权文件不符，
+  用户确认改为 MIT；`CyaniAgent` 链接原给 `hitjhub.com/CyaniAgent`（不可达），
+  用户确认改为 `https://github.com/CyaniAgent`（与仓内 `GITHUB_ORG_URL` 一致）。
+- MIT 链接：`https://github.com/CyaniAgent/Asagity/blob/Dev/LICENSE`（远端默认分支为 `Dev`）。
+- 底部留白：`mt-8 pb-8`（32px + 32px），实测滚到底后文字下方仍有 **32px** 空隙。
+
+**验证（2026-11-22）**：`tsc --noEmit` 0 / `vitest` **67/67** / `vite build` ✓ 4.51s；
+Playwright 明暗 **20/20 断言 ALL PASS**：`dl`×1 / `dt`×3 / `dd`×3、
+标签与中文值 HarmonyOS SC、React 与运行时值 Quicksand、页脚文案与两枚链接正确、
+底部空隙 32px、0 非预期控制台错误。
+截图：`screenshots/sysinfo-{light,dark}-card-footer.png`。分类 **verified**，无 revert。
+
+### 9.9 页脚字号统一 + 「服务端版本」分组修复（2026-11-22 完成，未提交）
+
+**页脚字号**：原实现用 `Text type="supporting"`(12px) 渲染普通文字，链接却是裸 `<a>`
+（继承 16px），同一行出现两种字号。修复：两枚链接各自包进
+`Text as="span" type="supporting"`，只用 `text-fgaccent hover:underline` 上色。
+实测明暗双面全部 6 个节点（4 段文字 + 2 枚链接）均为 **12px / 20px 行高**。
+
+**「服务端版本」问题讨论**（用户要求深入讨论后决策）：
+
+- 根因是语义结构而非样式：`MetadataListItem` 渲染一对 `<dt>label</dt><dd>value</dd>`，
+  原实现把一个「服务端版本」`dt` 配上装着 Go + .NET 两行的 `dd`。视觉上标签贴着 Go 行，
+  .NET 行看起来无标签；辅助技术会把两行读成一个复合值。
+- Astryx 官方 `MetadataList` 文档明确要求：**"Give each MetadataListItem a short label
+  that names its value. Assistive technology reads each label with its value as a term and
+  its definition."** 且 `label` 只接受 `string`，无 rowSpan / 分组 API；`Table` 也无行分组能力。
+  因此纯 CSS 跨行居中只能掩盖视觉，无法修正语义。
+- 候选方案：A 拆两条（丢分组）／**B 分组标题 + 两条**／C 合并一行值（长值易截断）／
+  D CSS 跨行（语义不变）／E 换 Table（混用两套组件语言）。用户选择 **B**。
+
+**实施**：卡片内改为两个 `MetadataList`：
+
+1. 第一个：`运行模式`、`React 版本`（`valueClass="font-quicksand"`）。
+2. 第二个：`title={<Text as="h3">服务端版本</Text>}`（官方推荐的「列表需要在页面大纲占位时传标题元素」用法），
+   内含 `Go` / `.NET` 两条独立 `MetadataListItem`，每条 label 命名自己的值，
+   状态点通过 `icon` prop 渲染（`bg-brand` / `animate-pulse` / `bg-fg/20`），
+   值走 `font-quicksand` + `hasTabularNumbers`。
+
+**验证（2026-11-22）**：`tsc --noEmit` **0** / `vitest` **67/67** / `vite build` ✓ 1.85s；
+Playwright 明暗 **22/22 断言 ALL PASS**：`dl`×2 / `dt`×4（运行模式、React 版本、Go、.NET）
+/ `dd`×4、h3「服务端版本」存在、标签与中文值 HarmonyOS SC、React 与运行时值 Quicksand、
+页脚文案与链接、底部 32px、0 非预期错误。另跑页脚专项 **6/6**（全 12px / 20px 行高）。
+截图覆盖为 `screenshots/sysinfo-{light,dark}-card-footer.png`（明版截图恰逢成员数据 loading，
+显示三行骨架，属正常异步态）。2001 已清理。
+
+### 9.10 项目组织者重构（2026-11-22 完成，未提交）
+
+**需求**：只列头像 + GitHub 显示名；背景透明；由「单卡片聚合」改为「逐条显示」；
+固定 4 位（组织 `CyaniAgent`，用户 `AyaxYuna` / `SakuraCake` / `shenwenbo2009`）；
+默认 2×2，随窗口缩放动态重排。
+
+**实施**：
+
+- 删除 `fetchGithubList("org-members")`、`LoadState<GithubPerson[]>`、`PeopleSkeleton`、
+  组织大卡 + 重叠头像堆 + 成员计数；改为固定常量 `ORGANIZERS`（4 条），
+  不再依赖 shell 网关，也消除了后端离线时的骨架/裸标题态。
+- 布局用 Astryx `Grid columns={{ minWidth: 280, max: 4, repeat: "fit" }} gap={3}`：
+  官方明确要求「响应式列用 minWidth + max，禁止固定列数」。760px 窗口内容区约 700px →
+  默认 **2 列 × 2 行**；容器收窄到 420px → 1 列；放宽到 1200px → 最多 4 列。
+  重排由 CSS Grid 跟随容器宽度，不依赖 viewport 媒体查询，自由窗口拖拽即生效。
+- 每条是一个 `<a href="https://github.com/{login}">`，内含 Astryx `Avatar`
+  （`name` + `src` + `size=40` + `tooltip=false`，加载失败时按官方行为回退首字母）
+  与一枚 `Text type="label" weight="medium"` 显示名；容器与条目均无背景/描边（透明）。
+
+**验证（2026-11-22）**：`tsc --noEmit` **0** / `vitest` **67/67** / `vite build` ✓ 1.64s；
+Playwright 明暗 **18/18 断言 ALL PASS**：恰好 4 条且顺序正确、每条 1 头像 + 1 名称、
+链接全部指向 GitHub、背景与描边透明、默认 2 列 / 窄 1 列 / 宽 4 列、
+无成员计数与骨架、0 非预期控制台错误。
+截图：`screenshots/sysinfo-{light,dark}-organizers-bottom.png`（滚到底，头像已加载）。
+分类 **verified**，无 revert。2001 已清理。
+
+### 9.11 「Asagity」英雄区重建为手机系统设置式（2026-11-22 完成，未提交）
+
+**背景**：原始英雄区（冰河壁纸 + 巨型 `204` + 底部版本文案）是用户参考 HarmonyOS /
+ColorOS 等「关于本机」页的灵感。之前清理违规实现（150px 装饰数字、渐变 scrim、
+periwinkle 光斑、彩色发光）时把这层语汇一并抹掉了。用户要求按方案 B 重建。
+
+**调研结论**：websearch 402、Bing/DDG 结果无效；以 Astryx 官方 `Heading`（`display-1`
+视觉角色 + 语义 h1）、`Text`（display 角色）、`Card`、`MetadataList` 文档与既有
+Design Conventions 为依据。手机「关于本机」的共性：强身份标题 + 大号 build/型号 +
+状态标记 + 中性分组卡片 + 单一 accent；与铁律冲突的只有装饰渐变和发光。
+
+**实施**：
+
+- 英雄区顶部：`Heading level={1} type="display-1"` 渲染 `Asagity`（实测 42px/600），
+  右侧一枚中性状态胶囊（`bg-fg/5` + `border-line`，复用 `runMode` 文案）。
+- 冰河照片保留；底部唯一信息带 `bg-sheet/80 backdrop-blur-glasslight`
+  （无渐变/无发光）：左侧版本文案 + 赛季代号，右侧 **`BUILD` 小标签 + `204` 展示数值**。
+- `204` 改回真数据：`getBuildVersion().commitsTotal` + `Text type="display-1"`
+  + `font-quicksand` + `tabular-nums`（实测 42px），有标签、可解释，**不是装饰数字**；
+  用户确认字体走 Quicksand，与 React/Go/.NET 数据一致。
+- 去掉旧 `type="code"` 的赛季代号，改 `type="supporting"`（HarmonyOS Sans，按语种映射）。
+- `lib/version.ts` 中「巨型 Build 数字（数据即装饰）」注释同步改为「带 BUILD 标签的展示数值」。
+
+**验证（2026-11-22）**：`tsc --noEmit` **0** / `vitest` **67/67** / `vite build` ✓ 1.88s；
+Playwright 明暗 **16/16 断言 ALL PASS**：h1 42px、状态胶囊中性底、`BUILD` 标签、
+`204` Quicksand 42px、磨砂带走 token 且 0 渐变、0 发光、内容完整、0 非预期错误。
+截图：`screenshots/sysinfo-{light,dark}-hero-mobile.png`。分类 **verified**，无 revert。
+
+### 9.12 英雄区按反馈简化：去顶部标题 / 去 BUILD / 文档融入照片（2026-11-22 完成，未提交）
+
+用户对 §9.11 的反馈：① 顶部大标题 + 状态胶囊不要；② 图片内版本显示块不能被容器包住，
+要「顺其背景、融入冰河照片」；③ 右侧 BUILD 数字纯属多余。
+
+**实施**：
+
+- 删 `Heading level={1}` 的 `Asagity`、状态胶囊、`BUILD` 标签与 `204` 展示数值；
+  同时移除 `Heading` / `getBuildVersion` 的 import 与 `build` memo。
+  `lib/version.ts` 的注释回退为中性描述（不再指向已删除的 BUILD 展示）。
+- 版本文案直接绝对定位在照片左下角：只有定位用的 `HStack`，**无 `Card`、
+  无 `bg-sheet/80` 磨砂带、无 `backdrop-blur`、无背景/描边**；
+  文字用 `text-white`（Astryx `Text` 自身设色，白色必须写在 Text 节点上，
+  写在祖先无效）配中性 `drop-shadow-md` 保证基本可读性，不引入渐变或发光。
+- 赛季代号保留在版本文案下方，同样白色系。
+
+**验证（2026-11-22）**：`tsc --noEmit` **0** / `vitest` **67/67** / `vite build` ✓ 2.38s；
+Playwright 明暗 **16/16 断言 ALL PASS**：无 h1、无 `BUILD`、无大号 204、
+照片仍在、版本文字白色、三层祖先均无背景/描边/模糊、0 渐变 0 发光、
+内容完整、0 非预期错误。截图：`screenshots/sysinfo-{light,dark}-hero-on-photo.png`。
+
+**诚实标注**：明版照片左下为亮冰面，白字对比度比磨砂带方案吃紧；
+这是「无容器、融入背景」的直接代价。§9.13 已补暗色文字投影解决，仍未加暗色遮罩/渐变（守铁律一）。
+分类 **verified**，无 revert。
+
+### 9.13 照片文字投影 / 去图标 / 图片禁右键（2026-11-22 完成，未提交）
+
+用户三项反馈：① 左下文字区加适当阴影；② 版本号左侧图标多余，删除；
+③ 禁止浏览器在图片区域右键，防止图片被盗。
+
+**实施**：
+
+- `globals.css` 新增 `.on-photo-ink`：取赛季「冰下」`#001421` 的暗色投影
+  `0 1px 2px rgba(0,20,33,.95) + 0 2px 6px rgba(0,20,33,.55)`，
+  并附带 `-webkit-touch-callout: none` / `user-select: none`。
+  这是**可读性投影，不是发光/氛围光斑**，不违反 §1.4。
+- 英雄区 `HStack` 换用 `.on-photo-ink`，移除 `drop-shadow-md`；
+  删掉版本号左侧的 `bg-brand` 竖条 `<span>`。
+- 照片容器加 `onContextMenu={(e) => e.preventDefault()}` 与 `select-none`；
+  `<img>` 加 `draggable={false}` 与 `pointer-events-none`（右键事件落到容器被拦下，
+  同时禁止拖拽保存）。
+
+**验证（2026-11-22）**：`tsc --noEmit` **0** / `vitest` **67/67** / `vite build` ✓ 1.49s；
+Playwright 明暗 **16/16 断言 ALL PASS**：文字投影 `rgba(0,20,33,.95) 0px 1px 2px` 存在、
+白字保留、`bg-brand` 图标 0 个、`contextmenu` 事件 `defaultPrevented=true`、
+图片 `draggable=false` 且 `pointer-events=none`、0 渐变 0 发光、0 非预期错误。
+截图：`screenshots/sysinfo-{light,dark}-hero-shadow.png`。分类 **verified**，无 revert。
+
+**诚实标注**：禁右键 + 禁拖拽只提高随手保存门槛，无法阻止 DevTools /
+网络请求取图，不是真正的版权保护；若需强保护需服务端签名或水印方案（超出本次范围）。
+
+### 9.14 自由窗口活跃机制 + 真全屏修复（2026-11-22 完成，未提交）
+
+**Bug 1 · 点非活跃窗口无反应**
+
+- 根因：`FreeWindow.tsx` 的 `onFocus?.()` 只在拖拽柄路径末尾调用，且开头有
+  `if (isMaximized) return`；点窗口正文或已最大化窗口不会触发。
+  另外所有窗口写死 `zIndex: 9990`，`focusedId` 只被 `RunManager` 消费，窗口本体无活跃态。
+- 修复：`onFocus` 移到 `handlePointerDown` 最前（任意区域按下都激活），
+  并补根节点 `onFocus`（键盘可达）；`WindowManager` 订阅 `focusedId`，按
+  `lastFocusedAt` 排序传 `isActive` / `stackOrder`；`FreeWindow` 计算
+  `zIndex = 9990 + (isActive ? 100 : stackOrder)`，活跃窗置顶、其余稳定层叠，
+  仍低于 modal/toast 的 100002。store 结构未改（`focus` 已维护 `focusedId` + `lastFocusedAt`）。
+
+**Bug 2 · 最大化仍留圆角**
+
+- 根因：最大化几何留 16px 边距（`innerWidth-32` / `x=16`），内层 div 恒定
+  `rounded-2xl border shadow-2xl`，`WindowHeader` 恒定 `rounded-t-2xl`。
+- 修复：最大化几何改 `0,0,innerWidth,innerHeight`；内层切 `rounded-none border-0 shadow-none bg-sheet`
+  （**不透明**，消除欢迎页透出）；普通态保留 `rounded-2xl border border-line shadow-2xl bg-sheet/90 backdrop-blur-glassheavy`；
+  标题栏顶角随 `isMaximized` 切 `rounded-none`。
+
+**验证（2026-11-22）**：新增 `src/stores/__tests__/freeWindow.test.ts` 4 条用例
+（开窗即活跃 / focus 切换并 bump / 关闭活跃回退 / 单例聚焦），
+`tsc --noEmit` **0** / `vitest` **71/71** / `vite build` ✓ 1.95s。
+Playwright E2E **8/8 断言 ALL PASS**：两窗初始层级正确、点非活跃窗正文后 z 翻转、
+最大化几何 `0,0,1440,900`、圆角/边框/阴影全无且底色不透明、还原回 16px、0 错误。
+截图：`screenshots/window-maximized.png`。分类 **verified**，无 revert。
 
 ---
 
 *Asagity Design Standard v2 · Neutral Baseline — 2026-11-09（§7 图标选型：Fluent → Lucide；
 2026-11-14 §1.2 修订：主 CTA 优先 accent 实底；2026-11-14 §6 追加：更多菜单锚定触发钮 + 收起动画；
-2026-11-20 §9 追加：系统信息窗口设计审查方案；§9.5 第一圈修复完成并验证）*
+2026-11-20 §9 追加：系统信息窗口设计审查方案；§9.5 第一圈；§9.6 第二圈共享外壳；
+2026-11-22 §9.7 圆角回退 + F009 组件化；§9.8 信息卡重构 + 页脚；§9.9 页脚字号 + 服务端版本分组；
+§9.10 项目组织者 4 条透明响应式 Grid；§9.11 手机系统设置式英雄区；
+§9.12 英雄区去顶部/BUILD，版本文案直接融入照片；§9.13 文字投影 + 去图标 + 图片禁右键；
+§9.14 自由窗口活跃机制 + 真全屏）*
