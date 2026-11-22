@@ -104,26 +104,26 @@ export function WindowHeader({
 
   return (
     // 透明融合：无自有底色，透出窗口玻璃底；分割线仅滚动时出现
-    <div className={`px-3 py-1.5 flex justify-between items-center shrink-0 cursor-grab active:cursor-grabbing rounded-t-2xl select-none border-b transition-colors duration-200 ${scrolled ? "border-gray-200/60 dark:border-white/10" : "border-transparent"}`}>
+    <div className={`px-3 py-2 flex justify-between items-center shrink-0 cursor-grab active:cursor-grabbing ${isMaximized ? "rounded-none" : "rounded-t-2xl"} select-none border-b transition-colors duration-200 ${scrolled ? "border-line" : "border-transparent"}`}>
       <div className="flex items-center gap-2 overflow-hidden max-w-[50%]">
         {renderTitle ? (
           renderTitle()
         ) : (
           <>
-            <Icon name={getIcon(type, customIcon)} className="text-branddeep dark:text-fgaccent shrink-0" fontSize={16} />
-            <span className="text-[13px] font-normal text-gray-800 dark:text-white truncate tracking-wide">
+            <Icon name={getIcon(type, customIcon)} className="text-fgaccent shrink-0" fontSize={16} />
+            <span className="text-[14px] font-medium text-fg truncate">
               {getTitle(type, mode, customTitle, t)}
             </span>
           </>
         )}
       </div>
 
-      <div className="flex items-center gap-1.5 shrink-0">
+      <div className="flex items-center gap-2 shrink-0">
         {/* Refresh */}
         {!disableTransfer && (
           <button
             onClick={onRefresh}
-            className={`${BTN} text-gray-500 hover:text-branddeep dark:text-gray-400 dark:hover:text-fgaccent hover:bg-black/5 dark:hover:bg-white/10`}
+            className={`${BTN} text-fgdim hover:text-fgaccent hover:bg-fg/5`}
             title={t("common.refresh")}
           >
             <Icon name="refresh" fontSize={14} />
@@ -134,7 +134,7 @@ export function WindowHeader({
         {!disableTransfer && (
           <button
             onClick={onSwitchMode}
-            className={`${BTN} text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-black/5 dark:hover:bg-white/10`}
+            className={`${BTN} text-fgdim hover:text-branddeep hover:bg-fg/5`}
             title={mode === "split" ? t("window.openInFreeWindow") : t("window.openAsTab")}
           >
             <Icon name={mode === "split" ? "open_in_new" : "window_arrow_up"} fontSize={14} />
@@ -145,7 +145,7 @@ export function WindowHeader({
         {mode === "free" && !disableMinimize && (
           <button
             onClick={onToggleMinimize}
-            className={`${BTN} text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10`}
+            className={`${BTN} text-fgdim hover:text-fg hover:bg-fg/5`}
             title={t("common.minimize")}
           >
             <Icon name="minimize" fontSize={14} />
@@ -156,19 +156,19 @@ export function WindowHeader({
         {mode === "free" && !disableMaximize && (
           <button
             onClick={onToggleMaximize}
-            className={`${BTN} text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10`}
+            className={`${BTN} text-fgdim hover:text-fg hover:bg-fg/5`}
             title={isMaximized ? t("common.restore") : t("common.maximize")}
           >
             <Icon name="maximize" fontSize={14} />
           </button>
         )}
 
-        <div className="w-px h-3.5 bg-gray-200 dark:bg-gray-700 mx-0.5" />
+        <div className="w-px h-4 bg-line mx-1" />
 
         {/* Close */}
         <button
           onClick={onClose}
-          className={`${BTN} text-gray-400 hover:text-white hover:bg-red-500`}
+          className={`${BTN} text-fgdim hover:text-bad hover:bg-bad/10`}
           title={t("common.close")}
         >
           <Icon name="close" fontSize={14} />

@@ -99,19 +99,19 @@ export function getViewConfig(viewType: string | null) {
 function renderContent(viewType: string | null, refreshKey: number, browserUrl?: string, windowId?: string, sessionId?: string) {
   switch (viewType) {
     case "error":
-      return <div className="p-4 text-red-500">系统错误内容</div>;
+      return <div className="p-4 text-bad">系统错误内容</div>;
     case "post":
-      return <div key={`post-${refreshKey}`} className="h-full"><div className="flex items-center justify-center h-full text-gray-400">PostDetail</div></div>;
+      return <div key={`post-${refreshKey}`} className="h-full"><div className="flex items-center justify-center h-full text-fgdim">PostDetail</div></div>;
     case "user":
-      return <div key={`user-${refreshKey}`} className="h-full"><div className="flex items-center justify-center h-full text-gray-400">UserProfile</div></div>;
+      return <div key={`user-${refreshKey}`} className="h-full"><div className="flex items-center justify-center h-full text-fgdim">UserProfile</div></div>;
     case "music":
-      return <div className="h-full"><div className="flex items-center justify-center h-full text-gray-400">MusicPlayer</div></div>;
+      return <div className="h-full"><div className="flex items-center justify-center h-full text-fgdim">MusicPlayer</div></div>;
     case "notifications":
-      return <div key={`notif-${refreshKey}`} className="h-full"><div className="flex items-center justify-center h-full text-gray-400">Notifications</div></div>;
+      return <div key={`notif-${refreshKey}`} className="h-full"><div className="flex items-center justify-center h-full text-fgdim">Notifications</div></div>;
     case "chat":
-      return <div key={`chat-${refreshKey}`} className="h-full"><div className="flex items-center justify-center h-full text-gray-400">ChatDetail</div></div>;
+      return <div key={`chat-${refreshKey}`} className="h-full"><div className="flex items-center justify-center h-full text-fgdim">ChatDetail</div></div>;
     case "admin_database":
-      return <div key={`db-${refreshKey}`} className="h-full"><div className="flex items-center justify-center h-full text-gray-400">DatabaseDetails</div></div>;
+      return <div key={`db-${refreshKey}`} className="h-full"><div className="flex items-center justify-center h-full text-fgdim">DatabaseDetails</div></div>;
     case "browser":
       return <iframe src={browserUrl} className="w-full h-full border-0" title="Browser" />;
     case "termity":
@@ -133,9 +133,9 @@ function renderContent(viewType: string | null, refreshKey: number, browserUrl?:
     case "welcome_timeline":
       return <Suspense fallback={<WindowManagerFallback />}><TimelineFeed /></Suspense>;
     case "welcome_federation":
-      return <div className="flex items-center justify-center h-full text-gray-400 text-sm">联邦实例列表开发中</div>;
+      return <div className="flex items-center justify-center h-full text-fgdim text-sm">联邦实例列表开发中</div>;
     case "welcome_dashboard":
-      return <div className="flex items-center justify-center h-full text-gray-400 text-sm">数据面板开发中</div>;
+      return <div className="flex items-center justify-center h-full text-fgdim text-sm">数据面板开发中</div>;
     case "portal_debugger":
       return <Suspense fallback={<WindowManagerFallback />}><PortalDebuggerContent /></Suspense>;
     case "system_info":
@@ -145,7 +145,7 @@ function renderContent(viewType: string | null, refreshKey: number, browserUrl?:
         </Suspense>
       );
     default:
-      return <div className="p-4 text-gray-500">未知视图类型</div>;
+      return <div className="p-4 text-fgdim">未知视图类型</div>;
   }
 }
 
@@ -156,8 +156,13 @@ export function WindowManager() {
   const triggerRefresh = useFreeWindowStore((s) => s.triggerRefresh);
   const isLoggedIn = useUserStore((s) => s.isLoggedIn);
   const isWelcomePage = !isLoggedIn;
+  const focusedId = useFreeWindowStore((s) => s.focusedId);
   // Termity 当前激活的 Session（标题栏选择器与终端内容共用）
   const activeSessionId = useTermitySessionsStore((s) => s.activeId);
+  // 最近使用顺序：活跃窗口置顶，其余按 lastFocusedAt 稳定层叠
+  const orderedIds = [...windows]
+    .sort((a, b) => a.lastFocusedAt - b.lastFocusedAt)
+    .map((w) => w.id);
 
   // Start memory monitor once
   useEffect(() => {
@@ -188,11 +193,13 @@ export function WindowManager() {
             disableTransfer={config.disableTransfer || isWelcomePage}
             onClose={() => close(win.id)}
             onFocus={() => focus(win.id)}
+            isActive={focusedId === win.id}
+            stackOrder={orderedIds.indexOf(win.id)}
             onRefresh={() => triggerRefresh(win.id)}
             renderTitle={
               win.viewType === "termity"
                 ? () => (
-                    <Suspense fallback={<span className="text-[13px] text-gray-800 dark:text-white">Session</span>}>
+                    <Suspense fallback={<span className="text-[14px] text-fg">Session</span>}>
                       <TermitySessionSelector />
                     </Suspense>
                   )

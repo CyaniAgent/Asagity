@@ -108,7 +108,7 @@ export function initAppVersion(): void {
 
 /**
  * package.json 真版本号的三键值拆解（不可解析时 null）。
- * 供展示层取用——如系统信息 Banner 的巨型 Build 数字（数据即装饰）。
+ * 供展示层取用——真版本号的三键值拆解（展示位置由调用方决定）。
  */
 export function getBuildVersion(): BuildVersion | null {
   return parseBuildVersion(PACKAGE_VERSION);

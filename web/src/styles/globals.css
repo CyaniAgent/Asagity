@@ -270,6 +270,16 @@ code, kbd, samp, pre {
   font-family: var(--font-mono);
 }
 
+/* ── 照片上文字的可读性投影 ──────────────────────────────
+ * 仅用于压在冰河照片上的白字，取赛季「冰下」#001421 的暗色投影，
+ * 不是发光/氛围光斑（design-standard §1.4 禁发光仍成立）。
+ */
+.on-photo-ink {
+  text-shadow: 0 1px 2px rgba(0, 20, 33, 0.95), 0 2px 6px rgba(0, 20, 33, 0.55);
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
 /* ── 更多菜单出入场（design-standard：150ms 季节 fast + --ease-standard）──
  * 起始位移由 --menu-pop-shift 给出：向下弹 = -4px（从触发钮下缘冒出），
  * 上翻 = +4px（从触发钮上缘冒出）；transform-origin 由 JSX 侧 Tailwind

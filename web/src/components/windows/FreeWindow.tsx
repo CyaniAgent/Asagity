@@ -43,6 +43,10 @@ interface FreeWindowProps {
   disableMinimize?: boolean;
   onClose?: () => void;
   onFocus?: () => void;
+  /** 是否为当前活跃窗口（由 store.focusedId 决定） */
+  isActive?: boolean;
+  /** 最近使用顺序序号，用于非活跃窗口的稳定层叠 */
+  stackOrder?: number;
   onRefresh?: () => void;
   onSwitchMode?: () => void;
   /** 自定义标题渲染（用于 Termity 的 Session 选择器等） */
@@ -65,6 +69,8 @@ export function FreeWindow({
   disableMinimize = false,
   onClose,
   onFocus,
+  isActive = false,
+  stackOrder = 0,
   onRefresh,
   onSwitchMode,
   renderTitle,
@@ -148,6 +154,8 @@ export function FreeWindow({
 
   /* ── 拖拽：Pointer Events ────────────────────────────────── */
   const handlePointerDown = (e: React.PointerEvent) => {
+    // 任何区域按下都激活窗口（含正文与已最大化窗口），不只是拖拽柄
+    onFocus?.();
     if (isMaximized) return;
     const handle = (e.target as HTMLElement).closest(".window-drag-handle");
     if (!handle) return;
@@ -177,7 +185,6 @@ export function FreeWindow({
 
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
-    onFocus?.();
   };
 
   /* ── 最大化 / 最小化 / 关闭 ──────────────────────────────── */
@@ -219,13 +226,14 @@ export function FreeWindow({
 
   /* ── 动画样式 ─────────────────────────────────────────────── */
   const getTransition = () => {
+    const ease = "var(--ease-standard, cubic-bezier(0.2, 0.8, 0.2, 1))";
     if (isClosing) {
-      if (isMinimized) return "opacity 180ms cubic-bezier(0.4,0,1,1)";
-      return "opacity 220ms cubic-bezier(0.4,0,1,1), transform 220ms cubic-bezier(0.4,0,1,1)";
+      if (isMinimized) return `opacity 180ms ${ease}`;
+      return `opacity 220ms ${ease}, transform 220ms ${ease}`;
     }
-    if (restoreAnim) return "opacity 280ms cubic-bezier(0,0,0.2,1), transform 280ms cubic-bezier(0,0,0.2,1)";
-    if (isMaximized) return "opacity 120ms ease-out";
-    return "opacity 260ms cubic-bezier(0,0,0.2,1), transform 260ms cubic-bezier(0.16,1,0.3,1)";
+    if (restoreAnim) return `opacity 280ms ${ease}, transform 280ms ${ease}`;
+    if (isMaximized) return `opacity 120ms ${ease}`;
+    return `opacity 260ms ${ease}, transform 260ms ${ease}`;
   };
 
   const getTransformStyle = () => {
@@ -243,14 +251,16 @@ export function FreeWindow({
   };
 
   /* ── 计算实际窗口尺寸/位置 ────────────────────────────────── */
-  const w = isMaximized ? window.innerWidth - 32 : size.width;
-  const h = isMaximized ? window.innerHeight - 32 : size.height;
-  const x = isMaximized ? 16 : position.x;
-  const y = isMaximized ? 16 : position.y;
+  const w = isMaximized ? window.innerWidth : size.width;
+  const h = isMaximized ? window.innerHeight : size.height;
+  const x = isMaximized ? 0 : position.x;
+  const y = isMaximized ? 0 : position.y;
+  const zIndex = 9990 + (isActive ? 100 : Math.max(0, Math.min(stackOrder, 50)));
 
   return createPortal(
     <div
       onPointerDown={handlePointerDown}
+      onFocus={() => onFocus?.()}
       style={{
         position: "fixed",
         left: x,
@@ -258,13 +268,12 @@ export function FreeWindow({
         width: isMaximized ? w : undefined,
         height: isMaximized ? h : undefined,
         display: isMinimized ? "none" : undefined,
-        zIndex: 9990,
+        zIndex,
         opacity: getOpacity(),
         transform: getTransformStyle(),
         transition: getTransition(),
         willChange: "transform, opacity",
       }}
-      className="z-[9990]"
     >
       <Resizable
         size={isMaximized ? { width: w, height: h } : { width: size.width, height: size.height }}
@@ -319,7 +328,11 @@ export function FreeWindow({
         }}
       >
         <div
-          className="flex flex-col h-full rounded-2xl border shadow-[0_10px_40px_rgba(0,0,0,0.15)] overflow-hidden bg-white/90 dark:bg-gray-900/90 backdrop-blur-3xl border-gray-200/50 dark:border-gray-800/80"
+          className={`flex flex-col h-full overflow-hidden ${
+            isMaximized
+              ? "rounded-none border-0 shadow-none bg-sheet"
+              : "rounded-2xl border border-line shadow-2xl bg-sheet/90 backdrop-blur-glassheavy"
+          }`}
         >
           {/* 拖拽手柄 / 标题栏 */}
           <div className={`shrink-0 w-full ${isMaximized ? "cursor-default" : "cursor-grab active:cursor-grabbing"}`}>

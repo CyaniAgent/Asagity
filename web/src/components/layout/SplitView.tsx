@@ -54,10 +54,10 @@ export function SplitView({ children, isWidgetsOpen = false }: SplitViewProps) {
           minSize={isOpen ? 20 : 100}
         >
           <div
-            className={`h-full bg-white dark:bg-gray-900 rounded-[30px] border overflow-hidden cursor-default transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            className={`h-full bg-sheet rounded-freewin border overflow-hidden cursor-default transition-all duration-500 ease-[var(--ease-standard)] ${
               activeView === "left"
-                ? "border-brandlight/60 shadow-[inset_0_0_0_1px_rgba(65,135,200,0.2)]"
-                : "border-gray-200/50 dark:border-gray-800/50"
+                ? "border-brandlight/60 ring-1 ring-brand/20"
+                : "border-line"
             }`}
             onPointerDown={focusLeft}
           >
@@ -70,21 +70,21 @@ export function SplitView({ children, isWidgetsOpen = false }: SplitViewProps) {
         {/* Right Panel Divider */}
         {isOpen && (
           <>
-            <PanelResizeHandle className="w-1.5 rounded-full mx-1.5 hover:bg-brand/20 active:bg-brand/40 transition-colors z-30 shrink-0" />
+            <PanelResizeHandle className="w-2 rounded-full mx-2 hover:bg-brand/20 active:bg-brand/40 transition-colors z-30 shrink-0" />
             <Panel
               id="right"
               defaultSize={50}
               minSize={20}
             >
               <div
-                className={`h-full overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                className={`h-full overflow-hidden transition-all duration-500 ease-[var(--ease-standard)] ${
                   activeView === "right"
-                    ? "border-brandlight/60 shadow-[inset_0_0_0_1px_rgba(65,135,200,0.2)]"
-                    : "border-gray-200/50 dark:border-gray-800/50"
+                    ? "border-brandlight/60 ring-1 ring-brand/20"
+                    : "border-line"
                 }`}
                 onPointerDown={focusRight}
               >
-                <div className="h-full bg-white dark:bg-gray-900 rounded-[30px] border overflow-hidden flex flex-col">
+                <div className="h-full bg-sheet rounded-freewin border overflow-hidden flex flex-col">
                   <WindowHeader
                     mode="split"
                     type={currentRightViewType}
@@ -97,26 +97,26 @@ export function SplitView({ children, isWidgetsOpen = false }: SplitViewProps) {
                   <div className="flex-1 overflow-hidden">
                     {currentRightViewType === "user" && (
                       <div key={`user-${refreshKey}`} className="h-full">
-                        <div className="flex items-center justify-center h-full text-gray-400">
+                        <div className="flex items-center justify-center h-full text-fgdim">
                           UserProfile
                         </div>
                       </div>
                     )}
                     {currentRightViewType === "post" && (
                       <div key={`post-${refreshKey}`} className="h-full">
-                        <Suspense fallback={<div className="flex items-center justify-center h-full text-gray-400">Loading...</div>}>
+                        <Suspense fallback={<div className="flex items-center justify-center h-full text-fgdim">Loading...</div>}>
                           <PostDetail />
                         </Suspense>
                       </div>
                     )}
                     {currentRightViewType === "notifications" && (
                       <div key={`notif-${refreshKey}`} className="h-full">
-                        <div className="flex items-center justify-center h-full text-gray-400">Notifications</div>
+                        <div className="flex items-center justify-center h-full text-fgdim">Notifications</div>
                       </div>
                     )}
                     {currentRightViewType === "chat" && (
                       <div key={`chat-${refreshKey}`} className="h-full">
-                        <div className="flex items-center justify-center h-full text-gray-400">ChatDetail</div>
+                        <div className="flex items-center justify-center h-full text-fgdim">ChatDetail</div>
                       </div>
                     )}
                     {currentRightViewType === "browser" && (
@@ -126,7 +126,7 @@ export function SplitView({ children, isWidgetsOpen = false }: SplitViewProps) {
                     )}
                     {currentRightViewType === "music" && (
                       <div className="h-full">
-                        <div className="flex items-center justify-center h-full text-gray-400">MusicPlayer</div>
+                        <div className="flex items-center justify-center h-full text-fgdim">MusicPlayer</div>
                       </div>
                     )}
                   </div>
@@ -139,17 +139,17 @@ export function SplitView({ children, isWidgetsOpen = false }: SplitViewProps) {
         {/* Widgets Panel */}
         {isWidgetsOpen && (
           <>
-            <PanelResizeHandle className="w-1.5 rounded-full mx-1.5 hover:bg-brand/20 active:bg-brand/40 transition-colors z-30 shrink-0" />
+            <PanelResizeHandle className="w-2 rounded-full mx-2 hover:bg-brand/20 active:bg-brand/40 transition-colors z-30 shrink-0" />
             <Panel
               id="widgets"
               defaultSize={30}
               minSize={15}
             >
               <div
-                className={`h-full bg-white dark:bg-gray-900 rounded-[30px] border overflow-hidden flex flex-col ${
+                className={`h-full bg-sheet rounded-freewin border overflow-hidden flex flex-col ${
                   activeView === "widgets"
-                    ? "border-brandlight/60 shadow-[inset_0_0_0_1px_rgba(65,135,200,0.2)]"
-                    : "border-gray-200/50 dark:border-gray-800/50"
+                    ? "border-brandlight/60 ring-1 ring-brand/20"
+                    : "border-line"
                 }`}
                 onPointerDown={focusWidgets}
               >
