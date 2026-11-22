@@ -72,6 +72,7 @@ web/public/sounds/
 | `--keep-wav` | 关闭（即默认删 WAV） | 转换成功后保留源 `.wav` |
 | `--no-overwrite` | 关闭（即默认覆盖） | 同名 `.webm` 已存在时跳过而不覆盖 |
 | `--frame-duration` | `20` | Opus 帧长（ms），可选 2.5 / 5 / 10 / 20 |
+| `--nometa` | 关闭 | **只跳过 SHA-256 清单刷新**；registry 改写、引用安全校验、删除源 WAV 照常执行。用于新增提示音时快速转换 |
 | `--root` | 项目根 | 指定项目根目录，可写在子命令前或后 |
 
 > 码率、声道**不可通过 CLI 覆盖**，固定为 `-c:a libopus -b:a 192k`（立体声）。
@@ -88,7 +89,7 @@ web/public/sounds/
 4. 全部成功后，自动把 soundRegistry 中命中的 .wav 路径改为 .webm
 5. 重新扫描 web/src 全部源码引用，确认无任何代码仍引用待删 WAV
 6. 仅对未被引用者，删除源 .wav（失败文件、被引用文件一律保留）
-7. 自动刷新 SHA-256 清单，避免 verify 误报"清单文件丢失"
+7. 自动刷新 SHA-256 清单，避免 verify 误报"清单文件丢失"（`--nometa` 时跳过此步）
 ```
 
 **第 4→5→6 步的顺序是安全核心**：若先删 WAV 再改 registry，或 registry 改写未命中
@@ -102,6 +103,7 @@ web/public/sounds/
 - 引用安全校验失败：**不删除**对应 WAV，WebM 仍保留，registry 可能已部分更新；退出码 1。
 - 缺少 ffmpeg 或无 `libopus` 编码器：立即退出码 2，不做任何改动。
 - `--keep-wav`：仅跳过第 6 步，registry 与清单照常更新。
+- `--nometa`：仅跳过第 7 步（**不**刷新 SHA-256 清单），第 4/5/6 步安全流程完全不变。之后可单独运行 `manifest` 补刷。
 
 ## 5. 标准作业流程（SOP）
 
@@ -123,6 +125,16 @@ python scripts/audio_assets.py verify
 ```
 
 新增提示音时，只需把 `.wav` 丢进 `web/public/sounds/` 的任意层级，重跑 §5 步骤 2–4 即可。
+若只想快速转换、暂不更新 SHA-256 清单（例如批量导入后打算统一刷新），用：
+
+```bash
+python scripts/audio_assets.py convert --apply --nometa
+# registry 改写、引用安全校验、删除源 WAV 仍照常执行；
+# 需要清单时再单独运行 `python scripts/audio_assets.py manifest`
+```
+
+> 注意：`--nometa` 后 `verify` 会把新增的 `.webm` 报为"清单中未记录的新文件"（WARN）。
+> 这是预期行为，补刷清单即可消除。
 
 ## 6. 验证记录
 

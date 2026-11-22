@@ -9,13 +9,14 @@
     python scripts/audio_assets.py manifest                 # 生成 SHA-256 完整性清单
     python scripts/audio_assets.py convert                   # 预览转换计划（不写文件）
     python scripts/audio_assets.py convert --apply           # 递归转换全部 WAV 为 WebM/Opus（固定 192kbps 立体声）
+    python scripts/audio_assets.py convert --apply --nometa   # 同上，但不刷新 SHA-256 清单（新增提示音时快速转换）
 
 转换规则（--apply 时固定执行，不可通过参数改码率）:
   - 扫描 web/public/sounds/ 及所有子目录里的每一个 .wav，无白名单
   - 转为同目录同名 .webm，Opus 立体声 192kbps
   - 校验输出有效后，自动改写 soundRegistry 的 .wav 路径为 .webm
   - 确认 registry 不再引用待删 WAV 后，删除源 .wav
-  - 自动刷新 SHA-256 清单
+  - 自动刷新 SHA-256 清单（--nometa 时跳过此步，其余流程不变）
 
 退出码: 0 = 通过；1 = 有 ERROR；2 = 环境/用法错误（如缺 ffmpeg）。
 """
@@ -514,8 +515,12 @@ def cmd_convert(args: argparse.Namespace, root: Path) -> int:
         else:
             note("已保留源 WAV（--keep-wav）")
 
-    # 文件集合发生变化，自动刷新清单，避免 verify 误报"清单文件丢失"。
-    cmd_manifest(argparse.Namespace(), root)
+    # 文件集合发生变化，默认自动刷新清单，避免 verify 误报"清单文件丢失"。
+    # --nometa 用于新增提示音时快速转换：只跳过这一步，registry/安全校验/删 WAV 照常。
+    if args.nometa:
+        note("已跳过 SHA-256 清单刷新（--nometa）；需要时请单独运行 `manifest`")
+    else:
+        cmd_manifest(argparse.Namespace(), root)
 
     print("-" * 88)
     ok(f"成功 {len(done)} 个, 失败 {len(errors)} 个, 节省约 {human_size(max(saved, 0))}")
@@ -606,6 +611,7 @@ def build_parser() -> argparse.ArgumentParser:
     conv.add_argument("--frame-duration", "--frame_duration", dest="frame_duration", default="20", help="Opus 帧长 ms: 2.5/5/10/20（默认 20）")
     conv.add_argument("--no-overwrite", dest="overwrite", action="store_false", default=True, help="不覆盖已存在的 .webm（默认覆盖）")
     conv.add_argument("--keep-wav", dest="remove_wav", action="store_false", default=True, help="保留源 WAV（默认在校验成功后删除）")
+    conv.add_argument("--nometa", action="store_true", help="不刷新 SHA-256 清单（新增提示音快速转换；其余流程照常）")
 
     ver = sub.add_parser("verify", help="复核格式、引用、清单一致性与迁移残留")
     ver.add_argument("--show-orphans", action="store_true", help="列出全部孤立资源（默认只列前 5 条）")
