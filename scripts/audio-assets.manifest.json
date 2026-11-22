@@ -144,6 +144,42 @@
       "bytes": 21083,
       "sha256": "4c347c57565d0ada7f7a9dea696f64ae78c4c17f0d726ac7e77ef0bc3e441f2e"
     },
+    "System/Voiceroom/CameraDisable.webm": {
+      "bytes": 25937,
+      "sha256": "cbf0ba409f2604e69697a3f48de37de028785bad3a8da1b162237d5871bad205"
+    },
+    "System/Voiceroom/CameraEnable.webm": {
+      "bytes": 26511,
+      "sha256": "0caadf8c64c1c54b413edeca93cbf007b4410d0ade1a33f98e30bdd1029b7158"
+    },
+    "System/Voiceroom/Connect.webm": {
+      "bytes": 26501,
+      "sha256": "355ad530cfd3fbaaeff18390bb10637ccef6673a97a047299c3947696de41cb4"
+    },
+    "System/Voiceroom/Disconnect.webm": {
+      "bytes": 25599,
+      "sha256": "a8affe3c3d3f06ca7d84e80e9d57139f6ac70ee34a6efd5ff788f20d401aab6f"
+    },
+    "System/Voiceroom/MicDisable.webm": {
+      "bytes": 26436,
+      "sha256": "e09bd1f16ccc23eb0353f4339650087e2557b75e17a7c6b783cbd64399286539"
+    },
+    "System/Voiceroom/MicEnable.webm": {
+      "bytes": 26509,
+      "sha256": "0c0b6007ac93acfcf5e359450ead4ef34cad795870f03987f5ef53197ed7a689"
+    },
+    "System/Voiceroom/ScreenShareStart.webm": {
+      "bytes": 29589,
+      "sha256": "4d96a9cd565c89c04c3d07d10bfd0f35074f353694beb8bdde7bad417f229a84"
+    },
+    "System/Voiceroom/ScreenShareStop.webm": {
+      "bytes": 15527,
+      "sha256": "3c04925b6b22d1273af445d40019c401f77319a2694b21808652c668dce93007"
+    },
+    "System/Voiceroom/VoiceEnd.webm": {
+      "bytes": 6817,
+      "sha256": "3a21598114484b9a346fd941313aab36cdf6b349fb2eabd64ada8ed6b0fa7ded"
+    },
     "System/Warning.webm": {
       "bytes": 47857,
       "sha256": "c9b7cc57b523a9939905fe917acf43c94e030cbdaf3802ee6cad2826fa7d98a0"
