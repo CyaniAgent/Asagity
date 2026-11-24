@@ -96,7 +96,7 @@ export function getViewConfig(viewType: string | null) {
   }
 }
 
-function renderContent(viewType: string | null, refreshKey: number, browserUrl?: string, windowId?: string, sessionId?: string) {
+export function renderContent(viewType: string | null, refreshKey: number, browserUrl?: string, windowId?: string, sessionId?: string) {
   switch (viewType) {
     case "error":
       return <div className="p-4 text-bad">系统错误内容</div>;
