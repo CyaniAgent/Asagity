@@ -824,5 +824,24 @@
     "registerWindow": "Create Account",
     "systemInfo": "System Information",
     "termity": "Termity"
+  },
+  "taskbar": {
+    "home": "Home",
+    "messages": "Messages",
+    "spaces": "Spaces",
+    "appList": "Apps",
+    "comingSoon": "Coming soon"
+  },
+  "tabbar": {
+    "more": "More",
+    "widthSettings": "Width",
+    "autoWidth": "Auto width",
+    "back": "Back",
+    "forward": "Forward",
+    "popOut": "Pop out to window",
+    "endTask": "End task",
+    "narrow": "Narrow",
+    "medium": "Medium",
+    "wide": "Wide"
   }
 }

@@ -7,6 +7,7 @@ import { FreeWindow } from "@/components/windows/FreeWindow";
 import { startMemoryMonitor } from "@/lib/memoryManager";
 import { useEffect } from "react";
 import { useTermitySessionsStore } from "@/stores/termitySessions";
+import { usePageStripStore } from "@/stores/pageStrip";
 
 const Termity = lazy(() =>
   import("@/components/termity/Termity").then((m) => ({ default: m.Termity }))
@@ -153,6 +154,7 @@ export function WindowManager() {
   const windows = useFreeWindowStore((s) => s.windows);
   const close = useFreeWindowStore((s) => s.close);
   const focus = useFreeWindowStore((s) => s.focus);
+  const setMinimized = useFreeWindowStore((s) => s.setMinimized);
   const triggerRefresh = useFreeWindowStore((s) => s.triggerRefresh);
   const isLoggedIn = useUserStore((s) => s.isLoggedIn);
   const isWelcomePage = !isLoggedIn;
@@ -193,6 +195,20 @@ export function WindowManager() {
             disableTransfer={config.disableTransfer || isWelcomePage}
             onClose={() => close(win.id)}
             onFocus={() => focus(win.id)}
+            onMinimize={(v) => setMinimized(win.id, v)}
+            onSwitchMode={() => {
+              usePageStripStore.getState().openTab({
+                appId: win.viewType,
+                icon: config.icon ?? "tab_move",
+                title: config.title,
+                view: {
+                  kind: "window",
+                  refId: win.viewType,
+                  browserUrl: win.browserUrl,
+                },
+              });
+              close(win.id);
+            }}
             isActive={focusedId === win.id}
             stackOrder={orderedIds.indexOf(win.id)}
             onRefresh={() => triggerRefresh(win.id)}

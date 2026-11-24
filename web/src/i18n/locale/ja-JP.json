@@ -824,5 +824,24 @@
     "registerWindow": "アカウント作成",
     "systemInfo": "システム情報",
     "termity": "Termity"
+  },
+  "taskbar": {
+    "home": "ホーム",
+    "messages": "メッセージ",
+    "spaces": "スペース",
+    "appList": "アプリ一覧",
+    "comingSoon": "近日公開"
+  },
+  "tabbar": {
+    "more": "その他",
+    "widthSettings": "幅の設定",
+    "autoWidth": "自動幅調整",
+    "back": "戻る",
+    "forward": "進む",
+    "popOut": "ウィンドウで開く",
+    "endTask": "タスクを終了",
+    "narrow": "狭い",
+    "medium": "中",
+    "wide": "広い"
   }
 }

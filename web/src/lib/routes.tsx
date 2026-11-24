@@ -7,7 +7,7 @@
  * - wrapInMainLayout: true (默认) → 组件包裹在 <MainLayout> 中
  * - wrapInMainLayout: false → 组件自行处理布局（如 SettingsLayout）
  */
-import { lazy } from "react";
+import { lazy, useEffect } from "react";
 import { useRouterStore } from "@/stores/router";
 import type { RouteEntry } from "@/components/layout/RouteView";
 
@@ -16,7 +16,11 @@ import type { RouteEntry } from "@/components/layout/RouteView";
 /* ------------------------------------------------------------------ */
 
 const Redirect = ({ to }: { to: string }) => {
-  useRouterStore.getState().replace(to);
+  // 不能在 render 期间调用 setState（zustand 的 replace）——会触发
+  // "Cannot update a component while rendering a different component" 警告。
+  useEffect(() => {
+    useRouterStore.getState().replace(to);
+  }, [to]);
   return null;
 };
 

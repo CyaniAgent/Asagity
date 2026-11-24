@@ -5,6 +5,7 @@ import { useInstanceStore } from "@/stores/instance";
 import { useUserStore } from "@/stores/user";
 import { useThemeStore } from "@/stores/theme";
 import { useFreeWindowStore } from "@/stores/freeWindow";
+import { useRouterStore } from "@/stores/router";
 import { api } from "@/lib/api";
 import { Icon } from "@/components/ui/Icon";
 import { useI18n } from "@/components/providers/I18nProvider";
@@ -71,6 +72,7 @@ export function AuthModal() {
         password,
       });
       userStore.setAuth(data);
+      useRouterStore.getState().replace("/");
       closeAuth();
     } catch (err) {
       setError((err as Error).message || t("auth.authFailed"));
@@ -93,6 +95,7 @@ export function AuthModal() {
         password: regPassword,
       });
       userStore.setAuth(data);
+      useRouterStore.getState().replace("/");
       closeAuth();
     } catch (err) {
       setError((err as Error).message || t("auth.registrationRejected"));

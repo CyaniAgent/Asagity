@@ -43,6 +43,8 @@ interface FreeWindowProps {
   disableMinimize?: boolean;
   onClose?: () => void;
   onFocus?: () => void;
+  /** 本地最小化按钮回写 store，保证任务栏状态一致 */
+  onMinimize?: (v: boolean) => void;
   /** 是否为当前活跃窗口（由 store.focusedId 决定） */
   isActive?: boolean;
   /** 最近使用顺序序号，用于非活跃窗口的稳定层叠 */
@@ -69,6 +71,7 @@ export function FreeWindow({
   disableMinimize = false,
   onClose,
   onFocus,
+  onMinimize,
   isActive = false,
   stackOrder = 0,
   onRefresh,
@@ -131,6 +134,11 @@ export function FreeWindow({
     };
   }, []);
 
+  /* ── store 最小化状态同步（任务栏调用 setMinimized 时生效） ── */
+  useEffect(() => {
+    setIsMinimized(!isOpen);
+  }, [isOpen]);
+
   /* ── 打开/关闭动画控制 ─────────────────────────────────────── */
   useEffect(() => {
     if (isOpen) {
@@ -144,7 +152,6 @@ export function FreeWindow({
       cancelAnimationFrame(rafRef.current);
       setVisible(false);
       setIsClosing(false);
-      setIsMinimized(false);
       setIsMaximized(false);
       setRestoreAnim(false);
     }
@@ -198,6 +205,7 @@ export function FreeWindow({
 
   const handleToggleMinimize = () => {
     if (isMinimized) {
+      onMinimize?.(false);
       setIsMinimized(false);
       setRestoreAnim(false);
       requestAnimationFrame(() => {
@@ -207,6 +215,7 @@ export function FreeWindow({
         });
       });
     } else {
+      onMinimize?.(true);
       setIsClosing(true);
       addTimer(() => {
         setIsMinimized(true);

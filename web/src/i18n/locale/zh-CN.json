@@ -824,5 +824,24 @@
     "registerWindow": "注册新账号",
     "systemInfo": "系统信息",
     "termity": "Termity"
+  },
+  "taskbar": {
+    "home": "首页",
+    "messages": "消息",
+    "spaces": "空间",
+    "appList": "程序列表",
+    "comingSoon": "即将上线"
+  },
+  "tabbar": {
+    "more": "更多",
+    "widthSettings": "宽度设置",
+    "autoWidth": "自适应宽度",
+    "back": "后退",
+    "forward": "前进",
+    "popOut": "弹出到窗口",
+    "endTask": "一键结束任务",
+    "narrow": "窄",
+    "medium": "中",
+    "wide": "宽"
   }
 }

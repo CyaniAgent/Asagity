@@ -167,6 +167,9 @@ export const useUserStore = create<UserState>()(
     }),
     {
       name: "asagity-user",
+      // zustand v5 的 persist 默认是异步 rehydrate：首帧拿不到登录态，
+      // 直接访问 "/" 会被 HomePage 误判为未登录。改由 ClientLayout 显式 rehydrate。
+      skipHydration: true,
     }
   )
 );

@@ -824,5 +824,24 @@
     "registerWindow": "註冊新帳號",
     "systemInfo": "系統資訊",
     "termity": "Termity"
+  },
+  "taskbar": {
+    "home": "首頁",
+    "messages": "訊息",
+    "spaces": "空間",
+    "appList": "程式列表",
+    "comingSoon": "即將推出"
+  },
+  "tabbar": {
+    "more": "更多",
+    "widthSettings": "寬度設定",
+    "autoWidth": "自適應寬度",
+    "back": "後退",
+    "forward": "前進",
+    "popOut": "彈出至視窗",
+    "endTask": "一鍵結束工作",
+    "narrow": "窄",
+    "medium": "中",
+    "wide": "寬"
   }
 }

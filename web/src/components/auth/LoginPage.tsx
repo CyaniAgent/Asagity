@@ -11,6 +11,7 @@ import { useInstanceStore } from "@/stores/instance";
 import { useUserStore } from "@/stores/user";
 import { useThemeStore } from "@/stores/theme";
 import { useFreeWindowStore } from "@/stores/freeWindow";
+import { useRouterStore } from "@/stores/router";
 import { api } from "@/lib/api";
 import { Icon } from "@/components/ui/Icon";
 import { useI18n } from "@/components/providers/I18nProvider";
@@ -55,6 +56,7 @@ export function LoginPage() {
         password,
       });
       userStore.setAuth(data);
+      useRouterStore.getState().replace("/");
       // Close the login window by finding it in the store
       const win = freeWindowStore.windows.find((w) => w.viewType === "login_window");
       if (win) freeWindowStore.close(win.id);
@@ -232,6 +234,7 @@ export function LoginPage() {
               icon={<Icon name="terminal" fontSize={14} />}
               onClick={() => {
                 userStore.developerEnter();
+                useRouterStore.getState().replace("/");
                 const win = freeWindowStore.windows.find((w) => w.viewType === "login_window");
                 if (win) freeWindowStore.close(win.id);
               }}
