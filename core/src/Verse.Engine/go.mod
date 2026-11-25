@@ -29,6 +29,7 @@ require (
 	github.com/glebarez/go-sqlite v1.21.2 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
+	golang.org/x/net v0.62.0 // indirect
 	modernc.org/libc v1.22.5 // indirect
 	modernc.org/mathutil v1.5.0 // indirect
 	modernc.org/memory v1.5.0 // indirect
@@ -36,7 +37,10 @@ require (
 )
 
 require (
-	github.com/gorilla/websocket v1.5.3
+	// GO-2026-6278 / GHSA-w67g-5rqw-f597（CWE-338）：v1.5.3 的 newMaskKey
+	// 仍用 math/rand 生成 WebSocket 掩码键；上游修复 d67f4185 尚未发 tag，
+	// 故钉 Go vuln DB 指定的伪版本（crypto/rand）。有正式修复版后升级。
+	github.com/gorilla/websocket v1.5.4-0.20240701034025-d67f41855da4
 	github.com/mattn/go-sqlite3 v1.14.53 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
