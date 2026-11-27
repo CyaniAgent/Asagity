@@ -9,6 +9,11 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\\..\\Verse.Shared\\Verse.Shared.csproj" />
+    <ProjectReference Include="..\\..\\Verse.Data\\Verse.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
   </ItemGroup>
 
 </Project>

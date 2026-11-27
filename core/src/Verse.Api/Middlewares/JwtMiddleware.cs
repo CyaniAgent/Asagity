@@ -1,6 +1,4 @@
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Verse.Shared;
 
@@ -14,10 +12,7 @@ namespace Verse.Api.Middlewares;
 /// </summary>
 public sealed class JwtMiddleware(RequestDelegate next, IConfiguration config)
 {
-    private readonly string _secret =
-        config["JWT_SECRET"]
-        ?? Environment.GetEnvironmentVariable("JWT_SECRET")
-        ?? "asagity_secret_miku_39";
+    private readonly byte[] _key = JwtSecrets.DeriveKey(JwtSecrets.Resolve(config));
 
     public async Task InvokeAsync(HttpContext http)
     {
@@ -71,12 +66,9 @@ public sealed class JwtMiddleware(RequestDelegate next, IConfiguration config)
                 new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
-                    // HMAC-SHA256 needs a 256-bit key, while the shared secret is
-                    // shorter. Both stacks derive the key as SHA-256(secret)
-                    // (core/src/Verse.Engine/internal/platform/jwtx), so tokens
-                    // stay interchangeable.
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                        SHA256.HashData(Encoding.UTF8.GetBytes(_secret))),
+                    // HMAC-SHA256 needs a 256-bit key; both stacks derive it as
+                    // SHA-256(secret) so tokens stay interchangeable.
+                    IssuerSigningKey = new SymmetricSecurityKey(_key),
                     ValidateIssuer = false,
                     ValidateAudience = false,
                     ValidateLifetime = true,

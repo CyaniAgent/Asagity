@@ -3,6 +3,7 @@
 .claude/
 CODE_WIKI.md
 web/CLAUDE.md
+.workbuddy-ai/
 
 # Enviroment variables
 .env

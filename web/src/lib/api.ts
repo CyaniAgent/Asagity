@@ -35,13 +35,30 @@ async function request<T>(
     : "";
   const path = `${url}${queryString}`;
 
+  const isJsonBody =
+    typeof options.body === "string" ||
+    (options.body !== null &&
+      typeof options.body === "object" &&
+      !(options.body instanceof FormData) &&
+      !(options.body instanceof URLSearchParams) &&
+      !(options.body instanceof Blob) &&
+      !(options.body instanceof ArrayBuffer));
+  if (isJsonBody && !Object.keys(headers).some((k) => k.toLowerCase() === "content-type")) {
+    // Minimal API returns 415 without this header — fetch defaults to text/plain.
+    headers["Content-Type"] = "application/json";
+  }
+
+  let body: BodyInit | undefined;
+  if (isJsonBody) {
+    body = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
+  } else if (options.body != null) {
+    body = options.body as BodyInit;
+  }
+
   const response = await fetchBackend(path, {
     method: options.method,
     headers,
-    body:
-      options.body && typeof options.body === "object" && !(options.body instanceof FormData)
-        ? JSON.stringify(options.body)
-        : options.body ?? undefined,
+    body,
     signal: options.signal,
   });
 

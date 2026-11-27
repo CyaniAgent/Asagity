@@ -8,6 +8,12 @@ import { startMemoryMonitor } from "@/lib/memoryManager";
 import { useEffect } from "react";
 import { useTermitySessionsStore } from "@/stores/termitySessions";
 import { usePageStripStore } from "@/stores/pageStrip";
+import { AuthShell } from "@/components/auth/AuthShell";
+/* 登录/注册表单与 AuthShell 同为静态引入：auth 外壳的"切换不卸载"动画
+ * 依赖整个子树永不 Suspense 挂起——一旦挂起，楔形会被 fallback 转圈替换
+ * （表现为切换注册页时闪过 loading 圈）。这几个组件体量很小，不值得拆 chunk。 */
+import { LoginPage } from "@/components/auth/LoginPage";
+import { RegisterPage } from "@/components/auth/RegisterPage";
 
 const Termity = lazy(() =>
   import("@/components/termity/Termity").then((m) => ({ default: m.Termity }))
@@ -31,12 +37,7 @@ const PortalDebuggerContent = lazy(() =>
 const AuthForm = lazy(() =>
   import("@/components/auth/AuthForm").then((m) => ({ default: m.AuthForm }))
 );
-const RegisterPage = lazy(() =>
-  import("@/components/auth/RegisterPage").then((m) => ({ default: m.RegisterPage }))
-);
-const LoginPage = lazy(() =>
-  import("@/components/auth/LoginPage").then((m) => ({ default: m.LoginPage }))
-);
+
 const TimelineFeed = lazy(() =>
   import("@/components/post/TimelineFeed").then((m) => ({ default: m.TimelineFeed }))
 );
@@ -81,7 +82,7 @@ export function getViewConfig(viewType: string | null) {
     case "login_window":
       return { title: "登录", icon: "lock", width: 780, height: 520, disableMinimize: true };
     case "register_window":
-      return { title: "注册新账号", icon: "person_add", width: 820, height: 580, disableMinimize: true };
+      return { title: "注册新账号", icon: "person_add", width: 780, height: 520, disableMinimize: true };
     case "welcome_timeline":
       return { title: "时间线", icon: "public", width: 500, height: 600, disableMinimize: true };
     case "welcome_federation":
@@ -127,10 +128,19 @@ export function renderContent(viewType: string | null, refreshKey: number, brows
       return <Suspense fallback={<WindowManagerFallback />}><PlaylistWindow /></Suspense>;
     case "auth":
       return <Suspense fallback={<WindowManagerFallback />}><AuthForm /></Suspense>;
+    /* 两个视图共用同一个 AuthShell 实例：切 viewType 时外壳不会被
+     * 卸载，楔形和品牌块才能真的从一侧滑到另一侧。 */
     case "login_window":
-      return <Suspense fallback={<WindowManagerFallback />}><LoginPage /></Suspense>;
-    case "register_window":
-      return <Suspense fallback={<WindowManagerFallback />}><RegisterPage /></Suspense>;
+    case "register_window": {
+      const isRegister = viewType === "register_window";
+      return (
+        <Suspense fallback={<WindowManagerFallback />}>
+          <AuthShell side={isRegister ? "left" : "right"} windowId={windowId ?? ""}>
+            {isRegister ? <RegisterPage /> : <LoginPage />}
+          </AuthShell>
+        </Suspense>
+      );
+    }
     case "welcome_timeline":
       return <Suspense fallback={<WindowManagerFallback />}><TimelineFeed /></Suspense>;
     case "welcome_federation":
@@ -186,6 +196,7 @@ export function WindowManager() {
             title={config.title}
             icon={config.icon}
             type={win.viewType}
+            windowId={win.id}
             initialWidth={config.width}
             initialHeight={config.height}
             minWidth={(config as { minWidth?: number }).minWidth}
@@ -193,6 +204,7 @@ export function WindowManager() {
             disableMaximize={config.disableMaximize}
             disableMinimize={config.disableMinimize || isWelcomePage}
             disableTransfer={config.disableTransfer || isWelcomePage}
+            hideHeader={win.viewType === "login_window" || win.viewType === "register_window"}
             onClose={() => close(win.id)}
             onFocus={() => focus(win.id)}
             onMinimize={(v) => setMinimized(win.id, v)}

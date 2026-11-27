@@ -5,11 +5,24 @@
  * - re-resizable（缩放，纯函数组件，React 19 兼容）
  * - Pointer Events 自研拖拽（~50 行，完全可控）
  */
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, createContext, useContext } from "react";
 import { Resizable } from "re-resizable";
 import { createPortal } from "react-dom";
 import { WindowHeader } from "@/components/layout/WindowHeader";
+import { useFreeWindowStore } from "@/stores/freeWindow";
 import type { ViewType } from "@/types/windows";
+
+/** Window actions exposed to content that renders its own controls. */
+export interface FreeWindowActions {
+  close: () => void;
+  toggleMaximize: () => void;
+}
+
+const FreeWindowActionsContext = createContext<FreeWindowActions | null>(null);
+
+export function useFreeWindowActions(): FreeWindowActions | null {
+  return useContext(FreeWindowActionsContext);
+}
 
 /* ── re-resizable handle 样式（位置 + hover 效果） ─────────── */
 const HANDLE_STYLE_BASE: React.CSSProperties = {
@@ -33,6 +46,8 @@ interface FreeWindowProps {
   title?: string;
   icon?: string;
   type?: ViewType;
+  /** 所属窗口 id：auth 分离退场时用于匹配 closingWindow，让外壳同步渐隐 */
+  windowId?: string;
   initialWidth?: number;
   initialHeight?: number;
   minWidth?: number;
@@ -41,6 +56,8 @@ interface FreeWindowProps {
   disableTransfer?: boolean;
   disableMaximize?: boolean;
   disableMinimize?: boolean;
+  /** Hide the built-in title bar; content renders its own window controls. */
+  hideHeader?: boolean;
   onClose?: () => void;
   onFocus?: () => void;
   /** 本地最小化按钮回写 store，保证任务栏状态一致 */
@@ -61,6 +78,7 @@ export function FreeWindow({
   title,
   icon,
   type,
+  windowId,
   initialWidth = 450,
   initialHeight = 600,
   minWidth = 300,
@@ -69,6 +87,7 @@ export function FreeWindow({
   disableTransfer = false,
   disableMaximize = false,
   disableMinimize = false,
+  hideHeader = false,
   onClose,
   onFocus,
   onMinimize,
@@ -157,6 +176,23 @@ export function FreeWindow({
     }
   }, [isOpen]);
 
+  /* auth 分离退场进行中：内容（表单/楔形）在 AuthShell 内飞出，但窗口
+   * 外壳（圆角框/边框/阴影）不属于它——不渐隐的话内容飞完后窗口框会
+   * 突然消失，观感就是"硬关闭"。外壳用同一条曲线同步渐隐兜底。
+   * 必须放在 if (!mounted) return null 之前：条件 return 之后不能调用
+   * hook，否则首次渲染跳过、二次渲染执行，hook 数量不一致会崩掉整树。 */
+  const authClosing = useFreeWindowStore((s) => s.closingWindow);
+  const shellExiting =
+    authClosing !== null &&
+    authClosing === windowId &&
+    (type === "login_window" || type === "register_window");
+  const shellExitingStyle: React.CSSProperties | undefined = shellExiting
+    ? {
+        opacity: 0,
+        transition: "opacity var(--auth-exit-dur) var(--auth-exit-ease)",
+      }
+    : undefined;
+
   if (!mounted) return null;
 
   /* ── 拖拽：Pointer Events ────────────────────────────────── */
@@ -225,7 +261,14 @@ export function FreeWindow({
     setIsMaximized(false);
   };
 
+
   const handleClose = () => {
+    // 登录 / 注册窗口的关闭走内容分离退场（store.close 内驱动表单与
+    // 楔形向外飞出），不叠加窗口级收拢动画，两种运动会互相打架。
+    if (type === "login_window" || type === "register_window") {
+      onClose?.();
+      return;
+    }
     setIsClosing(true);
     addTimer(() => {
       setIsClosing(false);
@@ -337,36 +380,38 @@ export function FreeWindow({
         }}
       >
         <div
-          className={`flex flex-col h-full overflow-hidden ${
+          className={`free-window-shell flex flex-col h-full overflow-hidden ${
             isMaximized
               ? "rounded-none border-0 shadow-none bg-sheet"
               : "rounded-2xl border border-line shadow-2xl bg-sheet/90 backdrop-blur-glassheavy"
           }`}
+          style={shellExitingStyle}
         >
           {/* 拖拽手柄 / 标题栏 */}
-          <div className={`shrink-0 w-full ${isMaximized ? "cursor-default" : "cursor-grab active:cursor-grabbing"}`}>
-            <div className="window-drag-handle">
-              <WindowHeader
-                mode="free"
-                type={type}
-                customTitle={title}
-                customIcon={icon}
-                isMaximized={isMaximized}
-                isMinimized={isMinimized}
-                scrolled={contentScrolled}
-                disableTransfer={disableTransfer}
-                disableMaximize={disableMaximize}
-                disableMinimize={disableMinimize}
-                onClose={handleClose}
-                onToggleMaximize={handleToggleMaximize}
-                onToggleMinimize={handleToggleMinimize}
-                onRefresh={onRefresh}
-                onSwitchMode={onSwitchMode}
-                renderTitle={renderTitle}
-              />
+          {!hideHeader && (
+            <div className={`shrink-0 w-full ${isMaximized ? "cursor-default" : "cursor-grab active:cursor-grabbing"}`}>
+              <div className="window-drag-handle">
+                <WindowHeader
+                  mode="free"
+                  type={type}
+                  customTitle={title}
+                  customIcon={icon}
+                  isMaximized={isMaximized}
+                  isMinimized={isMinimized}
+                  scrolled={contentScrolled}
+                  disableTransfer={disableTransfer}
+                  disableMaximize={disableMaximize}
+                  disableMinimize={disableMinimize}
+                  onClose={handleClose}
+                  onToggleMaximize={handleToggleMaximize}
+                  onToggleMinimize={handleToggleMinimize}
+                  onRefresh={onRefresh}
+                  onSwitchMode={onSwitchMode}
+                  renderTitle={renderTitle}
+                />
+              </div>
             </div>
-          </div>
-
+          )}
           {/* 内容区域 */}
           <div
             className="flex-1 overflow-auto custom-scrollbar relative flex flex-col"
@@ -375,7 +420,11 @@ export function FreeWindow({
               setContentScrolled((prev) => (prev === t ? prev : t));
             }}
           >
-            {children}
+            <FreeWindowActionsContext.Provider
+              value={{ close: handleClose, toggleMaximize: handleToggleMaximize }}
+            >
+              {children}
+            </FreeWindowActionsContext.Provider>
           </div>
         </div>
       </Resizable>

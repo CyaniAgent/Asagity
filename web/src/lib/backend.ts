@@ -31,6 +31,42 @@ export function toApiNetPath(path: string): string | null {
   return null;
 }
 
+/**
+ * Username/password auth is live on .NET (S5). The Go engine keeps its own
+ * lite database, so sending these paths to it first produces ERR 14101 for
+ * accounts registered through .NET. Email-challenge flows stay on Go.
+ */
+const NET_OWNED_AUTH_PATHS = new Set([
+  "/api/auth/login",
+  "/api/auth/register",
+  "/api/auth/refresh",
+  "/api/auth/me",
+  "/api/auth/logout",
+  "/api/auth/logout-all",
+]);
+
+function toNetOwnedAuthPath(path: string): string | null {
+  const bare = path.split("?")[0];
+  return NET_OWNED_AUTH_PATHS.has(bare) ? `${NET_API_PREFIX}${path.slice("/api".length)}` : null;
+}
+
+/**
+ * Gateway-level failures from Vite/nginx: the Go engine is down (or the
+ * reverse proxy could not reach it). These are just as fatal for the UI as a
+ * transport error, so mirror them to the .NET backend.
+ */
+const GATEWAY_FAILURE_STATUSES = new Set([502, 503, 504]);
+
+/** Streams are consumed by the first fetch; everything else can be replayed. */
+function isReplayableBody(body?: BodyInit | null): boolean {
+  if (body == null || typeof body === "string") return true;
+  if (typeof Blob !== "undefined" && body instanceof Blob) return true;
+  if (typeof FormData !== "undefined" && body instanceof FormData) return true;
+  if (typeof URLSearchParams !== "undefined" && body instanceof URLSearchParams) return true;
+  if (body instanceof ArrayBuffer || ArrayBuffer.isView(body)) return true;
+  return false;
+}
+
 /** True for network-level failures where a backend fallback is worth trying. */
 export function isNetworkFailure(err: unknown): boolean {
   const msg = err instanceof Error ? err.message.toLowerCase() : String(err).toLowerCase();
@@ -44,22 +80,33 @@ export function isNetworkFailure(err: unknown): boolean {
 }
 
 /**
- * Fetch with .NET fallback: try the primary (engine :2048) path first,
- * retry once against the mirrored `/api-net` path on network failure.
- * HTTP error statuses (4xx/5xx) are NOT retried — only transport failures.
+ * Fetch with backend ownership: username/password auth goes straight to .NET;
+ * all other paths try the primary (engine) first, then retry once against the
+ * mirrored `/api-net` path when the engine is unreachable
+ * (transport error) or the proxy reports 502/503/504. Real HTTP errors from a
+ * live backend (4xx, 500) pass through so callers see the original contract.
  */
 export async function fetchBackend(path: string, init?: RequestInit): Promise<Response> {
-  let res: Response;
+  const owned = toNetOwnedAuthPath(path);
+  if (owned !== null) {
+    return fetch(owned, init);
+  }
+
+  const mirror = toApiNetPath(path);
+  const canRetry = mirror !== null && isReplayableBody(init?.body);
+
   try {
-    res = await fetch(path, init);
+    const res = await fetch(path, init);
+    if (canRetry && GATEWAY_FAILURE_STATUSES.has(res.status)) {
+      return fetch(mirror!, init);
+    }
+    return res;
   } catch (err) {
-    const mirror = toApiNetPath(path);
-    if (mirror && isNetworkFailure(err)) {
-      return fetch(mirror, init);
+    if (canRetry && isNetworkFailure(err)) {
+      return fetch(mirror!, init);
     }
     throw err;
   }
-  return res;
 }
 
 /** Probe one backend health endpoint with a timeout. Returns true when HTTP 2xx. */

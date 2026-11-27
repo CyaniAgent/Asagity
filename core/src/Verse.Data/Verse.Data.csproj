@@ -15,6 +15,10 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.14" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.14" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <!-- Go's auth service stores bcrypt ($2a$/2b$) hashes in the shared users
+         table. Verification must accept them during the S5 migration window;
+         plain Verify (not EnhancedVerify) is wire-compatible with Go bcrypt. -->
+    <PackageReference Include="BCrypt.Net-Next" Version="4.2.1" />
     <!-- Security: pin the native SQLite for the whole solution.
          CVE-2025-6965 / GHSA-2m69-gcr7-jv3q (aggregate terms > columns ->
          memory corruption, fixed in SQLite 3.50.2) was the original trigger:

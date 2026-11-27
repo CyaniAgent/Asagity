@@ -368,3 +368,108 @@ code, kbd, samp, pre {
 .toast-slide-out {
   animation: toast-slide-out 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
+
+/* ── Auth brand wedge ──────────────────────────────────────────────
+ * 楔形现在完全由 clip-path 描述，不再用 rotate + skew 让窗口去裁。
+ *
+ * 换掉的原因是可过渡：登录页楔形贴右、注册页贴左，两者是精确的
+ * 镜像。用 rotate/skew 表达镜像必须同时翻转 transform-origin 和
+ * left/right，这几样都不可插值，切换时只能硬跳；而 polygon() 只要
+ * 顶点数量与单位一致就能逐点插值 —— 楔形可以从右边一路扫到左边，
+ * 中途收成一条斜带，这才是"品牌面板整体位移"该有的样子。
+ *
+ * 顶点顺序固定 左上 → 右上 → 右下 → 左下，插值过程中不会自交：
+ *   右：45% / 100% / 75%   上宽下窄，贴右边缘（登录）
+ *   左：55% / 25% / 0%     完全镜像，贴左边缘（注册）
+ *
+ * 斜边不做任何描边：clip-path 会裁掉元素自身的 border，而通过父级
+ * drop-shadow 假装描边的方案（曾用于画 1px 亮线）已在楔形简化时移除，
+ * 现在 .brand-wedge 单层即可，不需要 shadow 包裹层。
+ */
+:root {
+  --auth-sweep-dur: 620ms;
+  --auth-sweep-ease: cubic-bezier(0.65, 0, 0.35, 1);
+  /* 关闭退场（表单与楔形向外分离）：AUTH_EXIT_MS（freeWindow.ts）
+   * 必须与 --auth-exit-dur 保持一致。加速曲线让元素有"被推出去"的离场感。 */
+  --auth-exit-dur: 420ms;
+  --auth-exit-ease: cubic-bezier(0.4, 0, 1, 1);
+}
+
+.brand-wedge {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(45deg, var(--wedge-from), var(--wedge-to));
+  clip-path: polygon(45% 0%, 100% 0%, 100% 100%, 75% 100%);
+  transition: clip-path var(--auth-sweep-dur) var(--auth-sweep-ease);
+}
+
+.auth-brand[data-side="left"] .brand-wedge {
+  background: linear-gradient(-45deg, var(--wedge-from), var(--wedge-to));
+  clip-path: polygon(0% 0%, 55% 0%, 25% 100%, 0% 100%);
+}
+
+/* 品牌块跟着楔形一起横移。宽度 32% 落在楔形中段的空白区里，
+ * 212.5% = 68% ÷ 32%，把它从 x=0 平移到 x=68% 处。 */
+.auth-brand-block {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  width: 32%;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  text-align: center;
+  transform: translateX(212.5%);
+  transition: transform var(--auth-sweep-dur) var(--auth-sweep-ease);
+}
+
+.auth-brand[data-side="left"] .auth-brand-block {
+  transform: translateX(0);
+}
+
+/* 窄屏放不下楔形里的品牌文案，交给表单头部的 Logo 兜底。 */
+@media (max-width: 767px) {
+  .auth-brand-block {
+    display: none;
+  }
+}
+
+/* 无障碍：系统开启"减少动态效果"时，楔形切换动画（CSS 类驱动）直接换态。
+ * 表单淡入淡出与关闭退场是内联 style，由 AuthShell 里的 matchMedia 处理。 */
+@media (prefers-reduced-motion: reduce) {
+
+  .brand-wedge,
+  .auth-brand-block {
+    transition: none;
+  }
+}
+
+/* ── Free windows: continuous (squircle) corner curvature ───────────
+ * border-radius still supplies the size; corner-shape replaces the
+ * circular arc with a superellipse so the straight edges blend into the
+ * corner without a visible curvature jump. Browsers without support keep
+ * the regular rounded-2xl corners.
+ */
+@supports (corner-shape: squircle) {
+  .free-window-shell:not(.rounded-none) {
+    corner-shape: squircle;
+  }
+}
+
+/* ── Login field: kill the browser autofill background ───────────────
+ * Chrome paints saved-credential inputs with its own opaque fill. Repaint
+ * the field with the page background (passed in as CSS vars by LoginPage)
+ * so filled and empty fields look identical.
+ */
+.m3-login-field input:-webkit-autofill,
+.m3-login-field input:-webkit-autofill:hover,
+.m3-login-field input:-webkit-autofill:focus,
+.m3-login-field input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px var(--m3-field-bg) inset !important;
+  -webkit-text-fill-color: var(--m3-field-fg) !important;
+  caret-color: var(--m3-field-fg);
+  transition: background-color 9999s ease-out;
+}

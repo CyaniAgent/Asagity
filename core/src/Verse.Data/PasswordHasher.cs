@@ -3,14 +3,15 @@ using System.Security.Cryptography;
 namespace Verse.Data;
 
 /// <summary>
-/// Password hashing for the .NET stack. The Go engine uses bcrypt; this
-/// implementation uses PBKDF2 (SHA-256, 210k iterations) with a per-password
-/// salt and a versioned, self-describing payload so hashes stay verifiable
-/// and upgradeable.
+/// Password hashing for the .NET stack. New hashes use PBKDF2 (SHA-256,
+/// 210k iterations) with a per-password salt and a versioned, self-describing
+/// payload so hashes stay verifiable and upgradeable.
 ///
-/// NOTE: accounts seeded by the Go engine carry bcrypt hashes and therefore
-/// cannot be verified by this hasher until the auth module is transliterated
-/// (stage S5); the .NET side only verifies its own hashes for now.
+/// The Go engine writes bcrypt ($2a$/$2b$) hashes into the same users table,
+/// so verification also understands those legacy hashes during the S5
+/// migration window. New writes are always PBKDF2; a successful bcrypt
+/// verification can be upgraded by calling <see cref="NeedsUpgrade"/> and
+/// <see cref="Hash"/>.
 /// </summary>
 public static class PasswordHasher
 {
@@ -28,11 +29,36 @@ public static class PasswordHasher
         return $"{Prefix}${Iterations}${Convert.ToBase64String(salt)}${Convert.ToBase64String(hash)}";
     }
 
+    /// <summary>True when the stored hash came from the Go engine and should be upgraded on next login.</summary>
+    public static bool NeedsUpgrade(string stored) =>
+        !string.IsNullOrEmpty(stored) && !stored.StartsWith(Prefix + "$", StringComparison.Ordinal);
+
     public static bool Verify(string password, string stored)
     {
-        if (string.IsNullOrEmpty(stored))
+        if (string.IsNullOrEmpty(stored) || string.IsNullOrEmpty(password))
         {
             return false;
+        }
+
+        if (!stored.StartsWith(Prefix + "$", StringComparison.Ordinal))
+        {
+            // Go bcrypt hashes: $2a$/$2b$ followed by cost, salt and digest.
+            // Plain Verify (not EnhancedVerify) is the wire-compatible mode.
+            if (!stored.StartsWith("$2", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            try
+            {
+                return BCrypt.Net.BCrypt.Verify(password, stored);
+            }
+            catch (Exception)
+            {
+                // Malformed/truncated legacy hash: treat as a failed login
+                // instead of leaking the parsing error to the caller.
+                return false;
+            }
         }
 
         var parts = stored.Split('$');

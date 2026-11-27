@@ -84,11 +84,11 @@ core/
 
 ## 🧱 Modular Business Domains (`Verse.Modules`)
 
-> Migration status ([`docs/architecture/tech-stack-audit.md`](../docs/architecture/tech-stack-audit.md)): **Instance, User, Shell and Music are live on .NET** (EF Core backed); **Auth, Note, Drive, Follow and Asset are still 501 stubs** while the Go engine keeps the working implementation until stages S5–S8 port them over.
+> Migration status ([`docs/architecture/tech-stack-audit.md`](../docs/architecture/tech-stack-audit.md)): **Instance, User, Shell, Music and username/password Auth are live on .NET** (EF Core backed); **Auth email-challenge flows and Note, Drive, Follow, Asset are still stubs** while the Go engine keeps the working implementation until stages S5b–S8 port them over.
 
 | Module package | Description |
 | :--- | :--- |
-| **`Verse.Module.Auth`** | Registration/login, 6-digit email OTP, JWT verification (30-min Access Token + 30-day Cookie Refresh Token rotation), device trust and global logout. *(501 stub on .NET — Go owns the live implementation)* |
+| **`Verse.Module.Auth`** | Username/password registration & login, JWT (30-min access token) and 30-day rotating refresh cookie, logout/logout-all, `/me`; verifies both PBKDF2 and Go bcrypt hashes. *(email OTP / device trust still 501 on .NET — Go owns those flows)* |
 | **`Verse.Module.User`** | User profiles, permission-group management, and Asagity's unique `pubid` (globally unique `usr_`-prefixed identifier, changeable monthly). |
 | **`Verse.Module.Instance`** | Health checks (`GET /healthz`), version and instance metadata exposure (`/api/meta/instance`). |
 | **`Verse.Module.Drive`** | Skyline Drive cloud system: chunked uploads and directory management across Local Disk, S3 object storage, and WebDAV mounts. |

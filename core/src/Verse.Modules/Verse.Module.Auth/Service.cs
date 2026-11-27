@@ -16,37 +16,33 @@ public static class AuthErrors
     public const string Unauthorized = "UNAUTHORIZED";
     public const string UserNotFound = "USER_NOT_FOUND";
     public const string VerificationFailed = "VERIFICATION_FAILED";
+    public const string EmailAuthNotImplemented = "EMAIL_AUTH_NOT_IMPLEMENTED";
 }
 
-/// <summary>Contract ported from Go <c>auth/service.Service</c> (30-min access / 30-day refresh).</summary>
+/// <summary>
+/// Contract ported from Go <c>auth/service.Service</c>. Username/password
+/// flows are live on .NET (30-min access / 30-day refresh); the email-challenge
+/// flows remain explicit 501s until mail delivery is ported in S5b.
+/// </summary>
 public interface IAuthService
 {
-    AuthResponse Register(RegisterRequest request);
-    RegisterSendCodeResponse RegisterWithEmail(RegisterWithEmailRequest request);
-    AuthResponse VerifyRegisterEmail(VerifyEmailRequest request);
-    AuthResponse Login(LoginRequest request);
-    AuthResponse VerifyLoginEmail(VerifyEmailRequest request, string deviceFingerprint, string deviceName);
-    AuthResponse Refresh(string refreshToken);
-    void Logout(string refreshToken);
-    void LogoutAll(string userId);
-    UserResponse Me(string userId);
-    RegisterSendCodeResponse SendLoginVerificationEmail(string userId, string deviceFingerprint, string deviceName);
+    Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken ct = default);
+    Task<RegisterSendCodeResponse> RegisterWithEmailAsync(RegisterWithEmailRequest request, CancellationToken ct = default);
+    Task<AuthResponse> VerifyRegisterEmailAsync(VerifyEmailRequest request, CancellationToken ct = default);
+    Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken ct = default);
+    Task<AuthResponse> VerifyLoginEmailAsync(VerifyEmailRequest request, string deviceFingerprint, string deviceName, CancellationToken ct = default);
+    Task<AuthResponse> RefreshAsync(string refreshToken, CancellationToken ct = default);
+    Task LogoutAsync(string refreshToken, CancellationToken ct = default);
+    Task LogoutAllAsync(string userId, CancellationToken ct = default);
+    Task<UserResponse> MeAsync(string userId, CancellationToken ct = default);
+    Task<RegisterSendCodeResponse> SendLoginVerificationEmailAsync(string userId, string deviceFingerprint, string deviceName, CancellationToken ct = default);
 }
 
-/// <summary>DI stub: every call returns 503 until the real service lands.</summary>
-public sealed class NotImplementedAuthService : IAuthService
+/// <summary>Common failure for the email-challenge flows (no mail service on .NET yet).</summary>
+public static class EmailAuthNotImplemented
 {
-    private static ModuleException Todo() =>
-        new(StatusCodes.Status503ServiceUnavailable, "AUTH_NOT_IMPLEMENTED", ".NET layer is planned but not implemented; use Go engine /api/*");
-
-    public AuthResponse Register(RegisterRequest request) => throw Todo();
-    public RegisterSendCodeResponse RegisterWithEmail(RegisterWithEmailRequest request) => throw Todo();
-    public AuthResponse VerifyRegisterEmail(VerifyEmailRequest request) => throw Todo();
-    public AuthResponse Login(LoginRequest request) => throw Todo();
-    public AuthResponse VerifyLoginEmail(VerifyEmailRequest request, string deviceFingerprint, string deviceName) => throw Todo();
-    public AuthResponse Refresh(string refreshToken) => throw Todo();
-    public void Logout(string refreshToken) => throw Todo();
-    public void LogoutAll(string userId) => throw Todo();
-    public UserResponse Me(string userId) => throw Todo();
-    public RegisterSendCodeResponse SendLoginVerificationEmail(string userId, string deviceFingerprint, string deviceName) => throw Todo();
+    public static ModuleException Error() => new(
+        StatusCodes.Status501NotImplemented,
+        AuthErrors.EmailAuthNotImplemented,
+        "Email verification is not implemented on the .NET API yet; use the Go engine /api/*");
 }

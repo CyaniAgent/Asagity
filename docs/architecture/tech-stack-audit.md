@@ -60,7 +60,7 @@ Go    Verse.Cli      运维工具：versetool
 | S2 | `Verse.Data`：EF Core DbContext + 实体映射 + provider 切换（lite=SQLite / prod=Npgsql） | ✅ 已完成：列名逐列对齐 GORM schema，共用同一库 |
 | S3 | Instance 模块真化（repository + service，替换 501 桩） | ✅ 已完成：含 admin 守卫与开发者账号查询 |
 | S4 | User 模块真化（me / pubid 变更 / 历史，含月度配额与格式规则） | ✅ 已完成：36 个 .NET 单测覆盖 |
-| S5 | Auth 模块真化（签发 JWT + 邮件验证码 + refresh） | 打通 .NET 端登录闭环 |
+| S5 | Auth 模块真化（签发 JWT + 邮件验证码 + refresh） | 🔶 用户名注册/登录 + JWT + refresh 轮换已完成（含 Go bcrypt 兼容）；邮件验证码流程仍 501，待 S5b |
 | S6 | Drive / Follow / Note / Asset / Shell 依次真化 | Note 最大（含搜索） |
 | S7 | databaseless mock 迁到 .NET；Go 引擎收缩为 `/internal/*` 内部服务 | 收尾：Go 只剩 core |
 | S8 | Go 侧业务模块与 GORM repository 删除 | 终态清理 |

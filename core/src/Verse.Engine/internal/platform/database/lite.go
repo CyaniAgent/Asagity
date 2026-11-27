@@ -14,7 +14,9 @@ import (
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/cache"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/mode"
-	"gorm.io/driver/sqlite"
+	// Pure-Go SQLite driver: lite mode must run without a C toolchain (and
+	// with CGO_ENABLED=0 in CI). Tests already use this driver.
+	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 )
 

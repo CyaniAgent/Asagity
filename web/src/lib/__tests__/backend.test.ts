@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { fetchShell, toApiNetPath } from "@/lib/backend";
+import { fetchBackend, fetchShell, toApiNetPath } from "@/lib/backend";
 
 const fetchMock = vi.fn();
 
@@ -63,6 +63,66 @@ describe("fetchShell", () => {
 
     expect(res.status).toBe(404);
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("fetchBackend", () => {
+  it("mirrors a proxy 502 to the .NET API and keeps the POST body", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response("Bad Gateway", { status: 502 }))
+      .mockResolvedValueOnce(jsonResponse(200, { ok: true, data: { access_token: "t" } }));
+
+    const res = await fetchBackend("/api/meta/instance", {
+      method: "POST",
+      body: JSON.stringify({ probe: true }),
+    });
+
+    expect(res.status).toBe(200);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/meta/instance");
+    expect(fetchMock.mock.calls[1][0]).toBe("/api-net/meta/instance");
+    expect(fetchMock.mock.calls[1][1]).toMatchObject({ method: "POST" });
+  });
+
+  it("passes real backend errors through without mirroring", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(401, { ok: false, error: { message: "bad password" } }));
+
+    const res = await fetchBackend("/api/meta/instance", { method: "GET" });
+
+    expect(res.status).toBe(401);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("routes username/password auth straight to the .NET API", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, { ok: true, data: { user: {} } }));
+
+    const res = await fetchBackend("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ identifier: "demo_tester", password: "Asagity@2026" }),
+    });
+
+    expect(res.status).toBe(200);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe("/api-net/auth/login");
+    expect(fetchMock.mock.calls[0][1]).toMatchObject({ method: "POST" });
+  });
+
+  it("leaves email-challenge flows on the Go engine", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, { ok: true, data: {} }));
+
+    await fetchBackend("/api/auth/register/verify-email", { method: "POST", body: "{}" });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/auth/register/verify-email");
+  });
+
+  it("does not mirror health/websocket paths with no .NET equivalent", async () => {
+    fetchMock.mockResolvedValueOnce(new Response("Bad Gateway", { status: 502 }));
+
+    const res = await fetchBackend("/ws/timeline");
+
+    expect(res.status).toBe(502);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -70,12 +70,15 @@ describe("fetchGithubList", () => {
       "asgt_shell_gh_contributors",
       JSON.stringify({ at: Date.now() - 11 * 60_000, items: MEMBERS }),
     );
-    fetchMock.mockResolvedValueOnce(new Response("boom", { status: 502 }));
+    // The gateway failure is mirrored to .NET once before the stale cache wins.
+    fetchMock
+      .mockResolvedValueOnce(new Response("boom", { status: 502 }))
+      .mockResolvedValueOnce(new Response("boom", { status: 502 }));
 
     const items = await fetchGithubList("contributors");
 
     expect(items).toHaveLength(2);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it("throws only when there is neither cache nor upstream", async () => {

@@ -9,26 +9,32 @@ public static class AuthModule
     private static readonly CookieOptions RefreshCookieOptions = new()
     {
         Path = "/",
-        MaxAge = TimeSpan.FromDays(30),
+        MaxAge = JwtTokenIssuer.RefreshTokenLifetime,
         Secure = true,
         HttpOnly = true,
         SameSite = SameSiteMode.Strict,
     };
 
-    public static void AddServices(IServiceCollection services) =>
-        services.AddSingleton<IAuthService, NotImplementedAuthService>();
+    public static void AddServices(IServiceCollection services)
+    {
+        // Single-replica by default; swap IRefreshTokenStore for a distributed
+        // implementation when running more than one API instance.
+        services.AddSingleton<IRefreshTokenStore, InMemoryRefreshTokenStore>();
+        services.AddSingleton<JwtTokenIssuer>();
+        services.AddScoped<IAuthService, AuthService>();
+    }
 
     public static void Register(WebApplication app)
     {
         var group = app.MapGroup("/api/auth");
 
-        group.MapPost("/register", (RegisterRequest? req, IAuthService svc, HttpContext http) =>
+        group.MapPost("/register", async (RegisterRequest? req, IAuthService svc, HttpContext http, CancellationToken ct) =>
         {
             if (req is null)
                 return Fail(400, AuthErrors.InvalidRequest, "Invalid request body");
             try
             {
-                var res = svc.Register(req);
+                var res = await svc.RegisterAsync(req, ct);
                 SetRefreshCookie(http, res.RefreshToken);
                 return ApiResults.Created(res);
             }
@@ -36,22 +42,22 @@ public static class AuthModule
             catch (Exception ex) { return Fail(409, AuthErrors.RegistrationFailed, ex.Message); }
         });
 
-        group.MapPost("/register/with-email", (RegisterWithEmailRequest? req, IAuthService svc) =>
+        group.MapPost("/register/with-email", async (RegisterWithEmailRequest? req, IAuthService svc, CancellationToken ct) =>
         {
             if (req is null)
                 return Fail(400, AuthErrors.InvalidRequest, "Invalid request body");
-            try { return ApiResults.Ok(svc.RegisterWithEmail(req)); }
+            try { return ApiResults.Ok(await svc.RegisterWithEmailAsync(req, ct)); }
             catch (ModuleException ex) { return ApiResults.From(ex); }
             catch (Exception ex) { return Fail(400, AuthErrors.RegistrationFailed, ex.Message); }
         });
 
-        group.MapPost("/register/verify-email", (VerifyEmailRequest? req, IAuthService svc, HttpContext http) =>
+        group.MapPost("/register/verify-email", async (VerifyEmailRequest? req, IAuthService svc, HttpContext http, CancellationToken ct) =>
         {
             if (req is null)
                 return Fail(400, AuthErrors.InvalidRequest, "Invalid request body");
             try
             {
-                var res = svc.VerifyRegisterEmail(req);
+                var res = await svc.VerifyRegisterEmailAsync(req, ct);
                 SetRefreshCookie(http, res.RefreshToken);
                 return ApiResults.Ok(res);
             }
@@ -59,13 +65,13 @@ public static class AuthModule
             catch (Exception ex) { return Fail(400, AuthErrors.VerificationFailed, ex.Message); }
         });
 
-        group.MapPost("/login", (LoginRequest? req, IAuthService svc, HttpContext http) =>
+        group.MapPost("/login", async (LoginRequest? req, IAuthService svc, HttpContext http, CancellationToken ct) =>
         {
             if (req is null)
                 return Fail(400, AuthErrors.InvalidRequest, "Invalid request body");
             try
             {
-                var res = svc.Login(req);
+                var res = await svc.LoginAsync(req, ct);
                 SetRefreshCookie(http, res.RefreshToken);
                 return ApiResults.Ok(res);
             }
@@ -73,15 +79,15 @@ public static class AuthModule
             catch (Exception ex) { return Fail(401, AuthErrors.LoginFailed, ex.Message); }
         });
 
-        group.MapPost("/login/verify-email", (VerifyEmailRequest? req, IAuthService svc, HttpContext http) =>
+        group.MapPost("/login/verify-email", async (VerifyEmailRequest? req, IAuthService svc, HttpContext http, CancellationToken ct) =>
         {
             if (req is null)
                 return Fail(400, AuthErrors.InvalidRequest, "Invalid request body");
             try
             {
-                var res = svc.VerifyLoginEmail(req,
+                var res = await svc.VerifyLoginEmailAsync(req,
                     http.Request.Headers["X-Device-Fingerprint"].ToString(),
-                    http.Request.Headers["X-Device-Name"].ToString());
+                    http.Request.Headers["X-Device-Name"].ToString(), ct);
                 SetRefreshCookie(http, res.RefreshToken);
                 return ApiResults.Ok(res);
             }
@@ -89,7 +95,7 @@ public static class AuthModule
             catch (Exception ex) { return Fail(400, AuthErrors.VerificationFailed, ex.Message); }
         });
 
-        group.MapPost("/refresh", (RefreshRequest? body, IAuthService svc, HttpContext http) =>
+        group.MapPost("/refresh", async (RefreshRequest? body, IAuthService svc, HttpContext http, CancellationToken ct) =>
         {
             // Cookie is preferred, JSON body is the fallback (mirrors Go handler).
             var token = http.Request.Cookies[RefreshCookie] ?? body?.RefreshToken;
@@ -97,7 +103,7 @@ public static class AuthModule
                 return Fail(400, AuthErrors.InvalidRequest, "Invalid request body");
             try
             {
-                var res = svc.Refresh(token);
+                var res = await svc.RefreshAsync(token, ct);
                 SetRefreshCookie(http, res.RefreshToken);
                 return ApiResults.Ok(res);
             }
@@ -105,7 +111,7 @@ public static class AuthModule
             catch (Exception ex) { return Fail(401, AuthErrors.RefreshFailed, ex.Message); }
         });
 
-        group.MapPost("/logout", (IAuthService svc, HttpContext http) =>
+        group.MapPost("/logout", async (IAuthService svc, HttpContext http, CancellationToken ct) =>
         {
             if (CurrentUser.From(http) is null)
                 return Fail(401, AuthErrors.Unauthorized, "User not authenticated");
@@ -113,7 +119,7 @@ public static class AuthModule
             try
             {
                 if (!string.IsNullOrEmpty(token))
-                    svc.Logout(token);
+                    await svc.LogoutAsync(token, ct);
             }
             catch (ModuleException ex) { return ApiResults.From(ex); }
             catch (Exception ex) { return Fail(500, AuthErrors.LogoutFailed, ex.Message); }
@@ -121,14 +127,14 @@ public static class AuthModule
             return ApiResults.Ok(new StatusResponse("ok"));
         });
 
-        group.MapPost("/logout-all", (IAuthService svc, HttpContext http) =>
+        group.MapPost("/logout-all", async (IAuthService svc, HttpContext http, CancellationToken ct) =>
         {
             var user = CurrentUser.From(http);
             if (user is null)
                 return Fail(401, AuthErrors.Unauthorized, "User not authenticated");
             try
             {
-                svc.LogoutAll(user.UserId);
+                await svc.LogoutAllAsync(user.UserId, ct);
             }
             catch (ModuleException ex) { return ApiResults.From(ex); }
             catch (Exception ex) { return Fail(500, AuthErrors.LogoutAllFailed, ex.Message); }
@@ -136,14 +142,14 @@ public static class AuthModule
             return ApiResults.Ok(new StatusResponse("ok"));
         });
 
-        group.MapGet("/me", (IAuthService svc, HttpContext http) =>
+        group.MapGet("/me", async (IAuthService svc, HttpContext http, CancellationToken ct) =>
         {
             var user = CurrentUser.From(http);
             if (user is null)
                 return Fail(401, AuthErrors.Unauthorized, "User not authenticated");
             try
             {
-                return ApiResults.Ok(svc.Me(user.UserId));
+                return ApiResults.Ok(await svc.MeAsync(user.UserId, ct));
             }
             catch (ModuleException ex) { return ApiResults.From(ex); }
             catch (Exception ex) { return Fail(404, AuthErrors.UserNotFound, ex.Message); }
