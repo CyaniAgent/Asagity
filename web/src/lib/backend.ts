@@ -32,9 +32,11 @@ export function toApiNetPath(path: string): string | null {
 }
 
 /**
- * Username/password auth is live on .NET (S5). The Go engine keeps its own
- * lite database, so sending these paths to it first produces ERR 14101 for
- * accounts registered through .NET. Email-challenge flows stay on Go.
+ * Username/password auth is live on .NET (S5), and the Go engine no longer
+ * serves any /api/auth/* route (the Go auth module was removed). These six
+ * paths are therefore sent to .NET directly instead of probing Go first.
+ * Email-challenge flows and /api/auth/devices are not yet in this set: their
+ * .NET implementations are S5b work and they are not live yet.
  */
 const NET_OWNED_AUTH_PATHS = new Set([
   "/api/auth/login",

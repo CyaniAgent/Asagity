@@ -11,7 +11,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	assetmodule "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/asset"
-	authmodule "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/auth"
 	drivemodule "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/drive"
 	followmodule "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/follow"
 	instancemodule "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/instance"
@@ -71,7 +70,6 @@ func New(cfg config.Config, clients *database.Clients) *App {
 	}
 
 	instancemodule.Register(mux, cfg, clients)
-	authmodule.Register(mux, cfg, clients, eventBus)
 	usermodule.Register(mux, cfg, clients, eventBus)
 	assetmodule.Register(mux, cfg, clients)
 	drivemodule.Register(mux, cfg, clients)

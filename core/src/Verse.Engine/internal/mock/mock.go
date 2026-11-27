@@ -85,14 +85,6 @@ func NewServer() *Server {
 	return s
 }
 
-func (s *Server) fakeAuth() map[string]any {
-	return map[string]any{
-		"access_token":  "mock-access-token",
-		"refresh_token": "mock-refresh-token",
-		"user":          s.user,
-	}
-}
-
 func (s *Server) nextNoteID() (string, string) {
 	n := s.seq.Add(1)
 	return fmt.Sprintf("mock-note-%04d", n), fmt.Sprintf("nt_mock%04d", n)
@@ -126,36 +118,6 @@ func (s *Server) Router() *chi.Mux {
 		})
 	})
 
-	// Auth: every flow succeeds with the fixed demo user.
-	mux.Post("/api/auth/register", func(w http.ResponseWriter, _ *http.Request) {
-		httpx.WriteJSON(w, http.StatusCreated, s.fakeAuth())
-	})
-	mux.Post("/api/auth/register/with-email", func(w http.ResponseWriter, _ *http.Request) {
-		httpx.WriteJSON(w, http.StatusOK, map[string]string{
-			"challenge_id": "mock-challenge", "expires_at": time.Now().Add(15 * time.Minute).UTC().Format(time.RFC3339),
-		})
-	})
-	mux.Post("/api/auth/register/verify-email", func(w http.ResponseWriter, _ *http.Request) {
-		httpx.WriteJSON(w, http.StatusOK, s.fakeAuth())
-	})
-	mux.Post("/api/auth/login", func(w http.ResponseWriter, _ *http.Request) {
-		httpx.WriteJSON(w, http.StatusOK, s.fakeAuth())
-	})
-	mux.Post("/api/auth/login/verify-email", func(w http.ResponseWriter, _ *http.Request) {
-		httpx.WriteJSON(w, http.StatusOK, s.fakeAuth())
-	})
-	mux.Post("/api/auth/refresh", func(w http.ResponseWriter, _ *http.Request) {
-		httpx.WriteJSON(w, http.StatusOK, s.fakeAuth())
-	})
-	mux.Post("/api/auth/logout", func(w http.ResponseWriter, _ *http.Request) {
-		httpx.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
-	})
-	mux.Post("/api/auth/logout-all", func(w http.ResponseWriter, _ *http.Request) {
-		httpx.WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
-	})
-	mux.Get("/api/auth/me", func(w http.ResponseWriter, _ *http.Request) {
-		httpx.WriteJSON(w, http.StatusOK, s.user)
-	})
 	mux.Get("/api/users/me", func(w http.ResponseWriter, _ *http.Request) {
 		httpx.WriteJSON(w, http.StatusOK, s.user)
 	})

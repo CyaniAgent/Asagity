@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"time"
 
-	authmodel "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/auth/model"
 	drivemodel "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/drive/model"
 	instancemodel "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/instance/model"
 	usermodel "github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/module/user/model"
@@ -47,9 +46,6 @@ func OpenLite(cfg config.Config) (*Clients, error) {
 		&usermodel.User{},
 		&usermodel.UserGroup{},
 		&usermodel.PubIDChange{},
-		&authmodel.Device{},
-		&authmodel.RefreshToken{},
-		&authmodel.EmailChallenge{},
 		&drivemodel.DriveFile{},
 		&drivemodel.DriveUsage{},
 	); err != nil {
