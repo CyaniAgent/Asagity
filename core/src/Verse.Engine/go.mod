@@ -20,7 +20,6 @@ require (
 	github.com/valkey-io/valkey-go/valkeycompat v1.0.80
 	golang.org/x/crypto v0.59.0
 	gorm.io/driver/postgres v1.6.3
-	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.2
 )
 
