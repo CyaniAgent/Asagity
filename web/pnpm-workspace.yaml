@@ -3,7 +3,5 @@ allowBuilds:
   '@astryxdesign/core': true
   '@parcel/watcher': true
   '@swc/core': true
+  esbuild: true
   sharp: true
-ignoredBuiltDependencies:
-  - sharp
-  - unrs-resolver
