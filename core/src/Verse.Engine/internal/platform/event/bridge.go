@@ -6,24 +6,27 @@ import (
 	"log"
 	"sync"
 
-	"github.com/redis/go-redis/v9"
+	"github.com/valkey-io/valkey-go"
+	"github.com/valkey-io/valkey-go/valkeycompat"
 )
 
-const redisEventChannel = "asagity:events"
+const valkeyEventChannel = "asagity:events"
 
 type Bridge struct {
 	bus    *Bus
-	rdb    *redis.Client
+	rdb    valkeycompat.Cmdable
 	ctx    context.Context
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
 }
 
-func NewBridge(bus *Bus, rdb *redis.Client) *Bridge {
+// NewBridge adapts the native Valkey client to the go-redis-shaped Cmdable
+// facade used by the Pub/Sub commands below.
+func NewBridge(bus *Bus, client valkey.Client) *Bridge {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Bridge{
 		bus:    bus,
-		rdb:    rdb,
+		rdb:    valkeycompat.NewAdapter(client),
 		ctx:    ctx,
 		cancel: cancel,
 	}
@@ -40,7 +43,7 @@ func (br *Bridge) Start() error {
 	br.wg.Add(1)
 	go br.subscribeFromRedis()
 
-	log.Printf("[EventBridge] Redis Pub/Sub bridge started (channel: %s)", redisEventChannel)
+	log.Printf("[EventBridge] Valkey Pub/Sub bridge started (channel: %s)", valkeyEventChannel)
 	return nil
 }
 
@@ -61,18 +64,18 @@ func (br *Bridge) publishToRedis(ctx context.Context, event Event) error {
 		return err
 	}
 
-	return br.rdb.Publish(ctx, redisEventChannel, data).Err()
+	return br.rdb.Publish(ctx, valkeyEventChannel, data).Err()
 }
 
 func (br *Bridge) subscribeFromRedis() {
 	defer br.wg.Done()
 
-	pubsub := br.rdb.Subscribe(br.ctx, redisEventChannel)
+	pubsub := br.rdb.Subscribe(br.ctx, valkeyEventChannel)
 	defer pubsub.Close()
 
 	ch := pubsub.Channel()
 
-	log.Printf("[EventBridge] Listening on Redis channel: %s", redisEventChannel)
+	log.Printf("[EventBridge] Listening on Valkey channel: %s", valkeyEventChannel)
 
 	for {
 		select {
@@ -84,7 +87,7 @@ func (br *Bridge) subscribeFromRedis() {
 			}
 			var event Event
 			if err := json.Unmarshal([]byte(msg.Payload), &event); err != nil {
-				log.Printf("[EventBridge] failed to parse event from Redis: %v", err)
+				log.Printf("[EventBridge] failed to parse event from Valkey: %v", err)
 				continue
 			}
 			br.bus.Emit(br.ctx, event)

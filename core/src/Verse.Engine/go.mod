@@ -9,14 +9,15 @@ go 1.26.1
 toolchain go1.26.11
 
 require (
-	github.com/blevesearch/bleve/v2 v2.6.3
+	github.com/blevesearch/bleve/v2 v2.6.4
 	github.com/glebarez/sqlite v1.11.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
 	github.com/hibiken/asynq v0.26.0
 	github.com/joho/godotenv v1.5.1
 	github.com/mozillazg/go-pinyin v0.21.0
-	github.com/redis/go-redis/v9 v9.23.0
+	github.com/valkey-io/valkey-go v1.0.80
+	github.com/valkey-io/valkey-go/valkeycompat v1.0.80
 	golang.org/x/crypto v0.59.0
 	gorm.io/driver/postgres v1.6.3
 	gorm.io/driver/sqlite v1.6.0
@@ -28,8 +29,9 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/glebarez/go-sqlite v1.21.2 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
+	github.com/redis/go-redis/v9 v9.24.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	golang.org/x/net v0.62.0 // indirect
+	golang.org/x/net v0.63.0 // indirect
 	modernc.org/libc v1.22.5 // indirect
 	modernc.org/mathutil v1.5.0 // indirect
 	modernc.org/memory v1.5.0 // indirect
@@ -48,7 +50,7 @@ require (
 
 require (
 	github.com/RoaringBitmap/roaring/v2 v2.30.0 // indirect
-	github.com/bits-and-blooms/bitset v1.29.0 // indirect
+	github.com/bits-and-blooms/bitset v1.30.0 // indirect
 	github.com/blevesearch/bleve_index_api v1.4.1 // indirect
 	github.com/blevesearch/geo v0.2.8 // indirect
 	github.com/blevesearch/go-faiss v1.1.5 // indirect

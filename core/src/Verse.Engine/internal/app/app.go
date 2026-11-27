@@ -62,8 +62,8 @@ func New(cfg config.Config, clients *database.Clients) *App {
 	wsServer.Start()
 
 	var bridge *event.Bridge
-	if clients.Redis != nil {
-		bridge = event.NewBridge(eventBus, clients.Redis)
+	if clients.Valkey != nil {
+		bridge = event.NewBridge(eventBus, clients.Valkey)
 		if err := bridge.Start(); err != nil {
 			log.Printf("[app] EventBridge failed to start: %v", err)
 			bridge = nil

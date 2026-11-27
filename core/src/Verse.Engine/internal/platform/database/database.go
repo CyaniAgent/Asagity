@@ -19,15 +19,18 @@ import (
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/cache"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/config"
 	"github.com/CyaniAgent/Asagity/core/src/Verse.Engine/internal/platform/mode"
-	"github.com/redis/go-redis/v9"
+	"github.com/valkey-io/valkey-go"
+	"github.com/valkey-io/valkey-go/valkeycompat"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 type Clients struct {
-	DB    *gorm.DB
-	Redis *redis.Client
-	// Cache is the KV store services use. Production wraps Redis;
+	DB *gorm.DB
+	// Valkey is the native Valkey client behind the KV cache and the
+	// cross-process event bridge. Nil in lite/databaseless modes.
+	Valkey valkey.Client
+	// Cache is the KV store services use. Production wraps Valkey;
 	// lite mode uses the in-process memory cache.
 	Cache cache.Cache
 	// Mode records which runtime mode opened these clients.
@@ -44,13 +47,17 @@ func Open(cfg config.Config) (*Clients, error) {
 		return nil, err
 	}
 
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     cfg.RedisAddr,
-		Password: cfg.RedisPassword,
-		DB:       cfg.RedisDB,
+	vk, err := valkey.NewClient(valkey.ClientOption{
+		InitAddress: []string{cfg.RedisAddr},
+		Password:    cfg.RedisPassword,
+		SelectDB:    cfg.RedisDB,
 	})
-
-	if err := rdb.Ping(context.Background()).Err(); err != nil {
+	if err != nil {
+		return nil, err
+	}
+	adapter := valkeycompat.NewAdapter(vk)
+	if err := adapter.Ping(context.Background()).Err(); err != nil {
+		vk.Close()
 		return nil, err
 	}
 
@@ -81,7 +88,7 @@ func Open(cfg config.Config) (*Clients, error) {
 			ProductionAdministrator.Username, ProductionAdministrator.Email, AdministratorGroupName)
 	}
 
-	return &Clients{DB: db, Redis: rdb, Cache: cache.NewRedisCache(rdb), Mode: mode.Production}, nil
+	return &Clients{DB: db, Valkey: vk, Cache: cache.NewValkeyCache(adapter), Mode: mode.Production}, nil
 }
 
 func ensureServices(cfg config.Config) error {
@@ -191,17 +198,20 @@ func probePostgres(cfg config.Config) error {
 }
 
 func probeRedis(cfg config.Config) error {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     cfg.RedisAddr,
-		Password: cfg.RedisPassword,
-		DB:       cfg.RedisDB,
+	vk, err := valkey.NewClient(valkey.ClientOption{
+		InitAddress: []string{cfg.RedisAddr},
+		Password:    cfg.RedisPassword,
+		SelectDB:    cfg.RedisDB,
 	})
-	defer func() { _ = rdb.Close() }()
+	if err != nil {
+		return err
+	}
+	defer vk.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	return rdb.Ping(ctx).Err()
+	return valkeycompat.NewAdapter(vk).Ping(ctx).Err()
 }
 
 func ProbePostgres(cfg config.Config) error {

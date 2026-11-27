@@ -70,9 +70,9 @@ func OpenLite(cfg config.Config) (*Clients, error) {
 	}
 
 	return &Clients{
-		DB:    db,
-		Redis: nil,
-		Cache: cache.NewMemoryCache(time.Minute),
-		Mode:  mode.Lite,
+		DB:     db,
+		Valkey: nil,
+		Cache:  cache.NewMemoryCache(time.Minute),
+		Mode:   mode.Lite,
 	}, nil
 }

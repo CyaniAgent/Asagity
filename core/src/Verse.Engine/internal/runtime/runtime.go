@@ -103,8 +103,8 @@ func closeClients(clients *database.Clients) {
 	if clients.Cache != nil {
 		_ = clients.Cache.Close()
 	}
-	if clients.Redis != nil {
-		_ = clients.Redis.Close()
+	if clients.Valkey != nil {
+		clients.Valkey.Close()
 	}
 	if clients.DB != nil {
 		if sqlDB, err := clients.DB.DB(); err == nil {
